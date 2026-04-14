@@ -1,43 +1,41 @@
 import "dotenv/config";
-import { Pool } from "pg";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "@prisma/client";
-
-const connectionString = process.env.DATABASE_URL!;
-
-const pool = new Pool({ connectionString });
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+import { hashPassword } from "../modules/auth/auth.password";
+import { pool } from "../shared/db/pool";
 
 async function main() {
-  const existingUser = await prisma.user.findUnique({
-    where: { email: "admin@example.com" },
-  });
+  const existingUser = await pool.query<{ id: number }>(
+    `
+      SELECT "id"
+      FROM "User"
+      WHERE "email" = $1
+      LIMIT 1
+    `,
+    ["admin@example.com"],
+  );
 
-  if (existingUser) {
+  if (existingUser.rowCount) {
     console.log("Админ уже существует");
     return;
   }
 
-  const user = await prisma.user.create({
-    data: {
-      email: "admin@example.com",
-      password: "123456",
-      role: "admin",
-    },
-  });
+  const user = await pool.query<{ email: string }>(
+    `
+      INSERT INTO "User" ("email", "password", "role")
+      VALUES ($1, $2, $3)
+      RETURNING "email"
+    `,
+    ["admin@example.com", hashPassword("123456"), "admin"],
+  );
 
-  console.log("Создан пользователь:", user.email);
+  console.log("Создан пользователь:", user.rows[0]?.email);
 }
 
 main()
   .then(async () => {
-    await prisma.$disconnect();
     await pool.end();
   })
   .catch(async (error) => {
     console.error("Ошибка seed:", error);
-    await prisma.$disconnect();
     await pool.end();
     process.exit(1);
   });

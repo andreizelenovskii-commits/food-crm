@@ -1,0 +1,8 @@
+{
+  "debug.javascript.autoAttachFilter": "disabled",
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "search.exclude": {
+    ".next": true,
+    "node_modules": true
+  }
+}
