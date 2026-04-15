@@ -5,10 +5,29 @@ import { updateEmployeeAction } from "@/modules/employees/employees.actions";
 import { EmployeeAdjustmentForm } from "@/modules/employees/components/employee-adjustment-form";
 import { EmployeeDatePicker } from "@/modules/employees/components/employee-date-picker";
 import { EmployeeScheduleEditor } from "@/modules/employees/components/employee-schedule-editor";
-import { EMPLOYEE_ROLES, EMPLOYEE_ADJUSTMENT_LABELS, type EmployeeProfile, type EmployeeAdjustment, type EmployeeSchedule, type EmployeeScheduleLegacy, type DaySchedule } from "@/modules/employees/employees.types";
+import {
+  formatScheduleSummary,
+  normalizeEmployeeSchedule,
+} from "@/modules/employees/employees.schedule";
+import {
+  EMPLOYEE_ADJUSTMENT_LABELS,
+  EMPLOYEE_ROLES,
+  type EmployeeAdjustment,
+  type EmployeeProfile,
+  type EmployeeSchedule,
+} from "@/modules/employees/employees.types";
 
 function formatMoney(cents: number) {
   return `${(cents / 100).toFixed(2).replace(".00", "")} ₽`;
+}
+
+function parseDisplayDate(value: string) {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split("-").map(Number);
+    return new Date(year, (month ?? 1) - 1, day ?? 1);
+  }
+
+  return new Date(value);
 }
 
 const formatDate = (value: string) =>
@@ -16,114 +35,33 @@ const formatDate = (value: string) =>
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
-  }).format(new Date(value));
+  }).format(parseDisplayDate(value));
 
-// Convert legacy schedule format to new format
-function convertLegacySchedule(legacy: EmployeeScheduleLegacy): EmployeeSchedule {
-  const days: Record<string, DaySchedule> = {};
-  const weekDayMap: Record<string, number> = {
-    monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0
-  };
-
-  // Get current month
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-
-  Object.entries(legacy).forEach(([dayName, hours]) => {
-    const weekDay = weekDayMap[dayName.toLowerCase()];
-    if (weekDay !== undefined) {
-      // Find all dates in current month that match this weekday
-      for (let day = 1; day <= 31; day++) {
-        const date = new Date(year, month, day);
-        if (date.getMonth() === month && date.getDay() === weekDay) {
-          const key = date.toISOString().split('T')[0];
-          days[key] = {
-            shifts: [{ hours }]
-          };
-        }
-      }
-    }
-  });
-
-  return {
-    shiftsPerDay: 1,
-    days
-  };
-}
-
-// Convert schedule to display format
-function formatScheduleForDisplay(schedule: EmployeeSchedule | EmployeeScheduleLegacy | null): string {
-  if (!schedule) return 'График не задан';
-
-  let normalizedSchedule: EmployeeSchedule;
-  if ('shiftsPerDay' in schedule) {
-    normalizedSchedule = schedule as EmployeeSchedule;
-  } else {
-    normalizedSchedule = convertLegacySchedule(schedule as EmployeeScheduleLegacy);
-  }
-
-  const selectedDays = Object.keys(normalizedSchedule.days);
-  if (!selectedDays.length) return 'График не задан';
-
-  // Group by day of week for display
-  const dayGroups: Record<number, { dates: string[], totalHours: number }> = {};
-
-  selectedDays.forEach(dateStr => {
-    const date = new Date(dateStr);
-    const weekDay = date.getDay();
-    const totalHours = normalizedSchedule.days[dateStr].shifts.reduce((sum, shift) => sum + shift.hours, 0);
-
-    if (!dayGroups[weekDay]) {
-      dayGroups[weekDay] = { dates: [], totalHours: 0 };
-    }
-    dayGroups[weekDay].dates.push(dateStr);
-    dayGroups[weekDay].totalHours += totalHours;
-  });
-
-  const weekDayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-  const parts = Object.entries(dayGroups)
-    .sort(([a], [b]) => parseInt(a) - parseInt(b))
-    .map(([weekDay, data]) => {
-      const avgHours = Math.round(data.totalHours / data.dates.length);
-      return `${weekDayNames[parseInt(weekDay)]} ${avgHours}ч`;
-    });
-
-  return parts.join(', ');
+function buildEditableSchedule(employee: EmployeeProfile): EmployeeSchedule {
+  return normalizeEmployeeSchedule(employee.schedule);
 }
 
 type Tab = 'general' | 'advances' | 'fines' | 'debts';
 
 export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile }) {
   const [activeTab, setActiveTab] = useState<Tab>('general');
-  const [schedule, setSchedule] = useState<EmployeeSchedule>(() => {
-    if (!employee.schedule) {
-      return { shiftsPerDay: 1, days: {} };
-    }
-    return 'shiftsPerDay' in employee.schedule
-      ? employee.schedule as EmployeeSchedule
-      : convertLegacySchedule(employee.schedule as EmployeeScheduleLegacy);
-  });
-  const [schedulePickerOpen, setSchedulePickerOpen] = useState(false);
+  const [schedule, setSchedule] = useState<EmployeeSchedule>(() => buildEditableSchedule(employee));
   const [isEditingContacts, setIsEditingContacts] = useState(false);
   const [selectedRole, setSelectedRole] = useState(employee.role);
   const [rolePickerOpen, setRolePickerOpen] = useState(false);
 
-  const scheduleSummary = () => formatScheduleForDisplay(schedule);
-
-  const handleSaveSchedule = async (newSchedule: EmployeeSchedule) => {
-    setSchedule(newSchedule);
-    setSchedulePickerOpen(false);
-
-    // Save to database
-    const formData = new FormData();
-    formData.append('schedule', JSON.stringify(newSchedule));
-    await updateEmployeeAction(employee.id, formData);
+  const resetContactsDraft = () => {
+    setSelectedRole(employee.role);
+    setRolePickerOpen(false);
+    setSchedule(buildEditableSchedule(employee));
   };
 
+  const scheduleSummary = formatScheduleSummary(schedule);
+  const serializedSchedule = Object.keys(schedule.days).length ? JSON.stringify(schedule) : "";
+
   const handleSaveContacts = async (formData: FormData) => {
+    formData.set("schedule", serializedSchedule);
     await updateEmployeeAction(employee.id, formData);
-    setIsEditingContacts(false);
   };
 
   const tabs = [
@@ -170,7 +108,10 @@ export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile 
               {!isEditingContacts && (
                 <button
                   type="button"
-                  onClick={() => setIsEditingContacts(true)}
+                  onClick={() => {
+                    resetContactsDraft();
+                    setIsEditingContacts(true);
+                  }}
                   className="rounded-2xl bg-zinc-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800"
                 >
                   Изменить данные
@@ -269,27 +210,20 @@ export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile 
                   defaultValue={employee.hireDate ? employee.hireDate.slice(0, 10) : ""}
                 />
 
-                <div className="block space-y-2">
-                  <span className="font-medium text-zinc-900">График работы</span>
-                  {schedulePickerOpen ? (
-                    <EmployeeScheduleEditor
-                      initialSchedule={schedule}
-                      onSave={handleSaveSchedule}
-                      onCancel={() => setSchedulePickerOpen(false)}
-                    />
-                  ) : (
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={() => setSchedulePickerOpen(true)}
-                        className="w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-left text-zinc-950 transition hover:border-zinc-500 focus:border-zinc-500 focus:outline-none"
-                      >
-                        <span className="block text-sm font-medium text-zinc-900">{scheduleSummary()}</span>
-                        <span className="text-xs text-zinc-500">Нажмите, чтобы отредактировать</span>
-                      </button>
-                    </div>
-                  )}
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <span className="font-medium text-zinc-900">График работы</span>
+                    <p className="text-xs text-zinc-500">
+                      Массово отмечай рабочие дни по дням недели, а затем при необходимости поправляй часы у
+                      отдельных дат прямо в календаре.
+                    </p>
+                  </div>
+                  <EmployeeScheduleEditor
+                    value={schedule}
+                    onChange={setSchedule}
+                  />
                 </div>
+                <input type="hidden" name="schedule" value={serializedSchedule} />
 
                 <div className="flex gap-2">
                   <button
@@ -300,7 +234,10 @@ export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile 
                   </button>
                   <button
                     type="button"
-                    onClick={() => setIsEditingContacts(false)}
+                    onClick={() => {
+                      resetContactsDraft();
+                      setIsEditingContacts(false);
+                    }}
                     className="rounded-2xl border border-zinc-300 px-4 py-3 text-sm font-medium text-zinc-950 transition hover:border-zinc-500"
                   >
                     Отмена
@@ -337,7 +274,7 @@ export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile 
                   {employee.hireDate ? formatDate(employee.hireDate) : "Не указана"}
                 </p>
                 <p>
-                  <span className="font-medium text-zinc-900">График работы:</span> {scheduleSummary()}
+                  <span className="font-medium text-zinc-900">График работы:</span> {scheduleSummary}
                 </p>
               </div>
             )}
