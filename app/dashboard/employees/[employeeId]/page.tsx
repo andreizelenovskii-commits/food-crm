@@ -3,12 +3,7 @@ import { notFound } from "next/navigation";
 import { PageShell } from "@/components/ui/page-shell";
 import { requireSessionUser } from "@/modules/auth/auth.session";
 import { EmployeeProfileClient } from "@/modules/employees/components/employee-profile-client";
-import { EMPLOYEE_ADJUSTMENT_LABELS } from "@/modules/employees/employees.types";
 import { fetchEmployeeById } from "@/modules/employees/employees.service";
-
-function formatMoney(cents: number) {
-  return `${(cents / 100).toFixed(2).replace(".00", "")} ₽`;
-}
 
 export default async function EmployeeProfilePage(props: {
   params?: Promise<{ employeeId: string }>;

@@ -9,7 +9,7 @@ import {
   updateEmployee,
 } from "@/modules/employees/employees.repository";
 import type { CreateEmployeeInput, UpdateEmployeeInput } from "@/modules/employees/employees.validation";
-import type { Employee, EmployeeProfile, EmployeeAdjustment } from "@/modules/employees/employees.types";
+import type { Employee, EmployeeProfile } from "@/modules/employees/employees.types";
 
 export async function fetchEmployees(): Promise<Employee[]> {
   return getAllEmployees();
@@ -28,6 +28,7 @@ export async function addEmployeeAdjustment(input: {
   type: string;
   amountCents: number;
   comment: string | null;
+  date: string;
 }) {
   return createEmployeeAdjustment(input);
 }

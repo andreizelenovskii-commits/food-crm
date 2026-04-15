@@ -52,6 +52,8 @@ model Employee {
   messenger    String?
   schedule     Json?    // График работы, например { "monday": 8, "tuesday": 8, ... }
   monthlyHours Int?     // Рассчитанные часы работы за месяц
+  birthDate    DateTime?
+  hireDate     DateTime?
   createdAt    DateTime @default(now())
   orders       Order[]
   adjustments  EmployeeAdjustment[]

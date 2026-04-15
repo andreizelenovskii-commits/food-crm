@@ -28,17 +28,21 @@ export type EmployeeAdjustment = {
   createdAt: string;
 };
 
-export type EmployeeProfile = Employee & {
-  advancesCents: number;
-  finesCents: number;
-  debtCents: number;
-  kpd: number;
-  ordersThisMonth: number;
-  salaryTodayCents: number;
-  adjustments: EmployeeAdjustment[];
+export type Shift = {
+  hours: number;
 };
 
-export type EmployeeSchedule = Record<string, number>; // e.g., { "monday": 8, "tuesday": 8, ... }
+export type DaySchedule = {
+  shifts: Shift[];
+};
+
+export type EmployeeSchedule = {
+  shiftsPerDay: 1 | 2;
+  days: Record<string, DaySchedule>; // key: "2024-04-15"
+};
+
+// Legacy support - convert old format to new
+export type EmployeeScheduleLegacy = Record<string, number>; // e.g., { "monday": 8, "tuesday": 8, ... }
 
 export type Employee = {
   id: number;
@@ -47,7 +51,19 @@ export type Employee = {
   role: EmployeeRole;
   phone: string | null;
   messenger: string | null;
-  schedule: EmployeeSchedule | null;
+  schedule: EmployeeSchedule | EmployeeScheduleLegacy | null;
   monthlyHours: number | null;
+  birthDate?: string | null;
+  hireDate?: string | null;
   createdAt: string;
+};
+
+export type EmployeeProfile = Employee & {
+  advancesCents: number;
+  finesCents: number;
+  debtCents: number;
+  kpd: number;
+  ordersThisMonth: number;
+  salaryTodayCents: number;
+  adjustments: EmployeeAdjustment[];
 };

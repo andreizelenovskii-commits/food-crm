@@ -4,19 +4,55 @@ import type {
   Employee,
   EmployeeAdjustment,
   EmployeeAdjustmentType,
+  EmployeeSchedule,
+  EmployeeScheduleLegacy,
 } from "@/modules/employees/employees.types";
 
-function mapRowToEmployee(row: {
+type EmployeeRow = {
   id: number;
   name: string;
   email: string | null;
   role: string;
   phone: string | null;
   messenger: string | null;
-  schedule: any | null;
+  schedule: Employee["schedule"];
   monthlyHours: number | null;
+  birthDate: Date | null;
+  hireDate: Date | null;
   createdAt: Date;
-}): Employee {
+};
+
+function hasShiftSchedule(
+  schedule: EmployeeSchedule | EmployeeScheduleLegacy,
+): schedule is EmployeeSchedule {
+  return "shiftsPerDay" in schedule;
+}
+
+function calculateMonthlyHours(
+  schedule: EmployeeSchedule | EmployeeScheduleLegacy | null,
+) {
+  if (!schedule) {
+    return null;
+  }
+
+  if (hasShiftSchedule(schedule)) {
+    return Object.values(schedule.days).reduce(
+      (sum, day) => sum + day.shifts.reduce((daySum, shift) => daySum + shift.hours, 0),
+      0,
+    );
+  }
+
+  return Object.values(schedule).reduce((sum, hours) => sum + hours, 0);
+}
+
+function formatDateOnly(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function mapRowToEmployee(row: EmployeeRow): Employee {
   return {
     id: row.id,
     name: row.name,
@@ -26,6 +62,8 @@ function mapRowToEmployee(row: {
     messenger: row.messenger,
     schedule: row.schedule,
     monthlyHours: row.monthlyHours,
+    birthDate: row.birthDate ? formatDateOnly(row.birthDate) : null,
+    hireDate: row.hireDate ? formatDateOnly(row.hireDate) : null,
     createdAt: row.createdAt.toISOString(),
   };
 }
@@ -49,19 +87,9 @@ function mapRowToAdjustment(row: {
 }
 
 export async function getAllEmployees(): Promise<Employee[]> {
-  const result = await pool.query<{
-    id: number;
-    name: string;
-    email: string | null;
-    role: string;
-    phone: string | null;
-    messenger: string | null;
-    schedule: any | null;
-    monthlyHours: number | null;
-    createdAt: Date;
-  }>(
+  const result = await pool.query<EmployeeRow>(
     `
-      SELECT "id", "name", "email", "role", "phone", "messenger", "schedule", "monthlyHours", "createdAt"
+      SELECT "id", "name", "email", "role", "phone", "messenger", "schedule", "monthlyHours", "birthDate", "hireDate", "createdAt"
       FROM "Employee"
       ORDER BY "createdAt" DESC
     `,
@@ -75,19 +103,9 @@ export async function getEmployeeById(employeeId: number): Promise<Employee | nu
     return null;
   }
 
-  const result = await pool.query<{
-    id: number;
-    name: string;
-    email: string | null;
-    role: string;
-    phone: string | null;
-    messenger: string | null;
-    schedule: any | null;
-    monthlyHours: number | null;
-    createdAt: Date;
-  }>(
+  const result = await pool.query<EmployeeRow>(
     `
-      SELECT "id", "name", "email", "role", "phone", "messenger", "schedule", "monthlyHours", "createdAt"
+      SELECT "id", "name", "email", "role", "phone", "messenger", "schedule", "monthlyHours", "birthDate", "hireDate", "createdAt"
       FROM "Employee"
       WHERE "id" = $1
       LIMIT 1
@@ -172,6 +190,7 @@ export async function createEmployeeAdjustment(input: {
   type: string;
   amountCents: number;
   comment: string | null;
+  date: string;
 }): Promise<EmployeeAdjustment> {
   const result = await pool.query<{
     id: number;
@@ -182,36 +201,24 @@ export async function createEmployeeAdjustment(input: {
     createdAt: Date;
   }>(
     `
-      INSERT INTO "EmployeeAdjustment" ("employeeId", "type", "amountCents", "comment")
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO "EmployeeAdjustment" ("employeeId", "type", "amountCents", "comment", "createdAt")
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING "id", "employeeId", "type", "amountCents", "comment", "createdAt"
     `,
-    [input.employeeId, input.type, input.amountCents, input.comment],
+    [input.employeeId, input.type, input.amountCents, input.comment, input.date],
   );
 
   return mapRowToAdjustment(result.rows[0]);
 }
 
 export async function createEmployee(input: CreateEmployeeInput): Promise<Employee> {
-  const monthlyHours = input.schedule
-    ? Object.values(input.schedule).reduce((sum, hours) => sum + hours, 0)
-    : null;
+  const monthlyHours = calculateMonthlyHours(input.schedule);
 
-  const result = await pool.query<{
-    id: number;
-    name: string;
-    email: string | null;
-    role: string;
-    phone: string | null;
-    messenger: string | null;
-    schedule: any | null;
-    monthlyHours: number | null;
-    createdAt: Date;
-  }>(
+  const result = await pool.query<EmployeeRow>(
     `
       INSERT INTO "Employee" ("name", "email", "role", "phone", "messenger", "schedule", "monthlyHours")
       VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING "id", "name", "email", "role", "phone", "messenger", "schedule", "monthlyHours", "createdAt"
+      RETURNING "id", "name", "email", "role", "phone", "messenger", "schedule", "monthlyHours", "birthDate", "hireDate", "createdAt"
     `,
     [input.name, null, input.role, input.phone, input.messenger, input.schedule, monthlyHours],
   );
@@ -225,7 +232,7 @@ export async function updateEmployee(employeeId: number, input: UpdateEmployeeIn
   }
 
   const updates: string[] = [];
-  const values: any[] = [];
+  const values: unknown[] = [];
   let paramIndex = 1;
 
   if (input.name !== undefined) {
@@ -244,14 +251,19 @@ export async function updateEmployee(employeeId: number, input: UpdateEmployeeIn
     updates.push(`"messenger" = $${paramIndex++}`);
     values.push(input.messenger);
   }
+  if (input.birthDate !== undefined) {
+    updates.push(`"birthDate" = $${paramIndex++}`);
+    values.push(input.birthDate);
+  }
+  if (input.hireDate !== undefined) {
+    updates.push(`"hireDate" = $${paramIndex++}`);
+    values.push(input.hireDate);
+  }
   if (input.schedule !== undefined) {
     updates.push(`"schedule" = $${paramIndex++}`);
     values.push(input.schedule);
     if (input.monthlyHours === undefined) {
-      // Пересчитать monthlyHours
-      const monthlyHours = input.schedule
-        ? Object.values(input.schedule).reduce((sum, hours) => sum + hours, 0)
-        : null;
+      const monthlyHours = calculateMonthlyHours(input.schedule);
       updates.push(`"monthlyHours" = $${paramIndex++}`);
       values.push(monthlyHours);
     }
@@ -267,22 +279,12 @@ export async function updateEmployee(employeeId: number, input: UpdateEmployeeIn
 
   values.push(employeeId);
 
-  const result = await pool.query<{
-    id: number;
-    name: string;
-    email: string | null;
-    role: string;
-    phone: string | null;
-    messenger: string | null;
-    schedule: any | null;
-    monthlyHours: number | null;
-    createdAt: Date;
-  }>(
+  const result = await pool.query<EmployeeRow>(
     `
       UPDATE "Employee"
       SET ${updates.join(", ")}
       WHERE "id" = $${paramIndex}
-      RETURNING "id", "name", "email", "role", "phone", "messenger", "schedule", "monthlyHours", "createdAt"
+      RETURNING "id", "name", "email", "role", "phone", "messenger", "schedule", "monthlyHours", "birthDate", "hireDate", "createdAt"
     `,
     values,
   );
