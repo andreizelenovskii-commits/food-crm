@@ -15,11 +15,30 @@ const LEGACY_WEEKDAY_TO_INDEX: Record<string, number> = {
 };
 
 export const CALENDAR_WEEKDAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"] as const;
+export const MIN_SCHEDULE_HOURS = 1;
+export const MAX_SCHEDULE_HOURS = 14;
+const DEFAULT_SCHEDULE_HOURS = 8;
 
 function isEmployeeSchedule(
   schedule: EmployeeSchedule | EmployeeScheduleLegacy,
 ): schedule is EmployeeSchedule {
   return "shiftsPerDay" in schedule;
+}
+
+export function clampScheduleHours(value: number) {
+  if (!Number.isFinite(value)) {
+    return DEFAULT_SCHEDULE_HOURS;
+  }
+
+  return Math.min(MAX_SCHEDULE_HOURS, Math.max(MIN_SCHEDULE_HOURS, Math.round(value)));
+}
+
+function normalizeDaySchedule(day: DaySchedule): DaySchedule {
+  const totalHours = day.shifts.reduce((sum, shift) => sum + shift.hours, 0);
+
+  return {
+    shifts: [{ hours: clampScheduleHours(totalHours) }],
+  };
 }
 
 function cloneDaySchedule(day: DaySchedule): DaySchedule {
@@ -30,9 +49,9 @@ function cloneDaySchedule(day: DaySchedule): DaySchedule {
 
 export function cloneEmployeeSchedule(schedule: EmployeeSchedule): EmployeeSchedule {
   return {
-    shiftsPerDay: schedule.shiftsPerDay,
+    shiftsPerDay: 1,
     days: Object.fromEntries(
-      Object.entries(schedule.days).map(([dateKey, day]) => [dateKey, cloneDaySchedule(day)]),
+      Object.entries(schedule.days).map(([dateKey, day]) => [dateKey, normalizeDaySchedule(cloneDaySchedule(day))]),
     ),
   };
 }
@@ -75,14 +94,9 @@ export function getCalendarGridDays(currentMonth: Date) {
   ];
 }
 
-export function createDaySchedule(
-  shiftsPerDay: EmployeeSchedule["shiftsPerDay"],
-  hoursTemplate?: number[],
-): DaySchedule {
+export function createDaySchedule(hours = DEFAULT_SCHEDULE_HOURS): DaySchedule {
   return {
-    shifts: Array.from({ length: shiftsPerDay }, (_, index) => ({
-      hours: hoursTemplate?.[index] ?? hoursTemplate?.[0] ?? 8,
-    })),
+    shifts: [{ hours: clampScheduleHours(hours) }],
   };
 }
 
@@ -109,7 +123,7 @@ export function normalizeEmployeeSchedule(
       continue;
     }
 
-    days[formatScheduleDateKey(date)] = createDaySchedule(1, [matchedEntry[1]]);
+    days[formatScheduleDateKey(date)] = createDaySchedule(matchedEntry[1]);
   }
 
   return {
@@ -128,7 +142,6 @@ export function getScheduleStats(schedule: EmployeeSchedule | EmployeeScheduleLe
   return {
     totalDays,
     totalHours,
-    shiftsPerDay: normalized.shiftsPerDay,
   };
 }
 
@@ -139,7 +152,7 @@ export function formatHours(value: number) {
 }
 
 export function formatScheduleSummary(schedule: EmployeeSchedule | EmployeeScheduleLegacy | null) {
-  const { totalDays, totalHours, shiftsPerDay } = getScheduleStats(schedule);
+  const { totalDays, totalHours } = getScheduleStats(schedule);
 
   if (!totalDays) {
     return "График не задан";
@@ -152,7 +165,5 @@ export function formatScheduleSummary(schedule: EmployeeSchedule | EmployeeSched
         ? "дня"
         : "дней";
 
-  const shiftLabel = shiftsPerDay === 1 ? "1 смена" : "2 смены";
-
-  return `${totalDays} ${dayWord} • ${formatHours(totalHours)} ч • ${shiftLabel} в день`;
+  return `${totalDays} ${dayWord} • ${formatHours(totalHours)} ч`;
 }

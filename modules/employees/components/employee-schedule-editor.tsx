@@ -3,6 +3,9 @@
 import { useMemo, useState } from "react";
 import {
   CALENDAR_WEEKDAYS,
+  MAX_SCHEDULE_HOURS,
+  MIN_SCHEDULE_HOURS,
+  clampScheduleHours,
   cloneEmployeeSchedule,
   createDaySchedule,
   formatHours,
@@ -19,7 +22,17 @@ type EmployeeScheduleEditorProps = {
   onChange: (schedule: EmployeeSchedule) => void;
 };
 
+type DayDraft = {
+  dateKey: string;
+  isWorkingDay: boolean;
+  hours: number;
+};
+
 const WEEKDAY_NUMBERS = [1, 2, 3, 4, 5, 6, 0] as const;
+const HOUR_OPTIONS = Array.from(
+  { length: MAX_SCHEDULE_HOURS - MIN_SCHEDULE_HOURS + 1 },
+  (_, index) => MIN_SCHEDULE_HOURS + index,
+);
 
 function getInitialMonth(schedule: EmployeeSchedule) {
   const firstDateKey = Object.keys(schedule.days).sort()[0];
@@ -33,28 +46,28 @@ function getInitialMonth(schedule: EmployeeSchedule) {
   return new Date(firstDate.getFullYear(), firstDate.getMonth(), 1);
 }
 
-function sanitizeHours(value: number) {
-  if (!Number.isFinite(value)) {
-    return 0;
-  }
+function getDayHours(schedule: EmployeeSchedule, dateKey: string) {
+  return clampScheduleHours(schedule.days[dateKey]?.shifts[0]?.hours ?? 8);
+}
 
-  return Math.min(24, Math.max(0, value));
+function formatPopupDate(dateKey: string) {
+  return new Intl.DateTimeFormat("ru-RU", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    weekday: "long",
+  }).format(parseScheduleDateKey(dateKey));
 }
 
 export function EmployeeScheduleEditor({ value, onChange }: EmployeeScheduleEditorProps) {
   const [currentMonth, setCurrentMonth] = useState(() => getInitialMonth(value));
   const [selectedWeekdays, setSelectedWeekdays] = useState<number[]>([1, 2, 3, 4, 5]);
-  const [templateHours, setTemplateHours] = useState<number[]>(
-    Array.from({ length: value.shiftsPerDay }, () => 8),
-  );
+  const [templateHours, setTemplateHours] = useState(8);
+  const [dayDraft, setDayDraft] = useState<DayDraft | null>(null);
 
   const totalStats = useMemo(() => getScheduleStats(value), [value]);
   const monthDays = useMemo(() => getMonthDays(currentMonth), [currentMonth]);
   const calendarDays = useMemo(() => getCalendarGridDays(currentMonth), [currentMonth]);
-  const resolvedTemplateHours = useMemo(
-    () => Array.from({ length: value.shiftsPerDay }, (_, index) => templateHours[index] ?? templateHours[0] ?? 8),
-    [templateHours, value.shiftsPerDay],
-  );
 
   const currentMonthStats = useMemo(() => {
     return monthDays.reduce(
@@ -78,51 +91,30 @@ export function EmployeeScheduleEditor({ value, onChange }: EmployeeScheduleEdit
     onChange(updater(cloneEmployeeSchedule(value)));
   };
 
-  const createTemplateDaySchedule = () =>
-    createDaySchedule(value.shiftsPerDay, resolvedTemplateHours.map((hours) => sanitizeHours(hours)));
+  const openDayEditor = (dateKey: string) => {
+    setDayDraft({
+      dateKey,
+      isWorkingDay: Boolean(value.days[dateKey]),
+      hours: getDayHours(value, dateKey),
+    });
+  };
 
-  const toggleDay = (day: Date) => {
-    const dateKey = formatScheduleDateKey(day);
+  const applyDayDraft = () => {
+    if (!dayDraft) {
+      return;
+    }
 
     updateSchedule((next) => {
-      if (next.days[dateKey]) {
-        delete next.days[dateKey];
+      if (dayDraft.isWorkingDay) {
+        next.days[dayDraft.dateKey] = createDaySchedule(dayDraft.hours);
       } else {
-        next.days[dateKey] = createTemplateDaySchedule();
+        delete next.days[dayDraft.dateKey];
       }
 
       return next;
     });
-  };
 
-  const updateShiftHours = (dateKey: string, shiftIndex: number, hours: number) => {
-    updateSchedule((next) => {
-      const daySchedule = next.days[dateKey];
-
-      if (!daySchedule) {
-        return next;
-      }
-
-      daySchedule.shifts[shiftIndex] = {
-        hours: sanitizeHours(hours),
-      };
-
-      return next;
-    });
-  };
-
-  const setShiftsPerDay = (shiftsPerDay: EmployeeSchedule["shiftsPerDay"]) => {
-    updateSchedule((next) => {
-      next.shiftsPerDay = shiftsPerDay;
-
-      for (const day of Object.values(next.days)) {
-        day.shifts = Array.from({ length: shiftsPerDay }, (_, index) => ({
-          hours: day.shifts[index]?.hours ?? day.shifts[0]?.hours ?? 8,
-        }));
-      }
-
-      return next;
-    });
+    setDayDraft(null);
   };
 
   const toggleWeekday = (weekday: number) => {
@@ -144,7 +136,7 @@ export function EmployeeScheduleEditor({ value, onChange }: EmployeeScheduleEdit
           continue;
         }
 
-        next.days[formatScheduleDateKey(day)] = createTemplateDaySchedule();
+        next.days[formatScheduleDateKey(day)] = createDaySchedule(templateHours);
       }
 
       return next;
@@ -185,24 +177,24 @@ export function EmployeeScheduleEditor({ value, onChange }: EmployeeScheduleEdit
   });
 
   return (
-    <div className="space-y-5 rounded-3xl border border-zinc-200 bg-zinc-50/70 p-4">
-      <div className="flex flex-col gap-3 rounded-3xl border border-zinc-200 bg-white p-4 lg:flex-row lg:items-start lg:justify-between">
+    <div className="space-y-5 rounded-[28px] border border-zinc-200 bg-zinc-50/80 p-4 sm:p-5">
+      <div className="flex flex-col gap-3 rounded-[24px] border border-zinc-200 bg-white p-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-1">
-          <p className="text-sm font-medium text-zinc-900">Календарь смен</p>
-          <p className="text-sm text-zinc-600">
-            Отмечай рабочие дни в календаре, задавай часы сразу для группы дней недели и при необходимости
-            поправляй отдельные даты вручную.
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500">График работы</p>
+          <p className="text-base font-semibold text-zinc-900">Рабочие дни по календарю</p>
+          <p className="text-sm leading-6 text-zinc-600">
+            Нажми на дату, чтобы отметить рабочий день, выбрать часы или оставить выходной.
           </p>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-2xl bg-zinc-100 px-4 py-3">
-            <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">Всего в графике</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Всего в графике</p>
             <p className="mt-1 text-sm font-semibold text-zinc-950">
               {totalStats.totalDays} дн. / {formatHours(totalStats.totalHours)} ч
             </p>
           </div>
           <div className="rounded-2xl bg-zinc-100 px-4 py-3">
-            <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">Текущий месяц</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Текущий месяц</p>
             <p className="mt-1 text-sm font-semibold text-zinc-950">
               {currentMonthStats.days} дн. / {formatHours(currentMonthStats.hours)} ч
             </p>
@@ -210,89 +202,50 @@ export function EmployeeScheduleEditor({ value, onChange }: EmployeeScheduleEdit
         </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1fr_1.3fr]">
-        <div className="space-y-4 rounded-3xl border border-zinc-200 bg-white p-4">
+      <div className="grid gap-4 xl:grid-cols-[18rem_minmax(0,1fr)]">
+        <div className="space-y-5 rounded-[24px] border border-zinc-200 bg-white p-4">
           <div className="space-y-2">
-            <p className="text-sm font-medium text-zinc-900">Количество смен в день</p>
-            <div className="flex gap-2">
-              {[1, 2].map((count) => (
-                <button
-                  key={count}
-                  type="button"
-                  onClick={() => setShiftsPerDay(count as EmployeeSchedule["shiftsPerDay"])}
-                  className={`rounded-2xl px-4 py-2 text-sm font-medium transition ${
-                    value.shiftsPerDay === count
-                      ? "bg-zinc-950 text-white"
-                      : "border border-zinc-300 bg-white text-zinc-950 hover:bg-zinc-50"
-                  }`}
-                >
-                  {count} {count === 1 ? "смена" : "смены"}
-                </button>
-              ))}
-            </div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500">Шаблон месяца</p>
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-zinc-900">Часы для выбранных дней</span>
+              <select
+                value={templateHours}
+                onChange={(event) => setTemplateHours(clampScheduleHours(Number(event.target.value)))}
+                className="w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm font-medium text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
+              >
+                {HOUR_OPTIONS.map((hours) => (
+                  <option key={hours} value={hours}>
+                    {hours} ч
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
 
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-zinc-900">Часы для шаблона месяца</p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {resolvedTemplateHours.map((hours, index) => (
-                <label key={index} className="space-y-2">
-                  <span className="text-xs font-medium uppercase tracking-[0.16em] text-zinc-500">
-                    Смена {index + 1}
-                  </span>
-                  <div className="flex items-center gap-2 rounded-2xl border border-zinc-300 px-3 py-2">
-                    <input
-                      type="number"
-                      min="0"
-                      max="24"
-                      step="0.5"
-                      value={hours}
-                      onChange={(event) => {
-                        const nextHours = sanitizeHours(Number(event.target.value));
-                        setTemplateHours((prev) => {
-                          const next = Array.from(
-                            { length: value.shiftsPerDay },
-                            (_, currentIndex) => prev[currentIndex] ?? prev[0] ?? 8,
-                          );
-                          next[index] = nextHours;
-                          return next;
-                        });
-                      }}
-                      className="w-full bg-transparent text-sm font-medium text-zinc-950 outline-none"
-                    />
-                    <span className="text-xs text-zinc-500">ч</span>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-medium text-zinc-900">Дни недели для массового заполнения</p>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => setSelectedWeekdays([1, 2, 3, 4, 5])}
-                  className="rounded-2xl border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:border-zinc-500"
-                >
-                  Будни
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedWeekdays([6, 0])}
-                  className="rounded-2xl border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:border-zinc-500"
-                >
-                  Выходные
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedWeekdays([...WEEKDAY_NUMBERS])}
-                  className="rounded-2xl border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:border-zinc-500"
-                >
-                  Все
-                </button>
-              </div>
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-zinc-900">Дни недели для массового заполнения</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedWeekdays([1, 2, 3, 4, 5])}
+                className="rounded-full border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:border-zinc-500"
+              >
+                Будни
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedWeekdays([6, 0])}
+                className="rounded-full border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:border-zinc-500"
+              >
+                Выходные
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedWeekdays([...WEEKDAY_NUMBERS])}
+                className="rounded-full border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:border-zinc-500"
+              >
+                Все
+              </button>
             </div>
 
             <div className="flex flex-wrap gap-2">
@@ -305,7 +258,7 @@ export function EmployeeScheduleEditor({ value, onChange }: EmployeeScheduleEdit
                     key={label}
                     type="button"
                     onClick={() => toggleWeekday(weekday)}
-                    className={`rounded-2xl px-3 py-2 text-sm font-medium transition ${
+                    className={`rounded-full px-3 py-2 text-sm font-medium transition ${
                       isSelected
                         ? "bg-zinc-950 text-white"
                         : "border border-zinc-300 bg-white text-zinc-950 hover:bg-zinc-50"
@@ -317,25 +270,25 @@ export function EmployeeScheduleEditor({ value, onChange }: EmployeeScheduleEdit
               })}
             </div>
 
-            <div className="grid gap-2 sm:grid-cols-3">
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
               <button
                 type="button"
                 onClick={applyTemplateToSelectedWeekdays}
-                className="rounded-2xl bg-zinc-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-zinc-800"
+                className="min-h-12 rounded-2xl bg-zinc-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-zinc-800"
               >
                 Заполнить месяц
               </button>
               <button
                 type="button"
                 onClick={clearSelectedWeekdays}
-                className="rounded-2xl border border-zinc-300 px-4 py-3 text-sm font-medium text-zinc-950 transition hover:border-zinc-500"
+                className="min-h-12 rounded-2xl border border-zinc-300 px-4 py-3 text-sm font-medium text-zinc-950 transition hover:border-zinc-500"
               >
                 Снять выбранные дни
               </button>
               <button
                 type="button"
                 onClick={clearCurrentMonth}
-                className="rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 transition hover:bg-red-100"
+                className="min-h-12 rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 transition hover:bg-red-100 sm:col-span-2 xl:col-span-1"
               >
                 Очистить месяц
               </button>
@@ -343,14 +296,14 @@ export function EmployeeScheduleEditor({ value, onChange }: EmployeeScheduleEdit
           </div>
         </div>
 
-        <div className="space-y-4 rounded-3xl border border-zinc-200 bg-white p-4">
+        <div className="space-y-4 rounded-[24px] border border-zinc-200 bg-white p-4">
           <div className="flex items-center justify-between gap-3">
             <button
               type="button"
               onClick={() =>
                 setCurrentMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))
               }
-              className="rounded-2xl border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-950 transition hover:bg-zinc-50"
+              className="rounded-full border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-950 transition hover:bg-zinc-50"
             >
               ← Назад
             </button>
@@ -360,19 +313,19 @@ export function EmployeeScheduleEditor({ value, onChange }: EmployeeScheduleEdit
               onClick={() =>
                 setCurrentMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))
               }
-              className="rounded-2xl border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-950 transition hover:bg-zinc-50"
+              className="rounded-full border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-950 transition hover:bg-zinc-50"
             >
               Вперёд →
             </button>
           </div>
 
           <div className="overflow-x-auto">
-            <div className="min-w-[52rem]">
+            <div className="min-w-[44rem]">
               <div className="grid grid-cols-7 gap-2">
                 {CALENDAR_WEEKDAYS.map((weekday) => (
                   <div
                     key={weekday}
-                    className="rounded-2xl bg-zinc-100 px-3 py-2 text-center text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500"
+                    className="rounded-2xl bg-zinc-100 px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-500"
                   >
                     {weekday}
                   </div>
@@ -380,91 +333,52 @@ export function EmployeeScheduleEditor({ value, onChange }: EmployeeScheduleEdit
 
                 {calendarDays.map((day, index) => {
                   if (!day) {
-                    return <div key={`empty-${index}`} className="min-h-[9.5rem] rounded-3xl bg-zinc-50" />;
+                    return <div key={`empty-${index}`} className="min-h-[7.75rem] rounded-[22px] bg-zinc-50" />;
                   }
 
                   const dateKey = formatScheduleDateKey(day);
-                  const daySchedule = value.days[dateKey];
-                  const isSelected = Boolean(daySchedule);
+                  const isWorkingDay = Boolean(value.days[dateKey]);
                   const isWeekend = day.getDay() === 0 || day.getDay() === 6;
 
                   return (
-                    <div
+                    <button
                       key={dateKey}
-                      className={`min-h-[9.5rem] rounded-3xl border p-3 transition ${
-                        isSelected
+                      type="button"
+                      onClick={() => openDayEditor(dateKey)}
+                      className={`min-h-[7.75rem] rounded-[22px] border p-3 text-left transition ${
+                        isWorkingDay
                           ? "border-zinc-950 bg-zinc-950 text-white shadow-sm"
                           : isWeekend
                             ? "border-zinc-200 bg-zinc-50 text-zinc-950"
                             : "border-zinc-200 bg-white text-zinc-950"
                       }`}
                     >
-                      <button
-                        type="button"
-                        onClick={() => toggleDay(day)}
-                        className="flex w-full items-start justify-between gap-2 text-left"
-                      >
+                      <div className="flex items-start justify-between gap-2">
                         <div>
-                          <span className="block text-lg font-semibold">{day.getDate()}</span>
-                          <span
-                            className={`text-xs ${
-                              isSelected ? "text-white/70" : "text-zinc-500"
-                            }`}
-                          >
-                            {isSelected ? "Рабочий день" : "Выходной"}
+                          <span className="block text-base font-semibold">{day.getDate()}</span>
+                          <span className={`text-[11px] ${isWorkingDay ? "text-white/70" : "text-zinc-500"}`}>
+                            {isWorkingDay ? "Рабочий день" : "Выходной"}
                           </span>
                         </div>
                         <span
-                          className={`rounded-full px-2 py-1 text-[11px] font-medium ${
-                            isSelected ? "bg-white/15 text-white" : "bg-zinc-100 text-zinc-600"
+                          className={`rounded-full px-2 py-1 text-[10px] font-medium ${
+                            isWorkingDay ? "bg-white/15 text-white" : "bg-zinc-100 text-zinc-600"
                           }`}
                         >
-                          {isSelected ? "Убрать" : "Добавить"}
+                          Изменить
                         </span>
-                      </button>
-
-                      {isSelected ? (
-                        <div className="mt-4 space-y-2">
-                          {daySchedule?.shifts.map((shift, shiftIndex) => (
-                            <label
-                              key={`${dateKey}-${shiftIndex}`}
-                              className={`flex items-center justify-between gap-3 rounded-2xl px-3 py-2 ${
-                                isSelected ? "bg-white/10" : "bg-zinc-50"
-                              }`}
-                            >
-                              <span className="text-xs font-medium uppercase tracking-[0.14em]">
-                                Смена {shiftIndex + 1}
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="number"
-                                  min="0"
-                                  max="24"
-                                  step="0.5"
-                                  value={shift.hours}
-                                  onClick={(event) => event.stopPropagation()}
-                                  onChange={(event) =>
-                                    updateShiftHours(dateKey, shiftIndex, Number(event.target.value))
-                                  }
-                                  className={`w-16 rounded-xl border px-2 py-1 text-right text-sm font-medium outline-none ${
-                                    isSelected
-                                      ? "border-white/15 bg-white text-zinc-950"
-                                      : "border-zinc-300 bg-white text-zinc-950"
-                                  }`}
-                                />
-                                <span className={`text-xs ${isSelected ? "text-white/70" : "text-zinc-500"}`}>
-                                  ч
-                                </span>
-                              </div>
-                            </label>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="mt-4 text-xs leading-5 text-zinc-500">
-                          Нажми на карточку, чтобы отметить рабочий день и подставить часы из шаблона месяца.
+                      </div>
+                      <div className="mt-4">
+                        <p className={`text-sm font-semibold ${isWorkingDay ? "text-white" : "text-zinc-600"}`}>
+                          {isWorkingDay ? `${getDayHours(value, dateKey)} ч` : "День свободен"}
                         </p>
-                      )}
-                    </div>
+                        <p className={`mt-1 text-[11px] leading-5 ${isWorkingDay ? "text-white/70" : "text-zinc-500"}`}>
+                          {isWorkingDay
+                            ? "Нажми, чтобы изменить часы или поставить выходной."
+                            : "Нажми, чтобы отметить рабочий день."}
+                        </p>
+                      </div>
+                    </button>
                   );
                 })}
               </div>
@@ -472,6 +386,99 @@ export function EmployeeScheduleEditor({ value, onChange }: EmployeeScheduleEdit
           </div>
         </div>
       </div>
+
+      {dayDraft ? (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-zinc-950/35 px-4">
+          <div className="w-full max-w-md rounded-[28px] border border-zinc-200 bg-white p-5 shadow-2xl shadow-zinc-950/20">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500">Дата</p>
+                <h3 className="mt-1 text-lg font-semibold capitalize text-zinc-950">
+                  {formatPopupDate(dayDraft.dateKey)}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDayDraft(null)}
+                className="rounded-full border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+              >
+                Закрыть
+              </button>
+            </div>
+
+            <div className="mt-5 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setDayDraft((prev) => (prev ? { ...prev, isWorkingDay: true } : prev))}
+                  className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${
+                    dayDraft.isWorkingDay
+                      ? "bg-zinc-950 text-white"
+                      : "border border-zinc-300 bg-white text-zinc-950 hover:bg-zinc-50"
+                  }`}
+                >
+                  Рабочий день
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDayDraft((prev) => (prev ? { ...prev, isWorkingDay: false } : prev))}
+                  className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${
+                    !dayDraft.isWorkingDay
+                      ? "bg-zinc-950 text-white"
+                      : "border border-zinc-300 bg-white text-zinc-950 hover:bg-zinc-50"
+                  }`}
+                >
+                  Выходной
+                </button>
+              </div>
+
+              {dayDraft.isWorkingDay ? (
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium text-zinc-900">Рабочие часы</span>
+                  <select
+                    value={dayDraft.hours}
+                    onChange={(event) =>
+                      setDayDraft((prev) =>
+                        prev
+                          ? { ...prev, hours: clampScheduleHours(Number(event.target.value)) }
+                          : prev,
+                      )
+                    }
+                    className="w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm font-medium text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
+                  >
+                    {HOUR_OPTIONS.map((hours) => (
+                      <option key={hours} value={hours}>
+                        {hours} ч
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : (
+                <div className="rounded-2xl bg-zinc-100 px-4 py-3 text-sm leading-6 text-zinc-600">
+                  Этот день будет сохранён как выходной и исчезнет из списка рабочих дней.
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={applyDayDraft}
+                className="flex-1 rounded-2xl bg-zinc-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-zinc-800"
+              >
+                Сохранить день
+              </button>
+              <button
+                type="button"
+                onClick={() => setDayDraft(null)}
+                className="rounded-2xl border border-zinc-300 px-4 py-3 text-sm font-medium text-zinc-950 transition hover:border-zinc-500"
+              >
+                Отмена
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
