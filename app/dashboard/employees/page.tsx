@@ -36,6 +36,7 @@ export default async function EmployeesPage() {
                       <p className="text-sm text-zinc-600">{employee.messenger || "Мессенджер не указан"}</p>
                       <p className="mt-1 text-sm text-zinc-500">{employee.role}</p>
                       <p className="text-sm text-zinc-500">{employee.phone || "Телефон не указан"}</p>
+                      <p className="text-sm text-zinc-500">Часы: {employee.monthlyHours ?? "Не рассчитано"}</p>
                     </div>
                   ))}
                 </div>

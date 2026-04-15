@@ -9,17 +9,7 @@ import {
   updateEmployee,
 } from "@/modules/employees/employees.repository";
 import type { CreateEmployeeInput, UpdateEmployeeInput } from "@/modules/employees/employees.validation";
-import type { Employee, EmployeeAdjustment } from "@/modules/employees/employees.types";
-
-export type EmployeeProfile = Employee & {
-  advancesCents: number;
-  finesCents: number;
-  debtCents: number;
-  kpd: number;
-  ordersThisMonth: number;
-  salaryTodayCents: number;
-  adjustments: EmployeeAdjustment[];
-};
+import type { Employee, EmployeeProfile, EmployeeAdjustment } from "@/modules/employees/employees.types";
 
 export async function fetchEmployees(): Promise<Employee[]> {
   return getAllEmployees();

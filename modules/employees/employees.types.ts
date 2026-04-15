@@ -28,6 +28,16 @@ export type EmployeeAdjustment = {
   createdAt: string;
 };
 
+export type EmployeeProfile = Employee & {
+  advancesCents: number;
+  finesCents: number;
+  debtCents: number;
+  kpd: number;
+  ordersThisMonth: number;
+  salaryTodayCents: number;
+  adjustments: EmployeeAdjustment[];
+};
+
 export type EmployeeSchedule = Record<string, number>; // e.g., { "monday": 8, "tuesday": 8, ... }
 
 export type Employee = {

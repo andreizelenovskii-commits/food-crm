@@ -8,8 +8,8 @@ import {
   type EmployeeAdjustmentType,
 } from "@/modules/employees/employees.types";
 
-export function EmployeeAdjustmentForm({ employeeId }: { employeeId: number }) {
-  const [adjustmentType, setAdjustmentType] = useState<EmployeeAdjustmentType>(EMPLOYEE_ADJUSTMENT_TYPES[0]);
+export function EmployeeAdjustmentForm({ employeeId, defaultType }: { employeeId: number; defaultType?: EmployeeAdjustmentType }) {
+  const [adjustmentType, setAdjustmentType] = useState<EmployeeAdjustmentType>(defaultType || EMPLOYEE_ADJUSTMENT_TYPES[0]);
 
   return (
     <form action={addEmployeeAdjustmentAction} className="space-y-5 rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
