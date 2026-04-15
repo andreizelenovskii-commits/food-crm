@@ -247,12 +247,14 @@ export async function updateEmployee(employeeId: number, input: UpdateEmployeeIn
   if (input.schedule !== undefined) {
     updates.push(`"schedule" = $${paramIndex++}`);
     values.push(input.schedule);
-    // Пересчитать monthlyHours
-    const monthlyHours = input.schedule
-      ? Object.values(input.schedule).reduce((sum, hours) => sum + hours, 0)
-      : null;
-    updates.push(`"monthlyHours" = $${paramIndex++}`);
-    values.push(monthlyHours);
+    if (input.monthlyHours === undefined) {
+      // Пересчитать monthlyHours
+      const monthlyHours = input.schedule
+        ? Object.values(input.schedule).reduce((sum, hours) => sum + hours, 0)
+        : null;
+      updates.push(`"monthlyHours" = $${paramIndex++}`);
+      values.push(monthlyHours);
+    }
   }
   if (input.monthlyHours !== undefined) {
     updates.push(`"monthlyHours" = $${paramIndex++}`);
