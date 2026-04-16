@@ -1,8 +1,11 @@
 import "dotenv/config";
-import { hashPassword } from "../modules/auth/auth.password";
+import { assertStrongPassword, hashPassword } from "../modules/auth/auth.password";
 import { pool } from "../shared/db/pool";
+import { getRequiredEnv } from "../shared/config/env";
 
 async function main() {
+  const adminSeedPassword = getRequiredEnv("ADMIN_SEED_PASSWORD");
+  assertStrongPassword(adminSeedPassword);
   const existingUser = await pool.query<{ id: number }>(
     `
       SELECT "id"
@@ -19,7 +22,7 @@ async function main() {
       INSERT INTO "User" ("email", "password", "role")
       VALUES ($1, $2, $3)
       `,
-      ["admin@example.com", hashPassword("123456"), "admin"],
+      ["admin@example.com", hashPassword(adminSeedPassword, { validateStrength: true }), "admin"],
     );
     console.log("Создан пользователь: admin@example.com");
   }

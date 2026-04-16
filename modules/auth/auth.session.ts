@@ -1,11 +1,12 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { hasPermission, type AuthPermission } from "@/modules/auth/authz";
 import { getRequiredEnv } from "@/shared/config/env";
 import type { SessionUser } from "@/modules/auth/auth.types";
 
 const SESSION_COOKIE_NAME = "food_crm_session";
-const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 7;
+const SESSION_TTL_MS = 1000 * 60 * 60 * 12;
 
 type SessionPayload = {
   userId: number;
@@ -73,7 +74,7 @@ export async function createSession(user: SessionUser) {
     expiresAt,
   }), {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: "strict",
     secure: process.env.NODE_ENV === "production",
     expires: new Date(expiresAt),
     path: "/",
@@ -112,6 +113,19 @@ export async function requireSessionUser() {
 
   if (!user) {
     redirect("/login");
+  }
+
+  return user;
+}
+
+export async function requirePermission(
+  permission: AuthPermission,
+  redirectTo = "/dashboard",
+) {
+  const user = await requireSessionUser();
+
+  if (!hasPermission(user, permission)) {
+    redirect(redirectTo);
   }
 
   return user;

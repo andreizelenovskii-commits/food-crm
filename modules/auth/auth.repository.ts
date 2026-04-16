@@ -17,6 +17,8 @@ type CreateUserInput = {
 export interface AuthUserRepository {
   findByEmail(email: string): Promise<AuthUser | null>;
   create(input: CreateUserInput): Promise<AuthUser>;
+  updatePasswordHash(userId: number, passwordHash: string): Promise<void>;
+  updateUser(userId: number, input: { email: string; role: UserRole; passwordHash?: string }): Promise<void>;
 }
 
 function mapRowToAuthUser(row: UserRow): AuthUser {
@@ -56,6 +58,44 @@ class PgAuthUserRepository implements AuthUserRepository {
     );
 
     return mapRowToAuthUser(result.rows[0]);
+  }
+
+  async updatePasswordHash(userId: number, passwordHash: string) {
+    await pool.query(
+      `
+        UPDATE "User"
+        SET "password" = $2
+        WHERE "id" = $1
+      `,
+      [userId, passwordHash],
+    );
+  }
+
+  async updateUser(
+    userId: number,
+    input: { email: string; role: UserRole; passwordHash?: string },
+  ) {
+    if (input.passwordHash) {
+      await pool.query(
+        `
+          UPDATE "User"
+          SET "email" = $2, "role" = $3, "password" = $4
+          WHERE "id" = $1
+        `,
+        [userId, input.email, input.role, input.passwordHash],
+      );
+
+      return;
+    }
+
+    await pool.query(
+      `
+        UPDATE "User"
+        SET "email" = $2, "role" = $3
+        WHERE "id" = $1
+      `,
+      [userId, input.email, input.role],
+    );
   }
 }
 

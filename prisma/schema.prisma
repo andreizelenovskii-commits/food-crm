@@ -13,6 +13,11 @@ enum OrderStatus {
   CANCELLED
 }
 
+enum ClientType {
+  CLIENT
+  ORGANIZATION
+}
+
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
@@ -24,8 +29,10 @@ model User {
 model Client {
   id        Int      @id @default(autoincrement())
   name      String
+  type      ClientType @default(CLIENT)
   email     String?
-  phone     String
+  phone     String   @unique
+  birthDate DateTime?
   address   String?
   notes     String?
   createdAt DateTime @default(now())

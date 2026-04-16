@@ -1,15 +1,55 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import {
+  AuthenticationError,
+  ValidationError,
+} from "@/shared/errors/app-error";
 import { createSession, clearSession } from "@/modules/auth/auth.session";
 import { authenticateUser } from "@/modules/auth/auth.service";
 import { parseLoginInput } from "@/modules/auth/auth.validation";
 
-export async function loginAction(formData: FormData) {
-  const input = parseLoginInput(formData);
-  const user = await authenticateUser(input);
+function getClientIpAddress(forwardedFor: string | null, realIp: string | null) {
+  if (forwardedFor) {
+    const firstForwardedIp = forwardedFor
+      .split(",")
+      .map((value) => value.trim())
+      .find(Boolean);
 
-  await createSession(user);
+    if (firstForwardedIp) {
+      return firstForwardedIp;
+    }
+  }
+
+  return realIp?.trim() || "unknown";
+}
+
+export async function loginAction(
+  _previousState: { errorMessage: string | null },
+  formData: FormData,
+): Promise<{ errorMessage: string | null }> {
+  try {
+    const input = parseLoginInput(formData);
+    const requestHeaders = await headers();
+    const user = await authenticateUser(input, undefined, {
+      ipAddress: getClientIpAddress(
+        requestHeaders.get("x-forwarded-for"),
+        requestHeaders.get("x-real-ip"),
+      ),
+    });
+
+    await createSession(user);
+  } catch (error) {
+    if (error instanceof ValidationError || error instanceof AuthenticationError) {
+      return {
+        errorMessage: error.message,
+      };
+    }
+
+    throw error;
+  }
+
   redirect("/dashboard");
 }
 

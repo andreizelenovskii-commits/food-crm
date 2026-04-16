@@ -59,6 +59,7 @@ export type Employee = {
   messenger: string | null;
   schedule: EmployeeSchedule | EmployeeScheduleLegacy | null;
   monthlyHours: number | null;
+  ordersCount: number;
   birthDate?: string | null;
   hireDate?: string | null;
   createdAt: string;

@@ -15,6 +15,7 @@ export default async function LoginPage() {
       title="Доступ в систему"
       description="Авторизация вынесена в отдельный модуль: маршрут отвечает только за экран, а не за бизнес-логику."
       align="center"
+      backHref="/"
     >
       <LoginForm />
     </PageShell>

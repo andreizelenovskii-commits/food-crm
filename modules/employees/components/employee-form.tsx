@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { EmployeeDatePicker } from "@/modules/employees/components/employee-date-picker";
 import { EMPLOYEE_ROLES, type EmployeeRole } from "@/modules/employees/employees.types";
 import { addEmployeeAction } from "@/modules/employees/employees.actions";
 
@@ -71,16 +72,17 @@ export function EmployeeForm() {
         />
       </label>
 
-      <label className="block space-y-2">
-        <span className="text-sm font-medium text-zinc-700">График работы (JSON)</span>
-        <textarea
-          name="schedule"
-          placeholder='{"monday": 8, "tuesday": 8, "wednesday": 8, "thursday": 8, "friday": 8}'
-          className="w-full rounded-2xl border border-zinc-300 px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
-          rows={3}
-        />
-        <p className="text-xs text-zinc-500">Необязательно. Укажи график в формате JSON, например дни недели и часы.</p>
-      </label>
+      <EmployeeDatePicker
+        name="hireDate"
+        label="Дата приема на работу"
+        placeholder="Укажи дату выхода"
+      />
+
+      <EmployeeDatePicker
+        name="birthDate"
+        label="Дата рождения"
+        placeholder="Укажи дату рождения"
+      />
 
       <button
         type="submit"

@@ -72,7 +72,8 @@ export type CreateEmployeeInput = {
   role: EmployeeRole;
   phone: string | null;
   messenger: string | null;
-  schedule: EmployeeSchedule | EmployeeScheduleLegacy | null;
+  birthDate: string | null;
+  hireDate: string | null;
 };
 
 export type UpdateEmployeeInput = {
@@ -99,7 +100,8 @@ export function parseCreateEmployeeInput(formData: FormData): CreateEmployeeInpu
   const role = normalizeInput(formData.get("role"));
   const phone = normalizeInput(formData.get("phone"));
   const messenger = normalizeInput(formData.get("messenger"));
-  const scheduleStr = normalizeInput(formData.get("schedule"));
+  const birthDateStr = normalizeInput(formData.get("birthDate"));
+  const hireDateStr = normalizeInput(formData.get("hireDate"));
 
   if (!name || !role) {
     throw new ValidationError("Заполните имя и роль сотрудника");
@@ -117,17 +119,22 @@ export function parseCreateEmployeeInput(formData: FormData): CreateEmployeeInpu
     }
   }
 
-  let schedule: EmployeeSchedule | EmployeeScheduleLegacy | null = null;
-  if (scheduleStr) {
-    try {
-      const parsed = JSON.parse(scheduleStr);
-      schedule = validateSchedule(parsed);
-    } catch (error) {
-      if (error instanceof ValidationError) {
-        throw error;
-      }
-      throw new ValidationError("Некорректный формат графика работы");
+  let birthDate: string | null = null;
+  if (birthDateStr) {
+    const parsed = new Date(`${birthDateStr}T00:00:00`);
+    if (Number.isNaN(parsed.getTime())) {
+      throw new ValidationError("Введите корректную дату рождения");
     }
+    birthDate = birthDateStr;
+  }
+
+  let hireDate: string | null = null;
+  if (hireDateStr) {
+    const parsed = new Date(`${hireDateStr}T00:00:00`);
+    if (Number.isNaN(parsed.getTime())) {
+      throw new ValidationError("Введите корректную дату приема на работу");
+    }
+    hireDate = hireDateStr;
   }
 
   return {
@@ -135,7 +142,8 @@ export function parseCreateEmployeeInput(formData: FormData): CreateEmployeeInpu
     role,
     phone: phone || null,
     messenger: messenger || null,
-    schedule,
+    birthDate,
+    hireDate,
   };
 }
 

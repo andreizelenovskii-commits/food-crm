@@ -1,12 +1,14 @@
 import {
   createEmployee,
   createEmployeeAdjustment,
+  deleteEmployee,
   getAllEmployees,
   getEmployeeById,
   getEmployeeAdjustments,
   getEmployeeAdjustmentTotals,
   getEmployeeOrdersThisMonth,
   getEmployeeOrderMonthlyStats,
+  issueEmployeeAccess,
   updateEmployee,
 } from "@/modules/employees/employees.repository";
 import type { CreateEmployeeInput, UpdateEmployeeInput } from "@/modules/employees/employees.validation";
@@ -22,6 +24,18 @@ export async function addEmployee(input: CreateEmployeeInput): Promise<Employee>
 
 export async function updateEmployeeService(employeeId: number, input: UpdateEmployeeInput): Promise<Employee | null> {
   return updateEmployee(employeeId, input);
+}
+
+export async function deleteEmployeeService(employeeId: number): Promise<boolean> {
+  return deleteEmployee(employeeId);
+}
+
+export async function issueEmployeeAccessService(input: {
+  employeeId: number;
+  email: string;
+  password: string;
+}): Promise<Employee | null> {
+  return issueEmployeeAccess(input);
 }
 
 export async function addEmployeeAdjustment(input: {

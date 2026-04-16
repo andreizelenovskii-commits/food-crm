@@ -243,6 +243,7 @@ function buildContactsDraft(employee: EmployeeProfile): ContactsDraft {
 }
 
 export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile }) {
+  const showOrderMetrics = employee.role === "Повар" || employee.role === "Курьер";
   const initialSchedule = buildEditableSchedule(employee);
   const initialScheduleSerialized = Object.keys(initialSchedule.days).length
     ? JSON.stringify(initialSchedule)
@@ -541,10 +542,12 @@ export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile 
                 <p className="text-sm text-zinc-500">Рабочие дни</p>
                 <p className="mt-3 text-2xl font-semibold text-zinc-950">{scheduleStats.days}</p>
               </div>
-              <div className="rounded-3xl bg-zinc-50 p-4">
-                <p className="text-sm text-zinc-500">Заказы за месяц</p>
-                <p className="mt-3 text-2xl font-semibold text-zinc-950">{selectedMonthOrderStats.ordersCount}</p>
-              </div>
+              {showOrderMetrics ? (
+                <div className="rounded-3xl bg-zinc-50 p-4">
+                  <p className="text-sm text-zinc-500">Заказы за месяц</p>
+                  <p className="mt-3 text-2xl font-semibold text-zinc-950">{selectedMonthOrderStats.ordersCount}</p>
+                </div>
+              ) : null}
             </div>
           </section>
         </div>
@@ -558,15 +561,19 @@ export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile 
               {selectedMonthLabel}
             </p>
           </div>
-          <div className="mt-5 grid gap-4 sm:grid-cols-3">
-            <div className="rounded-3xl bg-zinc-50 p-4">
-              <p className="text-sm text-zinc-500">Заказы за месяц</p>
-              <p className="mt-3 text-2xl font-semibold text-zinc-950">{selectedMonthOrderStats.ordersCount}</p>
-            </div>
-            <div className="rounded-3xl bg-zinc-50 p-4">
-              <p className="text-sm text-zinc-500">Сумма заказов</p>
-              <p className="mt-3 text-2xl font-semibold text-zinc-950">{formatMoney(selectedMonthOrderStats.revenueCents)}</p>
-            </div>
+          <div className={`mt-5 grid gap-4 ${showOrderMetrics ? "sm:grid-cols-3" : "sm:grid-cols-1"}`}>
+            {showOrderMetrics ? (
+              <div className="rounded-3xl bg-zinc-50 p-4">
+                <p className="text-sm text-zinc-500">Заказы за месяц</p>
+                <p className="mt-3 text-2xl font-semibold text-zinc-950">{selectedMonthOrderStats.ordersCount}</p>
+              </div>
+            ) : null}
+            {showOrderMetrics ? (
+              <div className="rounded-3xl bg-zinc-50 p-4">
+                <p className="text-sm text-zinc-500">Сумма заказов</p>
+                <p className="mt-3 text-2xl font-semibold text-zinc-950">{formatMoney(selectedMonthOrderStats.revenueCents)}</p>
+              </div>
+            ) : null}
             <div className="rounded-3xl bg-zinc-50 p-4">
               <p className="text-sm text-zinc-500">График на месяц</p>
               <p className="mt-3 text-2xl font-semibold text-zinc-950">{scheduleStats.days} дн.</p>

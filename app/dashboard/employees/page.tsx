@@ -1,17 +1,75 @@
 import Link from "next/link";
 import { PageShell } from "@/components/ui/page-shell";
+import { hasPermission } from "@/modules/auth/authz";
+import { EmployeeDeleteButton } from "@/modules/employees/components/employee-delete-button";
 import { EmployeeForm } from "@/modules/employees/components/employee-form";
 import { fetchEmployees } from "@/modules/employees/employees.service";
-import { requireSessionUser } from "@/modules/auth/auth.session";
+import { requirePermission } from "@/modules/auth/auth.session";
+import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
 
 export default async function EmployeesPage() {
-  await requireSessionUser();
+  const user = await requirePermission("view_employees");
   const employees = await fetchEmployees();
+
+  const getAgeLabel = (value: string | null | undefined) => {
+    if (!value) {
+      return null;
+    }
+
+    const birthDate = new Date(value);
+
+    if (Number.isNaN(birthDate.getTime())) {
+      return null;
+    }
+
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age -= 1;
+    }
+
+    if (age < 0) {
+      return null;
+    }
+
+    const lastTwoDigits = age % 100;
+    const lastDigit = age % 10;
+
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
+      return `${age} лет`;
+    }
+
+    if (lastDigit === 1) {
+      return `${age} год`;
+    }
+
+    if (lastDigit >= 2 && lastDigit <= 4) {
+      return `${age} года`;
+    }
+
+    return `${age} лет`;
+  };
+
+  const formatDate = (value: string | null | undefined) =>
+    value
+      ? new Intl.DateTimeFormat("ru-RU", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }).format(new Date(value))
+      : "Не указана";
 
   return (
     <PageShell
       title="Сотрудники"
       description="Добавляй новых сотрудников и переходи на их профиль для детальной статистики."
+      backHref="/dashboard"
+      action={<SessionUserActions user={user} />}
     >
       <div className="grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-6">
@@ -25,18 +83,37 @@ export default async function EmployeesPage() {
                   {employees.map((employee) => (
                     <div
                       key={employee.id}
-                      className="rounded-3xl border border-zinc-200 bg-zinc-50 p-4"
+                      className="group relative rounded-3xl border border-zinc-200 bg-zinc-50 p-4 transition hover:border-zinc-300 hover:bg-white"
                     >
                       <Link
                         href={`/dashboard/employees/${employee.id}`}
-                        className="text-base font-semibold text-zinc-950 hover:text-zinc-700"
-                      >
-                        {employee.name}
-                      </Link>
-                      <p className="text-sm text-zinc-600">{employee.messenger || "Мессенджер не указан"}</p>
-                      <p className="mt-1 text-sm text-zinc-500">{employee.role}</p>
-                      <p className="text-sm text-zinc-500">{employee.phone || "Телефон не указан"}</p>
-                      <p className="text-sm text-zinc-500">Часы: {employee.monthlyHours ?? "Не рассчитано"}</p>
+                        aria-label={`Открыть профиль сотрудника ${employee.name}`}
+                        className="absolute inset-0 rounded-3xl"
+                      />
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                          <p className="text-base font-semibold text-zinc-950 transition group-hover:text-zinc-700">
+                            {employee.name}
+                          </p>
+                          <p className="text-sm text-zinc-500">
+                            Дата рождения: {formatDate(employee.birthDate)}
+                            {getAgeLabel(employee.birthDate)
+                              ? ` · ${getAgeLabel(employee.birthDate)}`
+                              : ""}
+                          </p>
+                          <p className="text-sm text-zinc-500">
+                            Телефон: {employee.phone || "Не указан"}
+                          </p>
+                        </div>
+
+                        {hasPermission(user, "manage_employees") ? (
+                          <EmployeeDeleteButton
+                            employeeId={employee.id}
+                            employeeName={employee.name}
+                            disabled={employee.ordersCount > 0}
+                          />
+                        ) : null}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -45,9 +122,11 @@ export default async function EmployeesPage() {
           </section>
         </div>
 
-        <div className="space-y-6">
-          <EmployeeForm />
-        </div>
+        {hasPermission(user, "manage_employees") ? (
+          <div className="space-y-6">
+            <EmployeeForm />
+          </div>
+        ) : null}
       </div>
     </PageShell>
   );
