@@ -28,6 +28,12 @@ export type EmployeeAdjustment = {
   createdAt: string;
 };
 
+export type EmployeeMonthlyOrderStat = {
+  monthKey: string; // YYYY-MM
+  ordersCount: number;
+  revenueCents: number;
+};
+
 export type Shift = {
   hours: number;
 };
@@ -66,4 +72,5 @@ export type EmployeeProfile = Employee & {
   ordersThisMonth: number;
   salaryTodayCents: number;
   adjustments: EmployeeAdjustment[];
+  monthlyOrderStats: EmployeeMonthlyOrderStat[];
 };

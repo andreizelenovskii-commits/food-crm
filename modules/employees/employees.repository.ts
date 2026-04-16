@@ -4,6 +4,7 @@ import type {
   Employee,
   EmployeeAdjustment,
   EmployeeAdjustmentType,
+  EmployeeMonthlyOrderStat,
   EmployeeSchedule,
   EmployeeScheduleLegacy,
 } from "@/modules/employees/employees.types";
@@ -183,6 +184,32 @@ export async function getEmployeeOrdersThisMonth(employeeId: number): Promise<nu
   );
 
   return Number(result.rows[0]?.count ?? 0);
+}
+
+export async function getEmployeeOrderMonthlyStats(employeeId: number): Promise<EmployeeMonthlyOrderStat[]> {
+  const result = await pool.query<{
+    monthKey: string;
+    ordersCount: string;
+    revenueCents: string;
+  }>(
+    `
+      SELECT
+        TO_CHAR(date_trunc('month', "createdAt"), 'YYYY-MM') AS "monthKey",
+        COUNT(*) AS "ordersCount",
+        COALESCE(SUM("totalCents"), 0) AS "revenueCents"
+      FROM "Order"
+      WHERE "employeeId" = $1
+      GROUP BY date_trunc('month', "createdAt")
+      ORDER BY date_trunc('month', "createdAt") DESC
+    `,
+    [employeeId],
+  );
+
+  return result.rows.map((row) => ({
+    monthKey: row.monthKey,
+    ordersCount: Number(row.ordersCount ?? 0),
+    revenueCents: Number(row.revenueCents ?? 0),
+  }));
 }
 
 export async function createEmployeeAdjustment(input: {

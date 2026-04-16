@@ -320,7 +320,7 @@ export function EmployeeScheduleEditor({ value, onChange }: EmployeeScheduleEdit
           </div>
 
           <div className="overflow-x-auto">
-            <div className="min-w-[44rem]">
+            <div className="min-w-[20rem] sm:min-w-[34rem] lg:min-w-[40rem]">
               <div className="grid grid-cols-7 gap-2">
                 {CALENDAR_WEEKDAYS.map((weekday) => (
                   <div

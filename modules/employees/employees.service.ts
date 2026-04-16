@@ -6,6 +6,7 @@ import {
   getEmployeeAdjustments,
   getEmployeeAdjustmentTotals,
   getEmployeeOrdersThisMonth,
+  getEmployeeOrderMonthlyStats,
   updateEmployee,
 } from "@/modules/employees/employees.repository";
 import type { CreateEmployeeInput, UpdateEmployeeInput } from "@/modules/employees/employees.validation";
@@ -45,6 +46,7 @@ export async function fetchEmployeeById(
   const totals = await getEmployeeAdjustmentTotals(employeeId);
   const adjustments = await getEmployeeAdjustments(employeeId);
   const ordersThisMonth = await getEmployeeOrdersThisMonth(employeeId);
+  const monthlyOrderStats = await getEmployeeOrderMonthlyStats(employeeId);
 
   return {
     ...employee,
@@ -55,5 +57,6 @@ export async function fetchEmployeeById(
     ordersThisMonth,
     salaryTodayCents: 0,
     adjustments,
+    monthlyOrderStats,
   };
 }

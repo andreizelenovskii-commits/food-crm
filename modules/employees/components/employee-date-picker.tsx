@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 
 const MONTH_NAMES = [
   "Январь",
@@ -21,6 +21,8 @@ type EmployeeDatePickerProps = {
   name: string;
   label: string;
   defaultValue?: string;
+  value?: string;
+  onChange?: (value: string) => void;
   placeholder?: string;
 };
 
@@ -45,22 +47,18 @@ export function EmployeeDatePicker({
   name,
   label,
   defaultValue = "",
+  value: controlledValue,
+  onChange,
   placeholder = "Выберите дату",
 }: EmployeeDatePickerProps) {
-  const [value, setValue] = useState(defaultValue);
-  const [draftValue, setDraftValue] = useState(defaultValue);
+  const isControlled = controlledValue !== undefined;
+  const [internalValue, setInternalValue] = useState(defaultValue);
+  const value = isControlled ? controlledValue ?? "" : internalValue;
+  const [draftValue, setDraftValue] = useState(value);
   const [pickerOpen, setPickerOpen] = useState(false);
-
-  useEffect(() => {
-    setValue(defaultValue);
-    setDraftValue(defaultValue);
-  }, [defaultValue]);
-
-  const parsedDate = useMemo(() => {
-    const raw = pickerOpen ? draftValue || defaultValue : value || defaultValue;
-    const parsed = raw ? new Date(raw) : new Date();
-    return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
-  }, [draftValue, pickerOpen, value, defaultValue]);
+  const raw = pickerOpen ? draftValue || value : value || defaultValue;
+  const parsed = raw ? new Date(raw) : new Date();
+  const parsedDate = Number.isNaN(parsed.getTime()) ? new Date() : parsed;
 
   const selectedDay = parsedDate.getDate();
   const selectedMonth = parsedDate.getMonth();
@@ -68,11 +66,8 @@ export function EmployeeDatePicker({
   const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
   const currentYear = new Date().getFullYear();
 
-  const days = useMemo(() => Array.from({ length: daysInMonth }, (_, index) => index + 1), [daysInMonth]);
-  const years = useMemo(
-    () => Array.from({ length: currentYear - 1926 + 1 }, (_, index) => 1926 + index),
-    [currentYear],
-  );
+  const days = Array.from({ length: daysInMonth }, (_, index) => index + 1);
+  const years = Array.from({ length: currentYear - 1926 + 1 }, (_, index) => 1926 + index);
 
   const setDateValue = (day: number, month: number, year: number) => {
     const nextDay = Math.min(day, new Date(year, month + 1, 0).getDate());
@@ -88,17 +83,29 @@ export function EmployeeDatePicker({
     const today = new Date();
     const iso = formatISODate(today);
     setDraftValue(iso);
-    setValue(iso);
+    if (isControlled) {
+      onChange?.(iso);
+    } else {
+      setInternalValue(iso);
+    }
     setPickerOpen(false);
   };
 
   const saveDate = () => {
-    setValue(draftValue);
+    if (isControlled) {
+      onChange?.(draftValue);
+    } else {
+      setInternalValue(draftValue);
+    }
     setPickerOpen(false);
   };
 
   const clearDate = () => {
-    setValue("");
+    if (isControlled) {
+      onChange?.("");
+    } else {
+      setInternalValue("");
+    }
     setDraftValue("");
     setPickerOpen(false);
   };
@@ -110,7 +117,7 @@ export function EmployeeDatePicker({
         <button
           type="button"
           onClick={() => {
-            setDraftValue(value);
+            setDraftValue(isControlled ? controlledValue ?? "" : internalValue);
             setPickerOpen(true);
           }}
           onDoubleClick={clearDate}

@@ -1,13 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { updateEmployeeAction } from "@/modules/employees/employees.actions";
 import { EmployeeAdjustmentForm } from "@/modules/employees/components/employee-adjustment-form";
 import { EmployeeDatePicker } from "@/modules/employees/components/employee-date-picker";
 import { EmployeeScheduleEditor } from "@/modules/employees/components/employee-schedule-editor";
 import {
+  CALENDAR_WEEKDAYS,
+  formatHours,
+  formatScheduleDateKey,
   formatScheduleSummary,
+  getCalendarGridDays,
   normalizeEmployeeSchedule,
+  parseScheduleDateKey,
 } from "@/modules/employees/employees.schedule";
 import {
   EMPLOYEE_ADJUSTMENT_LABELS,
@@ -41,26 +46,241 @@ function buildEditableSchedule(employee: EmployeeProfile): EmployeeSchedule {
   return normalizeEmployeeSchedule(employee.schedule);
 }
 
+function getInitialPreviewMonth(schedule: EmployeeSchedule) {
+  const firstDateKey = Object.keys(schedule.days).sort()[0];
+
+  if (!firstDateKey) {
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth(), 1);
+  }
+
+  const firstDate = parseScheduleDateKey(firstDateKey);
+  return new Date(firstDate.getFullYear(), firstDate.getMonth(), 1);
+}
+
+function formatMonthLabel(value: Date) {
+  return new Intl.DateTimeFormat("ru-RU", {
+    month: "long",
+    year: "numeric",
+  })
+    .format(value)
+    .replace(/\s*г\.?$/, "");
+}
+
+function getMonthKey(value: Date) {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  return `${year}-${month}`;
+}
+
+function isDateInMonth(dateValue: string, month: Date) {
+  const date = new Date(dateValue);
+
+  if (Number.isNaN(date.getTime())) {
+    return false;
+  }
+
+  return date.getFullYear() === month.getFullYear() && date.getMonth() === month.getMonth();
+}
+
+function getMonthPreviewStats(schedule: EmployeeSchedule, month: Date) {
+  const year = month.getFullYear();
+  const monthIndex = month.getMonth();
+
+  return Object.entries(schedule.days).reduce(
+    (acc, [dateKey, day]) => {
+      const date = parseScheduleDateKey(dateKey);
+
+      if (date.getFullYear() !== year || date.getMonth() !== monthIndex) {
+        return acc;
+      }
+
+      return {
+        days: acc.days + 1,
+        hours: acc.hours + day.shifts.reduce((sum, shift) => sum + shift.hours, 0),
+      };
+    },
+    { days: 0, hours: 0 },
+  );
+}
+
+function EmployeeSchedulePreview({
+  schedule,
+  currentMonth,
+  onMonthChange,
+  onEdit,
+}: {
+  schedule: EmployeeSchedule;
+  currentMonth: Date;
+  onMonthChange: (month: Date) => void;
+  onEdit: () => void;
+}) {
+  const calendarDays = getCalendarGridDays(currentMonth);
+  const monthTitle = formatMonthLabel(currentMonth);
+  const monthScheduleStats = getMonthPreviewStats(schedule, currentMonth);
+
+  return (
+    <section className="rounded-[30px] border border-zinc-200 bg-white/90 p-5 shadow-sm shadow-zinc-950/5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-1">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">График работы</p>
+          <h2 className="text-lg font-semibold text-zinc-950">Календарь смен</h2>
+          <p className="text-xs leading-5 text-zinc-600 sm:text-sm">
+            Рабочие дни подсвечены. Для изменения графика открой полный календарь.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onEdit}
+          className="rounded-full border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 transition hover:border-zinc-500 hover:bg-zinc-50 sm:text-sm"
+        >
+          Изменить
+        </button>
+      </div>
+
+      <div className="mt-4 max-w-[19.5rem] rounded-[28px] bg-[linear-gradient(180deg,#fffdf8_0%,#f4efe5_100%)] p-3 shadow-inner shadow-white/60 ring-1 ring-zinc-200/80 sm:max-w-[21rem]">
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() =>
+              onMonthChange(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))
+            }
+            className="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-sm text-zinc-700 ring-1 ring-zinc-200 transition hover:bg-white hover:ring-zinc-300"
+          >
+            ←
+          </button>
+          <div className="rounded-full bg-white/80 px-3 py-1 text-[11px] font-semibold capitalize text-zinc-900 ring-1 ring-zinc-200/80">
+            {monthTitle}
+          </div>
+          <button
+            type="button"
+            onClick={() =>
+              onMonthChange(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))
+            }
+            className="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-sm text-zinc-700 ring-1 ring-zinc-200 transition hover:bg-white hover:ring-zinc-300"
+          >
+            →
+          </button>
+        </div>
+
+        <div className="mt-3 rounded-[22px] bg-white/80 p-2 ring-1 ring-white/70">
+          <div className="grid grid-cols-7 gap-1">
+            {CALENDAR_WEEKDAYS.map((weekday) => (
+              <div
+                key={weekday}
+                className="py-1 text-center text-[8px] font-semibold uppercase tracking-[0.14em] text-zinc-400"
+              >
+                {weekday}
+              </div>
+            ))}
+
+            {calendarDays.map((day, index) => {
+              if (!day) {
+                return <div key={`empty-${index}`} className="h-8 rounded-full" />;
+              }
+
+              const dateKey = formatScheduleDateKey(day);
+              const daySchedule = schedule.days[dateKey];
+              const isWorkingDay = Boolean(daySchedule);
+              const totalHours = daySchedule?.shifts.reduce((sum, shift) => sum + shift.hours, 0) ?? 0;
+              const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+
+              return (
+                <button
+                  key={dateKey}
+                  type="button"
+                  onClick={onEdit}
+                  title={isWorkingDay ? `${day.getDate()} • ${totalHours} ч` : `${day.getDate()} • Выходной`}
+                  className={`flex h-8 items-center justify-center rounded-full text-[11px] font-semibold transition ${
+                    isWorkingDay
+                      ? "bg-emerald-600 text-white shadow-sm shadow-emerald-700/20"
+                      : isWeekend
+                        ? "text-zinc-350 bg-zinc-100/70 text-zinc-400"
+                        : "bg-transparent text-zinc-700 hover:bg-white"
+                  }`}
+                >
+                  {day.getDate()}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="mt-3 flex items-center justify-between gap-3 rounded-full bg-white/70 px-3 py-2 text-[11px] text-zinc-600 ring-1 ring-zinc-200/70">
+          <div className="flex items-center gap-2">
+            <span className="h-2.5 w-2.5 rounded-full bg-emerald-600" />
+            <span>Рабочий день</span>
+          </div>
+          <span className="font-medium text-zinc-800">
+            {monthScheduleStats.days} дн. • {formatHours(monthScheduleStats.hours)} ч
+          </span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 type Tab = 'general' | 'advances' | 'fines' | 'debts';
+
+type ContactsDraft = {
+  name: string;
+  role: EmployeeProfile["role"];
+  phone: string;
+  messenger: string;
+  birthDate: string;
+  hireDate: string;
+};
+
+function buildContactsDraft(employee: EmployeeProfile): ContactsDraft {
+  return {
+    name: employee.name,
+    role: employee.role,
+    phone: employee.phone ?? "",
+    messenger: employee.messenger ?? "",
+    birthDate: employee.birthDate ? employee.birthDate.slice(0, 10) : "",
+    hireDate: employee.hireDate ? employee.hireDate.slice(0, 10) : "",
+  };
+}
 
 export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile }) {
   const initialSchedule = buildEditableSchedule(employee);
   const initialScheduleSerialized = Object.keys(initialSchedule.days).length
     ? JSON.stringify(initialSchedule)
     : "";
+  const initialContactsDraft = buildContactsDraft(employee);
   const [activeTab, setActiveTab] = useState<Tab>('general');
   const [schedule, setSchedule] = useState<EmployeeSchedule>(() => buildEditableSchedule(employee));
+  const [selectedMonth, setSelectedMonth] = useState(() => getInitialPreviewMonth(initialSchedule));
   const [isEditingContacts, setIsEditingContacts] = useState(false);
-  const [selectedRole, setSelectedRole] = useState(employee.role);
+  const [isScheduleEditorOpen, setIsScheduleEditorOpen] = useState(false);
+  const [contactsDraft, setContactsDraft] = useState<ContactsDraft>(initialContactsDraft);
   const [rolePickerOpen, setRolePickerOpen] = useState(false);
 
-  const resetContactsDraft = () => {
-    setSelectedRole(employee.role);
-    setRolePickerOpen(false);
-    setSchedule(buildEditableSchedule(employee));
-  };
+  useEffect(() => {
+    setContactsDraft(buildContactsDraft(employee));
+  }, [employee]);
 
   const scheduleSummary = formatScheduleSummary(schedule);
+  const scheduleStats = getMonthPreviewStats(schedule, selectedMonth);
+  const selectedMonthKey = getMonthKey(selectedMonth);
+  const selectedMonthLabel = formatMonthLabel(selectedMonth);
+  const selectedMonthAdjustments = employee.adjustments.filter((adjustment) =>
+    isDateInMonth(adjustment.createdAt, selectedMonth),
+  );
+  const selectedMonthAdjustmentTotals = selectedMonthAdjustments.reduce(
+    (acc, adjustment) => ({
+      ...acc,
+      [adjustment.type]: acc[adjustment.type] + adjustment.amountCents,
+    }),
+    {
+      ADVANCE: 0,
+      FINE: 0,
+      DEBT: 0,
+    } as Record<"ADVANCE" | "FINE" | "DEBT", number>,
+  );
+  const selectedMonthOrderStats =
+    employee.monthlyOrderStats.find((entry) => entry.monthKey === selectedMonthKey) ??
+    { monthKey: selectedMonthKey, ordersCount: 0, revenueCents: 0 };
   const serializedSchedule = Object.keys(schedule.days).length ? JSON.stringify(schedule) : "";
   const hasUnsavedScheduleChanges = serializedSchedule !== initialScheduleSerialized;
 
@@ -70,6 +290,7 @@ export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile 
   };
 
   const handleSaveSchedule = async () => {
+    setIsScheduleEditorOpen(false);
     const formData = new FormData();
     formData.set("schedule", serializedSchedule);
     await updateEmployeeAction(employee.id, formData);
@@ -82,7 +303,7 @@ export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile 
     { id: 'debts' as Tab, label: 'Долги' },
   ];
 
-  const filteredAdjustments = employee.adjustments.filter((adj: EmployeeAdjustment) => {
+  const filteredAdjustments = selectedMonthAdjustments.filter((adj: EmployeeAdjustment) => {
     switch (activeTab) {
       case 'advances': return adj.type === 'ADVANCE';
       case 'fines': return adj.type === 'FINE';
@@ -120,10 +341,7 @@ export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile 
                 {!isEditingContacts && (
                   <button
                     type="button"
-                    onClick={() => {
-                      resetContactsDraft();
-                      setIsEditingContacts(true);
-                    }}
+                    onClick={() => setIsEditingContacts(true)}
                     className="rounded-2xl bg-zinc-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800"
                   >
                     Изменить данные
@@ -141,7 +359,10 @@ export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile 
                     <input
                       name="name"
                       type="text"
-                      defaultValue={employee.name}
+                      value={contactsDraft.name}
+                      onChange={(event) =>
+                        setContactsDraft((prev) => ({ ...prev, name: event.target.value }))
+                      }
                       className="w-full rounded-2xl border border-zinc-300 px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
                     />
                   </label>
@@ -154,7 +375,7 @@ export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile 
                         onClick={() => setRolePickerOpen((open) => !open)}
                         className="w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-left text-zinc-950 transition hover:border-zinc-500 focus:border-zinc-500 focus:outline-none"
                       >
-                        <span className="block text-sm font-medium text-zinc-900">{selectedRole}</span>
+                        <span className="block text-sm font-medium text-zinc-900">{contactsDraft.role}</span>
                         <span className="text-xs text-zinc-500">Нажмите, чтобы выбрать</span>
                       </button>
 
@@ -168,11 +389,11 @@ export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile 
                                   key={role}
                                   type="button"
                                   onClick={() => {
-                                    setSelectedRole(role);
+                                    setContactsDraft((prev) => ({ ...prev, role }));
                                     setRolePickerOpen(false);
                                   }}
                                   className={`mb-2 flex w-full items-center justify-center rounded-2xl px-3 py-2 text-sm transition ${
-                                    role === selectedRole
+                                    role === contactsDraft.role
                                       ? 'bg-zinc-950 text-white'
                                       : 'bg-white text-zinc-950 hover:bg-zinc-100'
                                   }`}
@@ -185,7 +406,7 @@ export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile 
                         </div>
                       )}
                     </div>
-                    <input type="hidden" name="role" value={selectedRole} />
+                    <input type="hidden" name="role" value={contactsDraft.role} />
                   </label>
 
                   <label className="block space-y-2">
@@ -193,7 +414,10 @@ export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile 
                     <input
                       name="phone"
                       type="tel"
-                      defaultValue={employee.phone ?? ""}
+                      value={contactsDraft.phone}
+                      onChange={(event) =>
+                        setContactsDraft((prev) => ({ ...prev, phone: event.target.value }))
+                      }
                       placeholder="+7 900 123 45 67"
                       className="w-full rounded-2xl border border-zinc-300 px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
                     />
@@ -204,7 +428,10 @@ export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile 
                     <input
                       name="messenger"
                       type="url"
-                      defaultValue={employee.messenger ?? ""}
+                      value={contactsDraft.messenger}
+                      onChange={(event) =>
+                        setContactsDraft((prev) => ({ ...prev, messenger: event.target.value }))
+                      }
                       placeholder="https://t.me/ivan или https://wa.me/79991234567"
                       className="w-full rounded-2xl border border-zinc-300 px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
                     />
@@ -213,13 +440,15 @@ export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile 
                   <EmployeeDatePicker
                     name="birthDate"
                     label="Дата рождения"
-                    defaultValue={employee.birthDate ? employee.birthDate.slice(0, 10) : ""}
+                    value={contactsDraft.birthDate}
+                    onChange={(value) => setContactsDraft((prev) => ({ ...prev, birthDate: value }))}
                   />
 
                   <EmployeeDatePicker
                     name="hireDate"
                     label="Дата приема на работу"
-                    defaultValue={employee.hireDate ? employee.hireDate.slice(0, 10) : ""}
+                    value={contactsDraft.hireDate}
+                    onChange={(value) => setContactsDraft((prev) => ({ ...prev, hireDate: value }))}
                   />
 
                   <input type="hidden" name="schedule" value={serializedSchedule} />
@@ -234,7 +463,7 @@ export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile 
                     <button
                       type="button"
                       onClick={() => {
-                        resetContactsDraft();
+                        setRolePickerOpen(false);
                         setIsEditingContacts(false);
                       }}
                       className="rounded-2xl border border-zinc-300 px-4 py-3 text-sm font-medium text-zinc-950 transition hover:border-zinc-500"
@@ -276,62 +505,45 @@ export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile 
               )}
             </section>
 
-            <section className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
-              <div className="space-y-1">
-                <h2 className="text-xl font-semibold text-zinc-950">График работы</h2>
-                <p className="text-sm text-zinc-600">
-                  {scheduleSummary}
-                </p>
-              </div>
-              <div className="mt-5">
-                <EmployeeScheduleEditor
-                  value={schedule}
-                  onChange={setSchedule}
-                />
-              </div>
-              <div className="mt-4 flex gap-2">
-                <button
-                  type="button"
-                  onClick={handleSaveSchedule}
-                  disabled={!hasUnsavedScheduleChanges}
-                  className="rounded-2xl bg-zinc-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-300"
-                >
-                  Сохранить график
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSchedule(buildEditableSchedule(employee))}
-                  disabled={!hasUnsavedScheduleChanges}
-                  className="rounded-2xl border border-zinc-300 px-4 py-3 text-sm font-medium text-zinc-950 transition hover:border-zinc-500 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:text-zinc-400"
-                >
-                  Сбросить
-                </button>
-              </div>
-            </section>
+            <EmployeeSchedulePreview
+              schedule={schedule}
+              currentMonth={selectedMonth}
+              onMonthChange={setSelectedMonth}
+              onEdit={() => setIsScheduleEditorOpen(true)}
+            />
           </div>
 
           <section className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
-            <h2 className="text-xl font-semibold text-zinc-950">Показатели</h2>
+            <div className="flex items-start justify-between gap-3">
+              <h2 className="text-xl font-semibold text-zinc-950">Показатели</h2>
+              <p className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium capitalize text-zinc-700">
+                {selectedMonthLabel}
+              </p>
+            </div>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               <div className="rounded-3xl bg-zinc-50 p-4">
                 <p className="text-sm text-zinc-500">Авансы за месяц</p>
-                <p className="mt-3 text-2xl font-semibold text-zinc-950">{formatMoney(employee.advancesCents)}</p>
+                <p className="mt-3 text-2xl font-semibold text-zinc-950">{formatMoney(selectedMonthAdjustmentTotals.ADVANCE)}</p>
               </div>
               <div className="rounded-3xl bg-zinc-50 p-4">
                 <p className="text-sm text-zinc-500">Штрафы</p>
-                <p className="mt-3 text-2xl font-semibold text-zinc-950">{formatMoney(employee.finesCents)}</p>
+                <p className="mt-3 text-2xl font-semibold text-zinc-950">{formatMoney(selectedMonthAdjustmentTotals.FINE)}</p>
               </div>
               <div className="rounded-3xl bg-zinc-50 p-4">
                 <p className="text-sm text-zinc-500">Долги</p>
-                <p className="mt-3 text-2xl font-semibold text-zinc-950">{formatMoney(employee.debtCents)}</p>
+                <p className="mt-3 text-2xl font-semibold text-zinc-950">{formatMoney(selectedMonthAdjustmentTotals.DEBT)}</p>
               </div>
               <div className="rounded-3xl bg-zinc-50 p-4">
-                <p className="text-sm text-zinc-500">Часы работы</p>
-                <p className="mt-3 text-2xl font-semibold text-zinc-950">{employee.monthlyHours ?? "Не рассчитано"}</p>
+                <p className="text-sm text-zinc-500">Рабочие часы</p>
+                <p className="mt-3 text-2xl font-semibold text-zinc-950">{formatHours(scheduleStats.hours)}</p>
               </div>
               <div className="rounded-3xl bg-zinc-50 p-4">
-                <p className="text-sm text-zinc-500">КПД</p>
-                <p className="mt-3 text-2xl font-semibold text-zinc-950">{employee.kpd}%</p>
+                <p className="text-sm text-zinc-500">Рабочие дни</p>
+                <p className="mt-3 text-2xl font-semibold text-zinc-950">{scheduleStats.days}</p>
+              </div>
+              <div className="rounded-3xl bg-zinc-50 p-4">
+                <p className="text-sm text-zinc-500">Заказы за месяц</p>
+                <p className="mt-3 text-2xl font-semibold text-zinc-950">{selectedMonthOrderStats.ordersCount}</p>
               </div>
             </div>
           </section>
@@ -340,19 +552,29 @@ export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile 
 
       {activeTab === 'general' && (
         <section className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
-          <h2 className="text-xl font-semibold text-zinc-950">Рабочие результаты</h2>
+          <div className="flex items-start justify-between gap-3">
+            <h2 className="text-xl font-semibold text-zinc-950">Рабочие результаты</h2>
+            <p className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium capitalize text-zinc-700">
+              {selectedMonthLabel}
+            </p>
+          </div>
           <div className="mt-5 grid gap-4 sm:grid-cols-3">
             <div className="rounded-3xl bg-zinc-50 p-4">
               <p className="text-sm text-zinc-500">Заказы за месяц</p>
-              <p className="mt-3 text-2xl font-semibold text-zinc-950">{employee.ordersThisMonth}</p>
+              <p className="mt-3 text-2xl font-semibold text-zinc-950">{selectedMonthOrderStats.ordersCount}</p>
             </div>
             <div className="rounded-3xl bg-zinc-50 p-4">
-              <p className="text-sm text-zinc-500">Зарплата на сегодня</p>
-              <p className="mt-3 text-2xl font-semibold text-zinc-950">{formatMoney(employee.salaryTodayCents)}</p>
+              <p className="text-sm text-zinc-500">Сумма заказов</p>
+              <p className="mt-3 text-2xl font-semibold text-zinc-950">{formatMoney(selectedMonthOrderStats.revenueCents)}</p>
+            </div>
+            <div className="rounded-3xl bg-zinc-50 p-4">
+              <p className="text-sm text-zinc-500">График на месяц</p>
+              <p className="mt-3 text-2xl font-semibold text-zinc-950">{scheduleStats.days} дн.</p>
+              <p className="mt-1 text-sm text-zinc-500">{formatHours(scheduleStats.hours)} ч</p>
             </div>
           </div>
           <p className="mt-6 text-sm text-zinc-600">
-            Показатели пока считаются как заглушка. Логику расчёта можно подключить позже.
+            Показатели на экране синхронизированы с месяцем, который выбран в календаре сотрудника.
           </p>
         </section>
       )}
@@ -363,9 +585,10 @@ export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile 
             <h2 className="text-xl font-semibold text-zinc-950">
               {tabs.find(t => t.id === activeTab)?.label}
             </h2>
+            <p className="mt-1 text-sm capitalize text-zinc-500">{selectedMonthLabel}</p>
             <div className="mt-5 space-y-4">
               {filteredAdjustments.length === 0 ? (
-                <p className="text-sm text-zinc-600">Пока нет записей.</p>
+                <p className="text-sm text-zinc-600">За выбранный месяц записей пока нет.</p>
               ) : (
                 <div className="space-y-4">
                   {filteredAdjustments.map((adjustment: EmployeeAdjustment) => (
@@ -391,6 +614,61 @@ export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile 
           </div>
         </div>
       )}
+
+      {isScheduleEditorOpen ? (
+        <div
+          className="fixed inset-0 z-40 flex items-center justify-center bg-zinc-950/45 px-4 py-6"
+          onClick={() => setIsScheduleEditorOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Редактирование графика работы"
+            className="flex max-h-[calc(100vh-3rem)] w-full max-w-6xl flex-col overflow-hidden rounded-[32px] border border-zinc-200 bg-white shadow-2xl shadow-zinc-950/25"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-zinc-200 px-6 py-5">
+              <div className="space-y-1">
+                <h2 className="text-xl font-semibold text-zinc-950">График работы</h2>
+                <p className="text-sm text-zinc-600">{scheduleSummary}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsScheduleEditorOpen(false)}
+                className="rounded-full border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+              >
+                Закрыть
+              </button>
+            </div>
+
+            <div className="overflow-y-auto px-6 py-5">
+              <EmployeeScheduleEditor
+                value={schedule}
+                onChange={setSchedule}
+              />
+            </div>
+
+            <div className="flex flex-wrap justify-end gap-2 border-t border-zinc-200 px-6 py-4">
+              <button
+                type="button"
+                onClick={() => setSchedule(buildEditableSchedule(employee))}
+                disabled={!hasUnsavedScheduleChanges}
+                className="rounded-2xl border border-zinc-300 px-4 py-3 text-sm font-medium text-zinc-950 transition hover:border-zinc-500 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:text-zinc-400"
+              >
+                Сбросить
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveSchedule}
+                disabled={!hasUnsavedScheduleChanges}
+                className="rounded-2xl bg-zinc-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-300"
+              >
+                Сохранить график
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
