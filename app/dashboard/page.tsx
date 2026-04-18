@@ -57,6 +57,13 @@ export default async function DashboardPage(props: {
       visible: hasPermission(user, "view_clients"),
     },
     {
+      href: "/dashboard/inventory",
+      label: "Склад",
+      value: dashboard.entityCounts.products,
+      description: "Товары и остатки",
+      visible: hasPermission(user, "view_inventory"),
+    },
+    {
       href: "/dashboard/employees",
       label: "Сотрудники",
       value: dashboard.entityCounts.employees,
@@ -85,6 +92,13 @@ export default async function DashboardPage(props: {
           label: "Клиентская база",
           value: new Intl.NumberFormat("ru-RU").format(dashboard.entityCounts.clients),
           hint: "Клиенты и организации в базе",
+        }
+      : null,
+    hasPermission(user, "view_inventory")
+      ? {
+          label: "Складские позиции",
+          value: new Intl.NumberFormat("ru-RU").format(dashboard.entityCounts.products),
+          hint: "Товары, доступные для продажи",
         }
       : null,
     hasPermission(user, "view_employees")

@@ -44,6 +44,7 @@ model Product {
   name        String
   sku         String?  @unique
   unit        String
+  stockQuantity Int    @default(0)
   priceCents  Int
   description String?
   createdAt   DateTime @default(now())
