@@ -6,6 +6,21 @@ import { SessionUserActions } from "@/modules/auth/components/session-user-actio
 import { ProductDeleteButton } from "@/modules/inventory/components/product-delete-button";
 import { ProductForm } from "@/modules/inventory/components/product-form";
 import { fetchProducts } from "@/modules/inventory/inventory.service";
+import { TechCardForm } from "@/modules/tech-cards/components/tech-card-form";
+import {
+  fetchTechCardProductOptions,
+  fetchTechCards,
+} from "@/modules/tech-cards/tech-cards.service";
+
+const INVENTORY_TABS = [
+  { key: "products", label: "Товары" },
+  { key: "incoming", label: "Поступление товара" },
+  { key: "writeoff", label: "Списание товара" },
+  { key: "audit", label: "Инвентаризация" },
+  { key: "recipes", label: "Технологические карты" },
+] as const;
+
+type InventoryTab = (typeof INVENTORY_TABS)[number]["key"];
 
 function formatMoney(cents: number) {
   return new Intl.NumberFormat("ru-RU", {
@@ -16,13 +31,21 @@ function formatMoney(cents: number) {
 }
 
 export default async function InventoryPage(props: {
-  searchParams?: Promise<{ q?: string }>;
+  searchParams?: Promise<{ q?: string; tab?: string }>;
 }) {
   const user = await requirePermission("view_inventory");
   const searchParams = await props.searchParams;
-  const products = await fetchProducts();
+  const [products, techCards, techCardProducts] = await Promise.all([
+    fetchProducts(),
+    fetchTechCards(),
+    fetchTechCardProductOptions(),
+  ]);
   const rawQuery = searchParams?.q?.trim() ?? "";
   const normalizedQuery = rawQuery.toLowerCase();
+  const rawTab = searchParams?.tab?.trim() ?? "products";
+  const activeTab: InventoryTab = INVENTORY_TABS.some((tab) => tab.key === rawTab)
+    ? (rawTab as InventoryTab)
+    : "products";
   const totalStock = products.reduce((sum, product) => sum + product.stockQuantity, 0);
   const totalValueCents = products.reduce(
     (sum, product) => sum + product.stockQuantity * product.priceCents,
@@ -50,6 +73,30 @@ export default async function InventoryPage(props: {
       backHref="/dashboard"
       action={<SessionUserActions user={user} />}
     >
+      <section className="mb-6 rounded-3xl border border-zinc-200 bg-white/90 p-3 shadow-sm shadow-zinc-950/5">
+        <div className="grid gap-2 md:grid-cols-5">
+          {INVENTORY_TABS.map((tab) => {
+            const isActive = activeTab === tab.key;
+
+            return (
+              <Link
+                key={tab.key}
+                href={tab.key === "products" ? "/dashboard/inventory" : `/dashboard/inventory?tab=${tab.key}`}
+                className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${
+                  isActive
+                    ? "bg-zinc-950 shadow-sm shadow-zinc-950/10"
+                    : "bg-white text-zinc-950 ring-1 ring-zinc-200 hover:bg-zinc-100 hover:text-black hover:ring-zinc-300"
+                }`}
+                style={isActive ? { color: "#ffffff" } : { color: "#09090b" }}
+              >
+                {tab.label}
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      {activeTab === "products" ? (
       <div className="grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-6">
           <section className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
@@ -243,6 +290,265 @@ export default async function InventoryPage(props: {
           </div>
         ) : null}
       </div>
+      ) : null}
+
+      {activeTab === "incoming" ? (
+        <div className="grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
+          <div className="space-y-6">
+            <section className="rounded-3xl border border-zinc-200 bg-[linear-gradient(180deg,#fffdfa_0%,#eef6ea_100%)] p-6 shadow-sm shadow-zinc-950/5">
+              <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">
+                Поступление товара
+              </p>
+              <h2 className="mt-2 text-xl font-semibold text-zinc-950">
+                Приход на склад
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-zinc-600">
+                Здесь будем фиксировать новые поставки и увеличение остатков по товарам.
+              </p>
+
+              <div className="mt-5 grid gap-4 md:grid-cols-3">
+                <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
+                  <p className="text-sm font-medium text-zinc-500">Поставщиков</p>
+                  <p className="mt-3 text-3xl font-semibold text-zinc-950">0</p>
+                </div>
+                <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
+                  <p className="text-sm font-medium text-zinc-500">Приходов сегодня</p>
+                  <p className="mt-3 text-3xl font-semibold text-zinc-950">0</p>
+                </div>
+                <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
+                  <p className="text-sm font-medium text-zinc-500">Новые единицы</p>
+                  <p className="mt-3 text-3xl font-semibold text-zinc-950">0</p>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+              <h2 className="text-xl font-semibold text-zinc-950">Журнал поступлений</h2>
+              <p className="mt-2 text-sm leading-6 text-zinc-600">
+                Когда добавим бизнес-логику, здесь появится история всех приходов на склад.
+              </p>
+              <div className="mt-6 rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-sm text-zinc-500">
+                Пока поступлений ещё нет.
+              </div>
+            </section>
+          </div>
+
+          <aside className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold text-zinc-950">Новая поставка</h2>
+              <p className="text-sm leading-6 text-zinc-600">
+                Здесь будет форма прихода: товар, количество, закупочная цена, поставщик и комментарий.
+              </p>
+            </div>
+            <div className="mt-6 rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-sm leading-6 text-zinc-500">
+              Каркас вкладки готов. Следующим шагом можно подключить реальные операции поступления товара.
+            </div>
+          </aside>
+        </div>
+      ) : null}
+
+      {activeTab === "writeoff" ? (
+        <div className="grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
+          <div className="space-y-6">
+            <section className="rounded-3xl border border-zinc-200 bg-[linear-gradient(180deg,#fffdfa_0%,#f7ece7_100%)] p-6 shadow-sm shadow-zinc-950/5">
+              <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">
+                Списание товара
+              </p>
+              <h2 className="mt-2 text-xl font-semibold text-zinc-950">
+                Потери и расход
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-zinc-600">
+                Здесь будем фиксировать брак, порчу, внутренний расход и другие причины списания.
+              </p>
+
+              <div className="mt-5 grid gap-4 md:grid-cols-3">
+                <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
+                  <p className="text-sm font-medium text-zinc-500">Списаний сегодня</p>
+                  <p className="mt-3 text-3xl font-semibold text-zinc-950">0</p>
+                </div>
+                <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
+                  <p className="text-sm font-medium text-zinc-500">Товаров в риске</p>
+                  <p className="mt-3 text-3xl font-semibold text-zinc-950">{lowStockCount}</p>
+                </div>
+                <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
+                  <p className="text-sm font-medium text-zinc-500">Сумма списаний</p>
+                  <p className="mt-3 text-3xl font-semibold text-zinc-950">0 ₽</p>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+              <h2 className="text-xl font-semibold text-zinc-950">Журнал списаний</h2>
+              <p className="mt-2 text-sm leading-6 text-zinc-600">
+                Здесь появится история всех операций списания с причинами и ответственными.
+              </p>
+              <div className="mt-6 rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-sm text-zinc-500">
+                Пока списаний ещё нет.
+              </div>
+            </section>
+          </div>
+
+          <aside className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold text-zinc-950">Новое списание</h2>
+              <p className="text-sm leading-6 text-zinc-600">
+                Здесь будет форма списания: товар, количество, причина, комментарий и кто списал.
+              </p>
+            </div>
+            <div className="mt-6 rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-sm leading-6 text-zinc-500">
+              Каркас вкладки готов. Следующим шагом можно подключить реальные операции списания.
+            </div>
+          </aside>
+        </div>
+      ) : null}
+
+      {activeTab === "audit" ? (
+        <div className="grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
+          <div className="space-y-6">
+            <section className="rounded-3xl border border-zinc-200 bg-[linear-gradient(180deg,#fffdfa_0%,#eef0f6_100%)] p-6 shadow-sm shadow-zinc-950/5">
+              <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">
+                Инвентаризация
+              </p>
+              <h2 className="mt-2 text-xl font-semibold text-zinc-950">
+                Сверка фактических остатков
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-zinc-600">
+                Здесь будем сверять реальные остатки на складе с данными системы и фиксировать расхождения.
+              </p>
+
+              <div className="mt-5 grid gap-4 md:grid-cols-3">
+                <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
+                  <p className="text-sm font-medium text-zinc-500">Позиций на сверку</p>
+                  <p className="mt-3 text-3xl font-semibold text-zinc-950">{products.length}</p>
+                </div>
+                <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
+                  <p className="text-sm font-medium text-zinc-500">Расхождений</p>
+                  <p className="mt-3 text-3xl font-semibold text-zinc-950">0</p>
+                </div>
+                <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
+                  <p className="text-sm font-medium text-zinc-500">Последняя сверка</p>
+                  <p className="mt-3 text-3xl font-semibold text-zinc-950">-</p>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+              <h2 className="text-xl font-semibold text-zinc-950">Журнал инвентаризаций</h2>
+              <p className="mt-2 text-sm leading-6 text-zinc-600">
+                После подключения логики здесь появятся все проведённые сверки и найденные расхождения.
+              </p>
+              <div className="mt-6 rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-sm text-zinc-500">
+                Пока инвентаризаций ещё не проводилось.
+              </div>
+            </section>
+          </div>
+
+          <aside className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold text-zinc-950">Новая инвентаризация</h2>
+              <p className="text-sm leading-6 text-zinc-600">
+                Здесь будет форма сверки: дата, ответственный, список товаров, фактический остаток и комментарий.
+              </p>
+            </div>
+            <div className="mt-6 rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-sm leading-6 text-zinc-500">
+              Каркас вкладки готов. Следующим шагом можно сделать реальную инвентаризацию с фиксацией расхождений.
+            </div>
+          </aside>
+        </div>
+      ) : null}
+
+      {activeTab === "recipes" ? (
+        <div className="grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
+          <div className="space-y-6">
+            <section className="rounded-3xl border border-zinc-200 bg-[linear-gradient(180deg,#fffdfa_0%,#eceff8_100%)] p-6 shadow-sm shadow-zinc-950/5">
+              <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">
+                Технологические карты
+              </p>
+              <h2 className="mt-2 text-xl font-semibold text-zinc-950">
+                Состав и нормы расхода
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-zinc-600">
+                Здесь будем связывать продаваемые позиции с ингредиентами и автоматически считать расход склада.
+              </p>
+
+              <div className="mt-5 grid gap-4 md:grid-cols-3">
+                <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
+                  <p className="text-sm font-medium text-zinc-500">Карт</p>
+                  <p className="mt-3 text-3xl font-semibold text-zinc-950">{techCards.length}</p>
+                </div>
+                <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
+                  <p className="text-sm font-medium text-zinc-500">Ингредиентов</p>
+                  <p className="mt-3 text-3xl font-semibold text-zinc-950">{products.length}</p>
+                </div>
+                <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
+                  <p className="text-sm font-medium text-zinc-500">Автосписание</p>
+                  <p className="mt-3 text-3xl font-semibold text-zinc-950">В планах</p>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+              <h2 className="text-xl font-semibold text-zinc-950">Список технологических карт</h2>
+              <p className="mt-2 text-sm leading-6 text-zinc-600">
+                Здесь хранятся реальные технологические карты, которые можно будет связывать с каталогом сайта.
+              </p>
+              <div className="mt-6 space-y-4">
+                {techCards.length === 0 ? (
+                  <div className="rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-sm text-zinc-500">
+                    Пока технологических карт ещё нет.
+                  </div>
+                ) : (
+                  techCards.map((card) => (
+                    <article
+                      key={card.id}
+                      className="rounded-3xl border border-zinc-200 bg-zinc-50 p-5"
+                    >
+                      <div className="space-y-3">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <h3 className="text-lg font-semibold text-zinc-950">{card.name}</h3>
+                            <p className="text-sm text-zinc-500">
+                              Выход: {card.outputQuantity} {card.outputUnit}
+                            </p>
+                          </div>
+                          <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-zinc-500 ring-1 ring-zinc-200">
+                            Ингредиентов: {card.ingredients.length}
+                          </span>
+                        </div>
+
+                        <div className="space-y-2 text-sm text-zinc-600">
+                          {card.ingredients.map((ingredient) => (
+                            <p key={ingredient.id}>
+                              {ingredient.productName}: {ingredient.quantity} {ingredient.productUnit}
+                            </p>
+                          ))}
+                        </div>
+
+                        {card.description ? (
+                          <p className="text-sm leading-6 text-zinc-600">{card.description}</p>
+                        ) : null}
+                      </div>
+                    </article>
+                  ))
+                )}
+              </div>
+            </section>
+          </div>
+
+          {hasPermission(user, "manage_inventory") ? (
+            <TechCardForm products={techCardProducts} />
+          ) : (
+            <aside className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+              <div className="space-y-2">
+                <h2 className="text-xl font-semibold text-zinc-950">Новая техкарта</h2>
+                <p className="text-sm leading-6 text-zinc-600">
+                  Здесь можно будет создавать новые техкарты, если у роли есть право управления складом.
+                </p>
+              </div>
+            </aside>
+          )}
+        </div>
+      ) : null}
     </PageShell>
   );
 }

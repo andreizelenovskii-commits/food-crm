@@ -64,6 +64,34 @@ export default async function DashboardPage(props: {
       visible: hasPermission(user, "view_inventory"),
     },
     {
+      href: "/dashboard/catalog",
+      label: "Каталог",
+      value: "Site",
+      description: "Прайс и позиции сайта",
+      visible: hasPermission(user, "view_catalog"),
+    },
+    {
+      href: "/dashboard/reviews",
+      label: "Отзывы",
+      value: "New",
+      description: "Оценки и комментарии",
+      visible: true,
+    },
+    {
+      href: "/dashboard/loyalty",
+      label: "Система лояльности",
+      value: "CRM",
+      description: "Баллы, скидки, уровни",
+      visible: true,
+    },
+    {
+      href: "/dashboard/settings",
+      label: "Настройки",
+      value: "Core",
+      description: "ОФД, кассы, интеграции",
+      visible: hasPermission(user, "view_settings"),
+    },
+    {
       href: "/dashboard/employees",
       label: "Сотрудники",
       value: dashboard.entityCounts.employees,
@@ -117,75 +145,75 @@ export default async function DashboardPage(props: {
       backHref="/"
       action={<SessionUserActions user={user} />}
     >
-      <section className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {moduleCards.filter((card) => card.visible).map((card) => (
           <Link
             key={card.label}
             href={card.href}
-            className="rounded-3xl border border-zinc-200 bg-white/90 p-6 text-left transition hover:border-zinc-300 hover:bg-zinc-50"
+            className="rounded-[28px] border border-zinc-200 bg-white/90 p-5 text-left transition hover:border-zinc-300 hover:bg-zinc-50"
           >
-            <div className="flex items-start justify-between gap-4">
-              <p className="text-sm font-medium text-zinc-500">{card.label}</p>
-              <span className="inline-flex min-w-10 items-center justify-center rounded-full bg-zinc-950 px-3 py-1 text-sm font-semibold text-white">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[13px] font-medium text-zinc-500">{card.label}</p>
+              <span className="inline-flex min-w-10 items-center justify-center rounded-full bg-zinc-950 px-3 py-1 text-xs font-semibold text-white">
                 {card.value}
               </span>
             </div>
-            <p className="mt-4 text-xl font-semibold text-zinc-950">{card.description}</p>
+            <p className="mt-3 text-lg font-semibold leading-6 text-zinc-950">{card.description}</p>
           </Link>
         ))}
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <article className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+      <section className="grid gap-4 xl:grid-cols-[0.88fr_1.12fr]">
+        <article className="rounded-[28px] border border-zinc-200 bg-white/90 p-5 shadow-sm shadow-zinc-950/5">
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">
                 Статистика
               </p>
-              <h2 className="mt-2 text-2xl font-semibold text-zinc-950">
+              <h2 className="mt-1.5 text-xl font-semibold text-zinc-950">
                 Состояние базы CRM
               </h2>
             </div>
           </div>
 
-          <div className="mt-6 space-y-4">
+          <div className="mt-4 space-y-3">
             {visibleStatistics.map((item) => (
               <div
                 key={item.label}
-                className="rounded-2xl border border-zinc-200 bg-zinc-50/80 p-4"
+                className="rounded-2xl border border-zinc-200 bg-zinc-50/80 p-3.5"
               >
                 <div className="flex items-center justify-between gap-4">
                   <p className="text-sm font-medium text-zinc-600">{item.label}</p>
-                  <p className="text-2xl font-semibold text-zinc-950">{item.value}</p>
+                  <p className="text-xl font-semibold text-zinc-950">{item.value}</p>
                 </div>
-                <p className="mt-2 text-sm leading-6 text-zinc-500">{item.hint}</p>
+                <p className="mt-1.5 text-sm leading-5 text-zinc-500">{item.hint}</p>
               </div>
             ))}
           </div>
         </article>
 
         {hasPermission(user, "view_orders") && !isStaffRole ? (
-          <article className="rounded-3xl border border-zinc-200 bg-[linear-gradient(180deg,#fffdfa_0%,#f4efe6_100%)] p-6 shadow-sm shadow-zinc-950/5">
+          <article className="rounded-[28px] border border-zinc-200 bg-[linear-gradient(180deg,#fffdfa_0%,#f4efe6_100%)] p-5 shadow-sm shadow-zinc-950/5">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">
                   Продажи
                 </p>
-                <h2 className="mt-2 text-2xl font-semibold text-zinc-950">
+                <h2 className="mt-1.5 text-xl font-semibold text-zinc-950">
                   Выручка и динамика заказов
                 </h2>
               </div>
             </div>
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {dashboard.sales.map((item) => (
                 <div
                   key={item.label}
-                  className="rounded-[28px] border border-white/70 bg-white/80 p-5 shadow-sm shadow-zinc-950/5"
+                  className="rounded-[24px] border border-white/70 bg-white/80 p-4 shadow-sm shadow-zinc-950/5"
                 >
                   <p className="text-sm font-medium text-zinc-500">{item.label}</p>
-                  <p className="mt-3 text-2xl font-semibold text-zinc-950">{item.value}</p>
-                  <p className="mt-2 text-sm leading-6 text-zinc-600">{item.hint}</p>
+                  <p className="mt-2.5 text-xl font-semibold text-zinc-950">{item.value}</p>
+                  <p className="mt-1.5 text-sm leading-5 text-zinc-600">{item.hint}</p>
                 </div>
               ))}
             </div>
@@ -193,13 +221,13 @@ export default async function DashboardPage(props: {
         ) : null}
 
         {isStaffRole ? (
-          <article className="rounded-3xl border border-zinc-200 bg-[linear-gradient(180deg,#f8fbff_0%,#edf4ea_100%)] p-6 shadow-sm shadow-zinc-950/5">
+          <article className="rounded-[28px] border border-zinc-200 bg-[linear-gradient(180deg,#f8fbff_0%,#edf4ea_100%)] p-5 shadow-sm shadow-zinc-950/5">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">
                   Мой месяц
                 </p>
-                <h2 className="mt-2 text-2xl font-semibold text-zinc-950">
+                <h2 className="mt-1.5 text-xl font-semibold text-zinc-950">
                   График и начисления
                 </h2>
               </div>
@@ -226,22 +254,22 @@ export default async function DashboardPage(props: {
               ) : null}
             </div>
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-[28px] border border-white/70 bg-white/85 p-5 shadow-sm shadow-zinc-950/5 sm:col-span-2">
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-[24px] border border-white/70 bg-white/85 p-4 shadow-sm shadow-zinc-950/5 sm:col-span-2">
                 <p className="text-sm font-medium text-zinc-500">График</p>
-                <p className="mt-3 text-2xl font-semibold text-zinc-950">
+                <p className="mt-2.5 text-xl font-semibold text-zinc-950">
                   {employeeDashboard?.scheduleSummary ?? "График не задан"}
                 </p>
-                <p className="mt-2 text-sm leading-6 text-zinc-600">
+                <p className="mt-1.5 text-sm leading-5 text-zinc-600">
                   {employeeDashboard?.scheduleDays
                     ? `В текущем графике отмечено ${employeeDashboard.scheduleDays} рабочих дн. и ${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(employeeDashboard.scheduleHours)} ч`
                     : "У сотрудника пока не заполнен рабочий график."}
                 </p>
               </div>
 
-              <div className="rounded-[28px] border border-white/70 bg-white/80 p-5 shadow-sm shadow-zinc-950/5">
+              <div className="rounded-[24px] border border-white/70 bg-white/80 p-4 shadow-sm shadow-zinc-950/5">
                 <p className="text-sm font-medium text-zinc-500">Авансы за месяц</p>
-                <p className="mt-3 text-2xl font-semibold text-zinc-950">
+                <p className="mt-2.5 text-xl font-semibold text-zinc-950">
                   {new Intl.NumberFormat("ru-RU", {
                     style: "currency",
                     currency: "RUB",
@@ -250,9 +278,9 @@ export default async function DashboardPage(props: {
                 </p>
               </div>
 
-              <div className="rounded-[28px] border border-white/70 bg-white/80 p-5 shadow-sm shadow-zinc-950/5">
+              <div className="rounded-[24px] border border-white/70 bg-white/80 p-4 shadow-sm shadow-zinc-950/5">
                 <p className="text-sm font-medium text-zinc-500">Штрафы за месяц</p>
-                <p className="mt-3 text-2xl font-semibold text-zinc-950">
+                <p className="mt-2.5 text-xl font-semibold text-zinc-950">
                   {new Intl.NumberFormat("ru-RU", {
                     style: "currency",
                     currency: "RUB",
@@ -261,30 +289,30 @@ export default async function DashboardPage(props: {
                 </p>
               </div>
 
-              <div className="rounded-[28px] border border-white/70 bg-white/80 p-5 shadow-sm shadow-zinc-950/5 sm:col-span-2">
+              <div className="rounded-[24px] border border-white/70 bg-white/80 p-4 shadow-sm shadow-zinc-950/5 sm:col-span-2">
                 <p className="text-sm font-medium text-zinc-500">Долги за месяц</p>
-                <p className="mt-3 text-2xl font-semibold text-zinc-950">
+                <p className="mt-2.5 text-xl font-semibold text-zinc-950">
                   {new Intl.NumberFormat("ru-RU", {
                     style: "currency",
                     currency: "RUB",
                     maximumFractionDigits: 0,
                   }).format((employeeDashboard?.debtCents ?? 0) / 100)}
                 </p>
-                <p className="mt-2 text-sm leading-6 text-zinc-600">
+                <p className="mt-1.5 text-sm leading-5 text-zinc-600">
                   Здесь показываются только записи текущего месяца по сотруднику.
                 </p>
               </div>
 
-              <div className="rounded-[28px] border border-white/70 bg-white/85 p-5 shadow-sm shadow-zinc-950/5 sm:col-span-2">
+              <div className="rounded-[24px] border border-white/70 bg-white/85 p-4 shadow-sm shadow-zinc-950/5 sm:col-span-2">
                 <p className="text-sm font-medium text-zinc-500">Зарплата на текущий день</p>
-                <p className="mt-3 text-2xl font-semibold text-zinc-950">
+                <p className="mt-2.5 text-xl font-semibold text-zinc-950">
                   {new Intl.NumberFormat("ru-RU", {
                     style: "currency",
                     currency: "RUB",
                     maximumFractionDigits: 0,
                   }).format((employeeDashboard?.salaryTodayCents ?? 0) / 100)}
                 </p>
-                <p className="mt-2 text-sm leading-6 text-zinc-600">
+                <p className="mt-1.5 text-sm leading-5 text-zinc-600">
                   Логику расчёта добавим позже. Пока здесь выводится безопасная базовая заглушка.
                 </p>
               </div>

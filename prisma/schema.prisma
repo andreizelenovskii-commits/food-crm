@@ -49,6 +49,7 @@ model Product {
   description String?
   createdAt   DateTime @default(now())
   orderItems  OrderItem[]
+  ingredients TechCardIngredient[]
 }
 
 model Employee {
@@ -104,4 +105,38 @@ model OrderItem {
   quantity        Int
   unitPriceCents  Int
   totalPriceCents Int
+}
+
+model TechnologicalCard {
+  id             Int                  @id @default(autoincrement())
+  name           String               @unique
+  outputQuantity Int
+  outputUnit     String
+  description    String?
+  createdAt      DateTime             @default(now())
+  ingredients    TechCardIngredient[]
+  catalogItems   CatalogItem[]
+}
+
+model TechCardIngredient {
+  id                  Int               @id @default(autoincrement())
+  technologicalCard   TechnologicalCard @relation(fields: [technologicalCardId], references: [id])
+  technologicalCardId Int
+  product             Product           @relation(fields: [productId], references: [id])
+  productId           Int
+  quantity            Int
+}
+
+model CatalogItem {
+  id                  Int               @id @default(autoincrement())
+  name                String
+  slug                String            @unique
+  category            String?
+  description         String?
+  priceCents          Int
+  isPublished         Boolean           @default(false)
+  displayOrder        Int               @default(0)
+  createdAt           DateTime          @default(now())
+  technologicalCard   TechnologicalCard @relation(fields: [technologicalCardId], references: [id])
+  technologicalCardId Int
 }
