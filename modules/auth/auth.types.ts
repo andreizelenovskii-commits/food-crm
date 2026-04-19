@@ -32,4 +32,5 @@ export type SessionUser = {
   id: number;
   email: string;
   role: UserRole;
+  displayName?: string | null;
 };

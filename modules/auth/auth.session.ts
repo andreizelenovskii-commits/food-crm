@@ -2,7 +2,9 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { hasPermission, type AuthPermission } from "@/modules/auth/authz";
+import { USER_ROLE_LABELS } from "@/modules/auth/auth.types";
 import { getRequiredEnv } from "@/shared/config/env";
+import { pool } from "@/shared/db/pool";
 import type { SessionUser } from "@/modules/auth/auth.types";
 
 const SESSION_COOKIE_NAME = "food_crm_session";
@@ -101,10 +103,23 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     return null;
   }
 
+  const employeeResult = await pool.query<{ name: string }>(
+    `
+      SELECT "name"
+      FROM "Employee"
+      WHERE LOWER("email") = LOWER($1)
+      LIMIT 1
+    `,
+    [payload.email],
+  );
+
+  const displayName = employeeResult.rows[0]?.name ?? USER_ROLE_LABELS[payload.role];
+
   return {
     id: payload.userId,
     email: payload.email,
     role: payload.role,
+    displayName,
   };
 }
 

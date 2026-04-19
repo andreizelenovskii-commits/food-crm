@@ -8,7 +8,7 @@ const initialLoginFormState = {
   errorMessage: null,
 };
 
-export function LoginForm() {
+export function LoginForm({ returnTo }: { returnTo?: string }) {
   const [state, formAction, isPending] = useActionState(
     loginAction,
     initialLoginFormState,
@@ -24,6 +24,7 @@ export function LoginForm() {
       </div>
 
       <form action={formAction} className="mt-8 space-y-5">
+        <input type="hidden" name="returnTo" value={returnTo ?? ""} />
         <label className="block space-y-2">
           <span className="text-sm font-medium text-zinc-700">Email</span>
           <input

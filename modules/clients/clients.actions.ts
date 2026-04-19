@@ -81,7 +81,9 @@ export async function deleteClientAction(formData: FormData) {
     await deleteClientService(clientId);
   }
 
-  redirect(redirectTo || "/dashboard/clients");
+  return {
+    redirectTo: redirectTo || "/dashboard/clients",
+  };
 }
 
 export async function updateClientAction(

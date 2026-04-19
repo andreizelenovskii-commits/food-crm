@@ -3,8 +3,9 @@ import { PageShell } from "@/components/ui/page-shell";
 import { hasPermission } from "@/modules/auth/authz";
 import { requirePermission } from "@/modules/auth/auth.session";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
-import { ProductDeleteButton } from "@/modules/inventory/components/product-delete-button";
+import { LowStockPanel } from "@/modules/inventory/components/low-stock-panel";
 import { ProductForm } from "@/modules/inventory/components/product-form";
+import { PRODUCT_CATEGORIES } from "@/modules/inventory/inventory.types";
 import { fetchProducts } from "@/modules/inventory/inventory.service";
 import { TechCardForm } from "@/modules/tech-cards/components/tech-card-form";
 import {
@@ -31,7 +32,7 @@ function formatMoney(cents: number) {
 }
 
 export default async function InventoryPage(props: {
-  searchParams?: Promise<{ q?: string; tab?: string }>;
+  searchParams?: Promise<{ q?: string; tab?: string; category?: string }>;
 }) {
   const user = await requirePermission("view_inventory");
   const searchParams = await props.searchParams;
@@ -42,6 +43,7 @@ export default async function InventoryPage(props: {
   ]);
   const rawQuery = searchParams?.q?.trim() ?? "";
   const normalizedQuery = rawQuery.toLowerCase();
+  const selectedCategory = searchParams?.category?.trim() ?? "";
   const rawTab = searchParams?.tab?.trim() ?? "products";
   const activeTab: InventoryTab = INVENTORY_TABS.some((tab) => tab.key === rawTab)
     ? (rawTab as InventoryTab)
@@ -52,15 +54,27 @@ export default async function InventoryPage(props: {
     0,
   );
   const filteredProducts = products.filter((product) => {
+    const matchesCategory =
+      !selectedCategory || product.category === selectedCategory;
+
+    if (!matchesCategory) {
+      return false;
+    }
+
     if (!normalizedQuery) {
       return true;
     }
 
     return (
       product.name.toLowerCase().includes(normalizedQuery) ||
-      product.sku?.toLowerCase().includes(normalizedQuery)
+      product.sku?.toLowerCase().includes(normalizedQuery) ||
+      product.category?.toLowerCase().includes(normalizedQuery)
     );
   });
+  const categorySummaries = PRODUCT_CATEGORIES.map((category) => ({
+    category,
+    count: products.filter((product) => product.category === category).length,
+  })).filter((item) => item.count > 0);
   const lowStockProducts = filteredProducts
     .filter((product) => product.stockQuantity <= 5)
     .sort((left, right) => left.stockQuantity - right.stockQuantity);
@@ -112,7 +126,12 @@ export default async function InventoryPage(props: {
 
               {rawQuery ? (
                 <Link
-                  href="/dashboard/inventory"
+                  href={
+                    selectedCategory
+                      ? `/dashboard/inventory?category=${encodeURIComponent(selectedCategory)}`
+                      : "/dashboard/inventory"
+                  }
+                  scroll={false}
                   className="rounded-2xl border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-500 hover:text-zinc-950"
                 >
                   Сбросить
@@ -121,6 +140,7 @@ export default async function InventoryPage(props: {
             </div>
 
             <form action="/dashboard/inventory" className="mt-5 flex flex-col gap-3 sm:flex-row">
+              {selectedCategory ? <input type="hidden" name="category" value={selectedCategory} /> : null}
               <input
                 name="q"
                 type="search"
@@ -140,6 +160,11 @@ export default async function InventoryPage(props: {
               <p className="mt-3 text-sm text-zinc-500">
                 По запросу <span className="font-medium text-zinc-900">{rawQuery}</span> найдено:{" "}
                 {filteredProducts.length}
+              </p>
+            ) : null}
+            {selectedCategory ? (
+              <p className="mt-2 text-sm text-zinc-500">
+                Активная категория: <span className="font-medium text-zinc-900">{selectedCategory}</span>
               </p>
             ) : null}
           </section>
@@ -170,43 +195,64 @@ export default async function InventoryPage(props: {
                 <p className="mt-3 text-3xl font-semibold text-zinc-950">{formatMoney(totalValueCents)}</p>
               </div>
             </div>
+          </section>
 
-            <div className="mt-5 space-y-3">
-              <div className="flex items-center justify-between gap-4">
-                <p className="text-sm font-medium text-zinc-700">Позиции с низким остатком</p>
-                <span className="rounded-full bg-zinc-950 px-3 py-1 text-xs font-medium text-white">
-                  {lowStockCount}
-                </span>
-              </div>
+          <LowStockPanel products={lowStockProducts} />
 
-              {lowStockProducts.length === 0 ? (
-                <p className="text-sm text-zinc-600">
-                  Товары с низким остатком сейчас не найдены.
+          <section className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-semibold text-zinc-950">Категории товаров</h2>
+                <p className="mt-2 text-sm leading-6 text-zinc-600">
+                  Выбирай категорию, чтобы видеть только нужные складские позиции.
                 </p>
-              ) : (
-                lowStockProducts.slice(0, 4).map((product) => (
-                  <div
-                    key={product.id}
-                    className="rounded-2xl border border-white/80 bg-white/80 px-4 py-3"
+              </div>
+            </div>
+
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Link
+                href={
+                  rawQuery
+                    ? `/dashboard/inventory?q=${encodeURIComponent(rawQuery)}`
+                    : "/dashboard/inventory"
+                }
+                scroll={false}
+                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                  !selectedCategory
+                    ? "bg-zinc-950 text-white shadow-sm shadow-zinc-950/10"
+                    : "border border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 hover:text-zinc-950"
+                }`}
+                style={!selectedCategory ? { color: "#ffffff" } : undefined}
+              >
+                Все товары
+              </Link>
+              {categorySummaries.map((item) => {
+                const href = `/dashboard/inventory?category=${encodeURIComponent(item.category)}${rawQuery ? `&q=${encodeURIComponent(rawQuery)}` : ""}`;
+                const isActive = selectedCategory === item.category;
+
+                return (
+                  <Link
+                    key={item.category}
+                    href={href}
+                    scroll={false}
+                    className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                      isActive
+                        ? "bg-emerald-600 text-white shadow-sm shadow-emerald-700/20"
+                        : "border border-emerald-100 bg-emerald-50/70 text-emerald-800 hover:border-emerald-200 hover:bg-emerald-100"
+                    }`}
+                    style={isActive ? { color: "#ffffff" } : undefined}
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <p className="font-semibold text-zinc-950">{product.name}</p>
-                        <p className="text-sm text-zinc-500">
-                          Остаток: {product.stockQuantity} {product.unit}
-                        </p>
-                      </div>
-                      <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800">
-                        Нужен контроль
-                      </span>
-                    </div>
-                  </div>
-                ))
-              )}
+                    {item.category} {item.count}
+                  </Link>
+                );
+              })}
             </div>
           </section>
 
-          <section className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+          <section
+            id="inventory-products"
+            className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5"
+          >
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-xl font-semibold text-zinc-950">Список товаров</h2>
@@ -231,52 +277,43 @@ export default async function InventoryPage(props: {
                         : "text-emerald-600";
 
                   return (
-                    <article
+                    <Link
                       key={product.id}
-                      className="rounded-3xl border border-zinc-200 bg-zinc-50 p-5"
+                      href={`/dashboard/inventory/${product.id}`}
+                      className="block rounded-3xl border border-zinc-200 bg-zinc-50 p-5 transition hover:-translate-y-0.5 hover:border-zinc-300 hover:bg-white hover:shadow-sm hover:shadow-zinc-950/5"
                     >
-                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                        <div className="space-y-3">
-                          <div className="flex flex-wrap items-center gap-3">
-                            <h3 className="text-lg font-semibold text-zinc-950">{product.name}</h3>
-                            {product.sku ? (
-                              <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-zinc-500 ring-1 ring-zinc-200">
-                                SKU: {product.sku}
-                              </span>
-                            ) : null}
-                          </div>
-
-                          <div className="grid gap-3 text-sm text-zinc-600 sm:grid-cols-2">
-                            <p>
-                              Остаток: <span className={`font-semibold ${stockTone}`}>{product.stockQuantity} {product.unit}</span>
-                            </p>
-                            <p>Цена: {formatMoney(product.priceCents)}</p>
-                            <p>Стоимость остатка: {formatMoney(product.stockQuantity * product.priceCents)}</p>
-                            <p>Использований в заказах: {product.orderItemsCount}</p>
-                          </div>
-
-                          {product.description ? (
-                            <p className="text-sm leading-6 text-zinc-600">{product.description}</p>
+                      <div className="space-y-3">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <h3 className="text-lg font-semibold text-zinc-950">{product.name}</h3>
+                          {product.category ? (
+                            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-100">
+                              {product.category}
+                            </span>
+                          ) : null}
+                          {product.sku ? (
+                            <span className="rounded-full bg-white px-3 py-1 text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-400 ring-1 ring-zinc-200">
+                              {product.sku}
+                            </span>
                           ) : null}
                         </div>
 
-                        {hasPermission(user, "manage_inventory") ? (
-                          <div className="flex flex-wrap items-center gap-3">
-                            <Link
-                              href={`/dashboard/inventory/${product.id}/edit`}
-                              className="rounded-2xl border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-950"
-                            >
-                              Редактировать
-                            </Link>
-                            <ProductDeleteButton
-                              productId={product.id}
-                              productName={product.name}
-                              disabled={product.orderItemsCount > 0}
-                            />
-                          </div>
+                        <div className="grid gap-3 text-sm text-zinc-600 sm:grid-cols-2">
+                          <p>
+                            Код товара: <span className="font-medium text-zinc-700">{product.sku ?? "Не присвоен"}</span>
+                          </p>
+                          <p>
+                            Остаток: <span className={`font-semibold ${stockTone}`}>{product.stockQuantity} {product.unit}</span>
+                          </p>
+                          <p>Цена: {formatMoney(product.priceCents)}</p>
+                          <p>Стоимость остатка: {formatMoney(product.stockQuantity * product.priceCents)}</p>
+                          <p>Использований в заказах: {product.orderItemsCount}</p>
+                        </div>
+
+                        {product.description ? (
+                          <p className="text-sm leading-6 text-zinc-600">{product.description}</p>
                         ) : null}
                       </div>
-                    </article>
+                    </Link>
                   );
                 })
               )}
@@ -285,7 +322,7 @@ export default async function InventoryPage(props: {
         </div>
 
         {hasPermission(user, "manage_inventory") ? (
-          <div className="space-y-6">
+          <div className="space-y-6 xl:sticky xl:top-28 xl:self-start">
             <ProductForm />
           </div>
         ) : null}

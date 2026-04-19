@@ -66,7 +66,9 @@ export async function deleteEmployeeAction(formData: FormData) {
     await deleteEmployeeService(employeeId);
   }
 
-  redirect(redirectTo || "/dashboard/employees");
+  return {
+    redirectTo: redirectTo || "/dashboard/employees",
+  };
 }
 
 export type EmployeeAccessFormState = {

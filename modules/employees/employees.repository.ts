@@ -296,6 +296,22 @@ export async function deleteEmployee(employeeId: number): Promise<boolean> {
     return false;
   }
 
+  const employeeResult = await pool.query<{ email: string | null }>(
+    `
+      SELECT "email"
+      FROM "Employee"
+      WHERE "id" = $1
+      LIMIT 1
+    `,
+    [employeeId],
+  );
+
+  const employeeEmail = employeeResult.rows[0]?.email ?? null;
+
+  if (!employeeResult.rowCount) {
+    return false;
+  }
+
   const orderResult = await pool.query<{ count: string }>(
     `
       SELECT COUNT(*) AS count
@@ -321,6 +337,16 @@ export async function deleteEmployee(employeeId: number): Promise<boolean> {
       `,
       [employeeId],
     );
+
+    if (employeeEmail) {
+      await pool.query(
+        `
+          DELETE FROM "User"
+          WHERE "email" = $1
+        `,
+        [employeeEmail],
+      );
+    }
 
     const result = await pool.query(
       `

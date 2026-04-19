@@ -3,11 +3,15 @@ import { PageShell } from "@/components/ui/page-shell";
 import { LoginForm } from "@/modules/auth/components/login-form";
 import { getSessionUser } from "@/modules/auth/auth.session";
 
-export default async function LoginPage() {
+export default async function LoginPage(props: {
+  searchParams?: Promise<{ returnTo?: string }>;
+}) {
   const currentUser = await getSessionUser();
+  const searchParams = await props.searchParams;
+  const returnTo = searchParams?.returnTo?.trim() ?? "";
 
   if (currentUser) {
-    redirect("/dashboard");
+    redirect(returnTo.startsWith("/") ? returnTo : "/dashboard");
   }
 
   return (
@@ -17,7 +21,7 @@ export default async function LoginPage() {
       align="center"
       backHref="/"
     >
-      <LoginForm />
+      <LoginForm returnTo={returnTo} />
     </PageShell>
   );
 }

@@ -1,4 +1,8 @@
 import { ValidationError } from "@/shared/errors/app-error";
+import {
+  PRODUCT_CATEGORIES,
+  type ProductCategory,
+} from "@/modules/inventory/inventory.types";
 
 function normalizeInput(value: FormDataEntryValue | null) {
   return String(value ?? "").trim();
@@ -6,7 +10,7 @@ function normalizeInput(value: FormDataEntryValue | null) {
 
 export type ProductInput = {
   name: string;
-  sku: string;
+  category: ProductCategory;
   unit: "кг" | "шт";
   stockQuantity: number;
   priceCents: number;
@@ -14,6 +18,10 @@ export type ProductInput = {
 };
 
 function parsePriceToCents(value: string) {
+  if (!value) {
+    return 0;
+  }
+
   const normalized = value.replace(",", ".");
   const amount = Number(normalized);
 
@@ -26,14 +34,18 @@ function parsePriceToCents(value: string) {
 
 export function parseProductInput(formData: FormData): ProductInput {
   const name = normalizeInput(formData.get("name"));
-  const sku = normalizeInput(formData.get("sku"));
+  const category = normalizeInput(formData.get("category"));
   const unit = normalizeInput(formData.get("unit"));
   const stockQuantityRaw = normalizeInput(formData.get("stockQuantity"));
   const priceRaw = normalizeInput(formData.get("price"));
   const description = normalizeInput(formData.get("description"));
 
-  if (!name || !sku || !unit || !priceRaw) {
-    throw new ValidationError("Заполните название, внутренний код, единицу измерения и цену");
+  if (!name || !category || !unit) {
+    throw new ValidationError("Заполните название, категорию и единицу измерения");
+  }
+
+  if (!PRODUCT_CATEGORIES.includes(category as ProductCategory)) {
+    throw new ValidationError("Выберите категорию товара из списка");
   }
 
   if (unit !== "кг" && unit !== "шт") {
@@ -48,7 +60,7 @@ export function parseProductInput(formData: FormData): ProductInput {
 
   return {
     name,
-    sku,
+    category: category as ProductCategory,
     unit,
     stockQuantity,
     priceCents: parsePriceToCents(priceRaw),

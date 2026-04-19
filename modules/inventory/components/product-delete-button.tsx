@@ -1,42 +1,35 @@
 "use client";
 
+import { ConfirmDeleteButton } from "@/components/ui/confirm-delete-button";
 import { deleteProductAction } from "@/modules/inventory/inventory.actions";
 
 export function ProductDeleteButton({
   productId,
   productName,
   disabled,
+  redirectTo,
 }: {
   productId: number;
   productName: string;
   disabled?: boolean;
+  redirectTo?: string;
 }) {
   return (
-    <form
+    <ConfirmDeleteButton
       action={deleteProductAction}
-      onSubmit={(event) => {
-        if (disabled) {
-          event.preventDefault();
-          return;
-        }
-
-        const confirmed = window.confirm(
-          `Удалить товар "${productName}"? Это действие нельзя отменить.`,
-        );
-
-        if (!confirmed) {
-          event.preventDefault();
-        }
-      }}
-    >
-      <input type="hidden" name="productId" value={productId} />
-      <button
-        type="submit"
-        disabled={disabled}
-        className="relative z-10 rounded-2xl border border-red-200 px-4 py-2 text-sm font-medium text-red-600 transition hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:text-zinc-400"
-      >
-        Удалить
-      </button>
-    </form>
+      ariaLabel={`Удаление товара ${productName}`}
+      entityLabel="Товар"
+      entityName={productName}
+      disabled={disabled}
+      disabledMessage={
+        disabled
+          ? "Этот товар уже используется в заказах, поэтому удалить его нельзя."
+          : undefined
+      }
+      hiddenFields={[
+        { name: "productId", value: productId },
+        { name: "redirectTo", value: redirectTo ?? "/dashboard/inventory" },
+      ]}
+    />
   );
 }

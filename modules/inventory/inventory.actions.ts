@@ -12,7 +12,7 @@ import { parseProductInput } from "@/modules/inventory/inventory.validation";
 
 export type ProductFormValues = {
   name: string;
-  sku: string;
+  category: string;
   unit: string;
   stockQuantity: string;
   price: string;
@@ -21,6 +21,7 @@ export type ProductFormValues = {
 
 export type ProductFormState = {
   errorMessage: string | null;
+  successMessage: string | null;
   values: ProductFormValues;
 };
 
@@ -29,7 +30,7 @@ function getProductFormValues(formData: FormData): ProductFormValues {
 
   return {
     name: read("name"),
-    sku: read("sku"),
+    category: read("category"),
     unit: read("unit"),
     stockQuantity: read("stockQuantity"),
     price: read("price"),
@@ -50,6 +51,7 @@ export async function addProductAction(
     if (error instanceof ValidationError) {
       return {
         errorMessage: error.message,
+        successMessage: null,
         values: getProductFormValues(formData),
       };
     }
@@ -57,7 +59,38 @@ export async function addProductAction(
     throw error;
   }
 
-  redirect("/dashboard/inventory");
+  return {
+    errorMessage: null,
+    successMessage: "Товар добавлен.",
+    values: {
+      name: "",
+      category: "",
+      unit: "",
+      stockQuantity: "",
+      price: "",
+      description: "",
+    },
+  };
+}
+
+export async function submitAddProductAction(
+  formData: FormData,
+): Promise<ProductFormState> {
+  return addProductAction(
+    {
+      errorMessage: null,
+      successMessage: null,
+      values: {
+        name: "",
+        category: "",
+        unit: "",
+        stockQuantity: "",
+        price: "",
+        description: "",
+      },
+    },
+    formData,
+  );
 }
 
 export async function updateProductAction(
@@ -70,6 +103,7 @@ export async function updateProductAction(
   if (!Number.isInteger(productId) || productId <= 0) {
     return {
       errorMessage: "Товар не найден",
+      successMessage: null,
       values: getProductFormValues(formData),
     };
   }
@@ -81,6 +115,7 @@ export async function updateProductAction(
     if (!updated) {
       return {
         errorMessage: "Товар не найден",
+        successMessage: null,
         values: getProductFormValues(formData),
       };
     }
@@ -88,6 +123,7 @@ export async function updateProductAction(
     if (error instanceof ValidationError) {
       return {
         errorMessage: error.message,
+        successMessage: null,
         values: getProductFormValues(formData),
       };
     }
@@ -101,10 +137,13 @@ export async function updateProductAction(
 export async function deleteProductAction(formData: FormData) {
   await requirePermission("manage_inventory");
   const productId = Number(String(formData.get("productId") ?? "").trim());
+  const redirectTo = String(formData.get("redirectTo") ?? "/dashboard/inventory").trim();
 
   if (Number.isInteger(productId) && productId > 0) {
     await deleteProductService(productId);
   }
 
-  redirect("/dashboard/inventory");
+  return {
+    redirectTo: redirectTo || "/dashboard/inventory",
+  };
 }

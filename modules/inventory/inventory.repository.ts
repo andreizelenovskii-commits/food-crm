@@ -1,12 +1,13 @@
 import { pool } from "@/shared/db/pool";
 import { ValidationError } from "@/shared/errors/app-error";
-import type { ProductItem } from "@/modules/inventory/inventory.types";
+import type { ProductItem, ProductCategory } from "@/modules/inventory/inventory.types";
 import type { ProductInput } from "@/modules/inventory/inventory.validation";
 
 type ProductRow = {
   id: number;
   name: string;
   sku: string | null;
+  category: ProductCategory | null;
   unit: string;
   stockQuantity: number;
   priceCents: number;
@@ -15,11 +16,14 @@ type ProductRow = {
   createdAt: Date;
 };
 
+const PRODUCT_SKU_SQL = `COALESCE(p."sku", CONCAT('PRD-', LPAD(p."id"::text, 5, '0')))` as const;
+
 function mapRowToProduct(row: ProductRow): ProductItem {
   return {
     id: row.id,
     name: row.name,
     sku: row.sku,
+    category: row.category,
     unit: row.unit,
     stockQuantity: row.stockQuantity,
     priceCents: row.priceCents,
@@ -36,10 +40,27 @@ function mapProductConflict(error: unknown): never {
     "code" in error &&
     error.code === "23505"
   ) {
-    throw new ValidationError("Товар с таким SKU уже существует");
+    throw new ValidationError("Товар с таким названием уже существует");
   }
 
   throw error;
+}
+
+async function ensureUniqueProductName(name: string, excludeProductId?: number) {
+  const result = await pool.query<{ id: number }>(
+    `
+      SELECT "id"
+      FROM "Product"
+      WHERE LOWER("name") = LOWER($1)
+        AND ($2::int IS NULL OR "id" <> $2)
+      LIMIT 1
+    `,
+    [name, excludeProductId ?? null],
+  );
+
+  if (result.rows[0]) {
+    throw new ValidationError("Товар с таким названием уже существует");
+  }
 }
 
 export async function getProducts(): Promise<ProductItem[]> {
@@ -48,7 +69,8 @@ export async function getProducts(): Promise<ProductItem[]> {
       SELECT
         p."id",
         p."name",
-        p."sku",
+        ${PRODUCT_SKU_SQL} AS "sku",
+        p."category",
         p."unit",
         p."stockQuantity",
         p."priceCents",
@@ -61,6 +83,7 @@ export async function getProducts(): Promise<ProductItem[]> {
         p."id",
         p."name",
         p."sku",
+        p."category",
         p."unit",
         p."stockQuantity",
         p."priceCents",
@@ -83,7 +106,8 @@ export async function getProductById(productId: number): Promise<ProductItem | n
       SELECT
         p."id",
         p."name",
-        p."sku",
+        ${PRODUCT_SKU_SQL} AS "sku",
+        p."category",
         p."unit",
         p."stockQuantity",
         p."priceCents",
@@ -97,6 +121,7 @@ export async function getProductById(productId: number): Promise<ProductItem | n
         p."id",
         p."name",
         p."sku",
+        p."category",
         p."unit",
         p."stockQuantity",
         p."priceCents",
@@ -111,16 +136,19 @@ export async function getProductById(productId: number): Promise<ProductItem | n
 }
 
 export async function createProduct(input: ProductInput): Promise<ProductItem> {
+  await ensureUniqueProductName(input.name);
+  await pool.query("BEGIN");
+
   try {
-    const result = await pool.query<ProductRow>(
+    const insertedProduct = await pool.query<{ id: number }>(
       `
-        INSERT INTO "Product" ("name", "sku", "unit", "stockQuantity", "priceCents", "description")
+        INSERT INTO "Product" ("name", "category", "unit", "stockQuantity", "priceCents", "description")
         VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING "id", "name", "sku", "unit", "stockQuantity", "priceCents", "description", "createdAt"
+        RETURNING "id"
       `,
       [
         input.name,
-        input.sku,
+        input.category,
         input.unit,
         input.stockQuantity,
         input.priceCents,
@@ -128,8 +156,32 @@ export async function createProduct(input: ProductInput): Promise<ProductItem> {
       ],
     );
 
-    return mapRowToProduct(result.rows[0]);
+    const createdProductId = insertedProduct.rows[0]?.id;
+
+    if (!createdProductId) {
+      throw new ValidationError("Не удалось создать товар. Попробуйте ещё раз.");
+    }
+
+    const result = await pool.query<ProductRow>(
+      `
+        UPDATE "Product"
+        SET "sku" = CONCAT('PRD-', LPAD($2::text, 5, '0'))
+        WHERE "id" = $1
+        RETURNING "id", "name", "sku", "category", "unit", "stockQuantity", "priceCents", "description", "createdAt"
+      `,
+      [createdProductId, createdProductId],
+    );
+
+    const createdProduct = result.rows[0];
+
+    if (!createdProduct) {
+      throw new ValidationError("Не удалось сохранить внутренний код товара.");
+    }
+
+    await pool.query("COMMIT");
+    return mapRowToProduct(createdProduct);
   } catch (error) {
+    await pool.query("ROLLBACK");
     mapProductConflict(error);
   }
 }
@@ -140,23 +192,24 @@ export async function updateProduct(productId: number, input: ProductInput): Pro
   }
 
   try {
+    await ensureUniqueProductName(input.name, productId);
     const result = await pool.query<ProductRow>(
       `
         UPDATE "Product"
         SET
           "name" = $2,
-          "sku" = $3,
+          "category" = $3,
           "unit" = $4,
           "stockQuantity" = $5,
           "priceCents" = $6,
           "description" = $7
         WHERE "id" = $1
-        RETURNING "id", "name", "sku", "unit", "stockQuantity", "priceCents", "description", "createdAt"
+        RETURNING "id", "name", "sku", "category", "unit", "stockQuantity", "priceCents", "description", "createdAt"
       `,
       [
         productId,
         input.name,
-        input.sku,
+        input.category,
         input.unit,
         input.stockQuantity,
         input.priceCents,

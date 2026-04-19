@@ -29,6 +29,8 @@ export async function loginAction(
   _previousState: { errorMessage: string | null },
   formData: FormData,
 ): Promise<{ errorMessage: string | null }> {
+  const returnTo = String(formData.get("returnTo") ?? "").trim();
+
   try {
     const input = parseLoginInput(formData);
     const requestHeaders = await headers();
@@ -50,10 +52,15 @@ export async function loginAction(
     throw error;
   }
 
-  redirect("/dashboard");
+  redirect(returnTo.startsWith("/") ? returnTo : "/dashboard");
 }
 
-export async function logoutAction() {
+export async function logoutAction(formData: FormData) {
+  const returnTo = String(formData.get("returnTo") ?? "").trim();
   await clearSession();
-  redirect("/login");
+  redirect(
+    returnTo.startsWith("/")
+      ? `/login?returnTo=${encodeURIComponent(returnTo)}`
+      : "/login",
+  );
 }
