@@ -3,11 +3,18 @@ import { PageShell } from "@/components/ui/page-shell";
 import { hasPermission } from "@/modules/auth/authz";
 import { requirePermission } from "@/modules/auth/auth.session";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
+import { InventoryAuditDialogs } from "@/modules/inventory/components/inventory-audit-dialogs";
 import { LowStockPanel } from "@/modules/inventory/components/low-stock-panel";
 import { ProductForm } from "@/modules/inventory/components/product-form";
 import { PRODUCT_CATEGORIES } from "@/modules/inventory/inventory.types";
-import { fetchProducts } from "@/modules/inventory/inventory.service";
+import {
+  fetchInventoryResponsibleOptions,
+  fetchInventorySessions,
+  fetchProducts,
+} from "@/modules/inventory/inventory.service";
+import { fetchEmployees } from "@/modules/employees/employees.service";
 import { TechCardForm } from "@/modules/tech-cards/components/tech-card-form";
+import { TECH_CARD_CATEGORIES } from "@/modules/tech-cards/tech-cards.types";
 import {
   fetchTechCardProductOptions,
   fetchTechCards,
@@ -32,18 +39,22 @@ function formatMoney(cents: number) {
 }
 
 export default async function InventoryPage(props: {
-  searchParams?: Promise<{ q?: string; tab?: string; category?: string }>;
+  searchParams?: Promise<{ q?: string; tab?: string; category?: string; recipeCategory?: string; draft?: string }>;
 }) {
   const user = await requirePermission("view_inventory");
   const searchParams = await props.searchParams;
-  const [products, techCards, techCardProducts] = await Promise.all([
+  const [products, responsibleOptions, inventorySessions, employees, techCards, techCardProducts] = await Promise.all([
     fetchProducts(),
+    fetchInventoryResponsibleOptions(),
+    fetchInventorySessions(),
+    fetchEmployees(),
     fetchTechCards(),
     fetchTechCardProductOptions(),
   ]);
   const rawQuery = searchParams?.q?.trim() ?? "";
   const normalizedQuery = rawQuery.toLowerCase();
   const selectedCategory = searchParams?.category?.trim() ?? "";
+  const selectedRecipeCategory = searchParams?.recipeCategory?.trim() ?? "";
   const rawTab = searchParams?.tab?.trim() ?? "products";
   const activeTab: InventoryTab = INVENTORY_TABS.some((tab) => tab.key === rawTab)
     ? (rawTab as InventoryTab)
@@ -79,6 +90,15 @@ export default async function InventoryPage(props: {
     .filter((product) => product.stockQuantity <= 5)
     .sort((left, right) => left.stockQuantity - right.stockQuantity);
   const lowStockCount = lowStockProducts.length;
+  const zeroStockCount = products.filter((product) => product.stockQuantity === 0).length;
+  const canManageInventory = hasPermission(user, "manage_inventory");
+  const filteredTechCards = techCards.filter((card) =>
+    !selectedRecipeCategory || card.category === selectedRecipeCategory,
+  );
+  const recipeCategorySummaries = TECH_CARD_CATEGORIES.map((category) => ({
+    category,
+    count: techCards.filter((card) => card.category === category).length,
+  })).filter((item) => item.count > 0);
 
   return (
     <PageShell
@@ -321,7 +341,7 @@ export default async function InventoryPage(props: {
           </section>
         </div>
 
-        {hasPermission(user, "manage_inventory") ? (
+        {canManageInventory ? (
           <div className="space-y-6 xl:sticky xl:top-28 xl:self-start">
             <ProductForm />
           </div>
@@ -440,123 +460,218 @@ export default async function InventoryPage(props: {
       ) : null}
 
       {activeTab === "audit" ? (
-        <div className="grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
+        <div className="grid gap-8 xl:grid-cols-[0.78fr_1.22fr] xl:items-start">
           <div className="space-y-6">
-            <section className="rounded-3xl border border-zinc-200 bg-[linear-gradient(180deg,#fffdfa_0%,#eef0f6_100%)] p-6 shadow-sm shadow-zinc-950/5">
-              <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">
+            <section className="rounded-[32px] border border-zinc-200 bg-[linear-gradient(180deg,#fffdfa_0%,#eef0f6_100%)] p-6 shadow-sm shadow-zinc-950/5 xl:p-7">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-zinc-500">
                 Инвентаризация
               </p>
-              <h2 className="mt-2 text-xl font-semibold text-zinc-950">
-                Сверка фактических остатков
+              <h2 className="mt-3 max-w-[18rem] text-[1.85rem] font-semibold leading-[1.08] tracking-[-0.02em] text-zinc-950">
+                Сверка факта и системы
               </h2>
-              <p className="mt-3 text-sm leading-6 text-zinc-600">
-                Здесь будем сверять реальные остатки на складе с данными системы и фиксировать расхождения.
+              <p className="mt-3 max-w-md text-[15px] leading-7 text-zinc-600">
+                Проводи ревизию по товарам, фиксируй реальные остатки и сразу обновляй склад по факту пересчёта.
               </p>
 
               <div className="mt-5 grid gap-4 md:grid-cols-3">
-                <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
-                  <p className="text-sm font-medium text-zinc-500">Позиций на сверку</p>
-                  <p className="mt-3 text-3xl font-semibold text-zinc-950">{products.length}</p>
+                <div className="rounded-[26px] border border-white/90 bg-white/90 p-4 shadow-sm shadow-zinc-950/5">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-zinc-400">На сверку</p>
+                  <p className="mt-3 text-[2rem] font-semibold leading-none tracking-[-0.03em] text-zinc-950">{products.length}</p>
+                  <p className="mt-3 text-[14px] leading-6 text-zinc-500">Всех складских позиций в системе</p>
                 </div>
-                <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
-                  <p className="text-sm font-medium text-zinc-500">Расхождений</p>
-                  <p className="mt-3 text-3xl font-semibold text-zinc-950">0</p>
+                <div className="rounded-[26px] border border-white/90 bg-white/90 p-4 shadow-sm shadow-zinc-950/5">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-zinc-400">Мало остатка</p>
+                  <p className="mt-3 text-[2rem] font-semibold leading-none tracking-[-0.03em] text-zinc-950">{lowStockCount}</p>
+                  <p className="mt-3 text-[14px] leading-6 text-zinc-500">Позиции, которые стоит проверить в первую очередь</p>
                 </div>
-                <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
-                  <p className="text-sm font-medium text-zinc-500">Последняя сверка</p>
-                  <p className="mt-3 text-3xl font-semibold text-zinc-950">-</p>
+                <div className="rounded-[26px] border border-white/90 bg-white/90 p-4 shadow-sm shadow-zinc-950/5">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-zinc-400">Нулевой остаток</p>
+                  <p className="mt-3 text-[2rem] font-semibold leading-none tracking-[-0.03em] text-zinc-950">{zeroStockCount}</p>
+                  <p className="mt-3 text-[14px] leading-6 text-zinc-500">Позиции, где система уже показывает ноль</p>
                 </div>
               </div>
             </section>
 
-            <section className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
-              <h2 className="text-xl font-semibold text-zinc-950">Журнал инвентаризаций</h2>
-              <p className="mt-2 text-sm leading-6 text-zinc-600">
-                После подключения логики здесь появятся все проведённые сверки и найденные расхождения.
+            <section className="rounded-[32px] border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5 xl:p-7">
+              <h2 className="text-[1.55rem] font-semibold tracking-[-0.02em] text-zinc-950">Как работать с ревизией</h2>
+              <div className="mt-5 space-y-4">
+                <div className="rounded-[24px] border border-zinc-200 bg-zinc-50/80 p-4">
+                  <p className="text-sm font-medium text-zinc-900">1. Найди нужную группу товаров</p>
+                  <p className="mt-2 text-sm leading-6 text-zinc-600">
+                    Отфильтруй список по категории или найди конкретный товар по названию и внутреннему коду.
+                  </p>
+                </div>
+                <div className="rounded-[24px] border border-zinc-200 bg-zinc-50/80 p-4">
+                  <p className="text-sm font-medium text-zinc-900">2. Внеси фактический остаток</p>
+                  <p className="mt-2 text-sm leading-6 text-zinc-600">
+                    Вводи только те позиции, которые уже пересчитаны. Черновик сохраняется локально и не слетает при обновлении страницы.
+                  </p>
+                </div>
+                <div className="rounded-[24px] border border-zinc-200 bg-zinc-50/80 p-4">
+                  <p className="text-sm font-medium text-zinc-900">3. Сохрани итоговый лист</p>
+                  <p className="mt-2 text-sm leading-6 text-zinc-600">
+                    После создания лист зафиксирует выбранные товары, ответственного и остатки системы на текущий момент.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-[32px] border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5 xl:p-7">
+              <h2 className="text-[1.55rem] font-semibold tracking-[-0.02em] text-zinc-950">Готовность команды</h2>
+              <p className="mt-2 text-[15px] leading-7 text-zinc-600">
+                Ответственный за инвентаризацию выбирается из текущего списка сотрудников.
               </p>
-              <div className="mt-6 rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-sm text-zinc-500">
-                Пока инвентаризаций ещё не проводилось.
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-[24px] border border-zinc-200 bg-zinc-50/80 p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Сотрудников доступно</p>
+                  <p className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-zinc-950">{employees.length}</p>
+                </div>
+                <div className="rounded-[24px] border border-zinc-200 bg-zinc-50/80 p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Создано листов</p>
+                  <p className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-zinc-950">{inventorySessions.length}</p>
+                </div>
               </div>
             </section>
           </div>
 
-          <aside className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
-            <div className="space-y-2">
-              <h2 className="text-xl font-semibold text-zinc-950">Новая инвентаризация</h2>
-              <p className="text-sm leading-6 text-zinc-600">
-                Здесь будет форма сверки: дата, ответственный, список товаров, фактический остаток и комментарий.
-              </p>
-            </div>
-            <div className="mt-6 rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-sm leading-6 text-zinc-500">
-              Каркас вкладки готов. Следующим шагом можно сделать реальную инвентаризацию с фиксацией расхождений.
-            </div>
-          </aside>
+          <InventoryAuditDialogs
+            products={products}
+            responsibleOptions={responsibleOptions}
+            sessions={inventorySessions}
+            canManageInventory={canManageInventory}
+            lowStockCount={lowStockCount}
+            zeroStockCount={zeroStockCount}
+          />
         </div>
       ) : null}
 
       {activeTab === "recipes" ? (
-        <div className="grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
+        <div className="grid gap-8 xl:grid-cols-[minmax(0,0.92fr)_minmax(420px,1.08fr)] xl:items-start">
           <div className="space-y-6">
-            <section className="rounded-3xl border border-zinc-200 bg-[linear-gradient(180deg,#fffdfa_0%,#eceff8_100%)] p-6 shadow-sm shadow-zinc-950/5">
-              <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">
+            <section className="rounded-[32px] border border-zinc-200 bg-[linear-gradient(180deg,#fffdfa_0%,#eef3ff_100%)] p-6 shadow-sm shadow-zinc-950/5 xl:p-7">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-zinc-500">
                 Технологические карты
               </p>
-              <h2 className="mt-2 text-xl font-semibold text-zinc-950">
+              <h2 className="mt-3 max-w-[18rem] text-[1.85rem] font-semibold leading-[1.08] tracking-[-0.02em] text-zinc-950">
                 Состав и нормы расхода
               </h2>
-              <p className="mt-3 text-sm leading-6 text-zinc-600">
+              <p className="mt-3 max-w-md text-[15px] leading-7 text-zinc-600">
                 Здесь будем связывать продаваемые позиции с ингредиентами и автоматически считать расход склада.
               </p>
 
-              <div className="mt-5 grid gap-4 md:grid-cols-3">
-                <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
-                  <p className="text-sm font-medium text-zinc-500">Карт</p>
-                  <p className="mt-3 text-3xl font-semibold text-zinc-950">{techCards.length}</p>
+              <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                <div className="rounded-[26px] border border-white/90 bg-white/90 p-4 shadow-sm shadow-zinc-950/5">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-zinc-400">Техкарт</p>
+                  <p className="mt-3 text-[2rem] font-semibold leading-none tracking-[-0.03em] text-zinc-950">
+                    {techCards.length}
+                  </p>
+                  <p className="mt-3 max-w-[12rem] text-[14px] leading-6 text-zinc-500">
+                    Создано для каталога и кухни
+                  </p>
                 </div>
-                <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
-                  <p className="text-sm font-medium text-zinc-500">Ингредиентов</p>
-                  <p className="mt-3 text-3xl font-semibold text-zinc-950">{products.length}</p>
+                <div className="rounded-[26px] border border-white/90 bg-white/90 p-4 shadow-sm shadow-zinc-950/5">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-zinc-400">Ингредиенты</p>
+                  <p className="mt-3 text-[2rem] font-semibold leading-none tracking-[-0.03em] text-zinc-950">
+                    {products.length}
+                  </p>
+                  <p className="mt-3 max-w-[12rem] text-[14px] leading-6 text-zinc-500">
+                    Доступно позиций для состава
+                  </p>
                 </div>
-                <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
-                  <p className="text-sm font-medium text-zinc-500">Автосписание</p>
-                  <p className="mt-3 text-3xl font-semibold text-zinc-950">В планах</p>
+                <div className="rounded-[26px] border border-white/90 bg-white/90 p-4 shadow-sm shadow-zinc-950/5">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-zinc-400">Автосписание</p>
+                  <p className="mt-3 text-[1.35rem] font-semibold leading-[1.2] tracking-[-0.02em] text-zinc-950">
+                    В планах
+                  </p>
+                  <p className="mt-3 max-w-[12rem] text-[14px] leading-6 text-zinc-500">
+                    Следующий этап после настройки техкарт
+                  </p>
                 </div>
               </div>
             </section>
 
-            <section className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
-              <h2 className="text-xl font-semibold text-zinc-950">Список технологических карт</h2>
-              <p className="mt-2 text-sm leading-6 text-zinc-600">
+            <section className="rounded-[32px] border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5 xl:p-7">
+              <h2 className="text-[1.55rem] font-semibold tracking-[-0.02em] text-zinc-950">Список технологических карт</h2>
+              <p className="mt-2 text-[15px] leading-7 text-zinc-600">
                 Здесь хранятся реальные технологические карты, которые можно будет связывать с каталогом сайта.
               </p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Link
+                  href="/dashboard/inventory?tab=recipes"
+                  scroll={false}
+                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                    !selectedRecipeCategory
+                      ? "bg-zinc-950 text-white shadow-sm shadow-zinc-950/10"
+                      : "border border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 hover:text-zinc-950"
+                  }`}
+                  style={!selectedRecipeCategory ? { color: "#ffffff" } : undefined}
+                >
+                  Все категории
+                </Link>
+                {recipeCategorySummaries.map((item) => {
+                  const isActive = selectedRecipeCategory === item.category;
+
+                  return (
+                    <Link
+                      key={item.category}
+                      href={`/dashboard/inventory?tab=recipes&recipeCategory=${encodeURIComponent(item.category)}`}
+                      scroll={false}
+                      className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                        isActive
+                          ? "bg-emerald-600 text-white shadow-sm shadow-emerald-700/20"
+                          : "border border-emerald-100 bg-emerald-50/70 text-emerald-800 hover:border-emerald-200 hover:bg-emerald-100"
+                      }`}
+                      style={isActive ? { color: "#ffffff" } : undefined}
+                    >
+                      {item.category} {item.count}
+                    </Link>
+                  );
+                })}
+              </div>
               <div className="mt-6 space-y-4">
-                {techCards.length === 0 ? (
+                {filteredTechCards.length === 0 ? (
                   <div className="rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-sm text-zinc-500">
-                    Пока технологических карт ещё нет.
+                    {techCards.length === 0
+                      ? "Пока технологических карт ещё нет."
+                      : "В этой категории технологических карт пока нет."}
                   </div>
                 ) : (
-                  techCards.map((card) => (
+                  filteredTechCards.map((card) => (
                     <article
                       key={card.id}
-                      className="rounded-3xl border border-zinc-200 bg-zinc-50 p-5"
+                      className="rounded-[28px] border border-zinc-200 bg-zinc-50/90 p-5"
                     >
                       <div className="space-y-3">
                         <div className="flex flex-wrap items-center justify-between gap-3">
                           <div>
                             <h3 className="text-lg font-semibold text-zinc-950">{card.name}</h3>
+                            <p className="text-sm text-emerald-700">{card.category}</p>
+                            {card.pizzaSize ? (
+                              <p className="text-sm text-zinc-500">Размер: {card.pizzaSize}</p>
+                            ) : null}
                             <p className="text-sm text-zinc-500">
                               Выход: {card.outputQuantity} {card.outputUnit}
                             </p>
                           </div>
-                          <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-zinc-500 ring-1 ring-zinc-200">
-                            Ингредиентов: {card.ingredients.length}
-                          </span>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-zinc-500 ring-1 ring-zinc-200">
+                              Ингредиентов: {card.ingredients.length}
+                            </span>
+                            {canManageInventory ? (
+                              <Link
+                                href={`/dashboard/inventory/tech-cards/${card.id}`}
+                                className="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-700 transition hover:border-zinc-300 hover:text-zinc-950"
+                              >
+                                Редактировать
+                              </Link>
+                            ) : null}
+                          </div>
                         </div>
 
-                        <div className="space-y-2 text-sm text-zinc-600">
+                        <div className="grid gap-2 text-sm text-zinc-600 sm:grid-cols-2">
                           {card.ingredients.map((ingredient) => (
-                            <p key={ingredient.id}>
-                              {ingredient.productName}: {ingredient.quantity} {ingredient.productUnit}
+                            <p key={ingredient.id} className="rounded-2xl bg-white px-3 py-2 ring-1 ring-zinc-200/80">
+                              {ingredient.productName}: {ingredient.quantity} {ingredient.unit}
                             </p>
                           ))}
                         </div>
@@ -572,10 +687,13 @@ export default async function InventoryPage(props: {
             </section>
           </div>
 
-          {hasPermission(user, "manage_inventory") ? (
-            <TechCardForm products={techCardProducts} />
+          {canManageInventory ? (
+            <TechCardForm
+              products={techCardProducts}
+              clearDraft={searchParams?.draft?.trim() === "cleared"}
+            />
           ) : (
-            <aside className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+            <aside className="rounded-[32px] border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
               <div className="space-y-2">
                 <h2 className="text-xl font-semibold text-zinc-950">Новая техкарта</h2>
                 <p className="text-sm leading-6 text-zinc-600">

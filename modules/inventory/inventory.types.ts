@@ -24,3 +24,50 @@ export type ProductItem = {
   orderItemsCount: number;
   createdAt: string;
 };
+
+export type InventoryResponsibleOption = {
+  id: number;
+  name: string;
+  role: string;
+};
+
+export type InventorySessionItem = {
+  id: number;
+  productId: number;
+  productName: string;
+  productCategory: string | null;
+  productUnit: string;
+  stockQuantity: number;
+};
+
+export type InventorySessionItemSummary = {
+  id: number;
+  productId: number;
+  productName: string;
+  productCategory: string | null;
+  productUnit: string;
+  stockQuantity: number;
+};
+
+export type InventorySession = {
+  id: number;
+  responsibleEmployeeId: number;
+  responsibleEmployeeName: string;
+  responsibleEmployeeRole: string;
+  notes: string | null;
+  createdAt: string;
+  items: InventorySessionItem[];
+};
+
+export type InventorySessionSummary = {
+  id: number;
+  responsibleEmployeeId: number;
+  responsibleEmployeeName: string;
+  responsibleEmployeeRole: string;
+  notes: string | null;
+  createdAt: string;
+  itemsCount: number;
+  totalQuantity: number;
+  categories: string[];
+  items: InventorySessionItemSummary[];
+};

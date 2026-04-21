@@ -1,7 +1,18 @@
 import { pool } from "@/shared/db/pool";
 import { ValidationError } from "@/shared/errors/app-error";
-import type { ProductItem, ProductCategory } from "@/modules/inventory/inventory.types";
-import type { ProductInput } from "@/modules/inventory/inventory.validation";
+import type {
+  InventoryResponsibleOption,
+  InventorySession,
+  InventorySessionItem,
+  InventorySessionSummary,
+  ProductItem,
+  ProductCategory,
+} from "@/modules/inventory/inventory.types";
+import type {
+  CreateInventorySessionInput,
+  InventoryAuditEntryInput,
+  ProductInput,
+} from "@/modules/inventory/inventory.validation";
 
 type ProductRow = {
   id: number;
@@ -14,6 +25,26 @@ type ProductRow = {
   description: string | null;
   orderItemsCount?: string;
   createdAt: Date;
+};
+
+type InventorySessionRow = {
+  id: number;
+  responsibleEmployeeId: number;
+  responsibleEmployeeName: string;
+  responsibleEmployeeRole: string;
+  notes: string | null;
+  createdAt: Date;
+  itemsCount?: string;
+};
+
+type InventorySessionItemRow = {
+  id: number;
+  inventorySessionId: number;
+  productId: number;
+  productName: string;
+  productCategory: string | null;
+  productUnit: string;
+  stockQuantity: number;
 };
 
 const PRODUCT_SKU_SQL = `COALESCE(p."sku", CONCAT('PRD-', LPAD(p."id"::text, 5, '0')))` as const;
@@ -44,6 +75,68 @@ function mapProductConflict(error: unknown): never {
   }
 
   throw error;
+}
+
+export type InventoryAuditResult = {
+  checkedCount: number;
+  updatedCount: number;
+  differenceCount: number;
+};
+
+function mapInventorySessionItem(row: InventorySessionItemRow): InventorySessionItem {
+  return {
+    id: row.id,
+    productId: row.productId,
+    productName: row.productName,
+    productCategory: row.productCategory,
+    productUnit: row.productUnit,
+    stockQuantity: row.stockQuantity,
+  };
+}
+
+function mapInventorySession(
+  row: InventorySessionRow,
+  items: InventorySessionItem[],
+): InventorySession {
+  return {
+    id: row.id,
+    responsibleEmployeeId: row.responsibleEmployeeId,
+    responsibleEmployeeName: row.responsibleEmployeeName,
+    responsibleEmployeeRole: row.responsibleEmployeeRole,
+    notes: row.notes,
+    createdAt: row.createdAt.toISOString(),
+    items,
+  };
+}
+
+async function getInventorySessionItemsBySessionIds(sessionIds: number[]) {
+  if (sessionIds.length === 0) {
+    return {} as Record<number, InventorySessionItem[]>;
+  }
+
+  const result = await pool.query<InventorySessionItemRow>(
+    `
+      SELECT
+        i."id",
+        i."inventorySessionId",
+        i."productId",
+        i."productName",
+        i."productCategory",
+        i."productUnit",
+        i."stockQuantity"
+      FROM "InventorySessionItem" i
+      WHERE i."inventorySessionId" = ANY($1::int[])
+      ORDER BY LOWER(i."productName") ASC, i."id" ASC
+    `,
+    [sessionIds],
+  );
+
+  return result.rows.reduce<Record<number, InventorySessionItem[]>>((acc, row) => {
+    const current = acc[row.inventorySessionId] ?? [];
+    current.push(mapInventorySessionItem(row));
+    acc[row.inventorySessionId] = current;
+    return acc;
+  }, {});
 }
 
 async function ensureUniqueProductName(name: string, excludeProductId?: number) {
@@ -94,6 +187,26 @@ export async function getProducts(): Promise<ProductItem[]> {
   );
 
   return result.rows.map(mapRowToProduct);
+}
+
+export async function getInventoryResponsibleOptions(): Promise<InventoryResponsibleOption[]> {
+  const result = await pool.query<{
+    id: number;
+    name: string;
+    role: string;
+  }>(
+    `
+      SELECT "id", "name", "role"
+      FROM "Employee"
+      ORDER BY LOWER("name") ASC, "id" ASC
+    `,
+  );
+
+  return result.rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    role: row.role,
+  }));
 }
 
 export async function getProductById(productId: number): Promise<ProductItem | null> {
@@ -250,4 +363,232 @@ export async function deleteProduct(productId: number): Promise<boolean> {
   );
 
   return (result.rowCount ?? 0) > 0;
+}
+
+export async function applyInventoryAudit(entries: InventoryAuditEntryInput[]): Promise<InventoryAuditResult> {
+  if (entries.length === 0) {
+    throw new ValidationError("Укажи фактический остаток хотя бы для одной позиции");
+  }
+
+  const productIds = entries.map((entry) => entry.productId);
+  const currentProducts = await pool.query<Pick<ProductRow, "id" | "stockQuantity">>(
+    `
+      SELECT "id", "stockQuantity"
+      FROM "Product"
+      WHERE "id" = ANY($1::int[])
+    `,
+    [productIds],
+  );
+
+  if (currentProducts.rows.length !== entries.length) {
+    throw new ValidationError("Часть товаров для инвентаризации уже недоступна. Обнови страницу и попробуй снова.");
+  }
+
+  const stockById = new Map(
+    currentProducts.rows.map((row) => [row.id, row.stockQuantity]),
+  );
+  const changedEntries = entries.filter((entry) => stockById.get(entry.productId) !== entry.actualQuantity);
+
+  await pool.query("BEGIN");
+
+  try {
+    for (const entry of changedEntries) {
+      await pool.query(
+        `
+          UPDATE "Product"
+          SET "stockQuantity" = $2
+          WHERE "id" = $1
+        `,
+        [entry.productId, entry.actualQuantity],
+      );
+    }
+
+    await pool.query("COMMIT");
+
+    return {
+      checkedCount: entries.length,
+      updatedCount: changedEntries.length,
+      differenceCount: changedEntries.length,
+    };
+  } catch (error) {
+    await pool.query("ROLLBACK");
+    throw error;
+  }
+}
+
+export async function createInventorySession(input: CreateInventorySessionInput): Promise<InventorySession> {
+  const responsibleResult = await pool.query<{ id: number; name: string; role: string }>(
+    `
+      SELECT "id", "name", "role"
+      FROM "Employee"
+      WHERE "id" = $1
+      LIMIT 1
+    `,
+    [input.responsibleEmployeeId],
+  );
+
+  const responsible = responsibleResult.rows[0];
+
+  if (!responsible) {
+    throw new ValidationError("Ответственный сотрудник не найден");
+  }
+
+  const productsResult = await pool.query<ProductRow>(
+    `
+      SELECT
+        p."id",
+        p."name",
+        ${PRODUCT_SKU_SQL} AS "sku",
+        p."category",
+        p."unit",
+        p."stockQuantity",
+        p."priceCents",
+        p."description",
+        p."createdAt"
+      FROM "Product" p
+      WHERE p."id" = ANY($1::int[])
+      ORDER BY LOWER(p."name") ASC, p."id" ASC
+    `,
+    [input.productIds],
+  );
+
+  if (productsResult.rows.length !== input.productIds.length) {
+    throw new ValidationError("Часть выбранных товаров уже недоступна. Обнови страницу и собери лист заново.");
+  }
+
+  await pool.query("BEGIN");
+
+  try {
+    const sessionResult = await pool.query<InventorySessionRow>(
+      `
+        INSERT INTO "InventorySession" ("responsibleEmployeeId", "notes")
+        VALUES ($1, $2)
+        RETURNING
+          "id",
+          "responsibleEmployeeId",
+          "notes",
+          "createdAt"
+      `,
+      [input.responsibleEmployeeId, input.notes],
+    );
+
+    const session = sessionResult.rows[0];
+
+    if (!session) {
+      throw new ValidationError("Не удалось создать лист инвентаризации");
+    }
+
+    const items: InventorySessionItem[] = [];
+
+    for (const productId of input.productIds) {
+      const product = productsResult.rows.find((row) => row.id === productId);
+
+      if (!product) {
+        continue;
+      }
+
+      const itemResult = await pool.query<InventorySessionItemRow>(
+        `
+          INSERT INTO "InventorySessionItem" (
+            "inventorySessionId",
+            "productId",
+            "productName",
+            "productCategory",
+            "productUnit",
+            "stockQuantity"
+          )
+          VALUES ($1, $2, $3, $4, $5, $6)
+          RETURNING
+            "id",
+            "inventorySessionId",
+            "productId",
+            "productName",
+            "productCategory",
+            "productUnit",
+            "stockQuantity"
+        `,
+        [
+          session.id,
+          product.id,
+          product.name,
+          product.category,
+          product.unit,
+          product.stockQuantity,
+        ],
+      );
+
+      const createdItem = itemResult.rows[0];
+
+      if (createdItem) {
+        items.push(mapInventorySessionItem(createdItem));
+      }
+    }
+
+    await pool.query("COMMIT");
+
+    return mapInventorySession(
+      {
+        ...session,
+        responsibleEmployeeName: responsible.name,
+        responsibleEmployeeRole: responsible.role,
+      },
+      items,
+    );
+  } catch (error) {
+    await pool.query("ROLLBACK");
+    throw error;
+  }
+}
+
+export async function getInventorySessions(): Promise<InventorySessionSummary[]> {
+  const sessionsResult = await pool.query<InventorySessionRow>(
+    `
+      SELECT
+        s."id",
+        s."responsibleEmployeeId",
+        e."name" AS "responsibleEmployeeName",
+        e."role" AS "responsibleEmployeeRole",
+        s."notes",
+        s."createdAt",
+        COUNT(i."id") AS "itemsCount"
+      FROM "InventorySession" s
+      INNER JOIN "Employee" e ON e."id" = s."responsibleEmployeeId"
+      LEFT JOIN "InventorySessionItem" i ON i."inventorySessionId" = s."id"
+      GROUP BY
+        s."id",
+        s."responsibleEmployeeId",
+        e."name",
+        e."role",
+        s."notes",
+        s."createdAt"
+      ORDER BY s."createdAt" DESC, s."id" DESC
+    `,
+  );
+
+  const itemsBySessionId = await getInventorySessionItemsBySessionIds(
+    sessionsResult.rows.map((row) => row.id),
+  );
+
+  return sessionsResult.rows.map((row) => {
+    const items = itemsBySessionId[row.id] ?? [];
+
+    return {
+      id: row.id,
+      responsibleEmployeeId: row.responsibleEmployeeId,
+      responsibleEmployeeName: row.responsibleEmployeeName,
+      responsibleEmployeeRole: row.responsibleEmployeeRole,
+      notes: row.notes,
+      createdAt: row.createdAt.toISOString(),
+      itemsCount: Number(row.itemsCount ?? items.length),
+      totalQuantity: items.reduce((sum, item) => sum + item.stockQuantity, 0),
+      categories: Array.from(
+        new Set(
+          items
+            .map((item) => item.productCategory)
+            .filter((category): category is string => Boolean(category)),
+        ),
+      ),
+      items,
+    };
+  });
 }

@@ -51,6 +51,7 @@ model Product {
   createdAt   DateTime @default(now())
   orderItems  OrderItem[]
   ingredients TechCardIngredient[]
+  inventoryItems InventorySessionItem[]
 }
 
 model Employee {
@@ -67,6 +68,7 @@ model Employee {
   createdAt    DateTime @default(now())
   orders       Order[]
   adjustments  EmployeeAdjustment[]
+  inventorySessions InventorySession[]
 }
 
 enum EmployeeAdjustmentType {
@@ -110,7 +112,9 @@ model OrderItem {
 
 model TechnologicalCard {
   id             Int                  @id @default(autoincrement())
-  name           String               @unique
+  name           String
+  category       String
+  pizzaSize      String?
   outputQuantity Int
   outputUnit     String
   description    String?
@@ -125,7 +129,8 @@ model TechCardIngredient {
   technologicalCardId Int
   product             Product           @relation(fields: [productId], references: [id])
   productId           Int
-  quantity            Int
+  quantity            Float
+  unit                String
 }
 
 model CatalogItem {
@@ -140,4 +145,25 @@ model CatalogItem {
   createdAt           DateTime          @default(now())
   technologicalCard   TechnologicalCard @relation(fields: [technologicalCardId], references: [id])
   technologicalCardId Int
+}
+
+model InventorySession {
+  id                    Int                    @id @default(autoincrement())
+  responsibleEmployee   Employee               @relation(fields: [responsibleEmployeeId], references: [id])
+  responsibleEmployeeId Int
+  notes                 String?
+  createdAt             DateTime               @default(now())
+  items                 InventorySessionItem[]
+}
+
+model InventorySessionItem {
+  id                 Int              @id @default(autoincrement())
+  inventorySession   InventorySession @relation(fields: [inventorySessionId], references: [id])
+  inventorySessionId Int
+  product            Product          @relation(fields: [productId], references: [id])
+  productId          Int
+  productName        String
+  productCategory    String?
+  productUnit        String
+  stockQuantity      Int
 }

@@ -1,13 +1,19 @@
 import {
   createTechCard,
+  getTechCardById,
   getTechCardOptions,
   getTechCardProductOptions,
   getTechCards,
+  updateTechCard,
 } from "@/modules/tech-cards/tech-cards.repository";
 import type { TechCardInput } from "@/modules/tech-cards/tech-cards.validation";
 
 export async function fetchTechCards() {
   return getTechCards();
+}
+
+export async function fetchTechCardById(id: number) {
+  return getTechCardById(id);
 }
 
 export async function fetchTechCardProductOptions() {
@@ -20,4 +26,8 @@ export async function fetchTechCardOptions() {
 
 export async function addTechCard(input: TechCardInput) {
   return createTechCard(input);
+}
+
+export async function updateTechCardById(id: number, input: TechCardInput) {
+  return updateTechCard(id, input);
 }

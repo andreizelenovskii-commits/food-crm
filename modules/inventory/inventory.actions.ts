@@ -4,11 +4,17 @@ import { redirect } from "next/navigation";
 import { requirePermission } from "@/modules/auth/auth.session";
 import { ValidationError } from "@/shared/errors/app-error";
 import {
+  applyInventoryAuditService,
   addProduct,
+  createInventorySessionService,
   deleteProductService,
   updateProductService,
 } from "@/modules/inventory/inventory.service";
-import { parseProductInput } from "@/modules/inventory/inventory.validation";
+import {
+  parseCreateInventorySessionInput,
+  parseInventoryAuditInput,
+  parseProductInput,
+} from "@/modules/inventory/inventory.validation";
 
 export type ProductFormValues = {
   name: string;
@@ -23,6 +29,20 @@ export type ProductFormState = {
   errorMessage: string | null;
   successMessage: string | null;
   values: ProductFormValues;
+};
+
+export type InventoryAuditFormState = {
+  errorMessage: string | null;
+  successMessage: string | null;
+  checkedCount: number;
+  updatedCount: number;
+  differenceCount: number;
+};
+
+export type InventorySessionCreateFormState = {
+  errorMessage: string | null;
+  successMessage: string | null;
+  createdSessionId: number | null;
 };
 
 function getProductFormValues(formData: FormData): ProductFormValues {
@@ -146,4 +166,67 @@ export async function deleteProductAction(formData: FormData) {
   return {
     redirectTo: redirectTo || "/dashboard/inventory",
   };
+}
+
+export async function submitInventoryAuditAction(
+  _previousState: InventoryAuditFormState,
+  formData: FormData,
+): Promise<InventoryAuditFormState> {
+  await requirePermission("manage_inventory");
+
+  try {
+    const entries = parseInventoryAuditInput(formData);
+    const result = await applyInventoryAuditService(entries);
+
+    return {
+      errorMessage: null,
+      successMessage:
+        result.updatedCount > 0
+          ? `Инвентаризация сохранена. Обновлено позиций: ${result.updatedCount}.`
+          : "Инвентаризация сохранена. Расхождений не найдено.",
+      checkedCount: result.checkedCount,
+      updatedCount: result.updatedCount,
+      differenceCount: result.differenceCount,
+    };
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return {
+        errorMessage: error.message,
+        successMessage: null,
+        checkedCount: 0,
+        updatedCount: 0,
+        differenceCount: 0,
+      };
+    }
+
+    throw error;
+  }
+}
+
+export async function createInventorySessionAction(
+  _previousState: InventorySessionCreateFormState,
+  formData: FormData,
+): Promise<InventorySessionCreateFormState> {
+  await requirePermission("manage_inventory");
+
+  try {
+    const input = parseCreateInventorySessionInput(formData);
+    const session = await createInventorySessionService(input);
+
+    return {
+      errorMessage: null,
+      successMessage: `Инвентаризация №${session.id} создана.`,
+      createdSessionId: session.id,
+    };
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return {
+        errorMessage: error.message,
+        successMessage: null,
+        createdSessionId: null,
+      };
+    }
+
+    throw error;
+  }
 }

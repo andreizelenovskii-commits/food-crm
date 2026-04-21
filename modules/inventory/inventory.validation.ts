@@ -17,6 +17,17 @@ export type ProductInput = {
   description: string | null;
 };
 
+export type InventoryAuditEntryInput = {
+  productId: number;
+  actualQuantity: number;
+};
+
+export type CreateInventorySessionInput = {
+  responsibleEmployeeId: number;
+  notes: string | null;
+  productIds: number[];
+};
+
 function parsePriceToCents(value: string) {
   if (!value) {
     return 0;
@@ -65,5 +76,84 @@ export function parseProductInput(formData: FormData): ProductInput {
     stockQuantity,
     priceCents: parsePriceToCents(priceRaw),
     description: description || null,
+  };
+}
+
+export function parseInventoryAuditInput(formData: FormData): InventoryAuditEntryInput[] {
+  const productIds = formData
+    .getAll("productId")
+    .map((value) => Number(String(value ?? "").trim()));
+  const actualQuantities = formData
+    .getAll("actualQuantity")
+    .map((value) => String(value ?? "").trim());
+
+  if (productIds.length === 0 || actualQuantities.length === 0 || productIds.length !== actualQuantities.length) {
+    throw new ValidationError("Не удалось прочитать данные инвентаризации");
+  }
+
+  const uniqueProductIds = new Set<number>();
+  const entries = productIds.flatMap((productId, index) => {
+    const actualQuantityRaw = actualQuantities[index];
+
+    if (!actualQuantityRaw) {
+      return [];
+    }
+
+    if (!Number.isInteger(productId) || productId <= 0) {
+      throw new ValidationError("В списке инвентаризации найден некорректный товар");
+    }
+
+    if (uniqueProductIds.has(productId)) {
+      throw new ValidationError("Один и тот же товар нельзя добавить в инвентаризацию дважды");
+    }
+
+    const actualQuantity = Number(actualQuantityRaw.replace(",", "."));
+
+    if (!Number.isInteger(actualQuantity) || actualQuantity < 0) {
+      throw new ValidationError("Фактический остаток должен быть неотрицательным целым числом");
+    }
+
+    uniqueProductIds.add(productId);
+
+    return [{ productId, actualQuantity }];
+  });
+
+  if (entries.length === 0) {
+    throw new ValidationError("Укажи фактический остаток хотя бы для одной позиции");
+  }
+
+  return entries;
+}
+
+export function parseCreateInventorySessionInput(formData: FormData): CreateInventorySessionInput {
+  const responsibleEmployeeId = Number(normalizeInput(formData.get("responsibleEmployeeId")));
+  const notes = normalizeInput(formData.get("notes"));
+  const productIds = formData
+    .getAll("productId")
+    .map((value) => Number(String(value ?? "").trim()))
+    .filter((value) => Number.isInteger(value) && value > 0);
+
+  if (!Number.isInteger(responsibleEmployeeId) || responsibleEmployeeId <= 0) {
+    throw new ValidationError("Выбери ответственного за инвентаризацию");
+  }
+
+  if (productIds.length === 0) {
+    throw new ValidationError("Добавь хотя бы один товар в лист инвентаризации");
+  }
+
+  const uniqueProductIds = new Set<number>();
+
+  for (const productId of productIds) {
+    if (uniqueProductIds.has(productId)) {
+      throw new ValidationError("Один и тот же товар нельзя добавить в лист дважды");
+    }
+
+    uniqueProductIds.add(productId);
+  }
+
+  return {
+    responsibleEmployeeId,
+    notes: notes || null,
+    productIds,
   };
 }
