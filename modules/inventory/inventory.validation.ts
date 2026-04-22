@@ -28,6 +28,11 @@ export type CreateInventorySessionInput = {
   productIds: number[];
 };
 
+export type InventorySessionActualInput = {
+  itemId: number;
+  actualQuantity: number | null;
+};
+
 function parsePriceToCents(value: string) {
   if (!value) {
     return 0;
@@ -156,4 +161,51 @@ export function parseCreateInventorySessionInput(formData: FormData): CreateInve
     notes: notes || null,
     productIds,
   };
+}
+
+export function parseInventorySessionActualsInput(formData: FormData): InventorySessionActualInput[] {
+  const itemIds = formData
+    .getAll("itemId")
+    .map((value) => Number(String(value ?? "").trim()));
+  const actualQuantities = formData
+    .getAll("actualQuantity")
+    .map((value) => normalizeInput(value));
+
+  if (itemIds.length === 0 || itemIds.length !== actualQuantities.length) {
+    throw new ValidationError("Не удалось обработать строки действующей инвентаризации");
+  }
+
+  const uniqueItemIds = new Set<number>();
+
+  return itemIds.map((itemId, index) => {
+    const actualQuantityRaw = actualQuantities[index];
+
+    if (!Number.isInteger(itemId) || itemId <= 0) {
+      throw new ValidationError("В инвентаризации найдена некорректная строка");
+    }
+
+    if (uniqueItemIds.has(itemId)) {
+      throw new ValidationError("Строки инвентаризации не должны повторяться");
+    }
+
+    uniqueItemIds.add(itemId);
+
+    if (!actualQuantityRaw) {
+      return {
+        itemId,
+        actualQuantity: null,
+      };
+    }
+
+    const actualQuantity = Number(actualQuantityRaw.replace(",", "."));
+
+    if (!Number.isInteger(actualQuantity) || actualQuantity < 0) {
+      throw new ValidationError("Фактический остаток должен быть неотрицательным целым числом");
+    }
+
+    return {
+      itemId,
+      actualQuantity,
+    };
+  });
 }

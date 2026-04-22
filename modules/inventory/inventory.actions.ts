@@ -6,13 +6,16 @@ import { ValidationError } from "@/shared/errors/app-error";
 import {
   applyInventoryAuditService,
   addProduct,
+  closeInventorySessionService,
   createInventorySessionService,
   deleteProductService,
+  saveInventorySessionActualsService,
   updateProductService,
 } from "@/modules/inventory/inventory.service";
 import {
   parseCreateInventorySessionInput,
   parseInventoryAuditInput,
+  parseInventorySessionActualsInput,
   parseProductInput,
 } from "@/modules/inventory/inventory.validation";
 
@@ -43,6 +46,11 @@ export type InventorySessionCreateFormState = {
   errorMessage: string | null;
   successMessage: string | null;
   createdSessionId: number | null;
+};
+
+export type InventorySessionProgressFormState = {
+  errorMessage: string | null;
+  successMessage: string | null;
 };
 
 function getProductFormValues(formData: FormData): ProductFormValues {
@@ -224,6 +232,75 @@ export async function createInventorySessionAction(
         errorMessage: error.message,
         successMessage: null,
         createdSessionId: null,
+      };
+    }
+
+    throw error;
+  }
+}
+
+export async function saveInventorySessionActualsAction(
+  _previousState: InventorySessionProgressFormState,
+  formData: FormData,
+): Promise<InventorySessionProgressFormState> {
+  await requirePermission("manage_inventory");
+  const sessionId = Number(String(formData.get("sessionId") ?? "").trim());
+
+  if (!Number.isInteger(sessionId) || sessionId <= 0) {
+    return {
+      errorMessage: "Инвентаризация не найдена",
+      successMessage: null,
+    };
+  }
+
+  try {
+    const entries = parseInventorySessionActualsInput(formData);
+    await saveInventorySessionActualsService(sessionId, entries);
+
+    return {
+      errorMessage: null,
+      successMessage: "Фактические остатки сохранены.",
+    };
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return {
+        errorMessage: error.message,
+        successMessage: null,
+      };
+    }
+
+    throw error;
+  }
+}
+
+export async function closeInventorySessionAction(
+  _previousState: InventorySessionProgressFormState,
+  formData: FormData,
+): Promise<InventorySessionProgressFormState> {
+  await requirePermission("manage_inventory");
+  const sessionId = Number(String(formData.get("sessionId") ?? "").trim());
+
+  if (!Number.isInteger(sessionId) || sessionId <= 0) {
+    return {
+      errorMessage: "Инвентаризация не найдена",
+      successMessage: null,
+    };
+  }
+
+  try {
+    const entries = parseInventorySessionActualsInput(formData);
+    await saveInventorySessionActualsService(sessionId, entries);
+    await closeInventorySessionService(sessionId);
+
+    return {
+      errorMessage: null,
+      successMessage: "Инвентаризация закрыта, остатки на складе обновлены.",
+    };
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return {
+        errorMessage: error.message,
+        successMessage: null,
       };
     }
 

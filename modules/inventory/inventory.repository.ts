@@ -9,6 +9,7 @@ import type {
   ProductCategory,
 } from "@/modules/inventory/inventory.types";
 import type {
+  InventorySessionActualInput,
   CreateInventorySessionInput,
   InventoryAuditEntryInput,
   ProductInput,
@@ -34,6 +35,7 @@ type InventorySessionRow = {
   responsibleEmployeeRole: string;
   notes: string | null;
   createdAt: Date;
+  closedAt: Date | null;
   itemsCount?: string;
 };
 
@@ -45,6 +47,9 @@ type InventorySessionItemRow = {
   productCategory: string | null;
   productUnit: string;
   stockQuantity: number;
+  currentStockQuantity: number;
+  actualQuantity: number | null;
+  priceCents: number;
 };
 
 const PRODUCT_SKU_SQL = `COALESCE(p."sku", CONCAT('PRD-', LPAD(p."id"::text, 5, '0')))` as const;
@@ -84,6 +89,8 @@ export type InventoryAuditResult = {
 };
 
 function mapInventorySessionItem(row: InventorySessionItemRow): InventorySessionItem {
+  const varianceQuantity = row.actualQuantity === null ? null : row.actualQuantity - row.currentStockQuantity;
+
   return {
     id: row.id,
     productId: row.productId,
@@ -91,6 +98,11 @@ function mapInventorySessionItem(row: InventorySessionItemRow): InventorySession
     productCategory: row.productCategory,
     productUnit: row.productUnit,
     stockQuantity: row.stockQuantity,
+    currentStockQuantity: row.currentStockQuantity,
+    actualQuantity: row.actualQuantity,
+    priceCents: row.priceCents,
+    varianceQuantity,
+    varianceValueCents: varianceQuantity === null ? null : varianceQuantity * row.priceCents,
   };
 }
 
@@ -105,6 +117,8 @@ function mapInventorySession(
     responsibleEmployeeRole: row.responsibleEmployeeRole,
     notes: row.notes,
     createdAt: row.createdAt.toISOString(),
+    closedAt: row.closedAt ? row.closedAt.toISOString() : null,
+    isClosed: Boolean(row.closedAt),
     items,
   };
 }
@@ -123,8 +137,12 @@ async function getInventorySessionItemsBySessionIds(sessionIds: number[]) {
         i."productName",
         i."productCategory",
         i."productUnit",
-        i."stockQuantity"
+        i."stockQuantity",
+        p."stockQuantity" AS "currentStockQuantity",
+        i."actualQuantity",
+        p."priceCents"
       FROM "InventorySessionItem" i
+      INNER JOIN "Product" p ON p."id" = i."productId"
       WHERE i."inventorySessionId" = ANY($1::int[])
       ORDER BY LOWER(i."productName") ASC, i."id" ASC
     `,
@@ -467,7 +485,8 @@ export async function createInventorySession(input: CreateInventorySessionInput)
           "id",
           "responsibleEmployeeId",
           "notes",
-          "createdAt"
+          "createdAt",
+          "closedAt"
       `,
       [input.responsibleEmployeeId, input.notes],
     );
@@ -495,9 +514,10 @@ export async function createInventorySession(input: CreateInventorySessionInput)
             "productName",
             "productCategory",
             "productUnit",
-            "stockQuantity"
+            "stockQuantity",
+            "actualQuantity"
           )
-          VALUES ($1, $2, $3, $4, $5, $6)
+          VALUES ($1, $2, $3, $4, $5, $6, NULL)
           RETURNING
             "id",
             "inventorySessionId",
@@ -505,7 +525,10 @@ export async function createInventorySession(input: CreateInventorySessionInput)
             "productName",
             "productCategory",
             "productUnit",
-            "stockQuantity"
+            "stockQuantity",
+            "stockQuantity" AS "currentStockQuantity",
+            "actualQuantity",
+            $7::int AS "priceCents"
         `,
         [
           session.id,
@@ -514,6 +537,7 @@ export async function createInventorySession(input: CreateInventorySessionInput)
           product.category,
           product.unit,
           product.stockQuantity,
+          product.priceCents,
         ],
       );
 
@@ -550,6 +574,7 @@ export async function getInventorySessions(): Promise<InventorySessionSummary[]>
         e."role" AS "responsibleEmployeeRole",
         s."notes",
         s."createdAt",
+        s."closedAt",
         COUNT(i."id") AS "itemsCount"
       FROM "InventorySession" s
       INNER JOIN "Employee" e ON e."id" = s."responsibleEmployeeId"
@@ -560,7 +585,8 @@ export async function getInventorySessions(): Promise<InventorySessionSummary[]>
         e."name",
         e."role",
         s."notes",
-        s."createdAt"
+        s."createdAt",
+        s."closedAt"
       ORDER BY s."createdAt" DESC, s."id" DESC
     `,
   );
@@ -579,6 +605,8 @@ export async function getInventorySessions(): Promise<InventorySessionSummary[]>
       responsibleEmployeeRole: row.responsibleEmployeeRole,
       notes: row.notes,
       createdAt: row.createdAt.toISOString(),
+      closedAt: row.closedAt ? row.closedAt.toISOString() : null,
+      isClosed: Boolean(row.closedAt),
       itemsCount: Number(row.itemsCount ?? items.length),
       totalQuantity: items.reduce((sum, item) => sum + item.stockQuantity, 0),
       categories: Array.from(
@@ -591,4 +619,133 @@ export async function getInventorySessions(): Promise<InventorySessionSummary[]>
       items,
     };
   });
+}
+
+export async function saveInventorySessionActuals(
+  sessionId: number,
+  entries: InventorySessionActualInput[],
+) {
+  if (!Number.isInteger(sessionId) || sessionId <= 0) {
+    throw new ValidationError("Инвентаризация не найдена");
+  }
+
+  const sessionResult = await pool.query<{ id: number; closedAt: Date | null }>(
+    `
+      SELECT "id", "closedAt"
+      FROM "InventorySession"
+      WHERE "id" = $1
+      LIMIT 1
+    `,
+    [sessionId],
+  );
+
+  const session = sessionResult.rows[0];
+
+  if (!session) {
+    throw new ValidationError("Инвентаризация не найдена");
+  }
+
+  if (session.closedAt) {
+    throw new ValidationError("Эта инвентаризация уже закрыта");
+  }
+
+  await pool.query("BEGIN");
+
+  try {
+    for (const entry of entries) {
+      await pool.query(
+        `
+          UPDATE "InventorySessionItem"
+          SET "actualQuantity" = $3
+          WHERE "id" = $1
+            AND "inventorySessionId" = $2
+        `,
+        [entry.itemId, sessionId, entry.actualQuantity],
+      );
+    }
+
+    await pool.query("COMMIT");
+  } catch (error) {
+    await pool.query("ROLLBACK");
+    throw error;
+  }
+}
+
+export async function closeInventorySession(sessionId: number) {
+  if (!Number.isInteger(sessionId) || sessionId <= 0) {
+    throw new ValidationError("Инвентаризация не найдена");
+  }
+
+  const sessionResult = await pool.query<{ id: number; closedAt: Date | null }>(
+    `
+      SELECT "id", "closedAt"
+      FROM "InventorySession"
+      WHERE "id" = $1
+      LIMIT 1
+    `,
+    [sessionId],
+  );
+
+  const session = sessionResult.rows[0];
+
+  if (!session) {
+    throw new ValidationError("Инвентаризация не найдена");
+  }
+
+  if (session.closedAt) {
+    throw new ValidationError("Эта инвентаризация уже закрыта");
+  }
+
+  const itemsResult = await pool.query<{
+    id: number;
+    productId: number;
+    actualQuantity: number | null;
+  }>(
+    `
+      SELECT "id", "productId", "actualQuantity"
+      FROM "InventorySessionItem"
+      WHERE "inventorySessionId" = $1
+      ORDER BY "id" ASC
+    `,
+    [sessionId],
+  );
+
+  if (!itemsResult.rowCount) {
+    throw new ValidationError("В инвентаризации нет ни одной строки");
+  }
+
+  const unfilledItems = itemsResult.rows.filter((item) => item.actualQuantity === null);
+
+  if (unfilledItems.length > 0) {
+    throw new ValidationError("Чтобы закрыть инвентаризацию, укажи фактический остаток для всех товаров");
+  }
+
+  await pool.query("BEGIN");
+
+  try {
+    for (const item of itemsResult.rows) {
+      await pool.query(
+        `
+          UPDATE "Product"
+          SET "stockQuantity" = $2
+          WHERE "id" = $1
+        `,
+        [item.productId, item.actualQuantity],
+      );
+    }
+
+    await pool.query(
+      `
+        UPDATE "InventorySession"
+        SET "closedAt" = CURRENT_TIMESTAMP
+        WHERE "id" = $1
+      `,
+      [sessionId],
+    );
+
+    await pool.query("COMMIT");
+  } catch (error) {
+    await pool.query("ROLLBACK");
+    throw error;
+  }
 }

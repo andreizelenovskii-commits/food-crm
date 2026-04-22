@@ -38,6 +38,11 @@ export type InventorySessionItem = {
   productCategory: string | null;
   productUnit: string;
   stockQuantity: number;
+  currentStockQuantity: number;
+  actualQuantity: number | null;
+  priceCents: number;
+  varianceQuantity: number | null;
+  varianceValueCents: number | null;
 };
 
 export type InventorySessionItemSummary = {
@@ -47,6 +52,11 @@ export type InventorySessionItemSummary = {
   productCategory: string | null;
   productUnit: string;
   stockQuantity: number;
+  currentStockQuantity: number;
+  actualQuantity: number | null;
+  priceCents: number;
+  varianceQuantity: number | null;
+  varianceValueCents: number | null;
 };
 
 export type InventorySession = {
@@ -56,6 +66,8 @@ export type InventorySession = {
   responsibleEmployeeRole: string;
   notes: string | null;
   createdAt: string;
+  closedAt: string | null;
+  isClosed: boolean;
   items: InventorySessionItem[];
 };
 
@@ -66,6 +78,8 @@ export type InventorySessionSummary = {
   responsibleEmployeeRole: string;
   notes: string | null;
   createdAt: string;
+  closedAt: string | null;
+  isClosed: boolean;
   itemsCount: number;
   totalQuantity: number;
   categories: string[];

@@ -153,6 +153,7 @@ model InventorySession {
   responsibleEmployeeId Int
   notes                 String?
   createdAt             DateTime               @default(now())
+  closedAt              DateTime?
   items                 InventorySessionItem[]
 }
 
@@ -166,4 +167,5 @@ model InventorySessionItem {
   productCategory    String?
   productUnit        String
   stockQuantity      Int
+  actualQuantity     Int?
 }

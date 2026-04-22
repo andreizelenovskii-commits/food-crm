@@ -7,10 +7,12 @@ import type {
 import type {
   CreateInventorySessionInput,
   InventoryAuditEntryInput,
+  InventorySessionActualInput,
   ProductInput,
 } from "@/modules/inventory/inventory.validation";
 import {
   applyInventoryAudit,
+  closeInventorySession,
   createInventorySession,
   createProduct,
   deleteProduct,
@@ -18,6 +20,7 @@ import {
   getInventorySessions,
   getProductById,
   getProducts,
+  saveInventorySessionActuals,
   type InventoryAuditResult,
   updateProduct,
 } from "@/modules/inventory/inventory.repository";
@@ -63,4 +66,15 @@ export async function createInventorySessionService(
   input: CreateInventorySessionInput,
 ): Promise<InventorySession> {
   return createInventorySession(input);
+}
+
+export async function saveInventorySessionActualsService(
+  sessionId: number,
+  entries: InventorySessionActualInput[],
+) {
+  return saveInventorySessionActuals(sessionId, entries);
+}
+
+export async function closeInventorySessionService(sessionId: number) {
+  return closeInventorySession(sessionId);
 }

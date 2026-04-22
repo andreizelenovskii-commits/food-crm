@@ -3,8 +3,11 @@
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  closeInventorySessionAction,
   createInventorySessionAction,
+  saveInventorySessionActualsAction,
   type InventorySessionCreateFormState,
+  type InventorySessionProgressFormState,
 } from "@/modules/inventory/inventory.actions";
 import type {
   InventoryResponsibleOption,
@@ -21,6 +24,14 @@ function formatDateTime(value: string) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(value));
+}
+
+function formatMoney(cents: number) {
+  return new Intl.NumberFormat("ru-RU", {
+    style: "currency",
+    currency: "RUB",
+    maximumFractionDigits: 0,
+  }).format(cents / 100);
 }
 
 export function InventoryAuditDialogs({
@@ -40,25 +51,48 @@ export function InventoryAuditDialogs({
 }) {
   const router = useRouter();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isActiveDialogOpen, setIsActiveDialogOpen] = useState(false);
   const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
-  const [selectedSessionId, setSelectedSessionId] = useState<number | null>(sessions[0]?.id ?? null);
+  const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory | "">("");
   const [selectedResponsibleId, setSelectedResponsibleId] = useState("");
   const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
   const [notes, setNotes] = useState("");
-  const initialState: InventorySessionCreateFormState = {
+  const createInitialState: InventorySessionCreateFormState = {
     errorMessage: null,
     successMessage: null,
     createdSessionId: null,
   };
-  const [state, formAction, isPending] = useActionState(
+  const progressInitialState: InventorySessionProgressFormState = {
+    errorMessage: null,
+    successMessage: null,
+  };
+  const [createState, createFormAction, isCreatePending] = useActionState(
     createInventorySessionAction,
-    initialState,
+    createInitialState,
+  );
+  const [saveState, saveFormAction, isSavePending] = useActionState(
+    saveInventorySessionActualsAction,
+    progressInitialState,
+  );
+  const [closeState, closeFormAction, isClosePending] = useActionState(
+    closeInventorySessionAction,
+    progressInitialState,
+  );
+  const [actualDrafts, setActualDrafts] = useState<Record<number, string>>({});
+
+  const activeSessions = useMemo(
+    () => sessions.filter((session) => !session.isClosed),
+    [sessions],
+  );
+  const closedSessions = useMemo(
+    () => sessions.filter((session) => session.isClosed),
+    [sessions],
   );
 
   useEffect(() => {
-    if (!state.successMessage) {
+    if (!createState.successMessage) {
       return;
     }
 
@@ -73,7 +107,22 @@ export function InventoryAuditDialogs({
     });
 
     return () => window.cancelAnimationFrame(frameId);
-  }, [router, state.successMessage]);
+  }, [createState.successMessage, router]);
+
+  useEffect(() => {
+    if (!saveState.successMessage && !closeState.successMessage) {
+      return;
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      if (closeState.successMessage) {
+        setActualDrafts({});
+      }
+      router.refresh();
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [closeState.successMessage, router, saveState.successMessage]);
 
   const normalizedQuery = query.trim().toLowerCase();
   const filteredProducts = useMemo(
@@ -124,7 +173,31 @@ export function InventoryAuditDialogs({
   const selectedResponsible = responsibleOptions.find(
     (item) => String(item.id) === selectedResponsibleId,
   );
-  const selectedSession = sessions.find((session) => session.id === selectedSessionId) ?? null;
+  const selectedSession =
+    sessions.find((session) => session.id === selectedSessionId) ??
+    activeSessions[0] ??
+    closedSessions[0] ??
+    null;
+
+  useEffect(() => {
+    const frameId = window.requestAnimationFrame(() => {
+      if (!selectedSession || selectedSession.isClosed) {
+        setActualDrafts({});
+        return;
+      }
+
+      setActualDrafts(
+        Object.fromEntries(
+          selectedSession.items.map((item) => [
+            item.id,
+            item.actualQuantity === null ? "" : String(item.actualQuantity),
+          ]),
+        ),
+      );
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [selectedSession]);
 
   const toggleProduct = (productId: number) => {
     setSelectedProductIds((current) =>
@@ -132,6 +205,13 @@ export function InventoryAuditDialogs({
         ? current.filter((id) => id !== productId)
         : [...current, productId],
     );
+  };
+
+  const updateActualDraft = (itemId: number, value: string) => {
+    setActualDrafts((current) => ({
+      ...current,
+      [itemId]: value.replace(/[^\d]/g, ""),
+    }));
   };
 
   return (
@@ -145,7 +225,7 @@ export function InventoryAuditDialogs({
             Управление инвентаризацией
           </h2>
           <p className="text-sm leading-6 text-zinc-600">
-            Создай новый лист инвентаризации с выбранными товарами и ответственным сотрудником или открой уже собранные листы.
+            Создавай новые листы, веди открытые инвентаризации и просматривай уже закрытые сессии.
           </p>
         </div>
 
@@ -162,31 +242,57 @@ export function InventoryAuditDialogs({
               Создать инвентаризацию
             </p>
             <p className="mt-2 text-sm leading-6 text-white/75">
-              Выбери товары, назначь ответственного и зафиксируй текущие остатки в итоговом листе.
+              Выбери товары, назначь ответственного и зафиксируй стартовый лист инвентаризации.
             </p>
           </button>
 
           <button
             type="button"
-            onClick={() => setIsHistoryDialogOpen(true)}
+            onClick={() => {
+              setSelectedSessionId(activeSessions[0]?.id ?? null);
+              setIsActiveDialogOpen(true);
+            }}
+            className="rounded-[28px] border border-amber-200 bg-amber-50 px-5 py-5 text-left transition hover:border-amber-300 hover:bg-amber-100/60"
+          >
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-700">
+              В работе
+            </p>
+            <p className="mt-3 text-[1.25rem] font-semibold tracking-[-0.02em] text-zinc-950">
+              Действующие инвентаризации
+            </p>
+            <p className="mt-2 text-sm leading-6 text-zinc-600">
+              Открывай незакрытые листы и веди фактические остатки с расчётом расхождений по количеству и в рублях.
+            </p>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedSessionId(closedSessions[0]?.id ?? activeSessions[0]?.id ?? null);
+              setIsHistoryDialogOpen(true);
+            }}
             className="rounded-[28px] border border-zinc-200 bg-zinc-50 px-5 py-5 text-left transition hover:border-zinc-300 hover:bg-white"
           >
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-zinc-400">
               Архив
             </p>
             <p className="mt-3 text-[1.25rem] font-semibold tracking-[-0.02em] text-zinc-950">
-              Прошедшие инвентаризации
+              Закрытые инвентаризации
             </p>
             <p className="mt-2 text-sm leading-6 text-zinc-600">
-              Открой уже созданные листы, посмотри ответственного, дату и полный список товаров в инвентаризации.
+              Смотри завершённые листы и историю уже закрытых пересчётов.
             </p>
           </button>
         </div>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+        <div className="mt-6 grid gap-3 sm:grid-cols-4">
           <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">На складе</p>
             <p className="mt-2 text-xl font-semibold tracking-[-0.03em] text-zinc-950">{products.length}</p>
+          </div>
+          <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Открыто</p>
+            <p className="mt-2 text-xl font-semibold tracking-[-0.03em] text-zinc-950">{activeSessions.length}</p>
           </div>
           <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Мало остатка</p>
@@ -233,19 +339,19 @@ export function InventoryAuditDialogs({
               </button>
             </div>
 
-            {state.errorMessage ? (
+            {createState.errorMessage ? (
               <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {state.errorMessage}
+                {createState.errorMessage}
               </div>
             ) : null}
 
-            {state.successMessage ? (
+            {createState.successMessage ? (
               <div className="mb-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                {state.successMessage}
+                {createState.successMessage}
               </div>
             ) : null}
 
-            <form action={canManageInventory ? formAction : undefined} className="grid gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(360px,0.75fr)]">
+            <form action={canManageInventory ? createFormAction : undefined} className="grid gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(360px,0.75fr)]">
               <section className="space-y-5 rounded-[28px] border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-950/5">
                 <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(280px,320px)]">
                   <label className="space-y-2">
@@ -285,7 +391,7 @@ export function InventoryAuditDialogs({
                     rows={3}
                     value={notes}
                     onChange={(event) => setNotes(event.target.value)}
-                    placeholder="Например: вечерняя ревизия по соусам и молочной группе"
+                    placeholder="Например: вечерняя ревизия по молочной группе и соусам"
                     className="w-full rounded-2xl border border-zinc-300 px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
                   />
                 </label>
@@ -373,7 +479,7 @@ export function InventoryAuditDialogs({
                     Что войдёт в инвентаризацию
                   </h4>
                   <p className="text-sm leading-6 text-zinc-600">
-                    После создания лист зафиксирует текущие остатки выбранных товаров на момент открытия инвентаризации.
+                    После создания лист зафиксирует выбранные товары и программные остатки на момент старта.
                   </p>
                 </div>
 
@@ -395,7 +501,7 @@ export function InventoryAuditDialogs({
                 <div className="space-y-3 rounded-[24px] border border-zinc-200 bg-zinc-50/80 p-4">
                   {selectedProducts.length === 0 ? (
                     <p className="text-sm leading-6 text-zinc-500">
-                      Пока лист пустой. Выбери товары слева, и они сразу появятся в итоговой ведомости.
+                      Пока лист пустой. Выбери товары слева, и они появятся в итоговой ведомости.
                     </p>
                   ) : (
                     selectedProducts.map((product) => (
@@ -411,7 +517,7 @@ export function InventoryAuditDialogs({
                           </div>
                           <div className="text-right">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-400">
-                              Остаток сейчас
+                              Программный остаток
                             </p>
                             <p className="mt-1 text-sm font-semibold text-zinc-950">
                               {product.stockQuantity} {product.unit}
@@ -431,10 +537,10 @@ export function InventoryAuditDialogs({
 
                 <button
                   type="submit"
-                  disabled={!canManageInventory || isPending || selectedProducts.length === 0 || !selectedResponsibleId}
+                  disabled={!canManageInventory || isCreatePending || selectedProducts.length === 0 || !selectedResponsibleId}
                   className="w-full rounded-2xl bg-zinc-950 px-5 py-3 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-400"
                 >
-                  {isPending ? "Создаём лист..." : "Создать инвентаризацию"}
+                  {isCreatePending ? "Создаём лист..." : "Создать инвентаризацию"}
                 </button>
               </section>
             </form>
@@ -442,49 +548,50 @@ export function InventoryAuditDialogs({
         </div>
       ) : null}
 
-      {isHistoryDialogOpen ? (
+      {isActiveDialogOpen ? (
         <div
           className="fixed inset-0 z-50 flex items-start justify-center bg-zinc-950/50 px-4 py-8 backdrop-blur-sm"
-          onClick={() => setIsHistoryDialogOpen(false)}
+          onClick={() => setIsActiveDialogOpen(false)}
           role="presentation"
         >
           <div
             role="dialog"
             aria-modal="true"
-            aria-label="Прошедшие инвентаризации"
-            className="max-h-[calc(100vh-4rem)] w-full max-w-6xl overflow-y-auto rounded-[32px] border border-zinc-200 bg-[#fcfbf8] p-6 shadow-2xl shadow-zinc-950/20"
+            aria-label="Действующие инвентаризации"
+            className="max-h-[calc(100vh-4rem)] w-full max-w-7xl overflow-y-auto rounded-[32px] border border-zinc-200 bg-[#fcfbf8] p-6 shadow-2xl shadow-zinc-950/20"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-2">
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">
-                  Архив инвентаризаций
+                  Действующие инвентаризации
                 </p>
                 <h3 className="text-[1.5rem] font-semibold tracking-[-0.02em] text-zinc-950">
-                  Прошедшие инвентаризации
+                  Открытые листы пересчёта
                 </h3>
                 <p className="text-sm leading-6 text-zinc-600">
-                  Здесь лежат уже созданные листы: кто собирал инвентаризацию, когда и какие товары вошли в неё на момент создания.
+                  Здесь хранятся незакрытые инвентаризации. Для каждой позиции видно программный остаток, факт, разницу в единицах и в рублях.
                 </p>
               </div>
               <button
                 type="button"
-                onClick={() => setIsHistoryDialogOpen(false)}
+                onClick={() => setIsActiveDialogOpen(false)}
                 className="rounded-2xl border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-950"
               >
                 Закрыть
               </button>
             </div>
 
-            {sessions.length === 0 ? (
+            {activeSessions.length === 0 ? (
               <div className="mt-6 rounded-[28px] border border-dashed border-zinc-300 bg-zinc-50 px-5 py-6 text-sm leading-6 text-zinc-500">
-                Пока нет ни одной созданной инвентаризации.
+                Сейчас нет ни одной действующей инвентаризации.
               </div>
             ) : (
-              <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(280px,0.8fr)_minmax(0,1.2fr)]">
+              <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(280px,0.72fr)_minmax(0,1.28fr)]">
                 <div className="space-y-3">
-                  {sessions.map((session) => {
+                  {activeSessions.map((session) => {
                     const isActive = session.id === selectedSessionId;
+                    const countedItems = session.items.filter((item) => item.actualQuantity !== null).length;
 
                     return (
                       <button
@@ -507,7 +614,246 @@ export function InventoryAuditDialogs({
                           {session.responsibleEmployeeRole} • {formatDateTime(session.createdAt)}
                         </p>
                         <p className={`mt-2 text-sm ${isActive ? "text-white/75" : "text-zinc-600"}`}>
-                          Товаров в листе: {session.itemsCount}
+                          Заполнено строк: {countedItems} из {session.itemsCount}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {selectedSession ? (
+                  <div className="space-y-4">
+                    {saveState.errorMessage ? (
+                      <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                        {saveState.errorMessage}
+                      </div>
+                    ) : null}
+                    {saveState.successMessage ? (
+                      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                        {saveState.successMessage}
+                      </div>
+                    ) : null}
+                    {closeState.errorMessage ? (
+                      <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                        {closeState.errorMessage}
+                      </div>
+                    ) : null}
+                    {closeState.successMessage ? (
+                      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                        {closeState.successMessage}
+                      </div>
+                    ) : null}
+
+                    <div className="rounded-[28px] border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-950/5">
+                      <div className="flex flex-wrap items-start justify-between gap-4">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
+                            Инвентаризация #{selectedSession.id}
+                          </p>
+                          <h4 className="mt-2 text-[1.3rem] font-semibold tracking-[-0.02em] text-zinc-950">
+                            {selectedSession.responsibleEmployeeName}
+                          </h4>
+                          <p className="mt-1 text-sm text-zinc-500">
+                            {selectedSession.responsibleEmployeeRole} • {formatDateTime(selectedSession.createdAt)}
+                          </p>
+                          {selectedSession.notes ? (
+                            <p className="mt-2 text-sm leading-6 text-zinc-600">{selectedSession.notes}</p>
+                          ) : null}
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-3">
+                          <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Товаров</p>
+                            <p className="mt-2 text-xl font-semibold tracking-[-0.03em] text-zinc-950">{selectedSession.itemsCount}</p>
+                          </div>
+                          <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Категорий</p>
+                            <p className="mt-2 text-xl font-semibold tracking-[-0.03em] text-zinc-950">{selectedSession.categories.length}</p>
+                          </div>
+                          <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Статус</p>
+                            <p className="mt-2 text-sm font-semibold text-amber-700">Открыта</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <form action={canManageInventory ? saveFormAction : undefined} className="space-y-4">
+                      <input type="hidden" name="sessionId" value={selectedSession.id} />
+                      <div className="overflow-hidden rounded-[28px] border border-zinc-200 bg-white shadow-sm shadow-zinc-950/5">
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full text-sm">
+                            <thead className="bg-zinc-50">
+                              <tr className="text-left text-zinc-500">
+                                <th className="px-4 py-3 font-medium">Товар</th>
+                                <th className="px-4 py-3 font-medium">Ед.</th>
+                                <th className="px-4 py-3 font-medium">Программный остаток</th>
+                                <th className="px-4 py-3 font-medium">Фактический остаток</th>
+                                <th className="px-4 py-3 font-medium">Разница</th>
+                                <th className="px-4 py-3 font-medium">Разница в рублях</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {selectedSession.items.map((item) => {
+                                const draftValue = actualDrafts[item.id] ?? "";
+                                const actualQuantity =
+                                  draftValue === "" ? item.actualQuantity : Number(draftValue);
+                                const varianceQuantity =
+                                  actualQuantity === null ? null : actualQuantity - item.currentStockQuantity;
+                                const varianceValueCents =
+                                  varianceQuantity === null ? null : varianceQuantity * item.priceCents;
+                                const varianceTone =
+                                  varianceQuantity === null
+                                    ? "text-zinc-400"
+                                    : varianceQuantity > 0
+                                      ? "text-emerald-700"
+                                      : varianceQuantity < 0
+                                        ? "text-red-600"
+                                        : "text-zinc-600";
+
+                                return (
+                                  <tr key={item.id} className="border-t border-zinc-200 align-top">
+                                    <td className="px-4 py-4">
+                                      <input type="hidden" name="itemId" value={item.id} />
+                                      <div className="space-y-1">
+                                        <p className="font-semibold text-zinc-950">{item.productName}</p>
+                                        <p className="text-zinc-500">{item.productCategory ?? "Без категории"}</p>
+                                      </div>
+                                    </td>
+                                    <td className="px-4 py-4 font-medium text-zinc-600">{item.productUnit}</td>
+                                    <td className="px-4 py-4 font-medium text-zinc-950">
+                                      {item.currentStockQuantity}
+                                    </td>
+                                    <td className="px-4 py-4">
+                                      <input
+                                        name="actualQuantity"
+                                        type="text"
+                                        inputMode="numeric"
+                                        value={draftValue}
+                                        onChange={(event) => updateActualDraft(item.id, event.target.value)}
+                                        placeholder={item.actualQuantity === null ? "0" : String(item.actualQuantity)}
+                                        className="w-28 rounded-xl border border-zinc-300 px-3 py-2 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
+                                      />
+                                    </td>
+                                    <td className={`px-4 py-4 font-medium ${varianceTone}`}>
+                                      {varianceQuantity === null
+                                        ? "—"
+                                        : `${varianceQuantity > 0 ? "+" : ""}${varianceQuantity} ${item.productUnit}`}
+                                    </td>
+                                    <td className={`px-4 py-4 font-medium ${varianceTone}`}>
+                                      {varianceValueCents === null
+                                        ? "—"
+                                        : `${varianceValueCents > 0 ? "+" : ""}${formatMoney(varianceValueCents)}`}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap justify-end gap-3">
+                        <button
+                          type="submit"
+                          disabled={!canManageInventory || isSavePending || isClosePending}
+                          className="rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-950 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {isSavePending ? "Сохраняем..." : "Сохранить факт"}
+                        </button>
+                      </div>
+                    </form>
+
+                    <form action={canManageInventory ? closeFormAction : undefined} className="flex justify-end">
+                      <input type="hidden" name="sessionId" value={selectedSession.id} />
+                      {selectedSession.items.map((item) => (
+                        <div key={item.id}>
+                          <input type="hidden" name="itemId" value={item.id} />
+                          <input
+                            type="hidden"
+                            name="actualQuantity"
+                            value={actualDrafts[item.id] ?? (item.actualQuantity === null ? "" : String(item.actualQuantity))}
+                          />
+                        </div>
+                      ))}
+                      <button
+                        type="submit"
+                        disabled={!canManageInventory || isSavePending || isClosePending}
+                        className="rounded-2xl bg-zinc-950 px-5 py-3 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-400"
+                      >
+                        {isClosePending ? "Закрываем..." : "Закрыть инвентаризацию"}
+                      </button>
+                    </form>
+                  </div>
+                ) : null}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
+
+      {isHistoryDialogOpen ? (
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center bg-zinc-950/50 px-4 py-8 backdrop-blur-sm"
+          onClick={() => setIsHistoryDialogOpen(false)}
+          role="presentation"
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Закрытые инвентаризации"
+            className="max-h-[calc(100vh-4rem)] w-full max-w-6xl overflow-y-auto rounded-[32px] border border-zinc-200 bg-[#fcfbf8] p-6 shadow-2xl shadow-zinc-950/20"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">
+                  Архив инвентаризаций
+                </p>
+                <h3 className="text-[1.5rem] font-semibold tracking-[-0.02em] text-zinc-950">
+                  Закрытые инвентаризации
+                </h3>
+                <p className="text-sm leading-6 text-zinc-600">
+                  Здесь лежат уже закрытые листы с датой завершения и зафиксированным составом инвентаризации.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsHistoryDialogOpen(false)}
+                className="rounded-2xl border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-950"
+              >
+                Закрыть
+              </button>
+            </div>
+
+            {closedSessions.length === 0 ? (
+              <div className="mt-6 rounded-[28px] border border-dashed border-zinc-300 bg-zinc-50 px-5 py-6 text-sm leading-6 text-zinc-500">
+                Пока нет ни одной закрытой инвентаризации.
+              </div>
+            ) : (
+              <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(280px,0.8fr)_minmax(0,1.2fr)]">
+                <div className="space-y-3">
+                  {closedSessions.map((session) => {
+                    const isActive = session.id === selectedSessionId;
+
+                    return (
+                      <button
+                        key={session.id}
+                        type="button"
+                        onClick={() => setSelectedSessionId(session.id)}
+                        className={`w-full rounded-[24px] border px-5 py-4 text-left transition ${
+                          isActive
+                            ? "border-zinc-950 bg-zinc-950 text-white shadow-sm shadow-zinc-950/15"
+                            : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50"
+                        }`}
+                      >
+                        <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${isActive ? "text-white/70" : "text-zinc-400"}`}>
+                          Инвентаризация #{session.id}
+                        </p>
+                        <p className={`mt-2 text-sm font-semibold ${isActive ? "text-white" : "text-zinc-950"}`}>
+                          {session.responsibleEmployeeName}
+                        </p>
+                        <p className={`mt-1 text-sm ${isActive ? "text-white/75" : "text-zinc-500"}`}>
+                          Закрыта {session.closedAt ? formatDateTime(session.closedAt) : formatDateTime(session.createdAt)}
                         </p>
                       </button>
                     );
@@ -525,26 +871,16 @@ export function InventoryAuditDialogs({
                           {selectedSession.responsibleEmployeeName}
                         </h4>
                         <p className="text-sm text-zinc-500">
-                          {selectedSession.responsibleEmployeeRole} • {formatDateTime(selectedSession.createdAt)}
+                          {selectedSession.responsibleEmployeeRole} • Создана {formatDateTime(selectedSession.createdAt)}
                         </p>
+                        {selectedSession.closedAt ? (
+                          <p className="text-sm text-zinc-500">
+                            Закрыта {formatDateTime(selectedSession.closedAt)}
+                          </p>
+                        ) : null}
                         {selectedSession.notes ? (
                           <p className="text-sm leading-6 text-zinc-600">{selectedSession.notes}</p>
                         ) : null}
-                      </div>
-
-                      <div className="grid gap-3 sm:grid-cols-3">
-                        <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Позиций</p>
-                          <p className="mt-2 text-xl font-semibold tracking-[-0.03em] text-zinc-950">{selectedSession.itemsCount}</p>
-                        </div>
-                        <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Категорий</p>
-                          <p className="mt-2 text-xl font-semibold tracking-[-0.03em] text-zinc-950">{selectedSession.categories.length}</p>
-                        </div>
-                        <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Снимок остатков</p>
-                          <p className="mt-2 text-sm font-medium text-zinc-950">Зафиксирован при создании</p>
-                        </div>
                       </div>
 
                       <div className="space-y-3">
@@ -559,7 +895,7 @@ export function InventoryAuditDialogs({
                               </div>
                               <div className="text-right">
                                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-400">
-                                  Остаток на момент создания
+                                  Остаток на старте
                                 </p>
                                 <p className="mt-1 text-sm font-semibold text-zinc-950">
                                   {item.stockQuantity} {item.productUnit}
