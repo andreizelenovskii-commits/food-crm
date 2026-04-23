@@ -1,11 +1,24 @@
 import { ValidationError } from "@/shared/errors/app-error";
 import {
   PRODUCT_CATEGORIES,
+  WRITEOFF_REASONS,
   type ProductCategory,
+  type WriteoffReason,
 } from "@/modules/inventory/inventory.types";
 
 function normalizeInput(value: FormDataEntryValue | null) {
   return String(value ?? "").trim();
+}
+
+function parseDecimal(value: string, fieldLabel: string) {
+  const normalized = value.replace(",", ".");
+  const amount = Number(normalized);
+
+  if (!Number.isFinite(amount)) {
+    throw new ValidationError(`${fieldLabel} должно быть числом`);
+  }
+
+  return amount;
 }
 
 export type ProductInput = {
@@ -31,6 +44,27 @@ export type CreateInventorySessionInput = {
 export type InventorySessionActualInput = {
   itemId: number;
   actualQuantity: number | null;
+};
+
+export type CreateWriteoffActInput = {
+  responsibleEmployeeId: number;
+  reason: WriteoffReason;
+  notes: string | null;
+  items: Array<{
+    productId: number;
+    quantity: number;
+  }>;
+};
+
+export type CreateIncomingActInput = {
+  responsibleEmployeeId: number;
+  supplierName: string | null;
+  notes: string | null;
+  items: Array<{
+    productId: number;
+    quantity: number;
+    priceCents: number;
+  }>;
 };
 
 function parsePriceToCents(value: string) {
@@ -68,10 +102,10 @@ export function parseProductInput(formData: FormData): ProductInput {
     throw new ValidationError("Выберите единицу измерения: кг или шт");
   }
 
-  const stockQuantity = Number(stockQuantityRaw || "0");
+  const stockQuantity = parseDecimal(stockQuantityRaw || "0", "Остаток");
 
-  if (!Number.isInteger(stockQuantity) || stockQuantity < 0) {
-    throw new ValidationError("Остаток должен быть неотрицательным целым числом");
+  if (stockQuantity < 0) {
+    throw new ValidationError("Остаток должен быть неотрицательным числом");
   }
 
   return {
@@ -112,10 +146,10 @@ export function parseInventoryAuditInput(formData: FormData): InventoryAuditEntr
       throw new ValidationError("Один и тот же товар нельзя добавить в инвентаризацию дважды");
     }
 
-    const actualQuantity = Number(actualQuantityRaw.replace(",", "."));
+    const actualQuantity = parseDecimal(actualQuantityRaw, "Фактический остаток");
 
-    if (!Number.isInteger(actualQuantity) || actualQuantity < 0) {
-      throw new ValidationError("Фактический остаток должен быть неотрицательным целым числом");
+    if (actualQuantity < 0) {
+      throw new ValidationError("Фактический остаток должен быть неотрицательным числом");
     }
 
     uniqueProductIds.add(productId);
@@ -197,10 +231,10 @@ export function parseInventorySessionActualsInput(formData: FormData): Inventory
       };
     }
 
-    const actualQuantity = Number(actualQuantityRaw.replace(",", "."));
+    const actualQuantity = parseDecimal(actualQuantityRaw, "Фактический остаток");
 
-    if (!Number.isInteger(actualQuantity) || actualQuantity < 0) {
-      throw new ValidationError("Фактический остаток должен быть неотрицательным целым числом");
+    if (actualQuantity < 0) {
+      throw new ValidationError("Фактический остаток должен быть неотрицательным числом");
     }
 
     return {
@@ -208,4 +242,134 @@ export function parseInventorySessionActualsInput(formData: FormData): Inventory
       actualQuantity,
     };
   });
+}
+
+export function parseCreateWriteoffActInput(formData: FormData): CreateWriteoffActInput {
+  const responsibleEmployeeId = Number(normalizeInput(formData.get("responsibleEmployeeId")));
+  const reason = normalizeInput(formData.get("reason"));
+  const notes = normalizeInput(formData.get("notes"));
+  const productIds = formData
+    .getAll("productId")
+    .map((value) => Number(String(value ?? "").trim()));
+  const quantities = formData
+    .getAll("quantity")
+    .map((value) => normalizeInput(value));
+
+  if (!Number.isInteger(responsibleEmployeeId) || responsibleEmployeeId <= 0) {
+    throw new ValidationError("Выбери ответственного за списание");
+  }
+
+  if (!WRITEOFF_REASONS.includes(reason as WriteoffReason)) {
+    throw new ValidationError("Выбери корректную причину списания");
+  }
+
+  if (productIds.length === 0 || productIds.length !== quantities.length) {
+    throw new ValidationError("Не удалось обработать строки акта списания");
+  }
+
+  const uniqueProductIds = new Set<number>();
+  const items = productIds.flatMap((productId, index) => {
+    const quantityRaw = quantities[index];
+
+    if (!quantityRaw) {
+      return [];
+    }
+
+    if (!Number.isInteger(productId) || productId <= 0) {
+      throw new ValidationError("В акте списания найден некорректный товар");
+    }
+
+    if (uniqueProductIds.has(productId)) {
+      throw new ValidationError("Один и тот же товар нельзя списывать дважды в одном акте");
+    }
+
+    const quantity = parseDecimal(quantityRaw, "Количество списания");
+
+    if (quantity <= 0) {
+      throw new ValidationError("Количество списания должно быть положительным числом");
+    }
+
+    uniqueProductIds.add(productId);
+
+    return [{ productId, quantity }];
+  });
+
+  if (items.length === 0) {
+    throw new ValidationError("Укажи количество хотя бы для одной позиции");
+  }
+
+  return {
+    responsibleEmployeeId,
+    reason: reason as WriteoffReason,
+    notes: notes || null,
+    items,
+  };
+}
+
+export function parseCreateIncomingActInput(formData: FormData): CreateIncomingActInput {
+  const responsibleEmployeeId = Number(normalizeInput(formData.get("responsibleEmployeeId")));
+  const supplierName = normalizeInput(formData.get("supplierName"));
+  const notes = normalizeInput(formData.get("notes"));
+  const productIds = formData
+    .getAll("productId")
+    .map((value) => Number(String(value ?? "").trim()));
+  const quantities = formData
+    .getAll("quantity")
+    .map((value) => normalizeInput(value));
+  const prices = formData
+    .getAll("price")
+    .map((value) => normalizeInput(value));
+
+  if (!Number.isInteger(responsibleEmployeeId) || responsibleEmployeeId <= 0) {
+    throw new ValidationError("Выбери ответственного за поступление");
+  }
+
+  if (productIds.length === 0 || productIds.length !== quantities.length || productIds.length !== prices.length) {
+    throw new ValidationError("Не удалось обработать строки акта поступления");
+  }
+
+  const uniqueProductIds = new Set<number>();
+  const items = productIds.flatMap((productId, index) => {
+    const quantityRaw = quantities[index];
+    const priceRaw = prices[index];
+
+    if (!quantityRaw) {
+      return [];
+    }
+
+    if (!Number.isInteger(productId) || productId <= 0) {
+      throw new ValidationError("В акте поступления найден некорректный товар");
+    }
+
+    if (uniqueProductIds.has(productId)) {
+      throw new ValidationError("Один и тот же товар нельзя добавить в поступление дважды");
+    }
+
+    const quantity = parseDecimal(quantityRaw, "Количество поступления");
+
+    if (quantity <= 0) {
+      throw new ValidationError("Количество поступления должно быть положительным числом");
+    }
+
+    const priceCents = parsePriceToCents(priceRaw);
+
+    if (priceCents <= 0) {
+      throw new ValidationError("Укажи положительную закупочную цену");
+    }
+
+    uniqueProductIds.add(productId);
+
+    return [{ productId, quantity, priceCents }];
+  });
+
+  if (items.length === 0) {
+    throw new ValidationError("Укажи количество хотя бы для одной позиции");
+  }
+
+  return {
+    responsibleEmployeeId,
+    supplierName: supplierName || null,
+    notes: notes || null,
+    items,
+  };
 }

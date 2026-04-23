@@ -1,5 +1,9 @@
 import { pool } from "@/shared/db/pool";
-import type { AuthUser, UserRole } from "@/modules/auth/auth.types";
+import {
+  normalizeUserRole,
+  type AuthUser,
+  type UserRole,
+} from "@/modules/auth/auth.types";
 
 type UserRow = {
   id: number;
@@ -22,11 +26,13 @@ export interface AuthUserRepository {
 }
 
 function mapRowToAuthUser(row: UserRow): AuthUser {
+  const normalizedRole = normalizeUserRole(row.role) ?? "Курьер";
+
   return {
     id: row.id,
     email: row.email,
     passwordHash: row.password,
-    role: row.role as UserRole,
+    role: normalizedRole,
   };
 }
 

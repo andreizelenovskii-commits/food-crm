@@ -4,12 +4,16 @@ import { hasPermission } from "@/modules/auth/authz";
 import { requirePermission } from "@/modules/auth/auth.session";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
 import { InventoryAuditDialogs } from "@/modules/inventory/components/inventory-audit-dialogs";
+import { InventoryIncomingPanel } from "@/modules/inventory/components/inventory-incoming-panel";
+import { InventoryWriteoffPanel } from "@/modules/inventory/components/inventory-writeoff-panel";
 import { LowStockPanel } from "@/modules/inventory/components/low-stock-panel";
 import { ProductForm } from "@/modules/inventory/components/product-form";
 import { PRODUCT_CATEGORIES } from "@/modules/inventory/inventory.types";
 import {
   fetchInventoryResponsibleOptions,
+  fetchIncomingActs,
   fetchInventorySessions,
+  fetchWriteoffActs,
   fetchProducts,
 } from "@/modules/inventory/inventory.service";
 import { fetchEmployees } from "@/modules/employees/employees.service";
@@ -43,10 +47,12 @@ export default async function InventoryPage(props: {
 }) {
   const user = await requirePermission("view_inventory");
   const searchParams = await props.searchParams;
-  const [products, responsibleOptions, inventorySessions, employees, techCards, techCardProducts] = await Promise.all([
+  const [products, responsibleOptions, incomingActs, inventorySessions, writeoffActs, employees, techCards, techCardProducts] = await Promise.all([
     fetchProducts(),
     fetchInventoryResponsibleOptions(),
+    fetchIncomingActs(),
     fetchInventorySessions(),
+    fetchWriteoffActs(),
     fetchEmployees(),
     fetchTechCards(),
     fetchTechCardProductOptions(),
@@ -103,7 +109,7 @@ export default async function InventoryPage(props: {
   return (
     <PageShell
       title="Склад"
-      description="Здесь хранится всё, что вы продаёте: товары, остатки и базовая стоимость."
+      description="Здесь хранится всё по складу: товары, остатки, средняя закупочная цена и движение."
       backHref="/dashboard"
       action={<SessionUserActions user={user} />}
     >
@@ -211,7 +217,7 @@ export default async function InventoryPage(props: {
                 <p className="mt-3 text-3xl font-semibold text-zinc-950">{totalStock}</p>
               </div>
               <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
-                <p className="text-sm font-medium text-zinc-500">Стоимость остатка</p>
+                <p className="text-sm font-medium text-zinc-500">Стоимость остатка по закупке</p>
                 <p className="mt-3 text-3xl font-semibold text-zinc-950">{formatMoney(totalValueCents)}</p>
               </div>
             </div>
@@ -324,7 +330,7 @@ export default async function InventoryPage(props: {
                           <p>
                             Остаток: <span className={`font-semibold ${stockTone}`}>{product.stockQuantity} {product.unit}</span>
                           </p>
-                          <p>Цена: {formatMoney(product.priceCents)}</p>
+                          <p>Средняя закупочная: {formatMoney(product.priceCents)}</p>
                           <p>Стоимость остатка: {formatMoney(product.stockQuantity * product.priceCents)}</p>
                           <p>Использований в заказах: {product.orderItemsCount}</p>
                         </div>
@@ -350,113 +356,21 @@ export default async function InventoryPage(props: {
       ) : null}
 
       {activeTab === "incoming" ? (
-        <div className="grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
-          <div className="space-y-6">
-            <section className="rounded-3xl border border-zinc-200 bg-[linear-gradient(180deg,#fffdfa_0%,#eef6ea_100%)] p-6 shadow-sm shadow-zinc-950/5">
-              <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">
-                Поступление товара
-              </p>
-              <h2 className="mt-2 text-xl font-semibold text-zinc-950">
-                Приход на склад
-              </h2>
-              <p className="mt-3 text-sm leading-6 text-zinc-600">
-                Здесь будем фиксировать новые поставки и увеличение остатков по товарам.
-              </p>
-
-              <div className="mt-5 grid gap-4 md:grid-cols-3">
-                <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
-                  <p className="text-sm font-medium text-zinc-500">Поставщиков</p>
-                  <p className="mt-3 text-3xl font-semibold text-zinc-950">0</p>
-                </div>
-                <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
-                  <p className="text-sm font-medium text-zinc-500">Приходов сегодня</p>
-                  <p className="mt-3 text-3xl font-semibold text-zinc-950">0</p>
-                </div>
-                <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
-                  <p className="text-sm font-medium text-zinc-500">Новые единицы</p>
-                  <p className="mt-3 text-3xl font-semibold text-zinc-950">0</p>
-                </div>
-              </div>
-            </section>
-
-            <section className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
-              <h2 className="text-xl font-semibold text-zinc-950">Журнал поступлений</h2>
-              <p className="mt-2 text-sm leading-6 text-zinc-600">
-                Когда добавим бизнес-логику, здесь появится история всех приходов на склад.
-              </p>
-              <div className="mt-6 rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-sm text-zinc-500">
-                Пока поступлений ещё нет.
-              </div>
-            </section>
-          </div>
-
-          <aside className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
-            <div className="space-y-2">
-              <h2 className="text-xl font-semibold text-zinc-950">Новая поставка</h2>
-              <p className="text-sm leading-6 text-zinc-600">
-                Здесь будет форма прихода: товар, количество, закупочная цена, поставщик и комментарий.
-              </p>
-            </div>
-            <div className="mt-6 rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-sm leading-6 text-zinc-500">
-              Каркас вкладки готов. Следующим шагом можно подключить реальные операции поступления товара.
-            </div>
-          </aside>
-        </div>
+        <InventoryIncomingPanel
+          products={products}
+          responsibleOptions={responsibleOptions}
+          acts={incomingActs}
+          canManageInventory={canManageInventory}
+        />
       ) : null}
 
       {activeTab === "writeoff" ? (
-        <div className="grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
-          <div className="space-y-6">
-            <section className="rounded-3xl border border-zinc-200 bg-[linear-gradient(180deg,#fffdfa_0%,#f7ece7_100%)] p-6 shadow-sm shadow-zinc-950/5">
-              <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">
-                Списание товара
-              </p>
-              <h2 className="mt-2 text-xl font-semibold text-zinc-950">
-                Потери и расход
-              </h2>
-              <p className="mt-3 text-sm leading-6 text-zinc-600">
-                Здесь будем фиксировать брак, порчу, внутренний расход и другие причины списания.
-              </p>
-
-              <div className="mt-5 grid gap-4 md:grid-cols-3">
-                <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
-                  <p className="text-sm font-medium text-zinc-500">Списаний сегодня</p>
-                  <p className="mt-3 text-3xl font-semibold text-zinc-950">0</p>
-                </div>
-                <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
-                  <p className="text-sm font-medium text-zinc-500">Товаров в риске</p>
-                  <p className="mt-3 text-3xl font-semibold text-zinc-950">{lowStockCount}</p>
-                </div>
-                <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
-                  <p className="text-sm font-medium text-zinc-500">Сумма списаний</p>
-                  <p className="mt-3 text-3xl font-semibold text-zinc-950">0 ₽</p>
-                </div>
-              </div>
-            </section>
-
-            <section className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
-              <h2 className="text-xl font-semibold text-zinc-950">Журнал списаний</h2>
-              <p className="mt-2 text-sm leading-6 text-zinc-600">
-                Здесь появится история всех операций списания с причинами и ответственными.
-              </p>
-              <div className="mt-6 rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-sm text-zinc-500">
-                Пока списаний ещё нет.
-              </div>
-            </section>
-          </div>
-
-          <aside className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
-            <div className="space-y-2">
-              <h2 className="text-xl font-semibold text-zinc-950">Новое списание</h2>
-              <p className="text-sm leading-6 text-zinc-600">
-                Здесь будет форма списания: товар, количество, причина, комментарий и кто списал.
-              </p>
-            </div>
-            <div className="mt-6 rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-sm leading-6 text-zinc-500">
-              Каркас вкладки готов. Следующим шагом можно подключить реальные операции списания.
-            </div>
-          </aside>
-        </div>
+        <InventoryWriteoffPanel
+          products={products}
+          responsibleOptions={responsibleOptions}
+          acts={writeoffActs}
+          canManageInventory={canManageInventory}
+        />
       ) : null}
 
       {activeTab === "audit" ? (

@@ -19,10 +19,29 @@ export const MIN_SCHEDULE_HOURS = 1;
 export const MAX_SCHEDULE_HOURS = 14;
 const DEFAULT_SCHEDULE_HOURS = 8;
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isValidDaySchedule(value: unknown): value is DaySchedule {
+  if (!isRecord(value) || !Array.isArray(value.shifts)) {
+    return false;
+  }
+
+  return value.shifts.every((shift) => {
+    return isRecord(shift) && typeof shift.hours === "number" && Number.isFinite(shift.hours);
+  });
+}
+
 function isEmployeeSchedule(
-  schedule: EmployeeSchedule | EmployeeScheduleLegacy,
+  schedule: unknown,
 ): schedule is EmployeeSchedule {
-  return "shiftsPerDay" in schedule;
+  return (
+    isRecord(schedule) &&
+    (schedule.shiftsPerDay === 1 || schedule.shiftsPerDay === 2) &&
+    isRecord(schedule.days) &&
+    Object.values(schedule.days).every((day) => isValidDaySchedule(day))
+  );
 }
 
 export function clampScheduleHours(value: number) {
@@ -101,10 +120,10 @@ export function createDaySchedule(hours = DEFAULT_SCHEDULE_HOURS): DaySchedule {
 }
 
 export function normalizeEmployeeSchedule(
-  schedule: EmployeeSchedule | EmployeeScheduleLegacy | null,
+  schedule: EmployeeSchedule | EmployeeScheduleLegacy | null | unknown,
   referenceDate = new Date(),
 ): EmployeeSchedule {
-  if (!schedule) {
+  if (!isRecord(schedule)) {
     return { shiftsPerDay: 1, days: {} };
   }
 
@@ -112,10 +131,24 @@ export function normalizeEmployeeSchedule(
     return cloneEmployeeSchedule(schedule);
   }
 
+  const legacyEntries: Array<[string, number]> = Object.entries(schedule).flatMap(
+    ([dayName, hours]) => {
+      if (typeof hours === "number" && Number.isFinite(hours) && hours > 0) {
+        return [[dayName, hours]];
+      }
+
+      return [];
+    },
+  );
+
+  if (!legacyEntries.length) {
+    return { shiftsPerDay: 1, days: {} };
+  }
+
   const days: Record<string, DaySchedule> = {};
 
   for (const date of getMonthDays(referenceDate)) {
-    const matchedEntry = Object.entries(schedule).find(([dayName]) => {
+    const matchedEntry = legacyEntries.find(([dayName]) => {
       return LEGACY_WEEKDAY_TO_INDEX[dayName.toLowerCase()] === date.getDay();
     });
 

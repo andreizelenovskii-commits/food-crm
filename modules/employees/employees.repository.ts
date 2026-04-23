@@ -1,5 +1,6 @@
 import { pool } from "@/shared/db/pool";
 import { hashPassword } from "@/modules/auth/auth.password";
+import { normalizeUserRole } from "@/modules/auth/auth.types";
 import type { CreateEmployeeInput, UpdateEmployeeInput } from "@/modules/employees/employees.validation";
 import type {
   Employee,
@@ -9,7 +10,6 @@ import type {
   EmployeeSchedule,
   EmployeeScheduleLegacy,
 } from "@/modules/employees/employees.types";
-import type { UserRole } from "@/modules/auth/auth.types";
 import { ValidationError } from "@/shared/errors/app-error";
 
 type EmployeeRow = {
@@ -55,6 +55,10 @@ function formatDateOnly(date: Date) {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function mapEmployeeRoleToUserRole(role: string) {
+  return normalizeUserRole(role) ?? "Курьер";
 }
 
 function mapRowToEmployee(row: EmployeeRow): Employee {
@@ -389,7 +393,7 @@ export async function issueEmployeeAccess(input: {
     return null;
   }
 
-  const role = employeeRow.role as UserRole;
+  const role = mapEmployeeRoleToUserRole(employeeRow.role);
   const passwordHash = hashPassword(input.password, { validateStrength: true });
   const existingUserWithNewEmail = await pool.query<{ id: number }>(
     `
@@ -540,7 +544,7 @@ export async function updateEmployee(employeeId: number, input: UpdateEmployeeIn
           SET "role" = $2
           WHERE "email" = $1
         `,
-        [updatedEmployee.email, updatedEmployee.role as UserRole],
+        [updatedEmployee.email, mapEmployeeRoleToUserRole(updatedEmployee.role)],
       );
     }
 

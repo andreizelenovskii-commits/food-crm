@@ -1,4 +1,8 @@
-import type { SessionUser, UserRole } from "@/modules/auth/auth.types";
+import {
+  normalizeUserRole,
+  type SessionUser,
+  type UserRole,
+} from "@/modules/auth/auth.types";
 
 export const AUTH_PERMISSIONS = [
   "view_dashboard",
@@ -69,6 +73,12 @@ export function hasPermission(
   userOrRole: SessionUser | UserRole,
   permission: AuthPermission,
 ) {
-  const role = typeof userOrRole === "string" ? userOrRole : userOrRole.role;
+  const rawRole = typeof userOrRole === "string" ? userOrRole : userOrRole.role;
+  const role = normalizeUserRole(rawRole);
+
+  if (!role) {
+    return false;
+  }
+
   return ROLE_PERMISSIONS[role].includes(permission);
 }

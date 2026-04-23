@@ -9,6 +9,8 @@ import {
   type InventorySessionCreateFormState,
   type InventorySessionProgressFormState,
 } from "@/modules/inventory/inventory.actions";
+import { InventorySessionDeleteButton } from "@/modules/inventory/components/inventory-session-delete-button";
+import { InventorySessionExportLink } from "@/modules/inventory/components/inventory-session-export-link";
 import type {
   InventoryResponsibleOption,
   InventorySessionSummary,
@@ -32,6 +34,18 @@ function formatMoney(cents: number) {
     currency: "RUB",
     maximumFractionDigits: 0,
   }).format(cents / 100);
+}
+
+function normalizeDecimalDraft(value: string) {
+  const normalized = value.replace(/[^\d.,]/g, "").replace(".", ",");
+  const [integerPart = "", ...rest] = normalized.split(",");
+  const fractionalPart = rest.join("").slice(0, 2);
+
+  if (!rest.length) {
+    return integerPart;
+  }
+
+  return `${integerPart},${fractionalPart}`;
 }
 
 export function InventoryAuditDialogs({
@@ -210,7 +224,7 @@ export function InventoryAuditDialogs({
   const updateActualDraft = (itemId: number, value: string) => {
     setActualDrafts((current) => ({
       ...current,
-      [itemId]: value.replace(/[^\d]/g, ""),
+      [itemId]: normalizeDecimalDraft(value),
     }));
   };
 
@@ -643,7 +657,6 @@ export function InventoryAuditDialogs({
                         {closeState.successMessage}
                       </div>
                     ) : null}
-
                     <div className="rounded-[28px] border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-950/5">
                       <div className="flex flex-wrap items-start justify-between gap-4">
                         <div>
@@ -660,7 +673,12 @@ export function InventoryAuditDialogs({
                             <p className="mt-2 text-sm leading-6 text-zinc-600">{selectedSession.notes}</p>
                           ) : null}
                         </div>
-                        <div className="grid gap-3 sm:grid-cols-3">
+                        <div className="flex flex-col items-end gap-3">
+                          <InventorySessionExportLink
+                            sessionId={selectedSession.id}
+                            variant="secondary"
+                          />
+                          <div className="grid gap-3 sm:grid-cols-3">
                           <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Товаров</p>
                             <p className="mt-2 text-xl font-semibold tracking-[-0.03em] text-zinc-950">{selectedSession.itemsCount}</p>
@@ -672,6 +690,7 @@ export function InventoryAuditDialogs({
                           <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Статус</p>
                             <p className="mt-2 text-sm font-semibold text-amber-700">Открыта</p>
+                          </div>
                           </div>
                         </div>
                       </div>
@@ -727,7 +746,7 @@ export function InventoryAuditDialogs({
                                       <input
                                         name="actualQuantity"
                                         type="text"
-                                        inputMode="numeric"
+                                        inputMode="decimal"
                                         value={draftValue}
                                         onChange={(event) => updateActualDraft(item.id, event.target.value)}
                                         placeholder={item.actualQuantity === null ? "0" : String(item.actualQuantity)}
@@ -883,27 +902,93 @@ export function InventoryAuditDialogs({
                         ) : null}
                       </div>
 
-                      <div className="space-y-3">
-                        {selectedSession.items.map((item) => (
-                          <div key={item.id} className="rounded-[22px] border border-zinc-200 bg-zinc-50/80 px-4 py-3">
-                            <div className="flex flex-wrap items-start justify-between gap-3">
-                              <div>
-                                <p className="text-sm font-semibold text-zinc-950">{item.productName}</p>
-                                <p className="mt-1 text-sm text-zinc-500">
-                                  {item.productCategory ?? "Без категории"}
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-400">
-                                  Остаток на старте
-                                </p>
-                                <p className="mt-1 text-sm font-semibold text-zinc-950">
-                                  {item.stockQuantity} {item.productUnit}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                      <div className="grid gap-3 sm:grid-cols-4">
+                        <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Товаров</p>
+                          <p className="mt-2 text-xl font-semibold tracking-[-0.03em] text-zinc-950">{selectedSession.itemsCount}</p>
+                        </div>
+                        <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Категорий</p>
+                          <p className="mt-2 text-xl font-semibold tracking-[-0.03em] text-zinc-950">{selectedSession.categories.length}</p>
+                        </div>
+                        <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Строк с фактом</p>
+                          <p className="mt-2 text-xl font-semibold tracking-[-0.03em] text-zinc-950">
+                            {selectedSession.items.filter((item) => item.actualQuantity !== null).length}
+                          </p>
+                        </div>
+                        <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Статус</p>
+                          <p className="mt-2 text-sm font-semibold text-zinc-950">Только просмотр</p>
+                        </div>
+                      </div>
+
+                      <div className="overflow-hidden rounded-[28px] border border-zinc-200 bg-white shadow-sm shadow-zinc-950/5">
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full text-sm">
+                            <thead className="bg-zinc-50">
+                              <tr className="text-left text-zinc-500">
+                                <th className="px-4 py-3 font-medium">Товар</th>
+                                <th className="px-4 py-3 font-medium">Ед.</th>
+                                <th className="px-4 py-3 font-medium">Остаток на старте</th>
+                                <th className="px-4 py-3 font-medium">Факт при закрытии</th>
+                                <th className="px-4 py-3 font-medium">Разница</th>
+                                <th className="px-4 py-3 font-medium">Разница в рублях</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {selectedSession.items.map((item) => {
+                                const varianceTone =
+                                  item.varianceQuantity === null
+                                    ? "text-zinc-400"
+                                    : item.varianceQuantity > 0
+                                      ? "text-emerald-700"
+                                      : item.varianceQuantity < 0
+                                        ? "text-red-600"
+                                        : "text-zinc-600";
+
+                                return (
+                                  <tr key={item.id} className="border-t border-zinc-200 align-top">
+                                    <td className="px-4 py-4">
+                                      <div className="space-y-1">
+                                        <p className="font-semibold text-zinc-950">{item.productName}</p>
+                                        <p className="text-zinc-500">{item.productCategory ?? "Без категории"}</p>
+                                      </div>
+                                    </td>
+                                    <td className="px-4 py-4 font-medium text-zinc-600">{item.productUnit}</td>
+                                    <td className="px-4 py-4 font-medium text-zinc-950">{item.stockQuantity}</td>
+                                    <td className="px-4 py-4 font-medium text-zinc-950">
+                                      {item.actualQuantity === null ? "—" : item.actualQuantity}
+                                    </td>
+                                    <td className={`px-4 py-4 font-medium ${varianceTone}`}>
+                                      {item.varianceQuantity === null
+                                        ? "—"
+                                        : `${item.varianceQuantity > 0 ? "+" : ""}${item.varianceQuantity} ${item.productUnit}`}
+                                    </td>
+                                    <td className={`px-4 py-4 font-medium ${varianceTone}`}>
+                                      {item.varianceValueCents === null
+                                        ? "—"
+                                        : `${item.varianceValueCents > 0 ? "+" : ""}${formatMoney(item.varianceValueCents)}`}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap justify-end gap-3">
+                        <InventorySessionExportLink
+                          sessionId={selectedSession.id}
+                          variant="secondary"
+                        />
+                        {canManageInventory ? (
+                          <InventorySessionDeleteButton
+                            sessionId={selectedSession.id}
+                            sessionLabel={`#${selectedSession.id}`}
+                          />
+                        ) : null}
                       </div>
                     </div>
                   ) : null}

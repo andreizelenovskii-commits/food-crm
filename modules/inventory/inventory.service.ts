@@ -1,11 +1,15 @@
 import type {
+  IncomingActSummary,
   InventoryResponsibleOption,
   InventorySession,
   InventorySessionSummary,
   ProductItem,
+  WriteoffActSummary,
 } from "@/modules/inventory/inventory.types";
 import type {
+  CreateIncomingActInput,
   CreateInventorySessionInput,
+  CreateWriteoffActInput,
   InventoryAuditEntryInput,
   InventorySessionActualInput,
   ProductInput,
@@ -13,11 +17,20 @@ import type {
 import {
   applyInventoryAudit,
   closeInventorySession,
+  completeIncomingAct,
+  completeWriteoffAct,
+  createIncomingAct,
   createInventorySession,
+  createWriteoffAct,
   createProduct,
+  deleteWriteoffAct,
+  deleteInventorySession,
   deleteProduct,
   getInventoryResponsibleOptions,
+  getIncomingActs,
+  getInventorySessionById,
   getInventorySessions,
+  getWriteoffActs,
   getProductById,
   getProducts,
   saveInventorySessionActuals,
@@ -33,8 +46,22 @@ export async function fetchInventoryResponsibleOptions(): Promise<InventoryRespo
   return getInventoryResponsibleOptions();
 }
 
+export async function fetchIncomingActs(): Promise<IncomingActSummary[]> {
+  return getIncomingActs();
+}
+
 export async function fetchInventorySessions(): Promise<InventorySessionSummary[]> {
   return getInventorySessions();
+}
+
+export async function fetchInventorySessionById(
+  sessionId: number,
+): Promise<InventorySessionSummary | null> {
+  return getInventorySessionById(sessionId);
+}
+
+export async function fetchWriteoffActs(): Promise<WriteoffActSummary[]> {
+  return getWriteoffActs();
 }
 
 export async function fetchProductById(productId: number): Promise<ProductItem | null> {
@@ -68,6 +95,18 @@ export async function createInventorySessionService(
   return createInventorySession(input);
 }
 
+export async function createIncomingActService(
+  input: CreateIncomingActInput,
+): Promise<IncomingActSummary> {
+  return createIncomingAct(input);
+}
+
+export async function createWriteoffActService(
+  input: CreateWriteoffActInput,
+): Promise<WriteoffActSummary> {
+  return createWriteoffAct(input);
+}
+
 export async function saveInventorySessionActualsService(
   sessionId: number,
   entries: InventorySessionActualInput[],
@@ -77,4 +116,20 @@ export async function saveInventorySessionActualsService(
 
 export async function closeInventorySessionService(sessionId: number) {
   return closeInventorySession(sessionId);
+}
+
+export async function completeIncomingActService(actId: number) {
+  return completeIncomingAct(actId);
+}
+
+export async function deleteInventorySessionService(sessionId: number) {
+  return deleteInventorySession(sessionId);
+}
+
+export async function completeWriteoffActService(actId: number) {
+  return completeWriteoffAct(actId);
+}
+
+export async function deleteWriteoffActService(actId: number) {
+  return deleteWriteoffAct(actId);
 }

@@ -50,6 +50,18 @@ function normalizeDraftValue(value: string) {
   return value.trim();
 }
 
+function normalizeDecimalDraft(value: string) {
+  const normalized = value.replace(/[^\d.,]/g, "").replace(".", ",");
+  const [integerPart = "", ...rest] = normalized.split(",");
+  const fractionalPart = rest.join("").slice(0, 2);
+
+  if (!rest.length) {
+    return integerPart;
+  }
+
+  return `${integerPart},${fractionalPart}`;
+}
+
 export function InventoryAuditForm({
   products,
   canManageInventory,
@@ -176,7 +188,7 @@ export function InventoryAuditForm({
 
   const setDraftValue = (productId: number, value: string) => {
     setDraft((currentDraft) => {
-      const normalizedValue = value.replace(/[^\d]/g, "");
+      const normalizedValue = normalizeDecimalDraft(value);
       const nextDraft = { ...currentDraft };
 
       if (!normalizedValue) {
@@ -349,7 +361,7 @@ export function InventoryAuditForm({
                     <div className="relative">
                       <input
                         type="text"
-                        inputMode="numeric"
+                        inputMode="decimal"
                         value={value}
                         onChange={(event) => setDraftValue(product.id, event.target.value)}
                         placeholder={String(product.stockQuantity)}

@@ -61,10 +61,10 @@ export function ProductForm({ initialProduct }: { initialProduct?: ProductItem }
 
   const priceLabel =
     selectedUnit === "кг"
-      ? "Цена за кг"
+      ? "Средняя закупочная цена за кг"
       : selectedUnit === "шт"
-        ? "Цена за шт"
-        : "Цена";
+        ? "Средняя закупочная цена за шт"
+        : "Средняя закупочная цена";
 
   const handleCreateSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -112,7 +112,7 @@ export function ProductForm({ initialProduct }: { initialProduct?: ProductItem }
       <div className="space-y-2">
         <h2 className="text-xl font-semibold text-zinc-950">{title}</h2>
         <p className="text-sm leading-6 text-zinc-600">
-          Сохраняй товары, их цену и текущий остаток на складе.
+          Сохраняй товары, их среднюю закупочную цену и текущий остаток на складе.
         </p>
         <p className="text-xs text-zinc-500">
           Внутренний код присваивается автоматически при создании товара.
@@ -195,7 +195,7 @@ export function ProductForm({ initialProduct }: { initialProduct?: ProductItem }
             name="stockQuantity"
             type="number"
             min="0"
-            step="1"
+            step="0.01"
             defaultValue={activeState.values.stockQuantity}
             placeholder="0"
             className="w-full rounded-2xl border border-zinc-300 px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"

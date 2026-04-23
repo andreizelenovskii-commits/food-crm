@@ -7,12 +7,20 @@ import {
   applyInventoryAuditService,
   addProduct,
   closeInventorySessionService,
+  completeIncomingActService,
+  completeWriteoffActService,
+  createIncomingActService,
   createInventorySessionService,
+  createWriteoffActService,
+  deleteWriteoffActService,
+  deleteInventorySessionService,
   deleteProductService,
   saveInventorySessionActualsService,
   updateProductService,
 } from "@/modules/inventory/inventory.service";
 import {
+  parseCreateIncomingActInput,
+  parseCreateWriteoffActInput,
   parseCreateInventorySessionInput,
   parseInventoryAuditInput,
   parseInventorySessionActualsInput,
@@ -49,6 +57,17 @@ export type InventorySessionCreateFormState = {
 };
 
 export type InventorySessionProgressFormState = {
+  errorMessage: string | null;
+  successMessage: string | null;
+};
+
+export type WriteoffActCreateFormState = {
+  errorMessage: string | null;
+  successMessage: string | null;
+  createdActId: number | null;
+};
+
+export type WriteoffActProgressFormState = {
   errorMessage: string | null;
   successMessage: string | null;
 };
@@ -295,6 +314,212 @@ export async function closeInventorySessionAction(
     return {
       errorMessage: null,
       successMessage: "Инвентаризация закрыта, остатки на складе обновлены.",
+    };
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return {
+        errorMessage: error.message,
+        successMessage: null,
+      };
+    }
+
+    throw error;
+  }
+}
+
+export async function deleteInventorySessionAction(
+  _previousState: InventorySessionProgressFormState,
+  formData: FormData,
+): Promise<InventorySessionProgressFormState> {
+  await requirePermission("manage_inventory");
+  const sessionId = Number(String(formData.get("sessionId") ?? "").trim());
+
+  if (!Number.isInteger(sessionId) || sessionId <= 0) {
+    return {
+      errorMessage: "Инвентаризация не найдена",
+      successMessage: null,
+    };
+  }
+
+  try {
+    await deleteInventorySessionService(sessionId);
+
+    return {
+      errorMessage: null,
+      successMessage: "Инвентаризация удалена, остатки на складе пересчитаны.",
+    };
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return {
+        errorMessage: error.message,
+        successMessage: null,
+      };
+    }
+
+    throw error;
+  }
+}
+
+export async function deleteInventorySessionSubmitAction(formData: FormData) {
+  const result = await deleteInventorySessionAction(
+    {
+      errorMessage: null,
+      successMessage: null,
+    },
+    formData,
+  );
+
+  if (result.errorMessage) {
+    throw new ValidationError(result.errorMessage);
+  }
+
+  return {
+    redirectTo: String(formData.get("redirectTo") ?? "/dashboard/inventory?tab=audit").trim(),
+  };
+}
+
+export async function createWriteoffActAction(
+  _previousState: WriteoffActCreateFormState,
+  formData: FormData,
+): Promise<WriteoffActCreateFormState> {
+  await requirePermission("manage_inventory");
+
+  try {
+    const input = parseCreateWriteoffActInput(formData);
+    const act = await createWriteoffActService(input);
+
+    return {
+      errorMessage: null,
+      successMessage: `Акт списания №${act.id} создан.`,
+      createdActId: act.id,
+    };
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return {
+        errorMessage: error.message,
+        successMessage: null,
+        createdActId: null,
+      };
+    }
+
+    throw error;
+  }
+}
+
+export async function createIncomingActAction(
+  _previousState: WriteoffActCreateFormState,
+  formData: FormData,
+): Promise<WriteoffActCreateFormState> {
+  await requirePermission("manage_inventory");
+
+  try {
+    const input = parseCreateIncomingActInput(formData);
+    const act = await createIncomingActService(input);
+
+    return {
+      errorMessage: null,
+      successMessage: `Акт поступления №${act.id} создан.`,
+      createdActId: act.id,
+    };
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return {
+        errorMessage: error.message,
+        successMessage: null,
+        createdActId: null,
+      };
+    }
+
+    throw error;
+  }
+}
+
+export async function completeWriteoffActAction(
+  _previousState: WriteoffActProgressFormState,
+  formData: FormData,
+): Promise<WriteoffActProgressFormState> {
+  await requirePermission("manage_inventory");
+  const actId = Number(String(formData.get("actId") ?? "").trim());
+
+  if (!Number.isInteger(actId) || actId <= 0) {
+    return {
+      errorMessage: "Акт списания не найден",
+      successMessage: null,
+    };
+  }
+
+  try {
+    await completeWriteoffActService(actId);
+
+    return {
+      errorMessage: null,
+      successMessage: `Акт списания №${actId} завершён.`,
+    };
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return {
+        errorMessage: error.message,
+        successMessage: null,
+      };
+    }
+
+    throw error;
+  }
+}
+
+export async function completeIncomingActAction(
+  _previousState: WriteoffActProgressFormState,
+  formData: FormData,
+): Promise<WriteoffActProgressFormState> {
+  await requirePermission("manage_inventory");
+  const actId = Number(String(formData.get("actId") ?? "").trim());
+
+  if (!Number.isInteger(actId) || actId <= 0) {
+    return {
+      errorMessage: "Акт поступления не найден",
+      successMessage: null,
+    };
+  }
+
+  try {
+    await completeIncomingActService(actId);
+
+    return {
+      errorMessage: null,
+      successMessage: `Акт поступления №${actId} завершён.`,
+    };
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return {
+        errorMessage: error.message,
+        successMessage: null,
+      };
+    }
+
+    throw error;
+  }
+}
+
+export async function deleteWriteoffActAction(
+  _previousState: WriteoffActProgressFormState,
+  formData: FormData,
+): Promise<WriteoffActProgressFormState> {
+  await requirePermission("manage_inventory");
+  const actId = Number(String(formData.get("actId") ?? "").trim());
+
+  if (!Number.isInteger(actId) || actId <= 0) {
+    return {
+      errorMessage: "Акт списания не найден",
+      successMessage: null,
+    };
+  }
+
+  try {
+    await deleteWriteoffActService(actId);
+
+    return {
+      errorMessage: null,
+      successMessage: `Акт списания №${actId} удалён.`,
     };
   } catch (error) {
     if (error instanceof ValidationError) {

@@ -76,11 +76,11 @@ export default async function ProductDetailsPage(props: {
                 </p>
               </div>
               <div className="rounded-2xl border border-white/80 bg-white/90 p-4">
-                <p className="text-sm font-medium text-zinc-500">Цена</p>
+                <p className="text-sm font-medium text-zinc-500">Средняя закупочная цена</p>
                 <p className="mt-3 text-xl font-semibold text-zinc-950">{formatMoney(product.priceCents)}</p>
               </div>
               <div className="rounded-2xl border border-white/80 bg-white/90 p-4">
-                <p className="text-sm font-medium text-zinc-500">Стоимость остатка</p>
+                <p className="text-sm font-medium text-zinc-500">Стоимость остатка по закупке</p>
                 <p className="mt-3 text-xl font-semibold text-zinc-950">
                   {formatMoney(product.stockQuantity * product.priceCents)}
                 </p>

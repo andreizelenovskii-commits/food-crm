@@ -45,13 +45,15 @@ model Product {
   sku         String?  @unique
   category    String?
   unit        String
-  stockQuantity Int    @default(0)
+  stockQuantity Float  @default(0)
   priceCents  Int
   description String?
   createdAt   DateTime @default(now())
   orderItems  OrderItem[]
   ingredients TechCardIngredient[]
   inventoryItems InventorySessionItem[]
+  incomingItems IncomingActItem[]
+  writeoffItems WriteoffActItem[]
 }
 
 model Employee {
@@ -69,6 +71,8 @@ model Employee {
   orders       Order[]
   adjustments  EmployeeAdjustment[]
   inventorySessions InventorySession[]
+  incomingActs IncomingAct[]
+  writeoffActs WriteoffAct[]
 }
 
 enum EmployeeAdjustmentType {
@@ -166,6 +170,58 @@ model InventorySessionItem {
   productName        String
   productCategory    String?
   productUnit        String
-  stockQuantity      Int
-  actualQuantity     Int?
+  stockQuantity      Float
+  actualQuantity     Float?
+}
+
+model IncomingAct {
+  id                    Int               @id @default(autoincrement())
+  responsibleEmployee   Employee          @relation(fields: [responsibleEmployeeId], references: [id])
+  responsibleEmployeeId Int
+  supplierName          String?
+  notes                 String?
+  createdAt             DateTime          @default(now())
+  completedAt           DateTime?
+  items                 IncomingActItem[]
+}
+
+model IncomingActItem {
+  id                  Int         @id @default(autoincrement())
+  incomingAct         IncomingAct @relation(fields: [incomingActId], references: [id])
+  incomingActId       Int
+  product             Product     @relation(fields: [productId], references: [id])
+  productId           Int
+  productName         String
+  productCategory     String?
+  productUnit         String
+  quantity            Float
+  priceCents          Int
+  stockQuantityBefore Float?
+  stockQuantityAfter  Float?
+}
+
+model WriteoffAct {
+  id                    Int               @id @default(autoincrement())
+  responsibleEmployee   Employee          @relation(fields: [responsibleEmployeeId], references: [id])
+  responsibleEmployeeId Int
+  reason                String
+  notes                 String?
+  createdAt             DateTime          @default(now())
+  completedAt           DateTime?
+  items                 WriteoffActItem[]
+}
+
+model WriteoffActItem {
+  id                  Int         @id @default(autoincrement())
+  writeoffAct         WriteoffAct @relation(fields: [writeoffActId], references: [id])
+  writeoffActId       Int
+  product             Product     @relation(fields: [productId], references: [id])
+  productId           Int
+  productName         String
+  productCategory     String?
+  productUnit         String
+  quantity            Float
+  priceCents          Int
+  stockQuantityBefore Float?
+  stockQuantityAfter  Float?
 }

@@ -10,11 +10,14 @@ import {
 } from "@/modules/dashboard/dashboard.service";
 
 export default async function DashboardPage(props: {
-  searchParams?: Promise<{ month?: string }>;
+  searchParams?: Promise<{ month?: string | string[] }>;
 }) {
   const user = await requirePermission("view_dashboard");
   const searchParams = await props.searchParams;
-  const selectedMonth = searchParams?.month?.trim() ?? "";
+  const selectedMonthParam = Array.isArray(searchParams?.month)
+    ? searchParams.month[0]
+    : searchParams?.month;
+  const selectedMonth = selectedMonthParam?.trim() ?? "";
   const dashboard = await getDashboardMetrics();
   const isStaffRole =
     user.role === "Повар" || user.role === "Курьер" || user.role === "Диспетчер";
