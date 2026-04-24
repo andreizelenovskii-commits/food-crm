@@ -24,8 +24,10 @@ import {
   createWriteoffAct,
   createProduct,
   deleteWriteoffAct,
+  deleteIncomingAct,
   deleteInventorySession,
   deleteProduct,
+  getIncomingActById,
   getInventoryResponsibleOptions,
   getIncomingActs,
   getInventorySessionById,
@@ -35,6 +37,7 @@ import {
   getProducts,
   saveInventorySessionActuals,
   type InventoryAuditResult,
+  updateIncomingAct,
   updateProduct,
 } from "@/modules/inventory/inventory.repository";
 
@@ -48,6 +51,12 @@ export async function fetchInventoryResponsibleOptions(): Promise<InventoryRespo
 
 export async function fetchIncomingActs(): Promise<IncomingActSummary[]> {
   return getIncomingActs();
+}
+
+export async function fetchIncomingActById(
+  actId: number,
+): Promise<IncomingActSummary | null> {
+  return getIncomingActById(actId);
 }
 
 export async function fetchInventorySessions(): Promise<InventorySessionSummary[]> {
@@ -101,6 +110,13 @@ export async function createIncomingActService(
   return createIncomingAct(input);
 }
 
+export async function updateIncomingActService(
+  actId: number,
+  input: CreateIncomingActInput,
+): Promise<IncomingActSummary> {
+  return updateIncomingAct(actId, input);
+}
+
 export async function createWriteoffActService(
   input: CreateWriteoffActInput,
 ): Promise<WriteoffActSummary> {
@@ -132,4 +148,8 @@ export async function completeWriteoffActService(actId: number) {
 
 export async function deleteWriteoffActService(actId: number) {
   return deleteWriteoffAct(actId);
+}
+
+export async function deleteIncomingActService(actId: number) {
+  return deleteIncomingAct(actId);
 }

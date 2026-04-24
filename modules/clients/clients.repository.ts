@@ -1,4 +1,5 @@
 import { pool } from "@/shared/db/pool";
+import { ensureRecentDatabaseBackup } from "@/shared/db/backup";
 import { ValidationError } from "@/shared/errors/app-error";
 import type { Client } from "@/modules/clients/clients.types";
 import type {
@@ -123,6 +124,7 @@ export async function getClientById(clientId: number): Promise<Client | null> {
 
 export async function createClient(input: CreateClientInput): Promise<Client> {
   try {
+    await ensureRecentDatabaseBackup("client-create");
     const result = await pool.query<ClientRow>(
       `
         INSERT INTO "Client" ("name", "type", "email", "phone", "birthDate", "address", "notes")
@@ -164,6 +166,7 @@ export async function updateClient(
   }
 
   try {
+    await ensureRecentDatabaseBackup("client-update");
     const result = await pool.query<ClientRow>(
       `
         UPDATE "Client"
@@ -227,6 +230,7 @@ export async function deleteClient(clientId: number): Promise<boolean> {
     return false;
   }
 
+  await ensureRecentDatabaseBackup("client-delete");
   const result = await pool.query(
     `
       DELETE FROM "Client"

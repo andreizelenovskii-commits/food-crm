@@ -1,4 +1,5 @@
 import { pool } from "@/shared/db/pool";
+import { ensureRecentDatabaseBackup } from "@/shared/db/backup";
 import { ValidationError } from "@/shared/errors/app-error";
 import type { CatalogItem } from "@/modules/catalog/catalog.types";
 import type { CatalogItemInput } from "@/modules/catalog/catalog.validation";
@@ -72,6 +73,7 @@ export async function createCatalogItem(input: CatalogItemInput): Promise<Catalo
     throw new ValidationError("Позиция каталога с таким slug уже существует");
   }
 
+  await ensureRecentDatabaseBackup("catalog-item-create");
   const result = await pool.query<CatalogRow>(
     `
       INSERT INTO "CatalogItem" (

@@ -10,6 +10,7 @@ type ConfirmDeleteButtonProps = {
   entityName: string;
   disabled?: boolean;
   disabledMessage?: string;
+  warningMessage?: string;
   hiddenFields?: Array<{
     name: string;
     value: string | number;
@@ -27,6 +28,7 @@ export function ConfirmDeleteButton({
   entityName,
   disabled = false,
   disabledMessage,
+  warningMessage,
   hiddenFields = [],
   buttonClassName = DEFAULT_BUTTON_CLASS_NAME,
 }: ConfirmDeleteButtonProps) {
@@ -90,20 +92,20 @@ export function ConfirmDeleteButton({
 
       {isConfirmOpen ? (
         <div
-          className="fixed inset-0 z-40 flex items-center justify-center bg-zinc-950/45 px-4 py-6"
+          className="fixed inset-0 z-40 flex items-center justify-center bg-zinc-950/45 px-4 py-6 backdrop-blur-sm"
           onClick={() => setIsConfirmOpen(false)}
         >
           <div
             role="dialog"
             aria-modal="true"
             aria-label={ariaLabel}
-            className="w-full max-w-md rounded-[32px] border border-zinc-200 bg-white p-6 shadow-2xl shadow-zinc-950/25"
+            className="w-full max-w-md rounded-[32px] border border-zinc-200 bg-[linear-gradient(180deg,#ffffff_0%,#fff8f8_100%)] p-6 shadow-2xl shadow-zinc-950/25"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="space-y-2">
-              <p className="text-sm font-medium uppercase tracking-[0.18em] text-red-600/80">
+              <div className="inline-flex rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-red-700">
                 Подтверждение удаления
-              </p>
+              </div>
               <h2 className="text-xl font-semibold text-zinc-950">
                 Удалить {entityLabel.toLowerCase()}?
               </h2>
@@ -117,6 +119,11 @@ export function ConfirmDeleteButton({
               {disabledMessage ? (
                 <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
                   {disabledMessage}
+                </p>
+              ) : null}
+              {warningMessage ? (
+                <p className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-700">
+                  {warningMessage}
                 </p>
               ) : null}
             </div>

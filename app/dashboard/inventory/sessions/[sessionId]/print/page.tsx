@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requirePermission } from "@/modules/auth/auth.session";
+import { formatInventoryQuantity } from "@/modules/inventory/inventory.format";
 import { InventorySessionPrintButton } from "@/modules/inventory/components/inventory-session-print-button";
 import { fetchInventorySessionById } from "@/modules/inventory/inventory.service";
 
@@ -204,11 +205,11 @@ export default async function InventorySessionPrintPage(props: {
                   const factCell =
                     item.actualQuantity === null
                       ? "________________"
-                      : String(item.actualQuantity);
+                      : formatInventoryQuantity(item.actualQuantity);
                   const varianceText =
                     item.varianceQuantity === null
                       ? "____________"
-                      : `${item.varianceQuantity > 0 ? "+" : ""}${item.varianceQuantity} ${item.productUnit}`;
+                      : `${item.varianceQuantity > 0 ? "+" : ""}${formatInventoryQuantity(item.varianceQuantity)} ${item.productUnit}`;
                   const varianceValueText =
                     item.varianceValueCents === null
                       ? "____________"
@@ -229,7 +230,7 @@ export default async function InventorySessionPrintPage(props: {
                         {item.productUnit}
                       </td>
                       <td className="border-b border-zinc-200 px-3 py-3 font-medium text-zinc-950">
-                        {item.currentStockQuantity}
+                        {formatInventoryQuantity(item.currentStockQuantity)}
                       </td>
                       <td className="border-b border-zinc-200 px-3 py-3 font-medium text-zinc-950">
                         {factCell}

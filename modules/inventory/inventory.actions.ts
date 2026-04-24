@@ -12,10 +12,12 @@ import {
   createIncomingActService,
   createInventorySessionService,
   createWriteoffActService,
+  deleteIncomingActService,
   deleteWriteoffActService,
   deleteInventorySessionService,
   deleteProductService,
   saveInventorySessionActualsService,
+  updateIncomingActService,
   updateProductService,
 } from "@/modules/inventory/inventory.service";
 import {
@@ -434,6 +436,43 @@ export async function createIncomingActAction(
   }
 }
 
+export async function updateIncomingActAction(
+  _previousState: WriteoffActCreateFormState,
+  formData: FormData,
+): Promise<WriteoffActCreateFormState> {
+  await requirePermission("manage_inventory");
+  const actId = Number(String(formData.get("actId") ?? "").trim());
+
+  if (!Number.isInteger(actId) || actId <= 0) {
+    return {
+      errorMessage: "Акт поступления не найден",
+      successMessage: null,
+      createdActId: null,
+    };
+  }
+
+  try {
+    const input = parseCreateIncomingActInput(formData);
+    const act = await updateIncomingActService(actId, input);
+
+    return {
+      errorMessage: null,
+      successMessage: `Акт поступления №${act.id} обновлён.`,
+      createdActId: act.id,
+    };
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return {
+        errorMessage: error.message,
+        successMessage: null,
+        createdActId: null,
+      };
+    }
+
+    throw error;
+  }
+}
+
 export async function completeWriteoffActAction(
   _previousState: WriteoffActProgressFormState,
   formData: FormData,
@@ -531,4 +570,55 @@ export async function deleteWriteoffActAction(
 
     throw error;
   }
+}
+
+export async function deleteIncomingActAction(
+  _previousState: WriteoffActProgressFormState,
+  formData: FormData,
+): Promise<WriteoffActProgressFormState> {
+  await requirePermission("manage_inventory");
+  const actId = Number(String(formData.get("actId") ?? "").trim());
+
+  if (!Number.isInteger(actId) || actId <= 0) {
+    return {
+      errorMessage: "Акт поступления не найден",
+      successMessage: null,
+    };
+  }
+
+  try {
+    await deleteIncomingActService(actId);
+
+    return {
+      errorMessage: null,
+      successMessage: `Акт поступления №${actId} удалён.`,
+    };
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return {
+        errorMessage: error.message,
+        successMessage: null,
+      };
+    }
+
+    throw error;
+  }
+}
+
+export async function deleteIncomingActSubmitAction(formData: FormData) {
+  const result = await deleteIncomingActAction(
+    {
+      errorMessage: null,
+      successMessage: null,
+    },
+    formData,
+  );
+
+  if (result.errorMessage) {
+    throw new ValidationError(result.errorMessage);
+  }
+
+  return {
+    redirectTo: String(formData.get("redirectTo") ?? "/dashboard/inventory?tab=incoming").trim(),
+  };
 }

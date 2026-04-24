@@ -34,3 +34,17 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Local DB Backups
+
+The project keeps local PostgreSQL backups in `backups/db/`.
+
+- `npm run db:backup` creates a JSON snapshot of every table in the local database.
+- `npm run db:restore -- /absolute/or/relative/path/to/backup.json` restores a backup file.
+- transactional write flows also create automatic local backups with a cooldown, so routine edits do not overwrite protection on every click.
+
+Optional env settings:
+
+- `DB_BACKUP_ENABLED=0` disables automatic and manual backups.
+- `DB_BACKUP_MIN_INTERVAL_MINUTES=15` changes the auto-backup cooldown.
+- `DB_BACKUP_DIR=/custom/path` changes the local backup directory.

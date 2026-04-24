@@ -1,4 +1,5 @@
 import { pool } from "@/shared/db/pool";
+import { ensureRecentDatabaseBackup } from "@/shared/db/backup";
 import {
   normalizeUserRole,
   type AuthUser,
@@ -42,7 +43,7 @@ class PgAuthUserRepository implements AuthUserRepository {
       `
         SELECT "id", "email", "password", "role"
         FROM "User"
-        WHERE "email" = $1
+        WHERE LOWER("email") = LOWER($1)
         LIMIT 1
       `,
       [email],
@@ -54,19 +55,22 @@ class PgAuthUserRepository implements AuthUserRepository {
   }
 
   async create({ email, passwordHash, role }: CreateUserInput) {
+    await ensureRecentDatabaseBackup("auth-user-create");
+    const normalizedEmail = email.trim().toLowerCase();
     const result = await pool.query<UserRow>(
       `
         INSERT INTO "User" ("email", "password", "role")
         VALUES ($1, $2, $3)
         RETURNING "id", "email", "password", "role"
       `,
-      [email, passwordHash, role],
+      [normalizedEmail, passwordHash, role],
     );
 
     return mapRowToAuthUser(result.rows[0]);
   }
 
   async updatePasswordHash(userId: number, passwordHash: string) {
+    await ensureRecentDatabaseBackup("auth-password-update");
     await pool.query(
       `
         UPDATE "User"
@@ -81,6 +85,9 @@ class PgAuthUserRepository implements AuthUserRepository {
     userId: number,
     input: { email: string; role: UserRole; passwordHash?: string },
   ) {
+    await ensureRecentDatabaseBackup("auth-user-update");
+    const normalizedEmail = input.email.trim().toLowerCase();
+
     if (input.passwordHash) {
       await pool.query(
         `
@@ -88,7 +95,7 @@ class PgAuthUserRepository implements AuthUserRepository {
           SET "email" = $2, "role" = $3, "password" = $4
           WHERE "id" = $1
         `,
-        [userId, input.email, input.role, input.passwordHash],
+        [userId, normalizedEmail, input.role, input.passwordHash],
       );
 
       return;
@@ -100,7 +107,7 @@ class PgAuthUserRepository implements AuthUserRepository {
         SET "email" = $2, "role" = $3
         WHERE "id" = $1
       `,
-      [userId, input.email, input.role],
+      [userId, normalizedEmail, input.role],
     );
   }
 }

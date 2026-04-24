@@ -17,6 +17,7 @@ import {
   type ProductItem,
   type WriteoffActSummary,
 } from "@/modules/inventory/inventory.types";
+import { formatInventoryQuantity } from "@/modules/inventory/inventory.format";
 
 function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("ru-RU", {
@@ -34,13 +35,6 @@ function formatMoney(cents: number) {
     currency: "RUB",
     maximumFractionDigits: 0,
   }).format(cents / 100);
-}
-
-function formatQuantity(value: number) {
-  return new Intl.NumberFormat("ru-RU", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(value);
 }
 
 function parseQuantity(value: string) {
@@ -314,13 +308,13 @@ export function InventoryWriteoffPanel({
                     </p>
                   </td>
                   <td className="px-4 py-4 font-medium text-zinc-950">
-                    {item.stockQuantityBefore === null ? "—" : formatQuantity(item.stockQuantityBefore)} {item.productUnit}
+                    {item.stockQuantityBefore === null ? "—" : formatInventoryQuantity(item.stockQuantityBefore)} {item.productUnit}
                   </td>
                   <td className="px-4 py-4 font-medium text-red-600">
-                    -{formatQuantity(item.quantity)} {item.productUnit}
+                    -{formatInventoryQuantity(item.quantity)} {item.productUnit}
                   </td>
                   <td className="px-4 py-4 font-medium text-zinc-950">
-                    {item.stockQuantityAfter === null ? "—" : formatQuantity(item.stockQuantityAfter)} {item.productUnit}
+                    {item.stockQuantityAfter === null ? "—" : formatInventoryQuantity(item.stockQuantityAfter)} {item.productUnit}
                   </td>
                 </tr>
               ))}
@@ -458,13 +452,13 @@ export function InventoryWriteoffPanel({
                                 </p>
                               </td>
                               <td className="px-4 py-4 font-medium text-zinc-950">
-                                {formatQuantity(item.currentStockQuantity)} {item.productUnit}
+                                {formatInventoryQuantity(item.currentStockQuantity)} {item.productUnit}
                               </td>
                               <td className="px-4 py-4 font-medium text-red-600">
-                                -{formatQuantity(item.quantity)} {item.productUnit}
+                                -{formatInventoryQuantity(item.quantity)} {item.productUnit}
                               </td>
                               <td className="px-4 py-4 font-medium text-zinc-950">
-                                {formatQuantity(item.currentStockQuantity - item.quantity)} {item.productUnit}
+                                {formatInventoryQuantity(item.currentStockQuantity - item.quantity)} {item.productUnit}
                               </td>
                             </tr>
                           ))}
@@ -701,10 +695,11 @@ export function InventoryWriteoffPanel({
                             </span>
                           </div>
                           <p className="text-sm text-zinc-500">
-                            {product.category ?? "Без категории"} • Сейчас: {formatQuantity(product.stockQuantity)} {product.unit}
+                            {product.category ?? "Без категории"} • Сейчас:{" "}
+                            {formatInventoryQuantity(product.stockQuantity)} {product.unit}
                           </p>
                           <p className={`text-sm font-medium ${projectedTone}`}>
-                            После списания: {formatQuantity(projectedStock)} {product.unit}
+                            После списания: {formatInventoryQuantity(projectedStock)} {product.unit}
                           </p>
                           <p className="text-sm font-medium text-zinc-700">
                             Сумма списания: {formatMoney(parsedQuantity * product.priceCents)}
@@ -894,7 +889,7 @@ export function InventoryWriteoffPanel({
                             <div className="min-w-0">
                               <p className="truncate text-sm font-semibold text-zinc-950">{product.name}</p>
                               <p className="mt-1 truncate text-sm text-zinc-500">
-                                {formatQuantity(product.stockQuantity)} {product.unit}
+                                {formatInventoryQuantity(product.stockQuantity)} {product.unit}
                                 {product.sku ? ` • ${product.sku}` : ""}
                               </p>
                               <p className="mt-1 text-xs font-medium uppercase tracking-[0.12em] text-amber-700">

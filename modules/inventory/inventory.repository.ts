@@ -1,4 +1,6 @@
 import { pool } from "@/shared/db/pool";
+import { ensureRecentDatabaseBackup } from "@/shared/db/backup";
+import { withTransaction } from "@/shared/db/transaction";
 import { ValidationError } from "@/shared/errors/app-error";
 import type {
   IncomingActItem,
@@ -532,51 +534,49 @@ export async function getProductById(productId: number): Promise<ProductItem | n
 
 export async function createProduct(input: ProductInput): Promise<ProductItem> {
   await ensureUniqueProductName(input.name);
-  await pool.query("BEGIN");
-
   try {
-    const insertedProduct = await pool.query<{ id: number }>(
-      `
-        INSERT INTO "Product" ("name", "category", "unit", "stockQuantity", "priceCents", "description")
-        VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING "id"
-      `,
-      [
-        input.name,
-        input.category,
-        input.unit,
-        input.stockQuantity,
-        input.priceCents,
-        input.description,
-      ],
-    );
+    return await withTransaction(async (client) => {
+      const insertedProduct = await client.query<{ id: number }>(
+        `
+          INSERT INTO "Product" ("name", "category", "unit", "stockQuantity", "priceCents", "description")
+          VALUES ($1, $2, $3, $4, $5, $6)
+          RETURNING "id"
+        `,
+        [
+          input.name,
+          input.category,
+          input.unit,
+          input.stockQuantity,
+          input.priceCents,
+          input.description,
+        ],
+      );
 
-    const createdProductId = insertedProduct.rows[0]?.id;
+      const createdProductId = insertedProduct.rows[0]?.id;
 
-    if (!createdProductId) {
-      throw new ValidationError("Не удалось создать товар. Попробуйте ещё раз.");
-    }
+      if (!createdProductId) {
+        throw new ValidationError("Не удалось создать товар. Попробуйте ещё раз.");
+      }
 
-    const result = await pool.query<ProductRow>(
-      `
-        UPDATE "Product"
-        SET "sku" = CONCAT('PRD-', LPAD($2::text, 5, '0'))
-        WHERE "id" = $1
-        RETURNING "id", "name", "sku", "category", "unit", "stockQuantity", "priceCents", "description", "createdAt"
-      `,
-      [createdProductId, createdProductId],
-    );
+      const result = await client.query<ProductRow>(
+        `
+          UPDATE "Product"
+          SET "sku" = CONCAT('PRD-', LPAD($2::text, 5, '0'))
+          WHERE "id" = $1
+          RETURNING "id", "name", "sku", "category", "unit", "stockQuantity", "priceCents", "description", "createdAt"
+        `,
+        [createdProductId, createdProductId],
+      );
 
-    const createdProduct = result.rows[0];
+      const createdProduct = result.rows[0];
 
-    if (!createdProduct) {
-      throw new ValidationError("Не удалось сохранить внутренний код товара.");
-    }
+      if (!createdProduct) {
+        throw new ValidationError("Не удалось сохранить внутренний код товара.");
+      }
 
-    await pool.query("COMMIT");
-    return mapRowToProduct(createdProduct);
+      return mapRowToProduct(createdProduct);
+    });
   } catch (error) {
-    await pool.query("ROLLBACK");
     mapProductConflict(error);
   }
 }
@@ -587,6 +587,7 @@ export async function updateProduct(productId: number, input: ProductInput): Pro
   }
 
   try {
+    await ensureRecentDatabaseBackup("product-update");
     await ensureUniqueProductName(input.name, productId);
     const result = await pool.query<ProductRow>(
       `
@@ -636,6 +637,7 @@ export async function deleteProduct(productId: number): Promise<boolean> {
     return false;
   }
 
+  await ensureRecentDatabaseBackup("product-delete");
   const result = await pool.query(
     `
       DELETE FROM "Product"
@@ -671,11 +673,9 @@ export async function applyInventoryAudit(entries: InventoryAuditEntryInput[]): 
   );
   const changedEntries = entries.filter((entry) => stockById.get(entry.productId) !== entry.actualQuantity);
 
-  await pool.query("BEGIN");
-
-  try {
+  await withTransaction(async (client) => {
     for (const entry of changedEntries) {
-      await pool.query(
+      await client.query(
         `
           UPDATE "Product"
           SET "stockQuantity" = $2
@@ -684,18 +684,13 @@ export async function applyInventoryAudit(entries: InventoryAuditEntryInput[]): 
         [entry.productId, entry.actualQuantity],
       );
     }
+  });
 
-    await pool.query("COMMIT");
-
-    return {
-      checkedCount: entries.length,
-      updatedCount: changedEntries.length,
-      differenceCount: changedEntries.length,
-    };
-  } catch (error) {
-    await pool.query("ROLLBACK");
-    throw error;
-  }
+  return {
+    checkedCount: entries.length,
+    updatedCount: changedEntries.length,
+    differenceCount: changedEntries.length,
+  };
 }
 
 export async function createInventorySession(input: CreateInventorySessionInput): Promise<InventorySession> {
@@ -738,10 +733,8 @@ export async function createInventorySession(input: CreateInventorySessionInput)
     throw new ValidationError("Часть выбранных товаров уже недоступна. Обнови страницу и собери лист заново.");
   }
 
-  await pool.query("BEGIN");
-
-  try {
-    const sessionResult = await pool.query<InventorySessionRow>(
+  return withTransaction(async (client) => {
+    const sessionResult = await client.query<InventorySessionRow>(
       `
         INSERT INTO "InventorySession" ("responsibleEmployeeId", "notes")
         VALUES ($1, $2)
@@ -770,7 +763,7 @@ export async function createInventorySession(input: CreateInventorySessionInput)
         continue;
       }
 
-      const itemResult = await pool.query<InventorySessionItemRow>(
+      const itemResult = await client.query<InventorySessionItemRow>(
         `
           INSERT INTO "InventorySessionItem" (
             "inventorySessionId",
@@ -812,8 +805,6 @@ export async function createInventorySession(input: CreateInventorySessionInput)
       }
     }
 
-    await pool.query("COMMIT");
-
     return mapInventorySession(
       {
         ...session,
@@ -822,10 +813,7 @@ export async function createInventorySession(input: CreateInventorySessionInput)
       },
       items,
     );
-  } catch (error) {
-    await pool.query("ROLLBACK");
-    throw error;
-  }
+  });
 }
 
 export async function getInventorySessions(): Promise<InventorySessionSummary[]> {
@@ -933,6 +921,53 @@ export async function getIncomingActs(): Promise<IncomingActSummary[]> {
     const items = itemsByActId[row.id] ?? [];
     return mapIncomingAct(row, items);
   });
+}
+
+export async function getIncomingActById(
+  actId: number,
+): Promise<IncomingActSummary | null> {
+  if (!Number.isInteger(actId) || actId <= 0) {
+    return null;
+  }
+
+  const actResult = await pool.query<IncomingActRow>(
+    `
+      SELECT
+        a."id",
+        a."responsibleEmployeeId",
+        e."name" AS "responsibleEmployeeName",
+        e."role" AS "responsibleEmployeeRole",
+        a."supplierName",
+        a."notes",
+        a."createdAt",
+        a."completedAt",
+        COUNT(i."id") AS "itemsCount"
+      FROM "IncomingAct" a
+      INNER JOIN "Employee" e ON e."id" = a."responsibleEmployeeId"
+      LEFT JOIN "IncomingActItem" i ON i."incomingActId" = a."id"
+      WHERE a."id" = $1
+      GROUP BY
+        a."id",
+        a."responsibleEmployeeId",
+        e."name",
+        e."role",
+        a."supplierName",
+        a."notes",
+        a."createdAt",
+        a."completedAt"
+      LIMIT 1
+    `,
+    [actId],
+  );
+
+  const act = actResult.rows[0];
+
+  if (!act) {
+    return null;
+  }
+
+  const itemsByActId = await getIncomingActItemsByActIds([act.id]);
+  return mapIncomingAct(act, itemsByActId[act.id] ?? []);
 }
 
 export async function getInventorySessionById(
@@ -1055,92 +1090,92 @@ export async function createWriteoffAct(
   input: CreateWriteoffActInput,
 ): Promise<WriteoffActSummary> {
   try {
-    await pool.query("BEGIN");
+    const actId = await withTransaction(async (client) => {
+      const responsibleResult = await client.query<{ id: number }>(
+        `
+          SELECT "id"
+          FROM "Employee"
+          WHERE "id" = $1
+          LIMIT 1
+        `,
+        [input.responsibleEmployeeId],
+      );
 
-    const responsibleResult = await pool.query<{ id: number }>(
-      `
-        SELECT "id"
-        FROM "Employee"
-        WHERE "id" = $1
-        LIMIT 1
-      `,
-      [input.responsibleEmployeeId],
-    );
-
-    if (!responsibleResult.rows[0]) {
-      throw new ValidationError("Ответственный сотрудник не найден");
-    }
-
-    const productIds = input.items.map((item) => item.productId);
-    const productsResult = await pool.query<{
-      id: number;
-      name: string;
-      category: string | null;
-      unit: string;
-      priceCents: number;
-    }>(
-      `
-        SELECT "id", "name", "category", "unit", "priceCents"
-        FROM "Product"
-        WHERE "id" = ANY($1::int[])
-      `,
-      [productIds],
-    );
-
-    if (productsResult.rows.length !== productIds.length) {
-      throw new ValidationError("Часть товаров для списания уже недоступна. Обнови страницу и попробуй снова.");
-    }
-
-    const productsById = new Map(productsResult.rows.map((row) => [row.id, row]));
-
-    const actResult = await pool.query<{ id: number }>(
-      `
-        INSERT INTO "WriteoffAct" ("responsibleEmployeeId", "reason", "notes")
-        VALUES ($1, $2, $3)
-        RETURNING "id"
-      `,
-      [input.responsibleEmployeeId, input.reason, input.notes],
-    );
-
-    const actId = actResult.rows[0]?.id;
-
-    if (!actId) {
-      throw new ValidationError("Не удалось создать акт списания");
-    }
-
-    for (const item of input.items) {
-      const product = productsById.get(item.productId);
-
-      if (!product) {
-        throw new ValidationError("Товар для списания не найден");
+      if (!responsibleResult.rows[0]) {
+        throw new ValidationError("Ответственный сотрудник не найден");
       }
 
-      await pool.query(
+      const productIds = input.items.map((item) => item.productId);
+      const productsResult = await client.query<{
+        id: number;
+        name: string;
+        category: string | null;
+        unit: string;
+        priceCents: number;
+      }>(
         `
-          INSERT INTO "WriteoffActItem" (
-            "writeoffActId",
-            "productId",
-            "productName",
-            "productCategory",
-            "productUnit",
-            "quantity",
-            "priceCents"
-          )
-          VALUES ($1, $2, $3, $4, $5, $6, $7)
+          SELECT "id", "name", "category", "unit", "priceCents"
+          FROM "Product"
+          WHERE "id" = ANY($1::int[])
         `,
-        [
-          actId,
-          product.id,
-          product.name,
-          product.category,
-          product.unit,
-          item.quantity,
-          product.priceCents,
-        ],
+        [productIds],
       );
-    }
 
-    await pool.query("COMMIT");
+      if (productsResult.rows.length !== productIds.length) {
+        throw new ValidationError("Часть товаров для списания уже недоступна. Обнови страницу и попробуй снова.");
+      }
+
+      const productsById = new Map(productsResult.rows.map((row) => [row.id, row]));
+
+      const actResult = await client.query<{ id: number }>(
+        `
+          INSERT INTO "WriteoffAct" ("responsibleEmployeeId", "reason", "notes")
+          VALUES ($1, $2, $3)
+          RETURNING "id"
+        `,
+        [input.responsibleEmployeeId, input.reason, input.notes],
+      );
+
+      const createdActId = actResult.rows[0]?.id;
+
+      if (!createdActId) {
+        throw new ValidationError("Не удалось создать акт списания");
+      }
+
+      for (const item of input.items) {
+        const product = productsById.get(item.productId);
+
+        if (!product) {
+          throw new ValidationError("Товар для списания не найден");
+        }
+
+        await client.query(
+          `
+            INSERT INTO "WriteoffActItem" (
+              "writeoffActId",
+              "productId",
+              "productName",
+              "productCategory",
+              "productUnit",
+              "quantity",
+              "priceCents"
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+          `,
+          [
+            createdActId,
+            product.id,
+            product.name,
+            product.category,
+            product.unit,
+            item.quantity,
+            product.priceCents,
+          ],
+        );
+      }
+
+      return createdActId;
+    });
 
     const acts = await getWriteoffActs();
     const created = acts.find((act) => act.id === actId);
@@ -1151,12 +1186,6 @@ export async function createWriteoffAct(
 
     return created;
   } catch (error) {
-    try {
-      await pool.query("ROLLBACK");
-    } catch {
-      // ignore rollback errors when the transaction never started
-    }
-
     mapMissingWriteoffTables(error);
   }
 }
@@ -1165,91 +1194,91 @@ export async function createIncomingAct(
   input: CreateIncomingActInput,
 ): Promise<IncomingActSummary> {
   try {
-    await pool.query("BEGIN");
+    const actId = await withTransaction(async (client) => {
+      const responsibleResult = await client.query<{ id: number }>(
+        `
+          SELECT "id"
+          FROM "Employee"
+          WHERE "id" = $1
+          LIMIT 1
+        `,
+        [input.responsibleEmployeeId],
+      );
 
-    const responsibleResult = await pool.query<{ id: number }>(
-      `
-        SELECT "id"
-        FROM "Employee"
-        WHERE "id" = $1
-        LIMIT 1
-      `,
-      [input.responsibleEmployeeId],
-    );
-
-    if (!responsibleResult.rows[0]) {
-      throw new ValidationError("Ответственный сотрудник не найден");
-    }
-
-    const productIds = input.items.map((item) => item.productId);
-    const productsResult = await pool.query<{
-      id: number;
-      name: string;
-      category: string | null;
-      unit: string;
-    }>(
-      `
-        SELECT "id", "name", "category", "unit"
-        FROM "Product"
-        WHERE "id" = ANY($1::int[])
-      `,
-      [productIds],
-    );
-
-    if (productsResult.rows.length !== productIds.length) {
-      throw new ValidationError("Часть товаров для поступления уже недоступна. Обнови страницу и попробуй снова.");
-    }
-
-    const productsById = new Map(productsResult.rows.map((row) => [row.id, row]));
-
-    const actResult = await pool.query<{ id: number }>(
-      `
-        INSERT INTO "IncomingAct" ("responsibleEmployeeId", "supplierName", "notes")
-        VALUES ($1, $2, $3)
-        RETURNING "id"
-      `,
-      [input.responsibleEmployeeId, input.supplierName, input.notes],
-    );
-
-    const actId = actResult.rows[0]?.id;
-
-    if (!actId) {
-      throw new ValidationError("Не удалось создать акт поступления");
-    }
-
-    for (const item of input.items) {
-      const product = productsById.get(item.productId);
-
-      if (!product) {
-        throw new ValidationError("Товар для поступления не найден");
+      if (!responsibleResult.rows[0]) {
+        throw new ValidationError("Ответственный сотрудник не найден");
       }
 
-      await pool.query(
+      const productIds = input.items.map((item) => item.productId);
+      const productsResult = await client.query<{
+        id: number;
+        name: string;
+        category: string | null;
+        unit: string;
+      }>(
         `
-          INSERT INTO "IncomingActItem" (
-            "incomingActId",
-            "productId",
-            "productName",
-            "productCategory",
-            "productUnit",
-            "quantity",
-            "priceCents"
-          )
-          VALUES ($1, $2, $3, $4, $5, $6, $7)
+          SELECT "id", "name", "category", "unit"
+          FROM "Product"
+          WHERE "id" = ANY($1::int[])
         `,
-        [
-          actId,
-          product.id,
-          product.name,
-          product.category,
-          product.unit,
-          item.quantity,
-          item.priceCents,
-        ],
+        [productIds],
       );
-    }
 
-    await pool.query("COMMIT");
+      if (productsResult.rows.length !== productIds.length) {
+        throw new ValidationError("Часть товаров для поступления уже недоступна. Обнови страницу и попробуй снова.");
+      }
+
+      const productsById = new Map(productsResult.rows.map((row) => [row.id, row]));
+
+      const actResult = await client.query<{ id: number }>(
+        `
+          INSERT INTO "IncomingAct" ("responsibleEmployeeId", "supplierName", "notes")
+          VALUES ($1, $2, $3)
+          RETURNING "id"
+        `,
+        [input.responsibleEmployeeId, input.supplierName, input.notes],
+      );
+
+      const createdActId = actResult.rows[0]?.id;
+
+      if (!createdActId) {
+        throw new ValidationError("Не удалось создать акт поступления");
+      }
+
+      for (const item of input.items) {
+        const product = productsById.get(item.productId);
+
+        if (!product) {
+          throw new ValidationError("Товар для поступления не найден");
+        }
+
+        await client.query(
+          `
+            INSERT INTO "IncomingActItem" (
+              "incomingActId",
+              "productId",
+              "productName",
+              "productCategory",
+              "productUnit",
+              "quantity",
+              "priceCents"
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+          `,
+          [
+            createdActId,
+            product.id,
+            product.name,
+            product.category,
+            product.unit,
+            item.quantity,
+            item.priceCents,
+          ],
+        );
+      }
+
+      return createdActId;
+    });
 
     const acts = await getIncomingActs();
     const created = acts.find((act) => act.id === actId);
@@ -1260,12 +1289,137 @@ export async function createIncomingAct(
 
     return created;
   } catch (error) {
-    try {
-      await pool.query("ROLLBACK");
-    } catch {
-      // ignore rollback errors when the transaction never started
+    mapMissingWriteoffTables(error);
+  }
+}
+
+export async function updateIncomingAct(
+  actId: number,
+  input: CreateIncomingActInput,
+): Promise<IncomingActSummary> {
+  try {
+    if (!Number.isInteger(actId) || actId <= 0) {
+      throw new ValidationError("Акт поступления не найден");
     }
 
+    const actResult = await pool.query<{ id: number; completedAt: Date | null }>(
+      `
+        SELECT "id", "completedAt"
+        FROM "IncomingAct"
+        WHERE "id" = $1
+        LIMIT 1
+      `,
+      [actId],
+    );
+
+    const act = actResult.rows[0];
+
+    if (!act) {
+      throw new ValidationError("Акт поступления не найден");
+    }
+
+    if (act.completedAt) {
+      throw new ValidationError("Завершённый акт поступления редактировать нельзя");
+    }
+
+    await withTransaction(async (client) => {
+      const responsibleResult = await client.query<{ id: number }>(
+        `
+          SELECT "id"
+          FROM "Employee"
+          WHERE "id" = $1
+          LIMIT 1
+        `,
+        [input.responsibleEmployeeId],
+      );
+
+      if (!responsibleResult.rows[0]) {
+        throw new ValidationError("Ответственный сотрудник не найден");
+      }
+
+      const productIds = input.items.map((item) => item.productId);
+      const productsResult = await client.query<{
+        id: number;
+        name: string;
+        category: string | null;
+        unit: string;
+      }>(
+        `
+          SELECT "id", "name", "category", "unit"
+          FROM "Product"
+          WHERE "id" = ANY($1::int[])
+        `,
+        [productIds],
+      );
+
+      if (productsResult.rows.length !== productIds.length) {
+        throw new ValidationError(
+          "Часть товаров для поступления уже недоступна. Обнови страницу и попробуй снова.",
+        );
+      }
+
+      const productsById = new Map(productsResult.rows.map((row) => [row.id, row]));
+
+      await client.query(
+        `
+          UPDATE "IncomingAct"
+          SET "responsibleEmployeeId" = $2,
+              "supplierName" = $3,
+              "notes" = $4
+          WHERE "id" = $1
+        `,
+        [actId, input.responsibleEmployeeId, input.supplierName, input.notes],
+      );
+
+      await client.query(
+        `
+          DELETE FROM "IncomingActItem"
+          WHERE "incomingActId" = $1
+        `,
+        [actId],
+      );
+
+      for (const item of input.items) {
+        const product = productsById.get(item.productId);
+
+        if (!product) {
+          throw new ValidationError("Товар для поступления не найден");
+        }
+
+        await client.query(
+          `
+            INSERT INTO "IncomingActItem" (
+              "incomingActId",
+              "productId",
+              "productName",
+              "productCategory",
+              "productUnit",
+              "quantity",
+              "priceCents"
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+          `,
+          [
+            actId,
+            product.id,
+            product.name,
+            product.category,
+            product.unit,
+            item.quantity,
+            item.priceCents,
+          ],
+        );
+      }
+    });
+
+    const updated = await getIncomingActById(actId);
+
+    if (!updated) {
+      throw new ValidationError("Акт поступления обновлён, но не удалось прочитать его данные.");
+    }
+
+    return updated;
+  } catch (error) {
     mapMissingWriteoffTables(error);
   }
 }
@@ -1314,64 +1468,56 @@ export async function completeWriteoffAct(actId: number) {
       throw new ValidationError("В акте списания нет ни одной строки");
     }
 
-    await pool.query("BEGIN");
+    await withTransaction(async (client) => {
+      for (const item of itemsResult.rows) {
+        const productResult = await client.query<{ stockQuantity: number; priceCents: number }>(
+          `
+            SELECT "stockQuantity"
+            FROM "Product"
+            WHERE "id" = $1
+            LIMIT 1
+          `,
+          [item.productId],
+        );
 
-    for (const item of itemsResult.rows) {
-      const productResult = await pool.query<{ stockQuantity: number; priceCents: number }>(
-        `
-          SELECT "stockQuantity"
-          FROM "Product"
-          WHERE "id" = $1
-          LIMIT 1
-        `,
-        [item.productId],
-      );
+        const currentStockQuantity = productResult.rows[0]?.stockQuantity;
 
-      const currentStockQuantity = productResult.rows[0]?.stockQuantity;
+        if (typeof currentStockQuantity !== "number") {
+          throw new ValidationError("Часть товаров из акта списания уже недоступна");
+        }
 
-      if (typeof currentStockQuantity !== "number") {
-        throw new ValidationError("Часть товаров из акта списания уже недоступна");
+        const stockQuantityAfter = currentStockQuantity - item.quantity;
+
+        await client.query(
+          `
+            UPDATE "Product"
+            SET "stockQuantity" = $2
+            WHERE "id" = $1
+          `,
+          [item.productId, stockQuantityAfter],
+        );
+
+        await client.query(
+          `
+            UPDATE "WriteoffActItem"
+            SET "stockQuantityBefore" = $2,
+                "stockQuantityAfter" = $3
+            WHERE "id" = $1
+          `,
+          [item.id, currentStockQuantity, stockQuantityAfter],
+        );
       }
 
-      const stockQuantityAfter = currentStockQuantity - item.quantity;
-
-      await pool.query(
+      await client.query(
         `
-          UPDATE "Product"
-          SET "stockQuantity" = $2
+          UPDATE "WriteoffAct"
+          SET "completedAt" = CURRENT_TIMESTAMP
           WHERE "id" = $1
         `,
-        [item.productId, stockQuantityAfter],
+        [actId],
       );
-
-      await pool.query(
-        `
-          UPDATE "WriteoffActItem"
-          SET "stockQuantityBefore" = $2,
-              "stockQuantityAfter" = $3
-          WHERE "id" = $1
-        `,
-        [item.id, currentStockQuantity, stockQuantityAfter],
-      );
-    }
-
-    await pool.query(
-      `
-        UPDATE "WriteoffAct"
-        SET "completedAt" = CURRENT_TIMESTAMP
-        WHERE "id" = $1
-      `,
-      [actId],
-    );
-
-    await pool.query("COMMIT");
+    });
   } catch (error) {
-    try {
-      await pool.query("ROLLBACK");
-    } catch {
-      // ignore rollback errors when the transaction never started
-    }
-
     mapMissingWriteoffTables(error);
   }
 }
@@ -1421,72 +1567,64 @@ export async function completeIncomingAct(actId: number) {
       throw new ValidationError("В акте поступления нет ни одной строки");
     }
 
-    await pool.query("BEGIN");
+    await withTransaction(async (client) => {
+      for (const item of itemsResult.rows) {
+        const productResult = await client.query<{ stockQuantity: number; priceCents: number }>(
+          `
+            SELECT "stockQuantity", "priceCents"
+            FROM "Product"
+            WHERE "id" = $1
+            LIMIT 1
+          `,
+          [item.productId],
+        );
 
-    for (const item of itemsResult.rows) {
-      const productResult = await pool.query<{ stockQuantity: number; priceCents: number }>(
-        `
-          SELECT "stockQuantity", "priceCents"
-          FROM "Product"
-          WHERE "id" = $1
-          LIMIT 1
-        `,
-        [item.productId],
-      );
+        const currentStockQuantity = productResult.rows[0]?.stockQuantity;
+        const currentPriceCents = productResult.rows[0]?.priceCents;
 
-      const currentStockQuantity = productResult.rows[0]?.stockQuantity;
-      const currentPriceCents = productResult.rows[0]?.priceCents;
+        if (typeof currentStockQuantity !== "number" || typeof currentPriceCents !== "number") {
+          throw new ValidationError("Часть товаров из акта поступления уже недоступна");
+        }
 
-      if (typeof currentStockQuantity !== "number" || typeof currentPriceCents !== "number") {
-        throw new ValidationError("Часть товаров из акта поступления уже недоступна");
+        const stockQuantityAfter = currentStockQuantity + item.quantity;
+        const nextPriceCents = calculateWeightedAveragePriceCents(
+          currentStockQuantity,
+          currentPriceCents,
+          item.quantity,
+          item.priceCents,
+        );
+
+        await client.query(
+          `
+            UPDATE "Product"
+            SET "stockQuantity" = $2,
+                "priceCents" = $3
+            WHERE "id" = $1
+          `,
+          [item.productId, stockQuantityAfter, nextPriceCents],
+        );
+
+        await client.query(
+          `
+            UPDATE "IncomingActItem"
+            SET "stockQuantityBefore" = $2,
+                "stockQuantityAfter" = $3
+            WHERE "id" = $1
+          `,
+          [item.id, currentStockQuantity, stockQuantityAfter],
+        );
       }
 
-      const stockQuantityAfter = currentStockQuantity + item.quantity;
-      const nextPriceCents = calculateWeightedAveragePriceCents(
-        currentStockQuantity,
-        currentPriceCents,
-        item.quantity,
-        item.priceCents,
-      );
-
-      await pool.query(
+      await client.query(
         `
-          UPDATE "Product"
-          SET "stockQuantity" = $2,
-              "priceCents" = $3
+          UPDATE "IncomingAct"
+          SET "completedAt" = CURRENT_TIMESTAMP
           WHERE "id" = $1
         `,
-        [item.productId, stockQuantityAfter, nextPriceCents],
+        [actId],
       );
-
-      await pool.query(
-        `
-          UPDATE "IncomingActItem"
-          SET "stockQuantityBefore" = $2,
-              "stockQuantityAfter" = $3
-          WHERE "id" = $1
-        `,
-        [item.id, currentStockQuantity, stockQuantityAfter],
-      );
-    }
-
-    await pool.query(
-      `
-        UPDATE "IncomingAct"
-        SET "completedAt" = CURRENT_TIMESTAMP
-        WHERE "id" = $1
-      `,
-      [actId],
-    );
-
-    await pool.query("COMMIT");
+    });
   } catch (error) {
-    try {
-      await pool.query("ROLLBACK");
-    } catch {
-      // ignore rollback errors when the transaction never started
-    }
-
     mapMissingWriteoffTables(error);
   }
 }
@@ -1526,53 +1664,125 @@ export async function deleteWriteoffAct(actId: number) {
       [actId],
     );
 
-    await pool.query("BEGIN");
+    await withTransaction(async (client) => {
+      if (act.completedAt) {
+        for (const item of itemsResult.rows) {
+          const productResult = await client.query<{ stockQuantity: number }>(
+            `
+              SELECT "stockQuantity"
+              FROM "Product"
+              WHERE "id" = $1
+              LIMIT 1
+            `,
+            [item.productId],
+          );
 
-    if (act.completedAt) {
-      for (const item of itemsResult.rows) {
-        const productResult = await pool.query<{ stockQuantity: number }>(
-          `
-            SELECT "stockQuantity"
-            FROM "Product"
-            WHERE "id" = $1
-            LIMIT 1
-          `,
-          [item.productId],
-        );
+          const currentStockQuantity = productResult.rows[0]?.stockQuantity;
 
-        const currentStockQuantity = productResult.rows[0]?.stockQuantity;
+          if (typeof currentStockQuantity !== "number") {
+            throw new ValidationError("Часть товаров из акта списания уже недоступна, остатки восстановить нельзя");
+          }
 
-        if (typeof currentStockQuantity !== "number") {
-          throw new ValidationError("Часть товаров из акта списания уже недоступна, остатки восстановить нельзя");
+          await client.query(
+            `
+              UPDATE "Product"
+              SET "stockQuantity" = $2
+              WHERE "id" = $1
+            `,
+            [item.productId, currentStockQuantity + item.quantity],
+          );
         }
-
-        await pool.query(
-          `
-            UPDATE "Product"
-            SET "stockQuantity" = $2
-            WHERE "id" = $1
-          `,
-          [item.productId, currentStockQuantity + item.quantity],
-        );
       }
+
+      await client.query(
+        `
+          DELETE FROM "WriteoffAct"
+          WHERE "id" = $1
+        `,
+        [actId],
+      );
+    });
+  } catch (error) {
+    mapMissingWriteoffTables(error);
+  }
+}
+
+export async function deleteIncomingAct(actId: number) {
+  try {
+    if (!Number.isInteger(actId) || actId <= 0) {
+      throw new ValidationError("Акт поступления не найден");
     }
 
-    await pool.query(
+    const actResult = await pool.query<{ id: number; completedAt: Date | null }>(
       `
-        DELETE FROM "WriteoffAct"
+        SELECT "id", "completedAt"
+        FROM "IncomingAct"
         WHERE "id" = $1
+        LIMIT 1
       `,
       [actId],
     );
 
-    await pool.query("COMMIT");
-  } catch (error) {
-    try {
-      await pool.query("ROLLBACK");
-    } catch {
-      // ignore rollback errors when the transaction never started
+    const act = actResult.rows[0];
+
+    if (!act) {
+      throw new ValidationError("Акт поступления не найден");
     }
 
+    const itemsResult = await pool.query<{
+      productId: number;
+      quantity: number;
+    }>(
+      `
+        SELECT "productId", "quantity"
+        FROM "IncomingActItem"
+        WHERE "incomingActId" = $1
+        ORDER BY "id" ASC
+      `,
+      [actId],
+    );
+
+    await withTransaction(async (client) => {
+      if (act.completedAt) {
+        for (const item of itemsResult.rows) {
+          const productResult = await client.query<{ stockQuantity: number }>(
+            `
+              SELECT "stockQuantity"
+              FROM "Product"
+              WHERE "id" = $1
+              LIMIT 1
+            `,
+            [item.productId],
+          );
+
+          const currentStockQuantity = productResult.rows[0]?.stockQuantity;
+
+          if (typeof currentStockQuantity !== "number") {
+            throw new ValidationError(
+              "Часть товаров из акта поступления уже недоступна, остатки скорректировать нельзя",
+            );
+          }
+
+          await client.query(
+            `
+              UPDATE "Product"
+              SET "stockQuantity" = $2
+              WHERE "id" = $1
+            `,
+            [item.productId, currentStockQuantity - item.quantity],
+          );
+        }
+      }
+
+      await client.query(
+        `
+          DELETE FROM "IncomingAct"
+          WHERE "id" = $1
+        `,
+        [actId],
+      );
+    });
+  } catch (error) {
     mapMissingWriteoffTables(error);
   }
 }
@@ -1605,11 +1815,9 @@ export async function saveInventorySessionActuals(
     throw new ValidationError("Эта инвентаризация уже закрыта");
   }
 
-  await pool.query("BEGIN");
-
-  try {
+  await withTransaction(async (client) => {
     for (const entry of entries) {
-      await pool.query(
+      await client.query(
         `
           UPDATE "InventorySessionItem"
           SET "actualQuantity" = $3
@@ -1619,12 +1827,7 @@ export async function saveInventorySessionActuals(
         [entry.itemId, sessionId, entry.actualQuantity],
       );
     }
-
-    await pool.query("COMMIT");
-  } catch (error) {
-    await pool.query("ROLLBACK");
-    throw error;
-  }
+  });
 }
 
 export async function closeInventorySession(sessionId: number) {
@@ -1676,11 +1879,9 @@ export async function closeInventorySession(sessionId: number) {
     throw new ValidationError("Чтобы закрыть инвентаризацию, укажи фактический остаток для всех товаров");
   }
 
-  await pool.query("BEGIN");
-
-  try {
+  await withTransaction(async (client) => {
     for (const item of itemsResult.rows) {
-      await pool.query(
+      await client.query(
         `
           UPDATE "Product"
           SET "stockQuantity" = $2
@@ -1690,7 +1891,7 @@ export async function closeInventorySession(sessionId: number) {
       );
     }
 
-    await pool.query(
+    await client.query(
       `
         UPDATE "InventorySession"
         SET "closedAt" = CURRENT_TIMESTAMP
@@ -1698,12 +1899,7 @@ export async function closeInventorySession(sessionId: number) {
       `,
       [sessionId],
     );
-
-    await pool.query("COMMIT");
-  } catch (error) {
-    await pool.query("ROLLBACK");
-    throw error;
-  }
+  });
 }
 
 export async function deleteInventorySession(sessionId: number) {
@@ -1751,9 +1947,7 @@ export async function deleteInventorySession(sessionId: number) {
     [sessionId],
   );
 
-  await pool.query("BEGIN");
-
-  try {
+  await withTransaction(async (client) => {
     for (const item of itemsResult.rows) {
       if (item.actualQuantity === null) {
         continue;
@@ -1762,7 +1956,7 @@ export async function deleteInventorySession(sessionId: number) {
       const revertedQuantity =
         item.currentStockQuantity + (item.stockQuantity - item.actualQuantity);
 
-      await pool.query(
+      await client.query(
         `
           UPDATE "Product"
           SET "stockQuantity" = $2
@@ -1772,7 +1966,7 @@ export async function deleteInventorySession(sessionId: number) {
       );
     }
 
-    await pool.query(
+    await client.query(
       `
         DELETE FROM "InventorySessionItem"
         WHERE "inventorySessionId" = $1
@@ -1780,17 +1974,12 @@ export async function deleteInventorySession(sessionId: number) {
       [sessionId],
     );
 
-    await pool.query(
+    await client.query(
       `
         DELETE FROM "InventorySession"
         WHERE "id" = $1
       `,
       [sessionId],
     );
-
-    await pool.query("COMMIT");
-  } catch (error) {
-    await pool.query("ROLLBACK");
-    throw error;
-  }
+  });
 }

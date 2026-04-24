@@ -3,6 +3,7 @@ import { PageShell } from "@/components/ui/page-shell";
 import { hasPermission } from "@/modules/auth/authz";
 import { requirePermission } from "@/modules/auth/auth.session";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
+import { formatInventoryQuantity } from "@/modules/inventory/inventory.format";
 import { ProductDeleteButton } from "@/modules/inventory/components/product-delete-button";
 import { ProductForm } from "@/modules/inventory/components/product-form";
 import { fetchProductById } from "@/modules/inventory/inventory.service";
@@ -72,7 +73,7 @@ export default async function ProductDetailsPage(props: {
               <div className="rounded-2xl border border-white/80 bg-white/90 p-4">
                 <p className="text-sm font-medium text-zinc-500">Остаток</p>
                 <p className={`mt-3 text-xl font-semibold ${stockTone}`}>
-                  {product.stockQuantity} {product.unit}
+                  {formatInventoryQuantity(product.stockQuantity)} {product.unit}
                 </p>
               </div>
               <div className="rounded-2xl border border-white/80 bg-white/90 p-4">

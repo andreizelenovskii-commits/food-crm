@@ -1,4 +1,6 @@
 import { pool } from "@/shared/db/pool";
+import { ensureRecentDatabaseBackup } from "@/shared/db/backup";
+import { withTransaction } from "@/shared/db/transaction";
 import { hashPassword } from "@/modules/auth/auth.password";
 import { normalizeUserRole } from "@/modules/auth/auth.types";
 import type { CreateEmployeeInput, UpdateEmployeeInput } from "@/modules/employees/employees.validation";
@@ -253,6 +255,7 @@ export async function createEmployeeAdjustment(input: {
   comment: string | null;
   date: string;
 }): Promise<EmployeeAdjustment> {
+  await ensureRecentDatabaseBackup("employee-adjustment-create");
   const result = await pool.query<{
     id: number;
     employeeId: number;
@@ -273,6 +276,7 @@ export async function createEmployeeAdjustment(input: {
 }
 
 export async function createEmployee(input: CreateEmployeeInput): Promise<Employee> {
+  await ensureRecentDatabaseBackup("employee-create");
   const result = await pool.query<EmployeeRow>(
     `
       INSERT INTO "Employee" ("name", "email", "role", "phone", "messenger", "schedule", "monthlyHours", "birthDate", "hireDate")
@@ -331,10 +335,8 @@ export async function deleteEmployee(employeeId: number): Promise<boolean> {
     return false;
   }
 
-  await pool.query("BEGIN");
-
-  try {
-    await pool.query(
+  return withTransaction(async (client) => {
+    await client.query(
       `
         DELETE FROM "EmployeeAdjustment"
         WHERE "employeeId" = $1
@@ -343,7 +345,7 @@ export async function deleteEmployee(employeeId: number): Promise<boolean> {
     );
 
     if (employeeEmail) {
-      await pool.query(
+      await client.query(
         `
           DELETE FROM "User"
           WHERE "email" = $1
@@ -352,7 +354,7 @@ export async function deleteEmployee(employeeId: number): Promise<boolean> {
       );
     }
 
-    const result = await pool.query(
+    const result = await client.query(
       `
         DELETE FROM "Employee"
         WHERE "id" = $1
@@ -360,12 +362,8 @@ export async function deleteEmployee(employeeId: number): Promise<boolean> {
       [employeeId],
     );
 
-    await pool.query("COMMIT");
     return (result.rowCount ?? 0) > 0;
-  } catch (error) {
-    await pool.query("ROLLBACK");
-    throw error;
-  }
+  });
 }
 
 export async function issueEmployeeAccess(input: {
@@ -424,10 +422,8 @@ export async function issueEmployeeAccess(input: {
     throw new ValidationError("Этот логин уже занят другим пользователем");
   }
 
-  await pool.query("BEGIN");
-
-  try {
-    await pool.query(
+  await withTransaction(async (client) => {
+    await client.query(
       `
         UPDATE "Employee"
         SET "email" = $2
@@ -437,7 +433,7 @@ export async function issueEmployeeAccess(input: {
     );
 
     if (currentUserId) {
-      await pool.query(
+      await client.query(
         `
           UPDATE "User"
           SET "email" = $2, "role" = $3, "password" = $4
@@ -446,7 +442,7 @@ export async function issueEmployeeAccess(input: {
         [currentUserId, input.email, role, passwordHash],
       );
     } else {
-      await pool.query(
+      await client.query(
         `
           INSERT INTO "User" ("email", "password", "role")
           VALUES ($1, $2, $3)
@@ -454,12 +450,7 @@ export async function issueEmployeeAccess(input: {
         [input.email, passwordHash, role],
       );
     }
-
-    await pool.query("COMMIT");
-  } catch (error) {
-    await pool.query("ROLLBACK");
-    throw error;
-  }
+  });
 
   return getEmployeeById(input.employeeId);
 }
@@ -517,10 +508,8 @@ export async function updateEmployee(employeeId: number, input: UpdateEmployeeIn
 
   values.push(employeeId);
 
-  await pool.query("BEGIN");
-
-  try {
-    const result = await pool.query<EmployeeRow>(
+  return withTransaction(async (client) => {
+    const result = await client.query<EmployeeRow>(
       `
         UPDATE "Employee"
         SET ${updates.join(", ")}
@@ -531,14 +520,13 @@ export async function updateEmployee(employeeId: number, input: UpdateEmployeeIn
     );
 
     if (!result.rowCount) {
-      await pool.query("ROLLBACK");
       return null;
     }
 
     const updatedEmployee = result.rows[0];
 
     if (input.role !== undefined && updatedEmployee.email) {
-      await pool.query(
+      await client.query(
         `
           UPDATE "User"
           SET "role" = $2
@@ -548,10 +536,6 @@ export async function updateEmployee(employeeId: number, input: UpdateEmployeeIn
       );
     }
 
-    await pool.query("COMMIT");
     return mapRowToEmployee(updatedEmployee);
-  } catch (error) {
-    await pool.query("ROLLBACK");
-    throw error;
-  }
+  });
 }

@@ -1,4 +1,5 @@
 import { pool } from "@/shared/db/pool";
+import { withTransaction } from "@/shared/db/transaction";
 import { ValidationError } from "@/shared/errors/app-error";
 import type {
   TechCardCategory,
@@ -167,85 +168,84 @@ export async function getTechCardOptions(): Promise<Array<{ id: number; name: st
 }
 
 export async function createTechCard(input: TechCardInput): Promise<TechCardItem> {
-  await pool.query("BEGIN");
-
   try {
-    const existing = await pool.query<{ id: number }>(
-      `
-        SELECT "id"
-        FROM "TechnologicalCard"
-        WHERE LOWER(REGEXP_REPLACE(TRIM("name"), '\s+', ' ', 'g')) = LOWER($1)
-          AND COALESCE("pizzaSize", '') = COALESCE($2, '')
-        LIMIT 1
-      `,
-      [input.name, input.pizzaSize],
-    );
-
-    if (existing.rowCount) {
-      throw new ValidationError(buildDuplicateTechCardMessage(input));
-    }
-
-    const cardResult = await pool.query<TechCardRow>(
-      `
-        INSERT INTO "TechnologicalCard" ("name", "category", "pizzaSize", "outputQuantity", "outputUnit", "description")
-        VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING "id", "name", "category", "pizzaSize", "outputQuantity", "outputUnit", "description", "createdAt"
-      `,
-      [
-        input.name,
-        input.category,
-        input.pizzaSize,
-        input.outputQuantity,
-        input.outputUnit,
-        input.description,
-      ],
-    );
-
-    const card = cardResult.rows[0];
-    const ingredients: TechCardIngredientItem[] = [];
-
-    for (const ingredient of input.ingredients) {
-      const ingredientResult = await pool.query<{
-        id: number;
-        productId: number;
-        productName: string;
-        productUnit: string;
-        quantity: number;
-        unit: "кг" | "шт";
-      }>(
+    return await withTransaction(async (client) => {
+      const existing = await client.query<{ id: number }>(
         `
-          INSERT INTO "TechCardIngredient" ("technologicalCardId", "productId", "quantity", "unit")
-          VALUES (
-            $1,
-            $2,
-            $3,
-            (SELECT CASE WHEN "unit" = 'кг' THEN 'кг' ELSE 'шт' END FROM "Product" WHERE "id" = $2)
-          )
-          RETURNING
-            "id",
-            "productId",
-            (SELECT "name" FROM "Product" WHERE "id" = $2) AS "productName",
-            (SELECT "unit" FROM "Product" WHERE "id" = $2) AS "productUnit",
-            "quantity",
-            "unit"
+          SELECT "id"
+          FROM "TechnologicalCard"
+          WHERE LOWER(REGEXP_REPLACE(TRIM("name"), '\s+', ' ', 'g')) = LOWER($1)
+            AND COALESCE("pizzaSize", '') = COALESCE($2, '')
+          LIMIT 1
         `,
-        [card.id, ingredient.productId, ingredient.quantity],
+        [input.name, input.pizzaSize],
       );
 
-      const createdIngredient = ingredientResult.rows[0];
+      if (existing.rowCount) {
+        throw new ValidationError(buildDuplicateTechCardMessage(input));
+      }
 
-      ingredients.push({
-        id: createdIngredient.id,
-        productId: createdIngredient.productId,
-        productName: createdIngredient.productName,
-        productUnit: createdIngredient.productUnit,
-        quantity: createdIngredient.quantity,
-        unit: createdIngredient.unit,
-      });
-    }
+      const cardResult = await client.query<TechCardRow>(
+        `
+          INSERT INTO "TechnologicalCard" ("name", "category", "pizzaSize", "outputQuantity", "outputUnit", "description")
+          VALUES ($1, $2, $3, $4, $5, $6)
+          RETURNING "id", "name", "category", "pizzaSize", "outputQuantity", "outputUnit", "description", "createdAt"
+        `,
+        [
+          input.name,
+          input.category,
+          input.pizzaSize,
+          input.outputQuantity,
+          input.outputUnit,
+          input.description,
+        ],
+      );
 
-    await pool.query("COMMIT");
-    return mapTechCardRow(card, ingredients);
+      const card = cardResult.rows[0];
+      const ingredients: TechCardIngredientItem[] = [];
+
+      for (const ingredient of input.ingredients) {
+        const ingredientResult = await client.query<{
+          id: number;
+          productId: number;
+          productName: string;
+          productUnit: string;
+          quantity: number;
+          unit: "кг" | "шт";
+        }>(
+          `
+            INSERT INTO "TechCardIngredient" ("technologicalCardId", "productId", "quantity", "unit")
+            VALUES (
+              $1,
+              $2,
+              $3,
+              (SELECT CASE WHEN "unit" = 'кг' THEN 'кг' ELSE 'шт' END FROM "Product" WHERE "id" = $2)
+            )
+            RETURNING
+              "id",
+              "productId",
+              (SELECT "name" FROM "Product" WHERE "id" = $2) AS "productName",
+              (SELECT "unit" FROM "Product" WHERE "id" = $2) AS "productUnit",
+              "quantity",
+              "unit"
+          `,
+          [card.id, ingredient.productId, ingredient.quantity],
+        );
+
+        const createdIngredient = ingredientResult.rows[0];
+
+        ingredients.push({
+          id: createdIngredient.id,
+          productId: createdIngredient.productId,
+          productName: createdIngredient.productName,
+          productUnit: createdIngredient.productUnit,
+          quantity: createdIngredient.quantity,
+          unit: createdIngredient.unit,
+        });
+      }
+
+      return mapTechCardRow(card, ingredients);
+    });
   } catch (error) {
     if (
       typeof error === "object" &&
@@ -253,116 +253,112 @@ export async function createTechCard(input: TechCardInput): Promise<TechCardItem
       "code" in error &&
       error.code === "23505"
     ) {
-      await pool.query("ROLLBACK");
       throw new ValidationError(buildDuplicateTechCardMessage(input));
     }
 
-    await pool.query("ROLLBACK");
     throw error;
   }
 }
 
 export async function updateTechCard(id: number, input: TechCardInput): Promise<TechCardItem | null> {
-  await pool.query("BEGIN");
-
   try {
-    const existingCard = await pool.query<{ id: number }>(
-      `
-        SELECT "id"
-        FROM "TechnologicalCard"
-        WHERE "id" = $1
-        LIMIT 1
-      `,
-      [id],
-    );
-
-    if (!existingCard.rowCount) {
-      await pool.query("ROLLBACK");
-      return null;
-    }
-
-    const duplicate = await pool.query<{ id: number }>(
-      `
-        SELECT "id"
-        FROM "TechnologicalCard"
-        WHERE LOWER(REGEXP_REPLACE(TRIM("name"), '\s+', ' ', 'g')) = LOWER($1)
-          AND COALESCE("pizzaSize", '') = COALESCE($2, '')
-          AND "id" <> $3
-        LIMIT 1
-      `,
-      [input.name, input.pizzaSize, id],
-    );
-
-    if (duplicate.rowCount) {
-      throw new ValidationError(buildDuplicateTechCardMessage(input));
-    }
-
-    const cardResult = await pool.query<TechCardRow>(
-      `
-        UPDATE "TechnologicalCard"
-        SET
-          "name" = $2,
-          "category" = $3,
-          "pizzaSize" = $4,
-          "outputQuantity" = $5,
-          "outputUnit" = $6,
-          "description" = $7
-        WHERE "id" = $1
-        RETURNING "id", "name", "category", "pizzaSize", "outputQuantity", "outputUnit", "description", "createdAt"
-      `,
-      [id, input.name, input.category, input.pizzaSize, input.outputQuantity, input.outputUnit, input.description],
-    );
-
-    await pool.query(
-      `
-        DELETE FROM "TechCardIngredient"
-        WHERE "technologicalCardId" = $1
-      `,
-      [id],
-    );
-
-    const ingredients: TechCardIngredientItem[] = [];
-
-    for (const ingredient of input.ingredients) {
-      const ingredientResult = await pool.query<{
-        id: number;
-        productId: number;
-        productName: string;
-        productUnit: string;
-        quantity: number;
-        unit: "кг" | "шт";
-      }>(
+    return await withTransaction(async (client) => {
+      const existingCard = await client.query<{ id: number }>(
         `
-          INSERT INTO "TechCardIngredient" ("technologicalCardId", "productId", "quantity", "unit")
-          VALUES (
-            $1,
-            $2,
-            $3,
-            (SELECT CASE WHEN "unit" = 'кг' THEN 'кг' ELSE 'шт' END FROM "Product" WHERE "id" = $2)
-          )
-          RETURNING
-            "id",
-            "productId",
-            (SELECT "name" FROM "Product" WHERE "id" = $2) AS "productName",
-            (SELECT "unit" FROM "Product" WHERE "id" = $2) AS "productUnit",
-            "quantity",
-            "unit"
+          SELECT "id"
+          FROM "TechnologicalCard"
+          WHERE "id" = $1
+          LIMIT 1
         `,
-        [id, ingredient.productId, ingredient.quantity],
+        [id],
       );
 
-      ingredients.push({
-        id: ingredientResult.rows[0].id,
-        productId: ingredientResult.rows[0].productId,
-        productName: ingredientResult.rows[0].productName,
-        productUnit: ingredientResult.rows[0].productUnit,
-        quantity: ingredientResult.rows[0].quantity,
-        unit: ingredientResult.rows[0].unit,
-      });
-    }
+      if (!existingCard.rowCount) {
+        return null;
+      }
 
-    await pool.query("COMMIT");
-    return mapTechCardRow(cardResult.rows[0], ingredients);
+      const duplicate = await client.query<{ id: number }>(
+        `
+          SELECT "id"
+          FROM "TechnologicalCard"
+          WHERE LOWER(REGEXP_REPLACE(TRIM("name"), '\s+', ' ', 'g')) = LOWER($1)
+            AND COALESCE("pizzaSize", '') = COALESCE($2, '')
+            AND "id" <> $3
+          LIMIT 1
+        `,
+        [input.name, input.pizzaSize, id],
+      );
+
+      if (duplicate.rowCount) {
+        throw new ValidationError(buildDuplicateTechCardMessage(input));
+      }
+
+      const cardResult = await client.query<TechCardRow>(
+        `
+          UPDATE "TechnologicalCard"
+          SET
+            "name" = $2,
+            "category" = $3,
+            "pizzaSize" = $4,
+            "outputQuantity" = $5,
+            "outputUnit" = $6,
+            "description" = $7
+          WHERE "id" = $1
+          RETURNING "id", "name", "category", "pizzaSize", "outputQuantity", "outputUnit", "description", "createdAt"
+        `,
+        [id, input.name, input.category, input.pizzaSize, input.outputQuantity, input.outputUnit, input.description],
+      );
+
+      await client.query(
+        `
+          DELETE FROM "TechCardIngredient"
+          WHERE "technologicalCardId" = $1
+        `,
+        [id],
+      );
+
+      const ingredients: TechCardIngredientItem[] = [];
+
+      for (const ingredient of input.ingredients) {
+        const ingredientResult = await client.query<{
+          id: number;
+          productId: number;
+          productName: string;
+          productUnit: string;
+          quantity: number;
+          unit: "кг" | "шт";
+        }>(
+          `
+            INSERT INTO "TechCardIngredient" ("technologicalCardId", "productId", "quantity", "unit")
+            VALUES (
+              $1,
+              $2,
+              $3,
+              (SELECT CASE WHEN "unit" = 'кг' THEN 'кг' ELSE 'шт' END FROM "Product" WHERE "id" = $2)
+            )
+            RETURNING
+              "id",
+              "productId",
+              (SELECT "name" FROM "Product" WHERE "id" = $2) AS "productName",
+              (SELECT "unit" FROM "Product" WHERE "id" = $2) AS "productUnit",
+              "quantity",
+              "unit"
+          `,
+          [id, ingredient.productId, ingredient.quantity],
+        );
+
+        ingredients.push({
+          id: ingredientResult.rows[0].id,
+          productId: ingredientResult.rows[0].productId,
+          productName: ingredientResult.rows[0].productName,
+          productUnit: ingredientResult.rows[0].productUnit,
+          quantity: ingredientResult.rows[0].quantity,
+          unit: ingredientResult.rows[0].unit,
+        });
+      }
+
+      return mapTechCardRow(cardResult.rows[0], ingredients);
+    });
   } catch (error) {
     if (
       typeof error === "object" &&
@@ -370,11 +366,9 @@ export async function updateTechCard(id: number, input: TechCardInput): Promise<
       "code" in error &&
       error.code === "23505"
     ) {
-      await pool.query("ROLLBACK");
       throw new ValidationError(buildDuplicateTechCardMessage(input));
     }
 
-    await pool.query("ROLLBACK");
     throw error;
   }
 }

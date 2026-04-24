@@ -9,6 +9,7 @@ import {
   type InventorySessionCreateFormState,
   type InventorySessionProgressFormState,
 } from "@/modules/inventory/inventory.actions";
+import { formatInventoryQuantity } from "@/modules/inventory/inventory.format";
 import { InventorySessionDeleteButton } from "@/modules/inventory/components/inventory-session-delete-button";
 import { InventorySessionExportLink } from "@/modules/inventory/components/inventory-session-export-link";
 import type {
@@ -475,7 +476,7 @@ export function InventoryAuditDialogs({
                             </div>
                           </div>
                           <div className="text-sm font-medium text-zinc-600">
-                            Остаток: {product.stockQuantity} {product.unit}
+                            Остаток: {formatInventoryQuantity(product.stockQuantity)} {product.unit}
                           </div>
                         </button>
                       );
@@ -534,7 +535,7 @@ export function InventoryAuditDialogs({
                               Программный остаток
                             </p>
                             <p className="mt-1 text-sm font-semibold text-zinc-950">
-                              {product.stockQuantity} {product.unit}
+                              {formatInventoryQuantity(product.stockQuantity)} {product.unit}
                             </p>
                           </div>
                         </div>
@@ -740,7 +741,7 @@ export function InventoryAuditDialogs({
                                     </td>
                                     <td className="px-4 py-4 font-medium text-zinc-600">{item.productUnit}</td>
                                     <td className="px-4 py-4 font-medium text-zinc-950">
-                                      {item.currentStockQuantity}
+                                      {formatInventoryQuantity(item.currentStockQuantity)}
                                     </td>
                                     <td className="px-4 py-4">
                                       <input
@@ -749,14 +750,18 @@ export function InventoryAuditDialogs({
                                         inputMode="decimal"
                                         value={draftValue}
                                         onChange={(event) => updateActualDraft(item.id, event.target.value)}
-                                        placeholder={item.actualQuantity === null ? "0" : String(item.actualQuantity)}
+                                        placeholder={
+                                          item.actualQuantity === null
+                                            ? formatInventoryQuantity(0)
+                                            : formatInventoryQuantity(item.actualQuantity)
+                                        }
                                         className="w-28 rounded-xl border border-zinc-300 px-3 py-2 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
                                       />
                                     </td>
                                     <td className={`px-4 py-4 font-medium ${varianceTone}`}>
                                       {varianceQuantity === null
                                         ? "—"
-                                        : `${varianceQuantity > 0 ? "+" : ""}${varianceQuantity} ${item.productUnit}`}
+                                        : `${varianceQuantity > 0 ? "+" : ""}${formatInventoryQuantity(varianceQuantity)} ${item.productUnit}`}
                                     </td>
                                     <td className={`px-4 py-4 font-medium ${varianceTone}`}>
                                       {varianceValueCents === null
@@ -956,14 +961,16 @@ export function InventoryAuditDialogs({
                                       </div>
                                     </td>
                                     <td className="px-4 py-4 font-medium text-zinc-600">{item.productUnit}</td>
-                                    <td className="px-4 py-4 font-medium text-zinc-950">{item.stockQuantity}</td>
                                     <td className="px-4 py-4 font-medium text-zinc-950">
-                                      {item.actualQuantity === null ? "—" : item.actualQuantity}
+                                      {formatInventoryQuantity(item.stockQuantity)}
+                                    </td>
+                                    <td className="px-4 py-4 font-medium text-zinc-950">
+                                      {item.actualQuantity === null ? "—" : formatInventoryQuantity(item.actualQuantity)}
                                     </td>
                                     <td className={`px-4 py-4 font-medium ${varianceTone}`}>
                                       {item.varianceQuantity === null
                                         ? "—"
-                                        : `${item.varianceQuantity > 0 ? "+" : ""}${item.varianceQuantity} ${item.productUnit}`}
+                                        : `${item.varianceQuantity > 0 ? "+" : ""}${formatInventoryQuantity(item.varianceQuantity)} ${item.productUnit}`}
                                     </td>
                                     <td className={`px-4 py-4 font-medium ${varianceTone}`}>
                                       {item.varianceValueCents === null

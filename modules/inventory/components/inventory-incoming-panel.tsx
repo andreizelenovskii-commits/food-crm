@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -8,6 +9,8 @@ import {
   type WriteoffActCreateFormState,
   type WriteoffActProgressFormState,
 } from "@/modules/inventory/inventory.actions";
+import { IncomingActDeleteButton } from "@/modules/inventory/components/incoming-act-delete-button";
+import { formatInventoryQuantity } from "@/modules/inventory/inventory.format";
 import type {
   IncomingActSummary,
   InventoryResponsibleOption,
@@ -36,13 +39,6 @@ function formatMoney(cents: number) {
 
 function formatPriceInput(priceCents: number) {
   return (priceCents / 100).toFixed(2).replace(/\.00$/, "");
-}
-
-function formatQuantity(value: number) {
-  return new Intl.NumberFormat("ru-RU", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(value);
 }
 
 function parseQuantity(value: string) {
@@ -286,16 +282,26 @@ export function InventoryIncomingPanel({
                     <p className="text-zinc-500">{item.productCategory ?? "Без категории"} • {item.productUnit}</p>
                   </td>
                   <td className="px-4 py-4 font-medium text-zinc-950">
-                    {formatQuantity(canComplete ? item.currentStockQuantity : (item.stockQuantityBefore ?? item.currentStockQuantity))} {item.productUnit}
+                    {formatInventoryQuantity(
+                      canComplete
+                        ? item.currentStockQuantity
+                        : (item.stockQuantityBefore ?? item.currentStockQuantity),
+                    )}{" "}
+                    {item.productUnit}
                   </td>
                   <td className="px-4 py-4 font-medium text-emerald-700">
-                    +{formatQuantity(item.quantity)} {item.productUnit}
+                    +{formatInventoryQuantity(item.quantity)} {item.productUnit}
                   </td>
                   <td className="px-4 py-4 font-medium text-zinc-950">
                     {formatMoney(item.priceCents)}
                   </td>
                   <td className="px-4 py-4 font-medium text-zinc-950">
-                    {formatQuantity(canComplete ? item.currentStockQuantity + item.quantity : (item.stockQuantityAfter ?? item.currentStockQuantity))} {item.productUnit}
+                    {formatInventoryQuantity(
+                      canComplete
+                        ? item.currentStockQuantity + item.quantity
+                        : (item.stockQuantityAfter ?? item.currentStockQuantity),
+                    )}{" "}
+                    {item.productUnit}
                   </td>
                 </tr>
               ))}
@@ -304,17 +310,32 @@ export function InventoryIncomingPanel({
         </div>
       </div>
 
-      {canManageInventory && canComplete ? (
-        <form action={completeFormAction} className="mt-4 flex justify-end">
-          <input type="hidden" name="actId" value={act.id} />
-          <button
-            type="submit"
-            disabled={isCompletePending}
-            className="rounded-2xl bg-zinc-950 px-5 py-3 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-400"
-          >
-            {isCompletePending ? "Проводим..." : "Завершить акт"}
-          </button>
-        </form>
+      {canManageInventory ? (
+        <div className="mt-4 flex flex-wrap justify-end gap-3">
+          {canComplete ? (
+            <Link
+              href={`/dashboard/inventory/incoming/${act.id}`}
+              className="rounded-2xl border border-zinc-300 bg-white px-5 py-3 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-950"
+            >
+              Редактировать
+            </Link>
+          ) : null}
+
+          <IncomingActDeleteButton actId={act.id} isCompleted={!canComplete} />
+
+          {canComplete ? (
+            <form action={completeFormAction}>
+              <input type="hidden" name="actId" value={act.id} />
+              <button
+                type="submit"
+                disabled={isCompletePending}
+                className="rounded-2xl bg-zinc-950 px-5 py-3 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-400"
+              >
+                {isCompletePending ? "Проводим..." : "Завершить акт"}
+              </button>
+            </form>
+          ) : null}
+        </div>
       ) : null}
     </article>
   );
@@ -385,7 +406,10 @@ export function InventoryIncomingPanel({
               <>
                 {completedActs.map((act) => renderAct(act, false))}
                 <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600">
-                  Всего проведено единиц товара: <span className="font-semibold text-zinc-950">{formatQuantity(totalCompletedUnits)}</span>
+                  Всего проведено единиц товара:{" "}
+                  <span className="font-semibold text-zinc-950">
+                    {formatInventoryQuantity(totalCompletedUnits)}
+                  </span>
                 </div>
               </>
             )}
@@ -511,10 +535,11 @@ export function InventoryIncomingPanel({
                           </span>
                         </div>
                         <p className="text-sm text-zinc-500">
-                          {product.category ?? "Без категории"} • Сейчас: {formatQuantity(product.stockQuantity)} {product.unit}
+                          {product.category ?? "Без категории"} • Сейчас:{" "}
+                          {formatInventoryQuantity(product.stockQuantity)} {product.unit}
                         </p>
                         <p className="text-sm font-medium text-zinc-700">
-                          После завершения: {formatQuantity(projectedStock)} {product.unit}
+                          После завершения: {formatInventoryQuantity(projectedStock)} {product.unit}
                         </p>
                         <p className="text-sm font-medium text-zinc-700">
                           Сумма поставки: {formatMoney(parsedQuantity * parsedPriceCents)}
@@ -691,7 +716,7 @@ export function InventoryIncomingPanel({
                             <div className="min-w-0">
                               <p className="truncate text-sm font-semibold text-zinc-950">{product.name}</p>
                               <p className="mt-1 truncate text-sm text-zinc-500">
-                                {formatQuantity(product.stockQuantity)} {product.unit}
+                                {formatInventoryQuantity(product.stockQuantity)} {product.unit}
                                 {product.sku ? ` • ${product.sku}` : ""}
                               </p>
                             </div>

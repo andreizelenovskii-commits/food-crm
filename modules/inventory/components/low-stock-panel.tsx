@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { formatInventoryQuantity } from "@/modules/inventory/inventory.format";
 import type { ProductItem } from "@/modules/inventory/inventory.types";
 
 export function LowStockPanel({ products }: { products: ProductItem[] }) {
@@ -43,7 +44,7 @@ export function LowStockPanel({ products }: { products: ProductItem[] }) {
                 <div>
                   <p className="font-semibold text-zinc-950">{product.name}</p>
                   <p className="text-sm text-zinc-500">
-                    Остаток: {product.stockQuantity} {product.unit}
+                    Остаток: {formatInventoryQuantity(product.stockQuantity)} {product.unit}
                   </p>
                   <p className="text-xs text-zinc-400">
                     Код: {product.sku ?? `PRD-${String(product.id).padStart(5, "0")}`}

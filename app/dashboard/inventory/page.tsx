@@ -7,6 +7,7 @@ import { InventoryAuditDialogs } from "@/modules/inventory/components/inventory-
 import { InventoryIncomingPanel } from "@/modules/inventory/components/inventory-incoming-panel";
 import { InventoryWriteoffPanel } from "@/modules/inventory/components/inventory-writeoff-panel";
 import { LowStockPanel } from "@/modules/inventory/components/low-stock-panel";
+import { formatInventoryQuantity } from "@/modules/inventory/inventory.format";
 import { ProductForm } from "@/modules/inventory/components/product-form";
 import { PRODUCT_CATEGORIES } from "@/modules/inventory/inventory.types";
 import {
@@ -214,7 +215,9 @@ export default async function InventoryPage(props: {
               </div>
               <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
                 <p className="text-sm font-medium text-zinc-500">Всего единиц</p>
-                <p className="mt-3 text-3xl font-semibold text-zinc-950">{totalStock}</p>
+                <p className="mt-3 text-3xl font-semibold text-zinc-950">
+                  {formatInventoryQuantity(totalStock)}
+                </p>
               </div>
               <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
                 <p className="text-sm font-medium text-zinc-500">Стоимость остатка по закупке</p>
@@ -328,7 +331,10 @@ export default async function InventoryPage(props: {
                             Код товара: <span className="font-medium text-zinc-700">{product.sku ?? "Не присвоен"}</span>
                           </p>
                           <p>
-                            Остаток: <span className={`font-semibold ${stockTone}`}>{product.stockQuantity} {product.unit}</span>
+                            Остаток:{" "}
+                            <span className={`font-semibold ${stockTone}`}>
+                              {formatInventoryQuantity(product.stockQuantity)} {product.unit}
+                            </span>
                           </p>
                           <p>Средняя закупочная: {formatMoney(product.priceCents)}</p>
                           <p>Стоимость остатка: {formatMoney(product.stockQuantity * product.priceCents)}</p>

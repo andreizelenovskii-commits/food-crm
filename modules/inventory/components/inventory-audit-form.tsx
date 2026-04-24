@@ -6,6 +6,7 @@ import {
   type InventoryAuditFormState,
   submitInventoryAuditAction,
 } from "@/modules/inventory/inventory.actions";
+import { formatInventoryQuantity } from "@/modules/inventory/inventory.format";
 import {
   PRODUCT_CATEGORIES,
   type ProductCategory,
@@ -337,7 +338,7 @@ export function InventoryAuditForm({
 
                     <div className="flex flex-wrap gap-2">
                       <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-zinc-600 ring-1 ring-zinc-200">
-                        Система: {product.stockQuantity} {product.unit}
+                        Система: {formatInventoryQuantity(product.stockQuantity)} {product.unit}
                       </span>
                       {product.sku ? (
                         <span className="rounded-full bg-white px-3 py-1 text-xs font-medium uppercase tracking-[0.12em] text-zinc-400 ring-1 ring-zinc-200">
@@ -349,8 +350,8 @@ export function InventoryAuditForm({
                           {difference === 0
                             ? "Без расхождения"
                             : difference > 0
-                              ? `Излишек: +${difference} ${product.unit}`
-                              : `Недостача: ${difference} ${product.unit}`}
+                              ? `Излишек: +${formatInventoryQuantity(difference)} ${product.unit}`
+                              : `Недостача: ${formatInventoryQuantity(difference)} ${product.unit}`}
                         </span>
                       ) : null}
                     </div>
@@ -364,7 +365,7 @@ export function InventoryAuditForm({
                         inputMode="decimal"
                         value={value}
                         onChange={(event) => setDraftValue(product.id, event.target.value)}
-                        placeholder={String(product.stockQuantity)}
+                        placeholder={formatInventoryQuantity(product.stockQuantity)}
                         disabled={!canManageInventory || isPending}
                         className="w-full rounded-[24px] border border-zinc-300 bg-white px-4 py-3 pr-16 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-500"
                       />
