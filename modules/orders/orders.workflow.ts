@@ -3,6 +3,7 @@ import type { OrderStatus } from "@/modules/orders/orders.types";
 
 export const INITIAL_ORDER_STATUS: OrderStatus = "SENT_TO_KITCHEN";
 export const FINAL_ORDER_STATUS: OrderStatus = "DELIVERED_PAID";
+export const DEFAULT_DELIVERY_FEE_CENTS = 17000;
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   SENT_TO_KITCHEN: "Передан на кухню",
@@ -38,8 +39,12 @@ const NEXT_ACTION_LABELS: Partial<Record<OrderStatus, string>> = {
   PACKED: "Заказ отвезён и оплачен",
 };
 
-function isManagerRole(role: UserRole) {
+export function isManagerRole(role: UserRole) {
   return role === "admin" || role === "Управляющий";
+}
+
+export function canAdjustDeliveryFee(role: UserRole) {
+  return isManagerRole(role);
 }
 
 export function canCreateOrders(role: UserRole) {

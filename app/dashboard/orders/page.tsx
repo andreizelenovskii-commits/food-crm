@@ -258,6 +258,7 @@ export default async function OrdersPage() {
 
       {canCreate ? (
         <OrderCreateButton
+          user={user}
           clients={orderCreateOptions.clients}
           employees={orderCreateOptions.employees}
           catalogItems={orderCreateOptions.catalogItems}

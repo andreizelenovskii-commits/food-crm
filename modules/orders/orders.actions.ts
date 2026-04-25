@@ -12,8 +12,10 @@ import { ValidationError } from "@/shared/errors/app-error";
 import { ORDER_STATUSES, type OrderStatus } from "@/modules/orders/orders.types";
 import {
   canAdvanceOrder,
+  canAdjustDeliveryFee,
   canCancelOrder,
   canCreateOrders,
+  DEFAULT_DELIVERY_FEE_CENTS,
   getNextOrderStatus,
   INITIAL_ORDER_STATUS,
   isOrderClosed,
@@ -29,6 +31,7 @@ const EMPTY_VALUES: OrderFormValues = {
   clientId: "",
   employeeId: "",
   status: INITIAL_ORDER_STATUS,
+  deliveryFeeCents: String(DEFAULT_DELIVERY_FEE_CENTS),
   isInternal: false,
   items: "[]",
 };
@@ -49,9 +52,16 @@ export async function createOrderAction(
 
   try {
     const input = parseCreateOrderInput(formData);
+    const deliveryFeeCents = input.isInternal
+      ? 0
+      : canAdjustDeliveryFee(user.role)
+        ? input.deliveryFeeCents
+        : DEFAULT_DELIVERY_FEE_CENTS;
+
     await addOrder({
       ...input,
       status: INITIAL_ORDER_STATUS,
+      deliveryFeeCents,
     });
   } catch (error) {
     if (error instanceof ValidationError) {

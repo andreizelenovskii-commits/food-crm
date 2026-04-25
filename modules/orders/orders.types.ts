@@ -38,5 +38,6 @@ export type OrderCreateInput = {
   employeeId: number;
   isInternal: boolean;
   status: OrderStatus;
+  deliveryFeeCents: number;
   items: OrderDraftItem[];
 };

@@ -14,6 +14,7 @@ export type OrderFormValues = {
   clientId: string;
   employeeId: string;
   status: string;
+  deliveryFeeCents: string;
   isInternal: boolean;
   items: string;
 };
@@ -25,6 +26,7 @@ export function getOrderFormValues(formData: FormData): OrderFormValues {
     clientId: read("clientId"),
     employeeId: read("employeeId"),
     status: read("status"),
+    deliveryFeeCents: read("deliveryFeeCents"),
     isInternal: read("isInternal") === "true",
     items: read("items"),
   };
@@ -34,6 +36,7 @@ export function parseCreateOrderInput(formData: FormData): OrderCreateInput {
   const clientId = Number(normalizeInput(formData.get("clientId")));
   const employeeId = Number(normalizeInput(formData.get("employeeId")));
   const status = normalizeInput(formData.get("status"));
+  const deliveryFeeCents = Number(normalizeInput(formData.get("deliveryFeeCents")));
   const isInternal = normalizeInput(formData.get("isInternal")) === "true";
   const itemsRaw = normalizeInput(formData.get("items"));
 
@@ -47,6 +50,10 @@ export function parseCreateOrderInput(formData: FormData): OrderCreateInput {
 
   if (!ORDER_STATUSES.includes(status as OrderStatus)) {
     throw new ValidationError("Выбери корректный статус заказа");
+  }
+
+  if (!Number.isInteger(deliveryFeeCents) || deliveryFeeCents < 0) {
+    throw new ValidationError("Укажи корректную стоимость доставки");
   }
 
   let items: OrderDraftItem[] = [];
@@ -76,6 +83,7 @@ export function parseCreateOrderInput(formData: FormData): OrderCreateInput {
     employeeId,
     isInternal,
     status: status as OrderStatus,
+    deliveryFeeCents,
     items,
   };
 }

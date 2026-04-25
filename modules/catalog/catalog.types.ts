@@ -12,6 +12,7 @@ export type CatalogItem = {
   name: string;
   priceListType: CatalogPriceListType;
   category: string | null;
+  pizzaSize: string | null;
   description: string | null;
   priceCents: number;
   createdAt: string;

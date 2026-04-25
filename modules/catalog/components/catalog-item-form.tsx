@@ -12,7 +12,11 @@ import {
   CATALOG_PRICE_LIST_LABELS,
   CATALOG_PRICE_LIST_TYPES,
 } from "@/modules/catalog/catalog.types";
-import { TECH_CARD_CATEGORIES } from "@/modules/tech-cards/tech-cards.types";
+import {
+  TECH_CARD_CATEGORIES,
+  TECH_CARD_PIZZA_SIZES,
+  type TechCardPizzaSize,
+} from "@/modules/tech-cards/tech-cards.types";
 
 export function CatalogItemForm({
   mode = "create",
@@ -30,7 +34,12 @@ export function CatalogItemForm({
     previousState: CatalogFormState,
     formData: FormData,
   ) => Promise<CatalogFormState>;
-  techCardOptions: Array<{ id: number; name: string; category: string }>;
+  techCardOptions: Array<{
+    id: number;
+    name: string;
+    category: string;
+    pizzaSize: string | null;
+  }>;
 }) {
   const initialState: CatalogFormState = {
     errorMessage: null,
@@ -46,6 +55,17 @@ export function CatalogItemForm({
   const [state, formAction, isPending] = useActionState(action, initialState);
   const [selectedPriceListType, setSelectedPriceListType] = useState(initialState.values.priceListType);
   const [selectedCategory, setSelectedCategory] = useState(initialState.values.category);
+  const [selectedTechCardId, setSelectedTechCardId] = useState(
+    initialState.values.technologicalCardId,
+  );
+
+  const selectedTechCard =
+    techCardOptions.find((option) => String(option.id) === selectedTechCardId) ?? null;
+  const [selectedPizzaSize, setSelectedPizzaSize] = useState<TechCardPizzaSize | "">(
+    selectedTechCard?.pizzaSize && TECH_CARD_PIZZA_SIZES.includes(selectedTechCard.pizzaSize as TechCardPizzaSize)
+      ? (selectedTechCard.pizzaSize as TechCardPizzaSize)
+      : "",
+  );
 
   const sortedTechCardOptions = useMemo(
     () =>
@@ -56,6 +76,19 @@ export function CatalogItemForm({
       ),
     [techCardOptions],
   );
+  const filteredTechCardOptions = useMemo(() => {
+    return sortedTechCardOptions.filter((option) => {
+      if (selectedCategory && option.category !== selectedCategory) {
+        return false;
+      }
+
+      if (selectedCategory === "Пиццы" && selectedPizzaSize) {
+        return option.pizzaSize === selectedPizzaSize;
+      }
+
+      return true;
+    });
+  }, [selectedCategory, selectedPizzaSize, sortedTechCardOptions]);
   const fieldClassName =
     "w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5";
 
@@ -147,7 +180,15 @@ export function CatalogItemForm({
             <select
               name="category"
               value={selectedCategory}
-              onChange={(event) => setSelectedCategory(event.target.value)}
+              onChange={(event) => {
+                const nextCategory = event.target.value;
+                setSelectedCategory(nextCategory);
+                setSelectedTechCardId("");
+
+                if (nextCategory !== "Пиццы") {
+                  setSelectedPizzaSize("");
+                }
+              }}
               className={`${fieldClassName} appearance-none pr-12`}
               required
             >
@@ -186,20 +227,72 @@ export function CatalogItemForm({
         </label>
       </div>
 
+      {selectedCategory === "Пиццы" ? (
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-sm font-medium text-zinc-700">Размер пиццы</span>
+            <span className="text-xs text-zinc-500">Обязательный выбор</span>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {TECH_CARD_PIZZA_SIZES.map((size) => {
+              const isSelected = selectedPizzaSize === size;
+
+              return (
+                <button
+                  key={size}
+                  type="button"
+                  onClick={() => {
+                    setSelectedPizzaSize(size);
+                    setSelectedTechCardId("");
+                  }}
+                  className={`rounded-2xl border px-4 py-3 text-sm font-medium transition ${
+                    isSelected
+                      ? "border-zinc-950 bg-zinc-950 text-white shadow-sm"
+                      : "border-zinc-300 bg-white text-zinc-700 hover:border-zinc-500 hover:text-zinc-950"
+                  }`}
+                  aria-pressed={isSelected}
+                >
+                  {size}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+
       <div className="grid gap-4">
         <label className="block space-y-2.5">
           <span className="text-sm font-medium text-zinc-700">Технологическая карта</span>
           <div className="relative">
             <select
               name="technologicalCardId"
-              defaultValue={state.values.technologicalCardId}
+              value={selectedTechCardId}
+              onChange={(event) => {
+                const nextId = event.target.value;
+                setSelectedTechCardId(nextId);
+
+                const nextTechCard =
+                  techCardOptions.find((option) => String(option.id) === nextId) ?? null;
+
+                if (selectedCategory === "Пиццы") {
+                  setSelectedPizzaSize(
+                    nextTechCard?.pizzaSize &&
+                      TECH_CARD_PIZZA_SIZES.includes(
+                        nextTechCard.pizzaSize as TechCardPizzaSize,
+                      )
+                      ? (nextTechCard.pizzaSize as TechCardPizzaSize)
+                      : "",
+                  );
+                }
+              }}
               className={`${fieldClassName} appearance-none pr-12`}
               required
             >
               <option value="">Выбери техкарту</option>
-              {sortedTechCardOptions.map((option) => (
+              {filteredTechCardOptions.map((option) => (
                 <option key={option.id} value={option.id}>
                   {option.name} - {option.category}
+                  {option.pizzaSize ? ` - ${option.pizzaSize}` : ""}
                 </option>
               ))}
             </select>
@@ -211,6 +304,9 @@ export function CatalogItemForm({
           </div>
           <p className="text-xs leading-5 text-zinc-500">
             Привязка к техкарте обязательна, чтобы прайс не расходился с производственной логикой.
+            {selectedCategory === "Пиццы"
+              ? " Для пиццы выбирается техкарта с конкретным размером."
+              : ""}
           </p>
         </label>
       </div>

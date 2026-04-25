@@ -30,6 +30,8 @@ type CatalogOrderItemRow = {
   isPublished: boolean;
 };
 
+const DELIVERY_ITEM_NAME = "Доставка";
+
 function normalizeDbOrderStatus(status: string): OrderStatus {
   switch (status) {
     case "PENDING":
@@ -195,15 +197,14 @@ export async function createOrder(input: OrderCreateInput): Promise<OrderListIte
     });
 
     const subtotalCents = orderItems.reduce((sum, item) => sum + item.totalPriceCents, 0);
+    const deliveryFeeCents = input.isInternal ? 0 : input.deliveryFeeCents;
     const currentClient = clientExists.rows[0];
     const discountPercent =
       !input.isInternal && currentClient.type === "CLIENT"
         ? getLoyaltyDiscountPercent(resolveLoyaltyLevel(Number(currentClient.totalSpentCents ?? 0)))
         : 0;
-    const totalCents = Math.max(
-      subtotalCents - Math.round((subtotalCents * discountPercent) / 100),
-      0,
-    );
+    const discountCents = Math.round((subtotalCents * discountPercent) / 100);
+    const totalCents = Math.max(subtotalCents - discountCents, 0) + deliveryFeeCents;
 
     const result = await client.query<OrderRow>(
       `
@@ -265,6 +266,23 @@ export async function createOrder(input: OrderCreateInput): Promise<OrderListIte
           item.unitPriceCents,
           item.totalPriceCents,
         ],
+      );
+    }
+
+    if (deliveryFeeCents > 0) {
+      await client.query(
+        `
+          INSERT INTO "OrderItem" (
+            "orderId",
+            "catalogItemId",
+            "itemName",
+            "quantity",
+            "unitPriceCents",
+            "totalPriceCents"
+          )
+          VALUES ($1, NULL, $2, 1, $3, $3)
+        `,
+        [order.id, DELIVERY_ITEM_NAME, deliveryFeeCents],
       );
     }
 

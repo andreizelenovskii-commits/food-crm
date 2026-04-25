@@ -2,12 +2,18 @@
 
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { createOrderAction, type OrderFormState } from "@/modules/orders/orders.actions";
+import type { SessionUser } from "@/modules/auth/auth.types";
 import type { CatalogItem } from "@/modules/catalog/catalog.types";
 import type { Client } from "@/modules/clients/clients.types";
 import type { Employee } from "@/modules/employees/employees.types";
 import { getLoyaltyDiscountPercent } from "@/modules/loyalty/loyalty.rules";
 import { LOYALTY_LEVEL_LABELS } from "@/modules/loyalty/loyalty.types";
-import { INITIAL_ORDER_STATUS, ORDER_STATUS_LABELS } from "@/modules/orders/orders.workflow";
+import {
+  canAdjustDeliveryFee,
+  DEFAULT_DELIVERY_FEE_CENTS,
+  INITIAL_ORDER_STATUS,
+  ORDER_STATUS_LABELS,
+} from "@/modules/orders/orders.workflow";
 
 function formatMoney(cents: number) {
   return new Intl.NumberFormat("ru-RU", {
@@ -25,10 +31,12 @@ function normalizeSearchValue(value: string | null | undefined) {
 }
 
 export function OrderCreateButton({
+  user,
   clients,
   employees,
   catalogItems,
 }: {
+  user: SessionUser;
   clients: Client[];
   employees: Employee[];
   catalogItems: CatalogItem[];
@@ -40,6 +48,7 @@ export function OrderCreateButton({
       clientId: "",
       employeeId: "",
       status: INITIAL_ORDER_STATUS,
+      deliveryFeeCents: String(DEFAULT_DELIVERY_FEE_CENTS),
       isInternal: false,
       items: "[]",
     },
@@ -53,9 +62,14 @@ export function OrderCreateButton({
   const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
   const [clientQuery, setClientQuery] = useState("");
   const [employeeQuery, setEmployeeQuery] = useState("");
+  const [catalogQuery, setCatalogQuery] = useState("");
+  const [deliveryFeeRubles, setDeliveryFeeRubles] = useState(
+    String(DEFAULT_DELIVERY_FEE_CENTS / 100),
+  );
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedItems, setSelectedItems] = useState<Record<number, number>>({});
   const [state, formAction, isPending] = useActionState(createOrderAction, initialState);
+  const canEditDeliveryFee = canAdjustDeliveryFee(user.role);
 
   useEffect(() => {
     if (!isPending && state.successMessage && isOpen) {
@@ -67,6 +81,8 @@ export function OrderCreateButton({
         setSelectedEmployeeId("");
         setClientQuery("");
         setEmployeeQuery("");
+        setCatalogQuery("");
+        setDeliveryFeeRubles(String(DEFAULT_DELIVERY_FEE_CENTS / 100));
         setSelectedCategory("");
         setSelectedItems({});
       }, 0);
@@ -93,8 +109,28 @@ export function OrderCreateButton({
 
   const filteredCatalogItems = useMemo(
     () =>
-      visibleCatalogItems.filter((item) => !selectedCategory || item.category === selectedCategory),
-    [selectedCategory, visibleCatalogItems],
+      visibleCatalogItems.filter((item) => {
+        const matchesCategory = !selectedCategory || item.category === selectedCategory;
+
+        if (!matchesCategory) {
+          return false;
+        }
+
+        const query = normalizeSearchValue(catalogQuery);
+
+        if (!query) {
+          return true;
+        }
+
+        const haystack = normalizeSearchValue(
+          [item.name, item.category, item.description, item.pizzaSize]
+            .filter(Boolean)
+            .join(" "),
+        );
+
+        return haystack.includes(query);
+      }),
+    [catalogQuery, selectedCategory, visibleCatalogItems],
   );
 
   const selectedOrderItems = useMemo(
@@ -121,12 +157,17 @@ export function OrderCreateButton({
   const selectedClient = clients.find((client) => String(client.id) === selectedClientId) ?? null;
   const selectedEmployee =
     employees.find((employee) => String(employee.id) === selectedEmployeeId) ?? null;
+  const parsedDeliveryRubles = Number(deliveryFeeRubles.replace(",", "."));
+  const deliveryFeeCents =
+    isInternal || Number.isNaN(parsedDeliveryRubles) || parsedDeliveryRubles < 0
+      ? 0
+      : Math.round(parsedDeliveryRubles * 100);
   const discountPercent =
     !isInternal && selectedClient?.loyaltyLevel
       ? getLoyaltyDiscountPercent(selectedClient.loyaltyLevel)
       : 0;
   const discountCents = Math.round((totalCents * discountPercent) / 100);
-  const payableTotalCents = Math.max(totalCents - discountCents, 0);
+  const payableTotalCents = Math.max(totalCents - discountCents, 0) + deliveryFeeCents;
   const itemsPayload = JSON.stringify(
     selectedOrderItems.map((entry) => ({
       catalogItemId: entry.item.id,
@@ -219,14 +260,17 @@ export function OrderCreateButton({
 
       {isOpen ? (
         <div
-          className="fixed inset-0 z-40 flex items-end justify-center bg-zinc-950/35 px-4 py-6 backdrop-blur-sm sm:items-center"
+          className="fixed inset-0 z-40 flex items-end justify-center overflow-y-auto bg-zinc-950/35 px-4 py-4 backdrop-blur-sm sm:items-center sm:py-6"
           onClick={() => setIsOpen(false)}
         >
           <div
-            className="w-full max-w-5xl rounded-[30px] border border-zinc-200 bg-white p-6 shadow-2xl shadow-zinc-950/20"
+            className="my-auto w-full max-w-5xl overflow-hidden rounded-[30px] border border-zinc-200 bg-white shadow-2xl shadow-zinc-950/20"
             onClick={(event) => event.stopPropagation()}
           >
-            <form action={formAction} className="space-y-6">
+            <form
+              action={formAction}
+              className="flex max-h-[calc(100vh-2rem)] flex-col p-6 sm:max-h-[calc(100vh-3rem)]"
+            >
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-2">
                   <h2 className="text-xl font-semibold text-zinc-950">Создать заказ</h2>
@@ -246,7 +290,8 @@ export function OrderCreateButton({
                 </button>
               </div>
 
-              <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
+              <div className="mt-6 min-h-0 flex-1 overflow-y-auto pr-1">
+                <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
                 <div className="space-y-6">
                   <div className="space-y-2.5">
                     <div className="flex items-center justify-between gap-3">
@@ -292,6 +337,14 @@ export function OrderCreateButton({
                       </div>
                     </div>
 
+                    <input
+                      type="search"
+                      value={catalogQuery}
+                      onChange={(event) => setCatalogQuery(event.target.value)}
+                      placeholder="Поиск по названию, категории или размеру"
+                      className="w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
+                    />
+
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
@@ -323,7 +376,7 @@ export function OrderCreateButton({
                     <div className="max-h-[26rem] space-y-3 overflow-y-auto pr-1">
                       {filteredCatalogItems.length === 0 ? (
                         <div className="rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-5 text-sm text-zinc-500">
-                          В этом прайсе пока нет доступных позиций.
+                          Ничего не найдено по выбранной категории или поисковому запросу.
                         </div>
                       ) : (
                         filteredCatalogItems.map((item) => {
@@ -341,6 +394,11 @@ export function OrderCreateButton({
                                     {item.category ? (
                                       <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-zinc-500 ring-1 ring-zinc-200">
                                         {item.category}
+                                      </span>
+                                    ) : null}
+                                    {item.pizzaSize ? (
+                                      <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-zinc-500 ring-1 ring-zinc-200">
+                                        {item.pizzaSize}
                                       </span>
                                     ) : null}
                                   </div>
@@ -469,6 +527,58 @@ export function OrderCreateButton({
                     <input type="hidden" name="status" value={INITIAL_ORDER_STATUS} />
                   </label>
 
+                  <label className="space-y-2">
+                    <span className="text-sm font-medium text-zinc-700">
+                      Доставка
+                    </span>
+                    {isInternal ? (
+                      <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+                        <p className="text-sm font-medium text-zinc-950">Не добавляется</p>
+                        <p className="mt-1 text-xs leading-5 text-zinc-500">
+                          Во внутренние заказы доставка автоматически не включается.
+                        </p>
+                      </div>
+                    ) : canEditDeliveryFee ? (
+                      <div className="space-y-2">
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={deliveryFeeRubles}
+                          onChange={(event) => setDeliveryFeeRubles(event.target.value)}
+                          className="w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
+                        />
+                        <p className="text-xs leading-5 text-zinc-500">
+                          Базовая стоимость доставки 170 ₽. Менять её может только управляющий.
+                        </p>
+                        <input
+                          type="hidden"
+                          name="deliveryFeeCents"
+                          value={String(deliveryFeeCents)}
+                        />
+                      </div>
+                    ) : (
+                      <>
+                        <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+                          <p className="text-sm font-medium text-zinc-950">
+                            {formatMoney(DEFAULT_DELIVERY_FEE_CENTS)}
+                          </p>
+                          <p className="mt-1 text-xs leading-5 text-zinc-500">
+                            Доставка добавится к клиентскому заказу автоматически.
+                          </p>
+                        </div>
+                        <input
+                          type="hidden"
+                          name="deliveryFeeCents"
+                          value={String(DEFAULT_DELIVERY_FEE_CENTS)}
+                        />
+                      </>
+                    )}
+                    {canEditDeliveryFee && !isInternal ? null : isInternal ? (
+                      <input type="hidden" name="deliveryFeeCents" value="0" />
+                    ) : null}
+                  </label>
+
                   <input type="hidden" name="items" value={itemsPayload} />
 
                   <div className="rounded-3xl border border-white/80 bg-white/80 p-4">
@@ -485,7 +595,10 @@ export function OrderCreateButton({
                         selectedOrderItems.map((entry) => (
                           <div key={entry.item.id} className="flex items-start justify-between gap-3 text-sm">
                             <div className="min-w-0">
-                              <p className="truncate font-medium text-zinc-900">{entry.item.name}</p>
+                              <p className="truncate font-medium text-zinc-900">
+                                {entry.item.name}
+                                {entry.item.pizzaSize ? ` · ${entry.item.pizzaSize}` : ""}
+                              </p>
                               <p className="text-zinc-500">
                                 {entry.quantity} × {formatMoney(entry.item.priceCents)}
                               </p>
@@ -503,6 +616,14 @@ export function OrderCreateButton({
                         {formatMoney(totalCents)}
                       </span>
                     </div>
+                    {!isInternal ? (
+                      <div className="mt-3 flex items-center justify-between gap-3">
+                        <span className="text-sm font-medium text-zinc-600">Доставка</span>
+                        <span className="text-base font-semibold text-zinc-950">
+                          {formatMoney(deliveryFeeCents)}
+                        </span>
+                      </div>
+                    ) : null}
                     {!isInternal && discountPercent > 0 ? (
                       <div className="mt-3 flex items-center justify-between gap-3">
                         <span className="text-sm font-medium text-zinc-600">
@@ -544,6 +665,7 @@ export function OrderCreateButton({
                     </button>
                   </div>
                 </aside>
+                </div>
               </div>
             </form>
           </div>

@@ -12,6 +12,7 @@ type CatalogRow = {
   name: string;
   slug: string;
   category: string | null;
+  pizzaSize: string | null;
   description: string | null;
   priceCents: number;
   isPublished: boolean;
@@ -44,6 +45,7 @@ function mapRowToCatalogItem(row: CatalogRow): CatalogItem {
     name: row.name,
     priceListType: mapPriceListType(row.isPublished),
     category: row.category,
+    pizzaSize: row.pizzaSize,
     description: row.description,
     priceCents: row.priceCents,
     createdAt: row.createdAt.toISOString(),
@@ -60,6 +62,7 @@ export async function getCatalogItems(): Promise<CatalogItem[]> {
         c."name",
         c."slug",
         c."category",
+        t."pizzaSize",
         c."description",
         c."priceCents",
         c."isPublished",
@@ -83,6 +86,7 @@ export async function getCatalogItemById(id: number): Promise<CatalogItem | null
         c."name",
         c."slug",
         c."category",
+        t."pizzaSize",
         c."description",
         c."priceCents",
         c."isPublished",
@@ -105,6 +109,30 @@ export async function getCatalogItemById(id: number): Promise<CatalogItem | null
 }
 
 export async function createCatalogItem(input: CatalogItemInput): Promise<CatalogItem> {
+  const techCardResult = await pool.query<{ id: number; category: string; pizzaSize: string | null }>(
+    `
+      SELECT "id", "category", "pizzaSize"
+      FROM "TechnologicalCard"
+      WHERE "id" = $1
+      LIMIT 1
+    `,
+    [input.technologicalCardId],
+  );
+
+  const techCard = techCardResult.rows[0];
+
+  if (!techCard) {
+    throw new ValidationError("Выбранная технологическая карта не найдена");
+  }
+
+  if (techCard.category !== input.category) {
+    throw new ValidationError("Категория позиции должна совпадать с категорией техкарты");
+  }
+
+  if (input.category === "Пиццы" && !techCard.pizzaSize) {
+    throw new ValidationError("Для пиццы выбери техкарту с размером 24 см, 26 см или 30 см");
+  }
+
   const slug = buildCatalogSlug(input);
   const existing = await pool.query<{ id: number }>(
     `
@@ -128,6 +156,7 @@ export async function createCatalogItem(input: CatalogItemInput): Promise<Catalo
         "name",
         "slug",
         "category",
+        (SELECT "pizzaSize" FROM "TechnologicalCard" WHERE "id" = $7) AS "pizzaSize",
         "description",
         "priceCents",
         "isPublished",
@@ -164,6 +193,30 @@ export async function updateCatalogItem(
   id: number,
   input: CatalogItemInput,
 ): Promise<CatalogItem | null> {
+  const techCardResult = await pool.query<{ id: number; category: string; pizzaSize: string | null }>(
+    `
+      SELECT "id", "category", "pizzaSize"
+      FROM "TechnologicalCard"
+      WHERE "id" = $1
+      LIMIT 1
+    `,
+    [input.technologicalCardId],
+  );
+
+  const techCard = techCardResult.rows[0];
+
+  if (!techCard) {
+    throw new ValidationError("Выбранная технологическая карта не найдена");
+  }
+
+  if (techCard.category !== input.category) {
+    throw new ValidationError("Категория позиции должна совпадать с категорией техкарты");
+  }
+
+  if (input.category === "Пиццы" && !techCard.pizzaSize) {
+    throw new ValidationError("Для пиццы выбери техкарту с размером 24 см, 26 см или 30 см");
+  }
+
   const slug = buildCatalogSlug(input);
   const existing = await pool.query<{ id: number }>(
     `
@@ -199,6 +252,7 @@ export async function updateCatalogItem(
         "name",
         "slug",
         "category",
+        (SELECT "pizzaSize" FROM "TechnologicalCard" WHERE "id" = $8) AS "pizzaSize",
         "description",
         "priceCents",
         "isPublished",
