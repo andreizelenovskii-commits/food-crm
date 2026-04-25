@@ -10,7 +10,7 @@ import type {
 
 type OrderRow = {
   id: number;
-  status: OrderStatus;
+  status: string;
   isInternal: boolean;
   clientId: number;
   clientName: string;
@@ -30,10 +30,29 @@ type CatalogOrderItemRow = {
   isPublished: boolean;
 };
 
+function normalizeDbOrderStatus(status: string): OrderStatus {
+  switch (status) {
+    case "PENDING":
+      return "SENT_TO_KITCHEN";
+    case "PROCESSING":
+      return "READY";
+    case "COMPLETED":
+      return "DELIVERED_PAID";
+    case "SENT_TO_KITCHEN":
+    case "READY":
+    case "PACKED":
+    case "DELIVERED_PAID":
+    case "CANCELLED":
+      return status;
+    default:
+      return "SENT_TO_KITCHEN";
+  }
+}
+
 function mapRowToOrder(row: OrderRow): OrderListItem {
   return {
     id: row.id,
-    status: row.status,
+    status: normalizeDbOrderStatus(row.status),
     isInternal: row.isInternal,
     clientId: row.clientId,
     clientName: row.clientName,

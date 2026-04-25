@@ -98,7 +98,7 @@ export async function getDashboardMetrics(): Promise<DashboardSnapshot> {
         COUNT(*) AS completed_count,
         COALESCE(SUM("totalCents"), 0) AS completed_total_cents
       FROM "Order"
-      WHERE "status" = 'DELIVERED_PAID'
+      WHERE "status"::text IN ('COMPLETED', 'DELIVERED_PAID')
     `),
     pool.query<{ month_count: string; month_total_cents: string | null }>(`
       SELECT
