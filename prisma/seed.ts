@@ -78,7 +78,7 @@ async function main() {
         $4
       )
       `,
-      ["client@example.com", "manager@example.com", 1600, "PENDING"],
+      ["client@example.com", "manager@example.com", 1600, "SENT_TO_KITCHEN"],
     );
 
     await pool.query(

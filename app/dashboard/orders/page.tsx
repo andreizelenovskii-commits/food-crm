@@ -6,21 +6,18 @@ import { SessionUserActions } from "@/modules/auth/components/session-user-actio
 import { fetchOrderCreateOptions, fetchOrders } from "@/modules/orders/orders.service";
 import { OrderCreateButton } from "@/modules/orders/components/order-create-button";
 import { OrderStatusButton } from "@/modules/orders/components/order-status-button";
-import type { OrderListItem, OrderStatus } from "@/modules/orders/orders.types";
-
-const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
-  PENDING: "Новый",
-  PROCESSING: "В работе",
-  COMPLETED: "Завершён",
-  CANCELLED: "Отменён",
-};
-
-const ORDER_STATUS_STYLES: Record<OrderStatus, string> = {
-  PENDING: "bg-amber-100 text-amber-800",
-  PROCESSING: "bg-sky-100 text-sky-800",
-  COMPLETED: "bg-emerald-100 text-emerald-800",
-  CANCELLED: "bg-rose-100 text-rose-800",
-};
+import type { OrderListItem } from "@/modules/orders/orders.types";
+import {
+  canCancelOrder,
+  canCreateOrders,
+  FINAL_ORDER_STATUS,
+  getOrderAdvanceAction,
+  getOrderStageOwner,
+  isOrderClosed,
+  ORDER_STATUS_LABELS,
+  ORDER_STATUS_STYLES,
+} from "@/modules/orders/orders.workflow";
+import type { SessionUser } from "@/modules/auth/auth.types";
 
 function formatMoney(cents: number) {
   return new Intl.NumberFormat("ru-RU", {
@@ -42,12 +39,15 @@ function formatDate(value: string) {
 
 function OrderCard({
   order,
-  canManageOrders,
+  user,
 }: {
   order: OrderListItem;
-  canManageOrders: boolean;
+  user: SessionUser;
 }) {
-  const isFinished = order.status === "COMPLETED" || order.status === "CANCELLED";
+  const isFinished = isOrderClosed(order.status);
+  const advanceAction = getOrderAdvanceAction(order.status, user.role);
+  const stageOwner = getOrderStageOwner(order.status);
+  const canShowCancel = canCancelOrder(order.status, user.role);
 
   return (
     <article className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-950/5">
@@ -78,6 +78,12 @@ function OrderCard({
           </p>
           <p>Тип клиента: {order.clientType === "ORGANIZATION" ? "Организация" : "Клиент"}</p>
           <p>Исполнитель: {order.employeeName}</p>
+          <p>
+            Ответственный этап:{" "}
+            <span className="font-medium text-zinc-900">
+              {stageOwner ?? (order.status === "CANCELLED" ? "Работа остановлена" : "Заказ закрыт")}
+            </span>
+          </p>
           <p>Создан: {formatDate(order.createdAt)}</p>
         </div>
 
@@ -91,15 +97,36 @@ function OrderCard({
           ) : null}
         </div>
 
-        {canManageOrders ? (
-          <div className="flex flex-wrap gap-2">
-            {!isFinished ? (
-              <OrderStatusButton orderId={order.id} status="COMPLETED" label="Завершить" />
+        {!isFinished ? (
+          <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-700">
+            {advanceAction ? (
+              <span>
+                Следующий шаг:{" "}
+                <span className="font-medium text-zinc-950">{advanceAction.label}</span>
+              </span>
             ) : (
-              <OrderStatusButton orderId={order.id} status="PROCESSING" label="Вернуть в работу" />
+              <span>
+                Сейчас заказ ждёт действие роли{" "}
+                <span className="font-medium text-zinc-950">
+                  {stageOwner ?? "ответственный сотрудник"}
+                </span>
+                .
+              </span>
             )}
+          </div>
+        ) : null}
 
-            {order.status !== "CANCELLED" ? (
+        {advanceAction || canShowCancel ? (
+          <div className="flex flex-wrap gap-2">
+            {advanceAction ? (
+              <OrderStatusButton
+                orderId={order.id}
+                status={advanceAction.status}
+                label={advanceAction.label}
+              />
+            ) : null}
+
+            {canShowCancel ? (
               <OrderStatusButton
                 orderId={order.id}
                 status="CANCELLED"
@@ -118,12 +145,12 @@ function OrderColumn({
   title,
   description,
   orders,
-  canManageOrders,
+  user,
 }: {
   title: string;
   description: string;
   orders: OrderListItem[];
-  canManageOrders: boolean;
+  user: SessionUser;
 }) {
   return (
     <section className="rounded-3xl border border-zinc-200 bg-white/90 p-5 shadow-sm shadow-zinc-950/5">
@@ -143,9 +170,7 @@ function OrderColumn({
             Пока пусто.
           </div>
         ) : (
-          orders.map((order) => (
-            <OrderCard key={order.id} order={order} canManageOrders={canManageOrders} />
-          ))
+          orders.map((order) => <OrderCard key={order.id} order={order} user={user} />)
         )}
       </div>
     </section>
@@ -155,20 +180,22 @@ function OrderColumn({
 export default async function OrdersPage() {
   const user = await requirePermission("view_orders");
   const canManageOrders = hasPermission(user, "manage_orders");
+  const canCreate = canCreateOrders(user.role) && canManageOrders;
   const [orders, orderCreateOptions] = await Promise.all([
     fetchOrders(),
-    canManageOrders
+    canCreate
       ? fetchOrderCreateOptions()
       : Promise.resolve({ clients: [], employees: [], catalogItems: [] }),
   ]);
-  const openOrders = orders.filter(
-    (order) => !order.isInternal && (order.status === "PENDING" || order.status === "PROCESSING"),
-  );
+  const activeOrders = orders.filter((order) => !order.isInternal && !isOrderClosed(order.status));
   const completedOrders = orders.filter(
-    (order) => !order.isInternal && (order.status === "COMPLETED" || order.status === "CANCELLED"),
+    (order) => !order.isInternal && isOrderClosed(order.status),
   );
   const internalOrders = orders.filter((order) => order.isInternal);
   const totalRevenueCents = orders.reduce((sum, order) => sum + order.totalCents, 0);
+  const deliveredOrdersCount = orders.filter(
+    (order) => order.status === FINAL_ORDER_STATUS,
+  ).length;
 
   return (
     <PageShell
@@ -184,12 +211,12 @@ export default async function OrdersPage() {
             <p className="mt-3 text-3xl font-semibold text-zinc-950">{orders.length}</p>
           </article>
           <article className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
-            <p className="text-sm font-medium text-zinc-500">Открытые</p>
-            <p className="mt-3 text-3xl font-semibold text-zinc-950">{openOrders.length}</p>
+            <p className="text-sm font-medium text-zinc-500">В работе</p>
+            <p className="mt-3 text-3xl font-semibold text-zinc-950">{activeOrders.length}</p>
           </article>
           <article className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
-            <p className="text-sm font-medium text-zinc-500">Завершённые</p>
-            <p className="mt-3 text-3xl font-semibold text-zinc-950">{completedOrders.length}</p>
+            <p className="text-sm font-medium text-zinc-500">Доставлены и оплачены</p>
+            <p className="mt-3 text-3xl font-semibold text-zinc-950">{deliveredOrdersCount}</p>
           </article>
           <article className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
             <p className="text-sm font-medium text-zinc-500">Сумма заказов</p>
@@ -200,36 +227,36 @@ export default async function OrdersPage() {
         <section className="rounded-3xl border border-zinc-200 bg-[linear-gradient(180deg,#fffdfa_0%,#eef4eb_100%)] p-6 shadow-sm shadow-zinc-950/5">
           <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">Доска заказов</p>
           <h2 className="mt-2 text-2xl font-semibold text-zinc-950">
-            Открытые, завершённые и внутренние
+            Поэтапный поток заказов
           </h2>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-600">
-            Обычные заказы разделены по статусу, а внутренние живут отдельно. Так проще видеть текущую работу и не смешивать её с внутренними задачами кухни или команды.
+            Заказ больше нельзя перепрыгнуть из создания сразу в завершение. После оформления он уходит на кухню, затем проходит этапы повара, диспетчера и курьера. В карточке всегда видно, кто сейчас отвечает за следующий шаг.
           </p>
         </section>
 
         <div className="grid gap-6 xl:grid-cols-3">
           <OrderColumn
-            title="Открытые заказы"
-            description="Новые и активные заказы, которые ещё в работе."
-            orders={openOrders}
-            canManageOrders={canManageOrders}
+            title="Активные заказы"
+            description="Заказы, которые ещё проходят обязательные этапы кухни, сборки и доставки."
+            orders={activeOrders}
+            user={user}
           />
           <OrderColumn
-            title="Завершённые заказы"
-            description="Уже закрытые или отменённые заказы."
+            title="Закрытые заказы"
+            description="Доставленные и оплаченные, а также отменённые заказы."
             orders={completedOrders}
-            canManageOrders={canManageOrders}
+            user={user}
           />
           <OrderColumn
             title="Внутренние заказы"
-            description="Служебные или внутренние задачи, которые не должны смешиваться с клиентскими."
+            description="Служебные заказы отделены от клиентских, но используют ту же дисциплину по этапам."
             orders={internalOrders}
-            canManageOrders={canManageOrders}
+            user={user}
           />
         </div>
       </div>
 
-      {canManageOrders ? (
+      {canCreate ? (
         <OrderCreateButton
           clients={orderCreateOptions.clients}
           employees={orderCreateOptions.employees}

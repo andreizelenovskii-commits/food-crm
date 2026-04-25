@@ -7,9 +7,10 @@ datasource db {
 }
 
 enum OrderStatus {
-  PENDING
-  PROCESSING
-  COMPLETED
+  SENT_TO_KITCHEN
+  READY
+  PACKED
+  DELIVERED_PAID
   CANCELLED
 }
 
@@ -93,7 +94,7 @@ model EmployeeAdjustment {
 
 model Order {
   id          Int         @id @default(autoincrement())
-  status      OrderStatus @default(PENDING)
+  status      OrderStatus @default(SENT_TO_KITCHEN)
   isInternal  Boolean     @default(false)
   client      Client      @relation(fields: [clientId], references: [id])
   clientId    Int

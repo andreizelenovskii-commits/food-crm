@@ -56,6 +56,7 @@ const ROLE_PERMISSIONS: Record<UserRole, AuthPermission[]> = {
   "Диспетчер": [
     "view_dashboard",
     "view_orders",
+    "manage_orders",
     "view_catalog",
     "view_clients",
   ],

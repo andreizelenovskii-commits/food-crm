@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requirePermission } from "@/modules/auth/auth.session";
-import { addOrder, updateOrderStatusById } from "@/modules/orders/orders.service";
+import { requirePermission, requireSessionUser } from "@/modules/auth/auth.session";
+import { addOrder, fetchOrderById, updateOrderStatusById } from "@/modules/orders/orders.service";
 import {
   getOrderFormValues,
   parseCreateOrderInput,
@@ -10,6 +10,14 @@ import {
 } from "@/modules/orders/orders.validation";
 import { ValidationError } from "@/shared/errors/app-error";
 import { ORDER_STATUSES, type OrderStatus } from "@/modules/orders/orders.types";
+import {
+  canAdvanceOrder,
+  canCancelOrder,
+  canCreateOrders,
+  getNextOrderStatus,
+  INITIAL_ORDER_STATUS,
+  isOrderClosed,
+} from "@/modules/orders/orders.workflow";
 
 export type OrderFormState = {
   errorMessage: string | null;
@@ -20,7 +28,7 @@ export type OrderFormState = {
 const EMPTY_VALUES: OrderFormValues = {
   clientId: "",
   employeeId: "",
-  status: "PENDING",
+  status: INITIAL_ORDER_STATUS,
   isInternal: false,
   items: "[]",
 };
@@ -29,11 +37,22 @@ export async function createOrderAction(
   _previousState: OrderFormState,
   formData: FormData,
 ): Promise<OrderFormState> {
-  await requirePermission("manage_orders");
+  const user = await requirePermission("manage_orders");
+
+  if (!canCreateOrders(user.role)) {
+    return {
+      errorMessage: "У тебя нет доступа к созданию заказов",
+      successMessage: null,
+      values: getOrderFormValues(formData),
+    };
+  }
 
   try {
     const input = parseCreateOrderInput(formData);
-    await addOrder(input);
+    await addOrder({
+      ...input,
+      status: INITIAL_ORDER_STATUS,
+    });
   } catch (error) {
     if (error instanceof ValidationError) {
       return {
@@ -56,7 +75,7 @@ export async function createOrderAction(
 }
 
 export async function updateOrderStatusAction(formData: FormData) {
-  await requirePermission("manage_orders");
+  const user = await requireSessionUser();
 
   const orderId = Number(String(formData.get("orderId") ?? "").trim());
   const status = String(formData.get("status") ?? "").trim();
@@ -67,6 +86,29 @@ export async function updateOrderStatusAction(formData: FormData) {
 
   if (!ORDER_STATUSES.includes(status as OrderStatus)) {
     return;
+  }
+
+  const order = await fetchOrderById(orderId);
+
+  if (!order || isOrderClosed(order.status)) {
+    return;
+  }
+
+  const nextExpectedStatus = getNextOrderStatus(order.status);
+  const nextStatus = status as OrderStatus;
+
+  if (nextStatus === "CANCELLED") {
+    if (!canCancelOrder(order.status, user.role)) {
+      return;
+    }
+  } else {
+    if (!nextExpectedStatus || nextExpectedStatus !== nextStatus) {
+      return;
+    }
+
+    if (!canAdvanceOrder(order.status, user.role)) {
+      return;
+    }
   }
 
   await updateOrderStatusById(orderId, status as OrderStatus);

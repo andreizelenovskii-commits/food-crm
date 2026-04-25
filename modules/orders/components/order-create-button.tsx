@@ -7,6 +7,7 @@ import type { Client } from "@/modules/clients/clients.types";
 import type { Employee } from "@/modules/employees/employees.types";
 import { getLoyaltyDiscountPercent } from "@/modules/loyalty/loyalty.rules";
 import { LOYALTY_LEVEL_LABELS } from "@/modules/loyalty/loyalty.types";
+import { INITIAL_ORDER_STATUS, ORDER_STATUS_LABELS } from "@/modules/orders/orders.workflow";
 
 function formatMoney(cents: number) {
   return new Intl.NumberFormat("ru-RU", {
@@ -14,6 +15,13 @@ function formatMoney(cents: number) {
     currency: "RUB",
     maximumFractionDigits: 0,
   }).format(cents / 100);
+}
+
+function normalizeSearchValue(value: string | null | undefined) {
+  return String(value ?? "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function OrderCreateButton({
@@ -31,14 +39,20 @@ export function OrderCreateButton({
     values: {
       clientId: "",
       employeeId: "",
-      status: "PENDING",
+      status: INITIAL_ORDER_STATUS,
       isInternal: false,
       items: "[]",
     },
   };
   const [isOpen, setIsOpen] = useState(false);
+  const [activePicker, setActivePicker] = useState<"client" | "employee" | null>(
+    null,
+  );
   const [isInternal, setIsInternal] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState("");
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
+  const [clientQuery, setClientQuery] = useState("");
+  const [employeeQuery, setEmployeeQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedItems, setSelectedItems] = useState<Record<number, number>>({});
   const [state, formAction, isPending] = useActionState(createOrderAction, initialState);
@@ -47,8 +61,12 @@ export function OrderCreateButton({
     if (!isPending && state.successMessage && isOpen) {
       const timeoutId = window.setTimeout(() => {
         setIsOpen(false);
+        setActivePicker(null);
         setIsInternal(false);
         setSelectedClientId("");
+        setSelectedEmployeeId("");
+        setClientQuery("");
+        setEmployeeQuery("");
         setSelectedCategory("");
         setSelectedItems({});
       }, 0);
@@ -101,6 +119,8 @@ export function OrderCreateButton({
 
   const totalCents = selectedOrderItems.reduce((sum, entry) => sum + entry.totalCents, 0);
   const selectedClient = clients.find((client) => String(client.id) === selectedClientId) ?? null;
+  const selectedEmployee =
+    employees.find((employee) => String(employee.id) === selectedEmployeeId) ?? null;
   const discountPercent =
     !isInternal && selectedClient?.loyaltyLevel
       ? getLoyaltyDiscountPercent(selectedClient.loyaltyLevel)
@@ -141,6 +161,40 @@ export function OrderCreateButton({
       return Object.fromEntries(nextEntries);
     });
   };
+
+  const filteredClients = useMemo(() => {
+    const query = normalizeSearchValue(clientQuery);
+
+    return clients.filter((client) => {
+      if (!query) {
+        return true;
+      }
+
+      const haystack = normalizeSearchValue(
+        [client.name, client.phone, client.email, client.address].filter(Boolean).join(" "),
+      );
+
+      return haystack.includes(query);
+    });
+  }, [clientQuery, clients]);
+
+  const filteredEmployees = useMemo(() => {
+    const query = normalizeSearchValue(employeeQuery);
+
+    return employees.filter((employee) => {
+      if (!query) {
+        return true;
+      }
+
+      const haystack = normalizeSearchValue(
+        [employee.name, employee.phone, employee.email, employee.role].filter(Boolean).join(" "),
+      );
+
+      return haystack.includes(query);
+    });
+  }, [employeeQuery, employees]);
+
+  const closePicker = () => setActivePicker(null);
 
   return (
     <>
@@ -338,20 +392,28 @@ export function OrderCreateButton({
 
                   <label className="space-y-2">
                     <span className="text-sm font-medium text-zinc-700">Клиент</span>
-                    <select
-                      name="clientId"
-                      value={selectedClientId}
-                      onChange={(event) => setSelectedClientId(event.target.value)}
-                      className="w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
-                      required
-                    >
-                      <option value="">Выбери клиента</option>
-                      {clients.map((client) => (
-                        <option key={client.id} value={client.id}>
-                          {client.name} · {client.phone}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="space-y-3">
+                      <input type="hidden" name="clientId" value={selectedClientId} />
+                      <button
+                        type="button"
+                        onClick={() => setActivePicker("client")}
+                        className="flex w-full items-center justify-between gap-3 rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-left text-zinc-950 outline-none transition hover:border-zinc-400 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
+                      >
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-medium">
+                            {selectedClient ? selectedClient.name : "Выбери клиента"}
+                          </span>
+                          <span className="mt-1 block truncate text-xs text-zinc-500">
+                            {selectedClient
+                              ? selectedClient.phone
+                              : "Поиск откроется в отдельном окне"}
+                          </span>
+                        </span>
+                        <span className="shrink-0 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-600">
+                          Найти
+                        </span>
+                      </button>
+                    </div>
                   </label>
 
                   {!isInternal && selectedClient?.loyaltyLevel ? (
@@ -367,34 +429,44 @@ export function OrderCreateButton({
 
                   <label className="space-y-2">
                     <span className="text-sm font-medium text-zinc-700">Исполнитель</span>
-                    <select
-                      name="employeeId"
-                      defaultValue={state.values.employeeId}
-                      className="w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
-                      required
-                    >
-                      <option value="">Выбери сотрудника</option>
-                      {employees.map((employee) => (
-                        <option key={employee.id} value={employee.id}>
-                          {employee.name} · {employee.role}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="space-y-3">
+                      <input type="hidden" name="employeeId" value={selectedEmployeeId} />
+                      <button
+                        type="button"
+                        onClick={() => setActivePicker("employee")}
+                        className="flex w-full items-center justify-between gap-3 rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-left text-zinc-950 outline-none transition hover:border-zinc-400 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
+                      >
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-medium">
+                            {selectedEmployee
+                              ? selectedEmployee.name
+                              : "Выбери исполнителя"}
+                          </span>
+                          <span className="mt-1 block truncate text-xs text-zinc-500">
+                            {selectedEmployee
+                              ? `${selectedEmployee.role}${selectedEmployee.phone ? ` · ${selectedEmployee.phone}` : ""}`
+                              : "Поиск откроется в отдельном окне"}
+                          </span>
+                        </span>
+                        <span className="shrink-0 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-600">
+                          Найти
+                        </span>
+                      </button>
+                    </div>
                   </label>
 
                   <label className="space-y-2">
-                    <span className="text-sm font-medium text-zinc-700">Статус</span>
-                    <select
-                      name="status"
-                      defaultValue={state.values.status}
-                      className="w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
-                      required
-                    >
-                      <option value="PENDING">Новый</option>
-                      <option value="PROCESSING">В работе</option>
-                      <option value="COMPLETED">Завершён</option>
-                      <option value="CANCELLED">Отменён</option>
-                    </select>
+                    <span className="text-sm font-medium text-zinc-700">Стартовый этап</span>
+                    <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+                      <p className="text-sm font-medium text-zinc-950">
+                        {ORDER_STATUS_LABELS[INITIAL_ORDER_STATUS]}
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-zinc-500">
+                        После создания заказ сразу уходит на кухню. Дальше его
+                        последовательно двигают повар, диспетчер и курьер.
+                      </p>
+                    </div>
+                    <input type="hidden" name="status" value={INITIAL_ORDER_STATUS} />
                   </label>
 
                   <input type="hidden" name="items" value={itemsPayload} />
@@ -474,6 +546,166 @@ export function OrderCreateButton({
                 </aside>
               </div>
             </form>
+          </div>
+        </div>
+      ) : null}
+
+      {activePicker === "client" ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/40 px-4 py-6 backdrop-blur-sm"
+          onClick={closePicker}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Поиск клиента"
+            className="w-full max-w-2xl rounded-[30px] border border-zinc-200 bg-white p-5 shadow-2xl shadow-zinc-950/20"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <h3 className="text-lg font-semibold text-zinc-950">Выбери клиента</h3>
+                <p className="text-sm text-zinc-600">
+                  Ищи по имени, фамилии или телефону.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closePicker}
+                className="rounded-full border border-zinc-200 bg-white p-2 text-zinc-500 transition hover:border-zinc-300 hover:text-zinc-900"
+                aria-label="Закрыть окно выбора клиента"
+              >
+                <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5" aria-hidden="true">
+                  <path d="M6 6L14 14M14 6L6 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="mt-5 space-y-4">
+              <input
+                type="search"
+                value={clientQuery}
+                onChange={(event) => setClientQuery(event.target.value)}
+                placeholder="Поиск по имени, фамилии или телефону"
+                className="w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
+              />
+
+              <div className="max-h-[24rem] space-y-2 overflow-y-auto pr-1">
+                {filteredClients.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 px-4 py-4 text-sm text-zinc-500">
+                    Клиенты не найдены.
+                  </div>
+                ) : (
+                  filteredClients.map((client) => {
+                    const isSelected = selectedClientId === String(client.id);
+
+                    return (
+                      <button
+                        key={client.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedClientId(String(client.id));
+                          setClientQuery(client.name);
+                          closePicker();
+                        }}
+                        className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
+                          isSelected
+                            ? "border-zinc-950 bg-zinc-950 text-white shadow-sm"
+                            : "border-zinc-200 bg-zinc-50 text-zinc-900 hover:border-zinc-300 hover:bg-white"
+                        }`}
+                        aria-pressed={isSelected}
+                      >
+                        <span className="block text-sm font-medium">{client.name}</span>
+                        <span className={`mt-1 block text-xs ${isSelected ? "text-zinc-300" : "text-zinc-500"}`}>
+                          {client.phone}
+                          {client.email ? ` · ${client.email}` : ""}
+                        </span>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {activePicker === "employee" ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/40 px-4 py-6 backdrop-blur-sm"
+          onClick={closePicker}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Поиск исполнителя"
+            className="w-full max-w-2xl rounded-[30px] border border-zinc-200 bg-white p-5 shadow-2xl shadow-zinc-950/20"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <h3 className="text-lg font-semibold text-zinc-950">Выбери исполнителя</h3>
+                <p className="text-sm text-zinc-600">
+                  Ищи по имени, фамилии или телефону.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closePicker}
+                className="rounded-full border border-zinc-200 bg-white p-2 text-zinc-500 transition hover:border-zinc-300 hover:text-zinc-900"
+                aria-label="Закрыть окно выбора исполнителя"
+              >
+                <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5" aria-hidden="true">
+                  <path d="M6 6L14 14M14 6L6 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="mt-5 space-y-4">
+              <input
+                type="search"
+                value={employeeQuery}
+                onChange={(event) => setEmployeeQuery(event.target.value)}
+                placeholder="Поиск по имени, фамилии или телефону"
+                className="w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
+              />
+
+              <div className="max-h-[24rem] space-y-2 overflow-y-auto pr-1">
+                {filteredEmployees.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 px-4 py-4 text-sm text-zinc-500">
+                    Сотрудники не найдены.
+                  </div>
+                ) : (
+                  filteredEmployees.map((employee) => {
+                    const isSelected = selectedEmployeeId === String(employee.id);
+
+                    return (
+                      <button
+                        key={employee.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedEmployeeId(String(employee.id));
+                          setEmployeeQuery(employee.name);
+                          closePicker();
+                        }}
+                        className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
+                          isSelected
+                            ? "border-zinc-950 bg-zinc-950 text-white shadow-sm"
+                            : "border-zinc-200 bg-zinc-50 text-zinc-900 hover:border-zinc-300 hover:bg-white"
+                        }`}
+                        aria-pressed={isSelected}
+                      >
+                        <span className="block text-sm font-medium">{employee.name}</span>
+                        <span className={`mt-1 block text-xs ${isSelected ? "text-zinc-300" : "text-zinc-500"}`}>
+                          {employee.role}
+                          {employee.phone ? ` · ${employee.phone}` : ""}
+                        </span>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
           </div>
         </div>
       ) : null}

@@ -1,6 +1,17 @@
-export type OrderStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "CANCELLED";
+export type OrderStatus =
+  | "SENT_TO_KITCHEN"
+  | "READY"
+  | "PACKED"
+  | "DELIVERED_PAID"
+  | "CANCELLED";
 
-export const ORDER_STATUSES = ["PENDING", "PROCESSING", "COMPLETED", "CANCELLED"] as const;
+export const ORDER_STATUSES = [
+  "SENT_TO_KITCHEN",
+  "READY",
+  "PACKED",
+  "DELIVERED_PAID",
+  "CANCELLED",
+] as const;
 
 export type OrderDraftItem = {
   catalogItemId: number;
