@@ -1,5 +1,9 @@
 import { ValidationError } from "@/shared/errors/app-error";
 import {
+  hasCompleteRussianPhone,
+  normalizeRussianPhoneForStorage,
+} from "@/shared/lib/phone";
+import {
   CLIENT_TYPES,
   type ClientType,
 } from "@/modules/clients/clients.types";
@@ -50,13 +54,18 @@ export function parseCreateClientInput(formData: FormData): CreateClientInput {
   const name = normalizeInput(formData.get("name"));
   const type = normalizeInput(formData.get("type"));
   const email = normalizeInput(formData.get("email"));
-  const phone = normalizeInput(formData.get("phone"));
+  const phoneInput = normalizeInput(formData.get("phone"));
+  const phone = normalizeRussianPhoneForStorage(phoneInput);
   const birthDateStr = normalizeInput(formData.get("birthDate"));
   const address = buildClientAddress(formData);
   const notes = normalizeInput(formData.get("notes"));
 
   if (!name || !phone) {
     throw new ValidationError("Заполните имя и телефон");
+  }
+
+  if (!hasCompleteRussianPhone(phoneInput)) {
+    throw new ValidationError("Введите телефон полностью в формате +7");
   }
 
   if (!isClientType(type)) {

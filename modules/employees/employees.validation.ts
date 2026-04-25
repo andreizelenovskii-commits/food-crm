@@ -1,5 +1,9 @@
 import { ValidationError } from "@/shared/errors/app-error";
 import {
+  hasCompleteRussianPhone,
+  normalizeRussianPhoneForStorage,
+} from "@/shared/lib/phone";
+import {
   EMPLOYEE_ROLES,
   EMPLOYEE_ADJUSTMENT_TYPES,
   type EmployeeAdjustmentType,
@@ -98,7 +102,8 @@ export type CreateEmployeeAdjustmentInput = {
 export function parseCreateEmployeeInput(formData: FormData): CreateEmployeeInput {
   const name = normalizeInput(formData.get("name"));
   const role = normalizeInput(formData.get("role"));
-  const phone = normalizeInput(formData.get("phone"));
+  const phoneInput = normalizeInput(formData.get("phone"));
+  const phone = normalizeRussianPhoneForStorage(phoneInput);
   const messenger = normalizeInput(formData.get("messenger"));
   const birthDateStr = normalizeInput(formData.get("birthDate"));
   const hireDateStr = normalizeInput(formData.get("hireDate"));
@@ -109,6 +114,10 @@ export function parseCreateEmployeeInput(formData: FormData): CreateEmployeeInpu
 
   if (!isEmployeeRole(role)) {
     throw new ValidationError("Выберите корректную роль сотрудника");
+  }
+
+  if (phone && !hasCompleteRussianPhone(phoneInput)) {
+    throw new ValidationError("Введите корректный телефон в формате +7");
   }
 
   if (messenger) {
@@ -150,7 +159,8 @@ export function parseCreateEmployeeInput(formData: FormData): CreateEmployeeInpu
 export function parseUpdateEmployeeInput(formData: FormData): UpdateEmployeeInput {
   const name = normalizeInput(formData.get("name"));
   const role = normalizeInput(formData.get("role"));
-  const phone = normalizeInput(formData.get("phone"));
+  const phoneInput = normalizeInput(formData.get("phone"));
+  const phone = normalizeRussianPhoneForStorage(phoneInput);
   const messenger = normalizeInput(formData.get("messenger"));
   const scheduleStr = normalizeInput(formData.get("schedule"));
   const monthlyHoursStr = normalizeInput(formData.get("monthlyHours"));
@@ -166,7 +176,12 @@ export function parseUpdateEmployeeInput(formData: FormData): UpdateEmployeeInpu
     }
     input.role = role;
   }
-  if (phone !== undefined) input.phone = phone || null;
+  if (phoneInput !== undefined) {
+    if (phone && !hasCompleteRussianPhone(phoneInput)) {
+      throw new ValidationError("Введите корректный телефон в формате +7");
+    }
+    input.phone = phone || null;
+  }
   if (messenger !== undefined) {
     if (messenger) {
       try {

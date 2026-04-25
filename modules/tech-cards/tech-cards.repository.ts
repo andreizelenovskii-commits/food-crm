@@ -155,10 +155,10 @@ export async function getTechCardById(id: number): Promise<TechCardItem | null> 
   return mapTechCardRow(card, ingredientsByCard[card.id] ?? []);
 }
 
-export async function getTechCardOptions(): Promise<Array<{ id: number; name: string }>> {
-  const result = await pool.query<{ id: number; name: string }>(
+export async function getTechCardOptions(): Promise<Array<{ id: number; name: string; category: string }>> {
+  const result = await pool.query<{ id: number; name: string; category: string }>(
     `
-      SELECT "id", "name"
+      SELECT "id", "name", "category"
       FROM "TechnologicalCard"
       ORDER BY "category" ASC, "name" ASC
     `,

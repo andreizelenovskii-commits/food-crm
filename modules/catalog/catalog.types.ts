@@ -1,12 +1,19 @@
+export const CATALOG_PRICE_LIST_TYPES = ["CLIENT", "INTERNAL"] as const;
+
+export type CatalogPriceListType = (typeof CATALOG_PRICE_LIST_TYPES)[number];
+
+export const CATALOG_PRICE_LIST_LABELS: Record<CatalogPriceListType, string> = {
+  CLIENT: "Клиентский прайс",
+  INTERNAL: "Внутренний прайс",
+};
+
 export type CatalogItem = {
   id: number;
   name: string;
-  slug: string;
+  priceListType: CatalogPriceListType;
   category: string | null;
   description: string | null;
   priceCents: number;
-  isPublished: boolean;
-  displayOrder: number;
   createdAt: string;
   technologicalCardId: number;
   technologicalCardName: string;

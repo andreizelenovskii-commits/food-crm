@@ -208,20 +208,20 @@ export default async function InventoryPage(props: {
               </div>
             </div>
 
-            <div className="mt-5 grid gap-4 md:grid-cols-3">
-              <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
-                <p className="text-sm font-medium text-zinc-500">Позиций</p>
-                <p className="mt-3 text-3xl font-semibold text-zinc-950">{products.length}</p>
+            <div className="mt-5 flex flex-col gap-4 lg:flex-row lg:flex-nowrap">
+              <div className="flex min-h-[8rem] flex-col rounded-2xl border border-white/80 bg-white/80 p-4 lg:w-[12rem] lg:flex-none">
+                <p className="min-h-[2.75rem] text-sm font-medium leading-6 text-zinc-500">Позиций</p>
+                <p className="mt-auto text-3xl font-semibold text-zinc-950">{products.length}</p>
               </div>
-              <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
-                <p className="text-sm font-medium text-zinc-500">Всего единиц</p>
-                <p className="mt-3 text-3xl font-semibold text-zinc-950">
+              <div className="flex min-h-[8rem] flex-col rounded-2xl border border-white/80 bg-white/80 p-4 lg:w-[12rem] lg:flex-none">
+                <p className="min-h-[2.75rem] text-sm font-medium leading-6 text-zinc-500">Всего единиц</p>
+                <p className="mt-auto text-3xl font-semibold text-zinc-950">
                   {formatInventoryQuantity(totalStock)}
                 </p>
               </div>
-              <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
-                <p className="text-sm font-medium text-zinc-500">Стоимость остатка по закупке</p>
-                <p className="mt-3 text-3xl font-semibold text-zinc-950">{formatMoney(totalValueCents)}</p>
+              <div className="flex min-h-[8rem] flex-col rounded-2xl border border-white/80 bg-white/80 p-4 lg:w-[12rem] lg:flex-none">
+                <p className="min-h-[2.75rem] text-sm font-medium leading-6 text-zinc-500">Стоимость остатка по закупке</p>
+                <p className="mt-auto text-3xl font-semibold text-zinc-950">{formatMoney(totalValueCents)}</p>
               </div>
             </div>
           </section>

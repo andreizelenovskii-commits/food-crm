@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { EmployeeDatePicker } from "@/modules/employees/components/employee-date-picker";
 import { EMPLOYEE_ROLES, type EmployeeRole } from "@/modules/employees/employees.types";
 import { addEmployeeAction } from "@/modules/employees/employees.actions";
@@ -64,11 +65,8 @@ export function EmployeeForm() {
 
       <label className="block space-y-2">
         <span className="text-sm font-medium text-zinc-700">Телефон</span>
-        <input
+        <PhoneInput
           name="phone"
-          type="tel"
-          placeholder="+7 900 123 45 67"
-          className="w-full rounded-2xl border border-zinc-300 px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
         />
       </label>
 
