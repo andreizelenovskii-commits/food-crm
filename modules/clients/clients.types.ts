@@ -2,6 +2,8 @@ export const CLIENT_TYPES = ["CLIENT", "ORGANIZATION"] as const;
 
 export type ClientType = (typeof CLIENT_TYPES)[number];
 
+export type ClientLoyaltyLevel = "BRONZE" | "SILVER" | "GOLD" | "PLATINUM";
+
 export type Client = {
   id: number;
   name: string;
@@ -13,5 +15,8 @@ export type Client = {
   notes: string | null;
   ordersCount: number;
   totalSpentCents: number;
+  loyaltyLevel: ClientLoyaltyLevel | null;
+  loyaltyNextLevel: ClientLoyaltyLevel | null;
+  loyaltyAmountToNextLevelCents: number;
   createdAt: string;
 };

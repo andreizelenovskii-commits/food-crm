@@ -10,9 +10,11 @@ import type {
   CreateClientInput,
   UpdateClientInput,
 } from "@/modules/clients/clients.validation";
+import { attachLoyaltyToClient } from "@/modules/loyalty/loyalty.rules";
 
 export async function fetchClients(): Promise<Client[]> {
-  return getAllClients();
+  const clients = await getAllClients();
+  return clients.map(attachLoyaltyToClient);
 }
 
 export async function addClient(input: CreateClientInput): Promise<Client> {
@@ -20,7 +22,8 @@ export async function addClient(input: CreateClientInput): Promise<Client> {
 }
 
 export async function fetchClientById(clientId: number): Promise<Client | null> {
-  return getClientById(clientId);
+  const client = await getClientById(clientId);
+  return client ? attachLoyaltyToClient(client) : null;
 }
 
 export async function updateClientService(

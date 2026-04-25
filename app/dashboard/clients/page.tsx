@@ -7,6 +7,7 @@ import { SessionUserActions } from "@/modules/auth/components/session-user-actio
 import { ClientCreatePanel } from "@/modules/clients/components/client-create-panel";
 import { ClientDeleteButton } from "@/modules/clients/components/client-delete-button";
 import { fetchClients } from "@/modules/clients/clients.service";
+import { LOYALTY_LEVEL_LABELS } from "@/modules/loyalty/loyalty.types";
 
 export default async function ClientsPage(props: {
   searchParams?: Promise<{ q?: string }>;
@@ -261,6 +262,13 @@ export default async function ClientsPage(props: {
                               {client.name}
                             </Link>
                           </p>
+                          {client.loyaltyLevel ? (
+                            <p className="mt-1">
+                              <span className="rounded-full bg-zinc-950 px-3 py-1 text-xs font-medium text-white">
+                                {LOYALTY_LEVEL_LABELS[client.loyaltyLevel]}
+                              </span>
+                            </p>
+                          ) : null}
                           <p className="text-sm text-zinc-500">
                             Телефон: {client.phone}
                           </p>

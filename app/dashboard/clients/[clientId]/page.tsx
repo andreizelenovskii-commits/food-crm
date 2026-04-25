@@ -5,6 +5,7 @@ import { hasPermission } from "@/modules/auth/authz";
 import { requirePermission } from "@/modules/auth/auth.session";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
 import { fetchClientById } from "@/modules/clients/clients.service";
+import { LOYALTY_LEVEL_LABELS } from "@/modules/loyalty/loyalty.types";
 
 export default async function ClientProfilePage(props: {
   params?: Promise<{ clientId: string }>;
@@ -45,6 +46,18 @@ export default async function ClientProfilePage(props: {
                 {client.type === "ORGANIZATION" ? "Организация" : "Клиент"}
               </p>
               <h2 className="mt-2 text-2xl font-semibold text-zinc-950">{client.name}</h2>
+              {client.loyaltyLevel ? (
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <span className="rounded-full bg-zinc-950 px-3 py-1 text-xs font-medium text-white">
+                    {LOYALTY_LEVEL_LABELS[client.loyaltyLevel]}
+                  </span>
+                  <span className="text-sm text-zinc-500">
+                    {client.loyaltyNextLevel
+                      ? `До ${LOYALTY_LEVEL_LABELS[client.loyaltyNextLevel]} осталось ${formatMoney(client.loyaltyAmountToNextLevelCents)}`
+                      : "Максимальный уровень уже достигнут"}
+                  </span>
+                </div>
+              ) : null}
             </div>
             {hasPermission(user, "manage_clients") ? (
               <Link
@@ -87,11 +100,19 @@ export default async function ClientProfilePage(props: {
             </div>
             <div className="rounded-2xl bg-zinc-50 p-4">
               <p className="text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">
+                Уровень лояльности
+              </p>
+              <p className="mt-2 text-lg font-semibold text-zinc-950">
+                {client.loyaltyLevel ? LOYALTY_LEVEL_LABELS[client.loyaltyLevel] : "Не участвует"}
+              </p>
+            </div>
+            <div className="rounded-2xl bg-zinc-50 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">
                 Заказы
               </p>
               <p className="mt-2 text-lg font-semibold text-zinc-950">{client.ordersCount}</p>
             </div>
-            <div className="rounded-2xl bg-zinc-50 p-4">
+            <div className="rounded-2xl bg-zinc-50 p-4 sm:col-span-2">
               <p className="text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">
                 Сумма заказов
               </p>

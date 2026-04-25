@@ -40,6 +40,9 @@ function mapRowToClient(row: ClientRow): Client {
     notes: row.notes,
     ordersCount: Number(row.ordersCount ?? 0),
     totalSpentCents: Number(row.totalSpentCents ?? 0),
+    loyaltyLevel: null,
+    loyaltyNextLevel: null,
+    loyaltyAmountToNextLevelCents: 0,
     createdAt: row.createdAt.toISOString(),
   };
 }
