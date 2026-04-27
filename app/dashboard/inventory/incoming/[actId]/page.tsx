@@ -8,7 +8,7 @@ import {
   fetchIncomingActById,
   fetchInventoryResponsibleOptions,
   fetchProducts,
-} from "@/modules/inventory/inventory.service";
+} from "@/modules/inventory/inventory.api";
 
 export default async function IncomingActDetailsPage(props: {
   params?: Promise<{ actId: string }>;

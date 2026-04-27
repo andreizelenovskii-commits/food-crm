@@ -1,43 +1,16 @@
-import { pool } from "@/shared/db/pool";
 import {
   formatHours,
   normalizeEmployeeSchedule,
 } from "@/modules/employees/employees.schedule";
 import type { UserRole } from "@/modules/auth/auth.types";
-
-type DashboardEntityCounts = {
-  orders: number;
-  clients: number;
-  products: number;
-  employees: number;
-};
-
-export type DashboardSnapshot = {
-  entityCounts: DashboardEntityCounts;
-  statistics: Array<{
-    label: string;
-    value: string;
-    hint: string;
-  }>;
-  sales: Array<{
-    label: string;
-    value: string;
-    hint: string;
-  }>;
-};
-
-export type EmployeeDashboardSnapshot = {
-  role: UserRole;
-  monthKey: string;
-  monthLabel: string;
-  scheduleSummary: string;
-  scheduleDays: number;
-  scheduleHours: number;
-  advancesCents: number;
-  finesCents: number;
-  debtCents: number;
-  salaryTodayCents: number;
-} | null;
+import {
+  getDashboardAggregateData,
+  getEmployeeDashboardSourceByEmail,
+} from "@/modules/dashboard/dashboard.repository";
+import type {
+  DashboardSnapshot,
+  EmployeeDashboardSnapshot,
+} from "@/modules/dashboard/dashboard.types";
 
 function formatMoney(cents: number) {
   return new Intl.NumberFormat("ru-RU", {
@@ -74,58 +47,15 @@ function parseMonthKey(monthKey?: string | null) {
 }
 
 export async function getDashboardMetrics(): Promise<DashboardSnapshot> {
-  const [
-    ordersCountResult,
-    clientsCountResult,
-    productsCountResult,
-    employeesCountResult,
-    orderTotalsResult,
-    completedSalesResult,
-    monthSalesResult,
-  ] = await Promise.all([
-    pool.query<{ count: string }>(`SELECT COUNT(*) AS count FROM "Order"`),
-    pool.query<{ count: string }>(`SELECT COUNT(*) AS count FROM "Client"`),
-    pool.query<{ count: string }>(`SELECT COUNT(*) AS count FROM "Product"`),
-    pool.query<{ count: string }>(`SELECT COUNT(*) AS count FROM "Employee"`),
-    pool.query<{ total_cents: string | null; average_cents: string | null }>(`
-      SELECT
-        COALESCE(SUM("totalCents"), 0) AS total_cents,
-        COALESCE(AVG("totalCents"), 0) AS average_cents
-      FROM "Order"
-    `),
-    pool.query<{ completed_count: string; completed_total_cents: string | null }>(`
-      SELECT
-        COUNT(*) AS completed_count,
-        COALESCE(SUM("totalCents"), 0) AS completed_total_cents
-      FROM "Order"
-      WHERE "status"::text IN ('COMPLETED', 'DELIVERED_PAID')
-    `),
-    pool.query<{ month_count: string; month_total_cents: string | null }>(`
-      SELECT
-        COUNT(*) AS month_count,
-        COALESCE(SUM("totalCents"), 0) AS month_total_cents
-      FROM "Order"
-      WHERE date_trunc('month', "createdAt") = date_trunc('month', CURRENT_DATE)
-    `),
-  ]);
-
-  const entityCounts = {
-    orders: Number(ordersCountResult.rows[0]?.count ?? 0),
-    clients: Number(clientsCountResult.rows[0]?.count ?? 0),
-    products: Number(productsCountResult.rows[0]?.count ?? 0),
-    employees: Number(employeesCountResult.rows[0]?.count ?? 0),
-  };
-
-  const totalRevenueCents = Number(orderTotalsResult.rows[0]?.total_cents ?? 0);
-  const averageOrderCents = Math.round(
-    Number(orderTotalsResult.rows[0]?.average_cents ?? 0),
-  );
-  const completedOrders = Number(completedSalesResult.rows[0]?.completed_count ?? 0);
-  const completedRevenueCents = Number(
-    completedSalesResult.rows[0]?.completed_total_cents ?? 0,
-  );
-  const monthOrders = Number(monthSalesResult.rows[0]?.month_count ?? 0);
-  const monthRevenueCents = Number(monthSalesResult.rows[0]?.month_total_cents ?? 0);
+  const {
+    entityCounts,
+    totalRevenueCents,
+    averageOrderCents,
+    completedOrders,
+    completedRevenueCents,
+    monthOrders,
+    monthRevenueCents,
+  } = await getDashboardAggregateData();
 
   return {
     entityCounts,
@@ -175,68 +105,16 @@ export async function getEmployeeDashboardMetricsByEmail(
   email: string,
   monthKey?: string | null,
 ): Promise<EmployeeDashboardSnapshot> {
-  const normalizedEmail = email.trim().toLowerCase();
-
-  if (!normalizedEmail) {
-    return null;
-  }
-
   const selectedMonth = parseMonthKey(monthKey);
   const selectedMonthKey = formatMonthKey(selectedMonth);
   const nextMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 1);
   const monthStart = `${selectedMonthKey}-01`;
   const monthEnd = `${formatMonthKey(nextMonth)}-01`;
-
-  const employeeResult = await pool.query<{
-    role: string;
-    schedule: unknown;
-  }>(
-    `
-      SELECT "role", "schedule"
-      FROM "Employee"
-      WHERE LOWER("email") = $1
-      LIMIT 1
-    `,
-    [normalizedEmail],
-  );
-
-  const employee = employeeResult.rows[0];
+  const employee = await getEmployeeDashboardSourceByEmail(email, monthStart, monthEnd);
 
   if (!employee) {
     return null;
   }
-
-  const monthTotalsResult = await pool.query<{
-    type: string;
-    total: string;
-  }>(
-    `
-      SELECT "type", COALESCE(SUM("amountCents"), 0) AS total
-      FROM "EmployeeAdjustment"
-      WHERE "employeeId" = (
-        SELECT "id"
-        FROM "Employee"
-        WHERE LOWER("email") = $1
-        LIMIT 1
-      )
-        AND "createdAt" >= $2::date
-        AND "createdAt" < $3::date
-      GROUP BY "type"
-    `,
-    [normalizedEmail, monthStart, monthEnd],
-  );
-
-  const totals = monthTotalsResult.rows.reduce(
-    (acc, row) => ({
-      ...acc,
-      [row.type]: Number(row.total ?? 0),
-    }),
-    {
-      ADVANCE: 0,
-      FINE: 0,
-      DEBT: 0,
-    } as Record<string, number>,
-  );
 
   const normalizedSchedule = normalizeEmployeeSchedule(
     employee.schedule as Parameters<typeof normalizeEmployeeSchedule>[0],
@@ -274,9 +152,9 @@ export async function getEmployeeDashboardMetricsByEmail(
     scheduleSummary,
     scheduleDays: scheduleStats.scheduleDays,
     scheduleHours: scheduleStats.scheduleHours,
-    advancesCents: totals.ADVANCE ?? 0,
-    finesCents: totals.FINE ?? 0,
-    debtCents: totals.DEBT ?? 0,
+    advancesCents: employee.totals.ADVANCE ?? 0,
+    finesCents: employee.totals.FINE ?? 0,
+    debtCents: employee.totals.DEBT ?? 0,
     salaryTodayCents: 0,
   };
 }

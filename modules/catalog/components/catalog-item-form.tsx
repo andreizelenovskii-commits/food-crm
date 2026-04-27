@@ -4,9 +4,9 @@ import { useMemo, useState } from "react";
 import { useActionState } from "react";
 import {
   addCatalogItemAction,
-  type CatalogFormState,
-  type CatalogFormValues,
+  updateCatalogItemAction,
 } from "@/modules/catalog/catalog.actions";
+import type { CatalogFormState, CatalogFormValues } from "@/modules/catalog/catalog.form-types";
 import {
   type CatalogItem,
   CATALOG_PRICE_LIST_LABELS,
@@ -23,17 +23,12 @@ export function CatalogItemForm({
   initialItem,
   initialValues,
   submitLabel,
-  action = addCatalogItemAction,
   techCardOptions,
 }: {
   mode?: "create" | "edit";
   initialItem?: CatalogItem;
   initialValues?: CatalogFormValues;
   submitLabel?: string;
-  action?: (
-    previousState: CatalogFormState,
-    formData: FormData,
-  ) => Promise<CatalogFormState>;
   techCardOptions: Array<{
     id: number;
     name: string;
@@ -41,6 +36,7 @@ export function CatalogItemForm({
     pizzaSize: string | null;
   }>;
 }) {
+  const action = mode === "edit" ? updateCatalogItemAction : addCatalogItemAction;
   const initialState: CatalogFormState = {
     errorMessage: null,
     values: initialValues ?? {

@@ -6,7 +6,7 @@ import { requirePermission } from "@/modules/auth/auth.session";
 import { EmployeeAccessForm } from "@/modules/employees/components/employee-access-form";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
 import { EmployeeProfileClient } from "@/modules/employees/components/employee-profile-client";
-import { fetchEmployeeById } from "@/modules/employees/employees.service";
+import { fetchEmployeeById } from "@/modules/employees/employees.api";
 
 export default async function EmployeeProfilePage(props: {
   params?: Promise<{ employeeId: string }>;

@@ -1,25 +1,6 @@
-"use server";
+"use client";
 
-import { redirect } from "next/navigation";
-import { requirePermission } from "@/modules/auth/auth.session";
 import { ValidationError } from "@/shared/errors/app-error";
-import {
-  applyInventoryAuditService,
-  addProduct,
-  closeInventorySessionService,
-  completeIncomingActService,
-  completeWriteoffActService,
-  createIncomingActService,
-  createInventorySessionService,
-  createWriteoffActService,
-  deleteIncomingActService,
-  deleteWriteoffActService,
-  deleteInventorySessionService,
-  deleteProductService,
-  saveInventorySessionActualsService,
-  updateIncomingActService,
-  updateProductService,
-} from "@/modules/inventory/inventory.service";
 import {
   parseCreateIncomingActInput,
   parseCreateWriteoffActInput,
@@ -28,6 +9,7 @@ import {
   parseInventorySessionActualsInput,
   parseProductInput,
 } from "@/modules/inventory/inventory.validation";
+import { browserBackendJson } from "@/shared/api/browser-backend";
 
 export type ProductFormValues = {
   name: string;
@@ -74,6 +56,8 @@ export type WriteoffActProgressFormState = {
   successMessage: string | null;
 };
 
+type IncomingActInput = ReturnType<typeof parseCreateIncomingActInput>;
+
 function getProductFormValues(formData: FormData): ProductFormValues {
   const read = (name: string) => String(formData.get(name) ?? "").trim();
 
@@ -87,17 +71,30 @@ function getProductFormValues(formData: FormData): ProductFormValues {
   };
 }
 
+function toIncomingActApiBody(input: IncomingActInput) {
+  return {
+    responsibleEmployeeId: input.responsibleEmployeeId,
+    supplierName: input.supplierName,
+    notes: input.notes,
+    items: input.items.map((item) => ({
+      productId: item.productId,
+      quantity: item.quantity,
+      price: item.priceCents / 100,
+    })),
+  };
+}
+
 export async function addProductAction(
   _previousState: ProductFormState,
   formData: FormData,
 ): Promise<ProductFormState> {
-  await requirePermission("manage_inventory");
-
   try {
-    const input = parseProductInput(formData);
-    await addProduct(input);
+    parseProductInput(formData);
+    await browserBackendJson("/api/v1/inventory/products", {
+      body: getProductFormValues(formData),
+    });
   } catch (error) {
-    if (error instanceof ValidationError) {
+    if (error instanceof ValidationError || error instanceof Error) {
       return {
         errorMessage: error.message,
         successMessage: null,
@@ -146,7 +143,6 @@ export async function updateProductAction(
   _previousState: ProductFormState,
   formData: FormData,
 ): Promise<ProductFormState> {
-  await requirePermission("manage_inventory");
   const productId = Number(String(formData.get("productId") ?? "").trim());
 
   if (!Number.isInteger(productId) || productId <= 0) {
@@ -158,18 +154,13 @@ export async function updateProductAction(
   }
 
   try {
-    const input = parseProductInput(formData);
-    const updated = await updateProductService(productId, input);
-
-    if (!updated) {
-      return {
-        errorMessage: "Товар не найден",
-        successMessage: null,
-        values: getProductFormValues(formData),
-      };
-    }
+    parseProductInput(formData);
+    await browserBackendJson(`/api/v1/inventory/products/${productId}`, {
+      method: "PATCH",
+      body: getProductFormValues(formData),
+    });
   } catch (error) {
-    if (error instanceof ValidationError) {
+    if (error instanceof ValidationError || error instanceof Error) {
       return {
         errorMessage: error.message,
         successMessage: null,
@@ -180,16 +171,18 @@ export async function updateProductAction(
     throw error;
   }
 
-  redirect("/dashboard/inventory");
+  window.location.assign("/dashboard/inventory");
+  return { errorMessage: null, successMessage: null, values: getProductFormValues(formData) };
 }
 
 export async function deleteProductAction(formData: FormData) {
-  await requirePermission("manage_inventory");
   const productId = Number(String(formData.get("productId") ?? "").trim());
   const redirectTo = String(formData.get("redirectTo") ?? "/dashboard/inventory").trim();
 
   if (Number.isInteger(productId) && productId > 0) {
-    await deleteProductService(productId);
+    await browserBackendJson(`/api/v1/inventory/products/${productId}`, {
+      method: "DELETE",
+    });
   }
 
   return {
@@ -201,11 +194,17 @@ export async function submitInventoryAuditAction(
   _previousState: InventoryAuditFormState,
   formData: FormData,
 ): Promise<InventoryAuditFormState> {
-  await requirePermission("manage_inventory");
-
   try {
     const entries = parseInventoryAuditInput(formData);
-    const result = await applyInventoryAuditService(entries);
+    const result = await browserBackendJson<{
+      checkedCount: number;
+      updatedCount: number;
+      differenceCount: number;
+    }>("/api/v1/inventory/audit", {
+      body: {
+        entries,
+      },
+    });
 
     return {
       errorMessage: null,
@@ -218,7 +217,7 @@ export async function submitInventoryAuditAction(
       differenceCount: result.differenceCount,
     };
   } catch (error) {
-    if (error instanceof ValidationError) {
+    if (error instanceof ValidationError || error instanceof Error) {
       return {
         errorMessage: error.message,
         successMessage: null,
@@ -236,11 +235,11 @@ export async function createInventorySessionAction(
   _previousState: InventorySessionCreateFormState,
   formData: FormData,
 ): Promise<InventorySessionCreateFormState> {
-  await requirePermission("manage_inventory");
-
   try {
     const input = parseCreateInventorySessionInput(formData);
-    const session = await createInventorySessionService(input);
+    const session = await browserBackendJson<{ id: number }>("/api/v1/inventory/sessions", {
+      body: input,
+    });
 
     return {
       errorMessage: null,
@@ -248,7 +247,7 @@ export async function createInventorySessionAction(
       createdSessionId: session.id,
     };
   } catch (error) {
-    if (error instanceof ValidationError) {
+    if (error instanceof ValidationError || error instanceof Error) {
       return {
         errorMessage: error.message,
         successMessage: null,
@@ -264,7 +263,6 @@ export async function saveInventorySessionActualsAction(
   _previousState: InventorySessionProgressFormState,
   formData: FormData,
 ): Promise<InventorySessionProgressFormState> {
-  await requirePermission("manage_inventory");
   const sessionId = Number(String(formData.get("sessionId") ?? "").trim());
 
   if (!Number.isInteger(sessionId) || sessionId <= 0) {
@@ -276,14 +274,19 @@ export async function saveInventorySessionActualsAction(
 
   try {
     const entries = parseInventorySessionActualsInput(formData);
-    await saveInventorySessionActualsService(sessionId, entries);
+    await browserBackendJson(`/api/v1/inventory/sessions/${sessionId}/actuals`, {
+      method: "PATCH",
+      body: {
+        items: entries,
+      },
+    });
 
     return {
       errorMessage: null,
       successMessage: "Фактические остатки сохранены.",
     };
   } catch (error) {
-    if (error instanceof ValidationError) {
+    if (error instanceof ValidationError || error instanceof Error) {
       return {
         errorMessage: error.message,
         successMessage: null,
@@ -298,7 +301,6 @@ export async function closeInventorySessionAction(
   _previousState: InventorySessionProgressFormState,
   formData: FormData,
 ): Promise<InventorySessionProgressFormState> {
-  await requirePermission("manage_inventory");
   const sessionId = Number(String(formData.get("sessionId") ?? "").trim());
 
   if (!Number.isInteger(sessionId) || sessionId <= 0) {
@@ -310,15 +312,20 @@ export async function closeInventorySessionAction(
 
   try {
     const entries = parseInventorySessionActualsInput(formData);
-    await saveInventorySessionActualsService(sessionId, entries);
-    await closeInventorySessionService(sessionId);
+    await browserBackendJson(`/api/v1/inventory/sessions/${sessionId}/actuals`, {
+      method: "PATCH",
+      body: {
+        items: entries,
+      },
+    });
+    await browserBackendJson(`/api/v1/inventory/sessions/${sessionId}/close`);
 
     return {
       errorMessage: null,
       successMessage: "Инвентаризация закрыта, остатки на складе обновлены.",
     };
   } catch (error) {
-    if (error instanceof ValidationError) {
+    if (error instanceof ValidationError || error instanceof Error) {
       return {
         errorMessage: error.message,
         successMessage: null,
@@ -333,7 +340,6 @@ export async function deleteInventorySessionAction(
   _previousState: InventorySessionProgressFormState,
   formData: FormData,
 ): Promise<InventorySessionProgressFormState> {
-  await requirePermission("manage_inventory");
   const sessionId = Number(String(formData.get("sessionId") ?? "").trim());
 
   if (!Number.isInteger(sessionId) || sessionId <= 0) {
@@ -344,14 +350,16 @@ export async function deleteInventorySessionAction(
   }
 
   try {
-    await deleteInventorySessionService(sessionId);
+    await browserBackendJson(`/api/v1/inventory/sessions/${sessionId}`, {
+      method: "DELETE",
+    });
 
     return {
       errorMessage: null,
       successMessage: "Инвентаризация удалена, остатки на складе пересчитаны.",
     };
   } catch (error) {
-    if (error instanceof ValidationError) {
+    if (error instanceof ValidationError || error instanceof Error) {
       return {
         errorMessage: error.message,
         successMessage: null,
@@ -384,11 +392,11 @@ export async function createWriteoffActAction(
   _previousState: WriteoffActCreateFormState,
   formData: FormData,
 ): Promise<WriteoffActCreateFormState> {
-  await requirePermission("manage_inventory");
-
   try {
     const input = parseCreateWriteoffActInput(formData);
-    const act = await createWriteoffActService(input);
+    const act = await browserBackendJson<{ id: number }>("/api/v1/inventory/writeoff-acts", {
+      body: input,
+    });
 
     return {
       errorMessage: null,
@@ -396,7 +404,7 @@ export async function createWriteoffActAction(
       createdActId: act.id,
     };
   } catch (error) {
-    if (error instanceof ValidationError) {
+    if (error instanceof ValidationError || error instanceof Error) {
       return {
         errorMessage: error.message,
         successMessage: null,
@@ -412,11 +420,11 @@ export async function createIncomingActAction(
   _previousState: WriteoffActCreateFormState,
   formData: FormData,
 ): Promise<WriteoffActCreateFormState> {
-  await requirePermission("manage_inventory");
-
   try {
     const input = parseCreateIncomingActInput(formData);
-    const act = await createIncomingActService(input);
+    const act = await browserBackendJson<{ id: number }>("/api/v1/inventory/incoming-acts", {
+      body: toIncomingActApiBody(input),
+    });
 
     return {
       errorMessage: null,
@@ -424,7 +432,7 @@ export async function createIncomingActAction(
       createdActId: act.id,
     };
   } catch (error) {
-    if (error instanceof ValidationError) {
+    if (error instanceof ValidationError || error instanceof Error) {
       return {
         errorMessage: error.message,
         successMessage: null,
@@ -440,7 +448,6 @@ export async function updateIncomingActAction(
   _previousState: WriteoffActCreateFormState,
   formData: FormData,
 ): Promise<WriteoffActCreateFormState> {
-  await requirePermission("manage_inventory");
   const actId = Number(String(formData.get("actId") ?? "").trim());
 
   if (!Number.isInteger(actId) || actId <= 0) {
@@ -453,7 +460,10 @@ export async function updateIncomingActAction(
 
   try {
     const input = parseCreateIncomingActInput(formData);
-    const act = await updateIncomingActService(actId, input);
+    const act = await browserBackendJson<{ id: number }>(`/api/v1/inventory/incoming-acts/${actId}`, {
+      method: "PATCH",
+      body: toIncomingActApiBody(input),
+    });
 
     return {
       errorMessage: null,
@@ -461,7 +471,7 @@ export async function updateIncomingActAction(
       createdActId: act.id,
     };
   } catch (error) {
-    if (error instanceof ValidationError) {
+    if (error instanceof ValidationError || error instanceof Error) {
       return {
         errorMessage: error.message,
         successMessage: null,
@@ -477,7 +487,6 @@ export async function completeWriteoffActAction(
   _previousState: WriteoffActProgressFormState,
   formData: FormData,
 ): Promise<WriteoffActProgressFormState> {
-  await requirePermission("manage_inventory");
   const actId = Number(String(formData.get("actId") ?? "").trim());
 
   if (!Number.isInteger(actId) || actId <= 0) {
@@ -488,14 +497,14 @@ export async function completeWriteoffActAction(
   }
 
   try {
-    await completeWriteoffActService(actId);
+    await browserBackendJson(`/api/v1/inventory/writeoff-acts/${actId}/complete`);
 
     return {
       errorMessage: null,
       successMessage: `Акт списания №${actId} завершён.`,
     };
   } catch (error) {
-    if (error instanceof ValidationError) {
+    if (error instanceof ValidationError || error instanceof Error) {
       return {
         errorMessage: error.message,
         successMessage: null,
@@ -510,7 +519,6 @@ export async function completeIncomingActAction(
   _previousState: WriteoffActProgressFormState,
   formData: FormData,
 ): Promise<WriteoffActProgressFormState> {
-  await requirePermission("manage_inventory");
   const actId = Number(String(formData.get("actId") ?? "").trim());
 
   if (!Number.isInteger(actId) || actId <= 0) {
@@ -521,14 +529,14 @@ export async function completeIncomingActAction(
   }
 
   try {
-    await completeIncomingActService(actId);
+    await browserBackendJson(`/api/v1/inventory/incoming-acts/${actId}/complete`);
 
     return {
       errorMessage: null,
       successMessage: `Акт поступления №${actId} завершён.`,
     };
   } catch (error) {
-    if (error instanceof ValidationError) {
+    if (error instanceof ValidationError || error instanceof Error) {
       return {
         errorMessage: error.message,
         successMessage: null,
@@ -543,7 +551,6 @@ export async function deleteWriteoffActAction(
   _previousState: WriteoffActProgressFormState,
   formData: FormData,
 ): Promise<WriteoffActProgressFormState> {
-  await requirePermission("manage_inventory");
   const actId = Number(String(formData.get("actId") ?? "").trim());
 
   if (!Number.isInteger(actId) || actId <= 0) {
@@ -554,14 +561,16 @@ export async function deleteWriteoffActAction(
   }
 
   try {
-    await deleteWriteoffActService(actId);
+    await browserBackendJson(`/api/v1/inventory/writeoff-acts/${actId}`, {
+      method: "DELETE",
+    });
 
     return {
       errorMessage: null,
       successMessage: `Акт списания №${actId} удалён.`,
     };
   } catch (error) {
-    if (error instanceof ValidationError) {
+    if (error instanceof ValidationError || error instanceof Error) {
       return {
         errorMessage: error.message,
         successMessage: null,
@@ -576,7 +585,6 @@ export async function deleteIncomingActAction(
   _previousState: WriteoffActProgressFormState,
   formData: FormData,
 ): Promise<WriteoffActProgressFormState> {
-  await requirePermission("manage_inventory");
   const actId = Number(String(formData.get("actId") ?? "").trim());
 
   if (!Number.isInteger(actId) || actId <= 0) {
@@ -587,14 +595,16 @@ export async function deleteIncomingActAction(
   }
 
   try {
-    await deleteIncomingActService(actId);
+    await browserBackendJson(`/api/v1/inventory/incoming-acts/${actId}`, {
+      method: "DELETE",
+    });
 
     return {
       errorMessage: null,
       successMessage: `Акт поступления №${actId} удалён.`,
     };
   } catch (error) {
-    if (error instanceof ValidationError) {
+    if (error instanceof ValidationError || error instanceof Error) {
       return {
         errorMessage: error.message,
         successMessage: null,

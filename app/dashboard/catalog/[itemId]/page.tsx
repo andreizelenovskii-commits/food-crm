@@ -2,13 +2,10 @@ import { notFound } from "next/navigation";
 import { PageShell } from "@/components/ui/page-shell";
 import { requirePermission } from "@/modules/auth/auth.session";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
-import {
-  type CatalogFormValues,
-  updateCatalogItemAction,
-} from "@/modules/catalog/catalog.actions";
+import { type CatalogFormValues } from "@/modules/catalog/catalog.form-types";
 import { CatalogItemForm } from "@/modules/catalog/components/catalog-item-form";
-import { fetchCatalogItemById } from "@/modules/catalog/catalog.service";
-import { fetchTechCardOptions } from "@/modules/tech-cards/tech-cards.service";
+import { fetchCatalogItemById } from "@/modules/catalog/catalog.api";
+import { fetchTechCardOptions } from "@/modules/tech-cards/tech-cards.api";
 
 function formatPriceInput(priceCents: number) {
   return (priceCents / 100).toFixed(2).replace(/\.00$/, "");
@@ -56,7 +53,6 @@ export default async function CatalogItemEditPage(props: {
           initialItem={catalogItem}
           initialValues={initialValues}
           submitLabel="Сохранить изменения"
-          action={updateCatalogItemAction}
           techCardOptions={techCardOptions}
         />
       </div>

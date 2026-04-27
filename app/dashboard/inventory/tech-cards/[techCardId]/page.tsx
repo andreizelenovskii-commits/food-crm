@@ -7,7 +7,7 @@ import { TechCardForm } from "@/modules/tech-cards/components/tech-card-form";
 import {
   fetchTechCardById,
   fetchTechCardProductOptions,
-} from "@/modules/tech-cards/tech-cards.service";
+} from "@/modules/tech-cards/tech-cards.api";
 
 export default async function TechCardDetailsPage(props: {
   params?: Promise<{ techCardId: string }>;

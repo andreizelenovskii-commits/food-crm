@@ -4,7 +4,7 @@ import { PageShell } from "@/components/ui/page-shell";
 import { hasPermission } from "@/modules/auth/authz";
 import { requirePermission } from "@/modules/auth/auth.session";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
-import { fetchClientById } from "@/modules/clients/clients.service";
+import { fetchClientById } from "@/modules/clients/clients.api";
 import { LOYALTY_LEVEL_LABELS } from "@/modules/loyalty/loyalty.types";
 
 export default async function ClientProfilePage(props: {

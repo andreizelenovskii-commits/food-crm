@@ -6,8 +6,8 @@ import { SessionUserActions } from "@/modules/auth/components/session-user-actio
 import { CatalogItemDeleteButton } from "@/modules/catalog/components/catalog-item-delete-button";
 import { CatalogItemForm } from "@/modules/catalog/components/catalog-item-form";
 import { CATALOG_PRICE_LIST_LABELS } from "@/modules/catalog/catalog.types";
-import { fetchCatalogItems } from "@/modules/catalog/catalog.service";
-import { fetchTechCardOptions } from "@/modules/tech-cards/tech-cards.service";
+import { fetchCatalogItems } from "@/modules/catalog/catalog.api";
+import { fetchTechCardOptions } from "@/modules/tech-cards/tech-cards.api";
 import { TECH_CARD_CATEGORIES } from "@/modules/tech-cards/tech-cards.types";
 
 function formatMoney(cents: number) {

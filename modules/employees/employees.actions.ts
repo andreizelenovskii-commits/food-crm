@@ -1,69 +1,72 @@
-"use server";
+"use client";
 
-import { redirect } from "next/navigation";
-import { requirePermission } from "@/modules/auth/auth.session";
 import { ValidationError } from "@/shared/errors/app-error";
-import {
-  addEmployee,
-  addEmployeeAdjustment,
-  deleteEmployeeService,
-  fetchEmployeeById,
-  issueEmployeeAccessService,
-  updateEmployeeService,
-} from "@/modules/employees/employees.service";
-import { parseIssueEmployeeAccessInput } from "@/modules/employees/employee-access.validation";
 import {
   parseCreateEmployeeInput,
   parseCreateEmployeeAdjustmentInput,
   parseUpdateEmployeeInput,
 } from "@/modules/employees/employees.validation";
+import { browserBackendJson } from "@/shared/api/browser-backend";
+
+function parseClientIssueEmployeeAccessInput(formData: FormData) {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const password = String(formData.get("password") ?? "").trim();
+
+  if (!email || !password) {
+    throw new ValidationError("Заполните логин и пароль для сотрудника");
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new ValidationError("Введите корректный email для входа");
+  }
+
+  return { email, password };
+}
 
 export async function addEmployeeAction(formData: FormData) {
-  await requirePermission("manage_employees");
   const input = parseCreateEmployeeInput(formData);
 
-  await addEmployee(input);
+  await browserBackendJson("/api/v1/employees", {
+    body: input,
+  });
 
-  redirect("/dashboard/employees");
+  window.location.assign("/dashboard/employees");
 }
 
 export async function updateEmployeeAction(employeeId: number, formData: FormData) {
-  await requirePermission("manage_employees");
   const input = parseUpdateEmployeeInput(formData);
 
-  const updated = await updateEmployeeService(employeeId, input);
+  await browserBackendJson(`/api/v1/employees/${employeeId}`, {
+    method: "PATCH",
+    body: input,
+  });
 
-  if (!updated) {
-    redirect("/dashboard/employees");
-    return;
-  }
-
-  redirect(`/dashboard/employees/${employeeId}`);
+  window.location.assign(`/dashboard/employees/${employeeId}`);
 }
 
 export async function addEmployeeAdjustmentAction(formData: FormData) {
-  await requirePermission("manage_employees");
   const input = parseCreateEmployeeAdjustmentInput(formData);
 
-  const employee = await fetchEmployeeById(input.employeeId);
+  await browserBackendJson(`/api/v1/employees/${input.employeeId}/adjustments`, {
+    body: {
+      type: input.type,
+      amount: String(input.amountCents / 100),
+      comment: input.comment,
+      date: input.date,
+    },
+  });
 
-  if (!employee) {
-    redirect("/dashboard/employees");
-    return;
-  }
-
-  await addEmployeeAdjustment(input);
-
-  redirect(`/dashboard/employees/${input.employeeId}`);
+  window.location.assign(`/dashboard/employees/${input.employeeId}`);
 }
 
 export async function deleteEmployeeAction(formData: FormData) {
-  await requirePermission("manage_employees");
   const employeeId = Number(String(formData.get("employeeId") ?? "").trim());
   const redirectTo = String(formData.get("redirectTo") ?? "/dashboard/employees").trim();
 
   if (Number.isInteger(employeeId) && employeeId > 0) {
-    await deleteEmployeeService(employeeId);
+    await browserBackendJson(`/api/v1/employees/${employeeId}`, {
+      method: "DELETE",
+    });
   }
 
   return {
@@ -84,7 +87,6 @@ export async function issueEmployeeAccessAction(
   _previousState: EmployeeAccessFormState,
   formData: FormData,
 ): Promise<EmployeeAccessFormState> {
-  await requirePermission("manage_employees");
   const employeeId = Number(String(formData.get("employeeId") ?? "").trim());
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "").trim();
@@ -101,25 +103,12 @@ export async function issueEmployeeAccessAction(
   }
 
   try {
-    const input = parseIssueEmployeeAccessInput(formData);
-    const updated = await issueEmployeeAccessService({
-      employeeId,
-      email: input.email,
-      password: input.password,
+    const input = parseClientIssueEmployeeAccessInput(formData);
+    await browserBackendJson(`/api/v1/employees/${employeeId}/access`, {
+      body: input,
     });
-
-    if (!updated) {
-      return {
-        errorMessage: "Сотрудник не найден",
-        successMessage: null,
-        values: {
-          email,
-          password,
-        },
-      };
-    }
   } catch (error) {
-    if (error instanceof ValidationError) {
+    if (error instanceof ValidationError || error instanceof Error) {
       return {
         errorMessage: error.message,
         successMessage: null,

@@ -1,10 +1,8 @@
-"use server";
+"use client";
 
-import { redirect } from "next/navigation";
-import { requirePermission } from "@/modules/auth/auth.session";
 import { ValidationError } from "@/shared/errors/app-error";
-import { addTechCard, updateTechCardById } from "@/modules/tech-cards/tech-cards.service";
 import { parseTechCardInput } from "@/modules/tech-cards/tech-cards.validation";
+import { browserBackendJson } from "@/shared/api/browser-backend";
 
 export type TechCardFormState = {
   errorMessage: string | null;
@@ -48,13 +46,13 @@ export async function addTechCardAction(
   _previousState: TechCardFormState,
   formData: FormData,
 ): Promise<TechCardFormState> {
-  await requirePermission("manage_inventory");
-
   try {
     const input = parseTechCardInput(formData);
-    await addTechCard(input);
+    await browserBackendJson("/api/v1/tech-cards", {
+      body: input,
+    });
   } catch (error) {
-    if (error instanceof ValidationError) {
+    if (error instanceof ValidationError || error instanceof Error) {
       return {
         errorMessage: error.message,
         values: getTechCardFormValues(formData),
@@ -64,14 +62,14 @@ export async function addTechCardAction(
     throw error;
   }
 
-  redirect("/dashboard/inventory?tab=recipes&draft=cleared");
+  window.location.assign("/dashboard/inventory?tab=recipes&draft=cleared");
+  return { errorMessage: null, values: getTechCardFormValues(formData) };
 }
 
 export async function updateTechCardAction(
   _previousState: TechCardFormState,
   formData: FormData,
 ): Promise<TechCardFormState> {
-  await requirePermission("manage_inventory");
   const techCardId = Number(String(formData.get("techCardId") ?? "").trim());
 
   if (!Number.isInteger(techCardId) || techCardId <= 0) {
@@ -83,16 +81,12 @@ export async function updateTechCardAction(
 
   try {
     const input = parseTechCardInput(formData);
-    const updated = await updateTechCardById(techCardId, input);
-
-    if (!updated) {
-      return {
-        errorMessage: "Технологическая карта не найдена",
-        values: getTechCardFormValues(formData),
-      };
-    }
+    await browserBackendJson(`/api/v1/tech-cards/${techCardId}`, {
+      method: "PATCH",
+      body: input,
+    });
   } catch (error) {
-    if (error instanceof ValidationError) {
+    if (error instanceof ValidationError || error instanceof Error) {
       return {
         errorMessage: error.message,
         values: getTechCardFormValues(formData),
@@ -102,5 +96,6 @@ export async function updateTechCardAction(
     throw error;
   }
 
-  redirect("/dashboard/inventory?tab=recipes");
+  window.location.assign("/dashboard/inventory?tab=recipes");
+  return { errorMessage: null, values: getTechCardFormValues(formData) };
 }

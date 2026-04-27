@@ -1,29 +1,11 @@
-"use server";
+"use client";
 
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 import {
   AuthenticationError,
   ValidationError,
 } from "@/shared/errors/app-error";
-import { createSession, clearSession } from "@/modules/auth/auth.session";
-import { authenticateUser } from "@/modules/auth/auth.service";
 import { parseLoginInput } from "@/modules/auth/auth.validation";
-
-function getClientIpAddress(forwardedFor: string | null, realIp: string | null) {
-  if (forwardedFor) {
-    const firstForwardedIp = forwardedFor
-      .split(",")
-      .map((value) => value.trim())
-      .find(Boolean);
-
-    if (firstForwardedIp) {
-      return firstForwardedIp;
-    }
-  }
-
-  return realIp?.trim() || "unknown";
-}
+import { browserBackendJson } from "@/shared/api/browser-backend";
 
 export async function loginAction(
   _previousState: { errorMessage: string | null },
@@ -33,17 +15,18 @@ export async function loginAction(
 
   try {
     const input = parseLoginInput(formData);
-    const requestHeaders = await headers();
-    const user = await authenticateUser(input, undefined, {
-      ipAddress: getClientIpAddress(
-        requestHeaders.get("x-forwarded-for"),
-        requestHeaders.get("x-real-ip"),
-      ),
+    await browserBackendJson<{
+      token: string;
+      expiresAt: string;
+    }>("/api/v1/auth/login", {
+      body: input,
     });
-
-    await createSession(user);
   } catch (error) {
-    if (error instanceof ValidationError || error instanceof AuthenticationError) {
+    if (
+      error instanceof ValidationError ||
+      error instanceof AuthenticationError ||
+      error instanceof Error
+    ) {
       return {
         errorMessage: error.message,
       };
@@ -52,13 +35,14 @@ export async function loginAction(
     throw error;
   }
 
-  redirect(returnTo.startsWith("/") ? returnTo : "/dashboard");
+  window.location.assign(returnTo.startsWith("/") ? returnTo : "/dashboard");
+  return { errorMessage: null };
 }
 
 export async function logoutAction(formData: FormData) {
   const returnTo = String(formData.get("returnTo") ?? "").trim();
-  await clearSession();
-  redirect(
+  await browserBackendJson("/api/v1/auth/logout");
+  window.location.assign(
     returnTo.startsWith("/")
       ? `/login?returnTo=${encodeURIComponent(returnTo)}`
       : "/login",

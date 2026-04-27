@@ -1,7 +1,7 @@
 import { PageShell } from "@/components/ui/page-shell";
 import { requirePermission } from "@/modules/auth/auth.session";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
-import { fetchLoyaltySnapshot } from "@/modules/loyalty/loyalty.service";
+import { fetchLoyaltySnapshot } from "@/modules/loyalty/loyalty.api";
 import {
   LOYALTY_LEVEL_LABELS,
   LOYALTY_LEVEL_STYLES,

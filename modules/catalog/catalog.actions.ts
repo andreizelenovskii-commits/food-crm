@@ -1,28 +1,9 @@
-"use server";
+"use client";
 
-import { redirect } from "next/navigation";
-import { requirePermission } from "@/modules/auth/auth.session";
 import { ValidationError } from "@/shared/errors/app-error";
-import {
-  addCatalogItem,
-  deleteCatalogItemById,
-  updateCatalogItemById,
-} from "@/modules/catalog/catalog.service";
 import { parseCatalogItemInput } from "@/modules/catalog/catalog.validation";
-
-export type CatalogFormValues = {
-  name: string;
-  priceListType: string;
-  category: string;
-  description: string;
-  price: string;
-  technologicalCardId: string;
-};
-
-export type CatalogFormState = {
-  errorMessage: string | null;
-  values: CatalogFormValues;
-};
+import { browserBackendJson } from "@/shared/api/browser-backend";
+import type { CatalogFormState, CatalogFormValues } from "@/modules/catalog/catalog.form-types";
 
 function getCatalogFormValues(formData: FormData): CatalogFormValues {
   const read = (name: string) => String(formData.get(name) ?? "").trim();
@@ -41,13 +22,16 @@ export async function addCatalogItemAction(
   _previousState: CatalogFormState,
   formData: FormData,
 ): Promise<CatalogFormState> {
-  await requirePermission("manage_catalog");
-
   try {
     const input = parseCatalogItemInput(formData);
-    await addCatalogItem(input);
+    await browserBackendJson("/api/v1/catalog", {
+      body: {
+        ...getCatalogFormValues(formData),
+        price: String(input.priceCents / 100),
+      },
+    });
   } catch (error) {
-    if (error instanceof ValidationError) {
+    if (error instanceof ValidationError || error instanceof Error) {
       return {
         errorMessage: error.message,
         values: getCatalogFormValues(formData),
@@ -57,15 +41,14 @@ export async function addCatalogItemAction(
     throw error;
   }
 
-  redirect("/dashboard/catalog");
+  window.location.assign("/dashboard/catalog");
+  return { errorMessage: null, values: getCatalogFormValues(formData) };
 }
 
 export async function updateCatalogItemAction(
   _previousState: CatalogFormState,
   formData: FormData,
 ): Promise<CatalogFormState> {
-  await requirePermission("manage_catalog");
-
   const catalogItemId = Number(String(formData.get("catalogItemId") ?? "").trim());
 
   if (!Number.isInteger(catalogItemId) || catalogItemId <= 0) {
@@ -77,16 +60,15 @@ export async function updateCatalogItemAction(
 
   try {
     const input = parseCatalogItemInput(formData);
-    const updated = await updateCatalogItemById(catalogItemId, input);
-
-    if (!updated) {
-      return {
-        errorMessage: "Позиция каталога не найдена",
-        values: getCatalogFormValues(formData),
-      };
-    }
+    await browserBackendJson(`/api/v1/catalog/${catalogItemId}`, {
+      method: "PATCH",
+      body: {
+        ...getCatalogFormValues(formData),
+        price: String(input.priceCents / 100),
+      },
+    });
   } catch (error) {
-    if (error instanceof ValidationError) {
+    if (error instanceof ValidationError || error instanceof Error) {
       return {
         errorMessage: error.message,
         values: getCatalogFormValues(formData),
@@ -96,17 +78,18 @@ export async function updateCatalogItemAction(
     throw error;
   }
 
-  redirect("/dashboard/catalog");
+  window.location.assign("/dashboard/catalog");
+  return { errorMessage: null, values: getCatalogFormValues(formData) };
 }
 
 export async function deleteCatalogItemAction(formData: FormData) {
-  await requirePermission("manage_catalog");
-
   const catalogItemId = Number(String(formData.get("catalogItemId") ?? "").trim());
   const redirectTo = String(formData.get("redirectTo") ?? "/dashboard/catalog").trim();
 
   if (Number.isInteger(catalogItemId) && catalogItemId > 0) {
-    await deleteCatalogItemById(catalogItemId);
+    await browserBackendJson(`/api/v1/catalog/${catalogItemId}`, {
+      method: "DELETE",
+    });
   }
 
   return {

@@ -3,7 +3,7 @@ import { PageShell } from "@/components/ui/page-shell";
 import { requirePermission } from "@/modules/auth/auth.session";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
 import { ClientForm } from "@/modules/clients/components/client-form";
-import { fetchClientById } from "@/modules/clients/clients.service";
+import { fetchClientById } from "@/modules/clients/clients.api";
 
 export default async function ClientEditPage(props: {
   params?: Promise<{ clientId: string }>;

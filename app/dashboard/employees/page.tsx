@@ -3,7 +3,7 @@ import { PageShell } from "@/components/ui/page-shell";
 import { hasPermission } from "@/modules/auth/authz";
 import { EmployeeDeleteButton } from "@/modules/employees/components/employee-delete-button";
 import { EmployeeForm } from "@/modules/employees/components/employee-form";
-import { fetchEmployees } from "@/modules/employees/employees.service";
+import { fetchEmployees } from "@/modules/employees/employees.api";
 import { requirePermission } from "@/modules/auth/auth.session";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
 

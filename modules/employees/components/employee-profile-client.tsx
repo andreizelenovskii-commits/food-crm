@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { updateEmployeeAction } from "@/modules/employees/employees.actions";
 import { EmployeeAdjustmentForm } from "@/modules/employees/components/employee-adjustment-form";
@@ -258,9 +258,10 @@ export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile 
   const [contactsDraft, setContactsDraft] = useState<ContactsDraft>(initialContactsDraft);
   const [rolePickerOpen, setRolePickerOpen] = useState(false);
 
-  useEffect(() => {
+  const resetContactsDraft = () => {
     setContactsDraft(buildContactsDraft(employee));
-  }, [employee]);
+    setRolePickerOpen(false);
+  };
 
   const scheduleSummary = formatScheduleSummary(schedule);
   const scheduleStats = getMonthPreviewStats(schedule, selectedMonth);
@@ -343,7 +344,10 @@ export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile 
                 {!isEditingContacts && (
                   <button
                     type="button"
-                    onClick={() => setIsEditingContacts(true)}
+                    onClick={() => {
+                      resetContactsDraft();
+                      setIsEditingContacts(true);
+                    }}
                     className="rounded-2xl bg-zinc-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800"
                   >
                     Изменить данные
@@ -462,7 +466,7 @@ export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile 
                     <button
                       type="button"
                       onClick={() => {
-                        setRolePickerOpen(false);
+                        resetContactsDraft();
                         setIsEditingContacts(false);
                       }}
                       className="rounded-2xl border border-zinc-300 px-4 py-3 text-sm font-medium text-zinc-950 transition hover:border-zinc-500"

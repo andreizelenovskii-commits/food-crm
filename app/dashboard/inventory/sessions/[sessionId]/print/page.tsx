@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { requirePermission } from "@/modules/auth/auth.session";
 import { formatInventoryQuantity } from "@/modules/inventory/inventory.format";
 import { InventorySessionPrintButton } from "@/modules/inventory/components/inventory-session-print-button";
-import { fetchInventorySessionById } from "@/modules/inventory/inventory.service";
+import { fetchInventorySessionById } from "@/modules/inventory/inventory.api";
 
 function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("ru-RU", {

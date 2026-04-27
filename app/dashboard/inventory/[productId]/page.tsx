@@ -6,7 +6,7 @@ import { SessionUserActions } from "@/modules/auth/components/session-user-actio
 import { formatInventoryQuantity } from "@/modules/inventory/inventory.format";
 import { ProductDeleteButton } from "@/modules/inventory/components/product-delete-button";
 import { ProductForm } from "@/modules/inventory/components/product-form";
-import { fetchProductById } from "@/modules/inventory/inventory.service";
+import { fetchProductById } from "@/modules/inventory/inventory.api";
 
 function formatMoney(cents: number) {
   return new Intl.NumberFormat("ru-RU", {
