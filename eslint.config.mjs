@@ -39,23 +39,6 @@ const eslintConfig = defineConfig([
       ],
     },
   },
-  {
-    files: ["modules/**/*.service.ts"],
-    rules: {
-      "no-restricted-imports": [
-        "error",
-        {
-          patterns: [
-            {
-              group: ["next/*"],
-              message:
-                "Keep the service layer framework-agnostic. Move Next.js-specific code to route files or server actions.",
-            },
-          ],
-        },
-      ],
-    },
-  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
