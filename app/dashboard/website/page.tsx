@@ -6,18 +6,18 @@ import { SessionUserActions } from "@/modules/auth/components/session-user-actio
 const WEBSITE_BLOCKS = [
   {
     title: "Ссылка на сайт",
-    description: "Здесь позже закрепим основной адрес сайта и сделаем горячую кнопку для мгновенного перехода.",
-    status: "Не добавлена",
+    description: "Основной публичный домен закреплён и ведёт на витрину Andromeda.",
+    status: "Готово",
   },
   {
     title: "Каталог на сайте",
-    description: "Позиции прайса будут подтягиваться из каталога CRM и привязываться к технологическим картам.",
-    status: "Подготовка",
+    description: "Главная страница показывает клиентский прайс, а если API закрыт, использует стартовую витрину.",
+    status: "Работает",
   },
   {
     title: "Быстрый переход",
-    description: "После добавления домена здесь появится отдельная кнопка, чтобы открывать сайт в один клик.",
-    status: "Скоро",
+    description: "Сотрудники могут открыть публичный сайт прямо из этого раздела.",
+    status: "Добавлен",
   },
 ];
 
@@ -27,7 +27,7 @@ export default async function WebsitePage() {
   return (
     <PageShell
       title="Наш сайт"
-      description="Здесь соберём адрес сайта, быстрый переход и всё, что связано с опубликованной витриной бизнеса."
+      description="Публичная витрина бизнеса, быстрый переход и связка с клиентским каталогом."
       backHref="/dashboard"
       action={<SessionUserActions user={user} />}
     >
@@ -38,25 +38,25 @@ export default async function WebsitePage() {
               Витрина бизнеса
             </p>
             <h2 className="mt-2 text-2xl font-semibold text-zinc-950">
-              Управление публичным сайтом
+              Публичный сайт Andromeda
             </h2>
             <p className="mt-3 text-sm leading-6 text-zinc-600">
-              Раздел подготовлен под будущую связку CRM с сайтом. Когда сайт будет готов,
-              сюда добавим основную ссылку и горячую кнопку перехода.
+              Основной домен уже подготовлен под витрину доставки. Сайт показывает
+              первый экран, меню, доставку, контакты и вход для сотрудников.
             </p>
 
             <div className="mt-6 grid gap-4 md:grid-cols-3">
               <div className="rounded-2xl border border-white/80 bg-white/90 p-4">
                 <p className="text-sm font-medium text-zinc-500">Статус сайта</p>
-                <p className="mt-3 text-3xl font-semibold text-zinc-950">В работе</p>
+                <p className="mt-3 text-3xl font-semibold text-zinc-950">Online</p>
               </div>
               <div className="rounded-2xl border border-white/80 bg-white/90 p-4">
                 <p className="text-sm font-medium text-zinc-500">Каталог</p>
-                <p className="mt-3 text-3xl font-semibold text-zinc-950">Готовим</p>
+                <p className="mt-3 text-3xl font-semibold text-zinc-950">Меню</p>
               </div>
               <div className="rounded-2xl border border-white/80 bg-white/90 p-4">
                 <p className="text-sm font-medium text-zinc-500">Переход</p>
-                <p className="mt-3 text-3xl font-semibold text-zinc-950">Скоро</p>
+                <p className="mt-3 text-3xl font-semibold text-zinc-950">Готов</p>
               </div>
             </div>
           </article>
@@ -84,25 +84,25 @@ export default async function WebsitePage() {
         <aside className="rounded-3xl border border-emerald-100 bg-white/90 p-6 shadow-sm shadow-emerald-950/5">
           <h2 className="text-xl font-semibold text-zinc-950">Что появится дальше</h2>
           <div className="mt-4 space-y-3 text-sm leading-6 text-zinc-600">
-            <p>Основной домен сайта и его рабочий статус.</p>
-            <p>Горячая кнопка перехода на сайт прямо из CRM.</p>
-            <p>Связка каталога сайта с позициями и технологическими картами.</p>
+            <p>Публичное оформление заказа без звонка.</p>
+            <p>Управление публикацией позиций прямо из CRM.</p>
+            <p>Отдельные страницы категорий и акций.</p>
             <p>Контроль публикации и подготовка к будущим онлайн-заказам.</p>
           </div>
 
           <div className="mt-6 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">
             <p className="text-sm font-medium text-emerald-800">
-              Пока ссылка не добавлена
+              Основной адрес
             </p>
             <p className="mt-2 text-sm leading-6 text-emerald-900/80">
-              Когда определимся с доменом сайта, сюда добавим рабочую ссылку и кнопку
-              мгновенного открытия.
+              Публичный сайт доступен по домену crmandromeda.ru. После настройки
+              онлайн-заказов эта ссылка станет входной точкой для клиентов.
             </p>
             <Link
-              href="/dashboard/catalog"
+              href="https://crmandromeda.ru"
               className="mt-4 inline-flex rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm font-medium text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100/60"
             >
-              Перейти в каталог
+              Открыть сайт
             </Link>
           </div>
         </aside>

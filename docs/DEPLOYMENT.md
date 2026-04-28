@@ -18,7 +18,7 @@ DB:       PostgreSQL на этой же VPS
 ```text
 crm.crmandromeda.ru       -> frontend, port 3000
 api.crmandromeda.ru       -> backend, port 4000
-crmandromeda.ru, www      -> public site placeholder
+crmandromeda.ru, www      -> public site, frontend, port 3000
 ```
 
 Директории на сервере:
@@ -161,6 +161,33 @@ curl -I -sS http://127.0.0.1:3000 | head -n 1
 food-crm-backend     online
 food-crm-frontend    online
 pm2-logrotate        online
+```
+
+## Caddy Public Site Route
+
+Чтобы публичный сайт был виден на `crmandromeda.ru`, Caddy должен проксировать
+основной домен в тот же frontend-процесс, что и CRM:
+
+```caddyfile
+crmandromeda.ru, www.crmandromeda.ru {
+  reverse_proxy 127.0.0.1:3000
+}
+
+crm.crmandromeda.ru {
+  reverse_proxy 127.0.0.1:3000
+}
+
+api.crmandromeda.ru {
+  reverse_proxy 127.0.0.1:4000
+}
+```
+
+Проверить и применить:
+
+```bash
+sudo caddy validate --config /etc/caddy/Caddyfile
+sudo caddy fmt --overwrite /etc/caddy/Caddyfile
+sudo systemctl reload caddy
 ```
 
 ## Manual Restart

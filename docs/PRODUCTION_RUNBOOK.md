@@ -12,7 +12,7 @@
 - База данных: PostgreSQL на этой же VPS
 - Frontend: `https://crm.crmandromeda.ru`
 - Backend API: `https://api.crmandromeda.ru`
-- Public site placeholder: `https://crmandromeda.ru`, `https://www.crmandromeda.ru`
+- Public site: `https://crmandromeda.ru`, `https://www.crmandromeda.ru`
 
 ## SSH
 
@@ -60,7 +60,7 @@ Frontend:
 https://crm.crmandromeda.ru
 ```
 
-Публичный placeholder:
+Публичный сайт:
 
 ```bash
 curl https://crmandromeda.ru
@@ -355,6 +355,22 @@ sudo -u postgres dropdb food_crm_restore_test
 
 ```text
 /etc/caddy/Caddyfile
+```
+
+Ожидаемые production routes:
+
+```caddyfile
+crmandromeda.ru, www.crmandromeda.ru {
+  reverse_proxy 127.0.0.1:3000
+}
+
+crm.crmandromeda.ru {
+  reverse_proxy 127.0.0.1:3000
+}
+
+api.crmandromeda.ru {
+  reverse_proxy 127.0.0.1:4000
+}
 ```
 
 Проверить конфиг:
