@@ -6,7 +6,7 @@ import { SessionUserActions } from "@/modules/auth/components/session-user-actio
 const WEBSITE_BLOCKS = [
   {
     title: "Ссылка на сайт",
-    description: "Основной публичный домен закреплён и ведёт на витрину Andromeda.",
+    description: "Основной публичный домен закреплён и ведёт на витрину FoodLike.",
     status: "Готово",
   },
   {
@@ -38,7 +38,7 @@ export default async function WebsitePage() {
               Витрина бизнеса
             </p>
             <h2 className="mt-2 text-2xl font-semibold text-zinc-950">
-              Публичный сайт Andromeda
+              Публичный сайт FoodLike
             </h2>
             <p className="mt-3 text-sm leading-6 text-zinc-600">
               Основной домен уже подготовлен под витрину доставки. Сайт показывает

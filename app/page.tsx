@@ -1,13 +1,13 @@
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 import type { Metadata } from "next";
 import type { CatalogItem } from "@/modules/catalog/catalog.types";
 import { backendGetOptional } from "@/shared/api/backend";
 
 export const metadata: Metadata = {
-  title: "CRM Andromeda | Доставка еды",
+  title: "FoodLike | Доставка еды",
   description:
-    "Публичный сайт CRM Andromeda: меню, доставка, контакты и быстрый переход для сотрудников.",
+    "FoodLike: доставка пиццы, роллов и горячих блюд. Меню, условия доставки, контакты и вход для сотрудников.",
 };
 
 type PublicMenuItem = {
@@ -33,7 +33,7 @@ const FALLBACK_MENU_ITEMS: PublicMenuItem[] = [
     id: "salmon-roll",
     name: "Ролл с лососем",
     category: "Роллы",
-    description: "Нежный лосось, сливочный сыр, рис и хрустящий огурец.",
+    description: "Лосось, сливочный сыр, рис и хрустящий огурец.",
     priceCents: 52000,
     imageUrl:
       "https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&w=900&q=80",
@@ -54,7 +54,15 @@ const MENU_IMAGES = [
   "https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&w=900&q=80",
   "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=900&q=80",
   "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1543353071-10c8ba85a904?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=900&q=80",
 ];
+
+const DELIVERY_STEPS = [
+  ["01", "Выбираете блюда", "Собираете заказ из меню или звоните нам."],
+  ["02", "Готовим свежим", "Кухня получает заказ в CRM и готовит по техкартам."],
+  ["03", "Привозим горячим", "Курьер доставляет аккуратно и вовремя."],
+] as const;
 
 function formatMoney(cents: number) {
   return new Intl.NumberFormat("ru-RU", {
@@ -88,23 +96,26 @@ export default async function Home() {
   const categories = Array.from(new Set(menuItems.map((item) => item.category)));
 
   return (
-    <main className="min-h-screen bg-[#f7faf5] text-[#121614]">
-      <section className="relative min-h-[92vh] overflow-hidden bg-[#121614] text-white">
+    <main className="min-h-screen bg-[#fffaf7] text-[#241316]">
+      <section className="relative min-h-[92vh] overflow-hidden bg-[#4b0615] text-white">
         <Image
-          src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=2200&q=80"
-          alt="Готовые блюда для доставки"
-          className="absolute inset-0 h-full w-full object-cover opacity-70"
+          src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=2200&q=82"
+          alt="Горячие блюда FoodLike на столе"
+          className="absolute inset-0 h-full w-full object-cover opacity-62"
           fill
           priority
           sizes="100vw"
         />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(17,16,14,0.92)_0%,rgba(17,16,14,0.64)_48%,rgba(17,16,14,0.18)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(54,2,15,0.96)_0%,rgba(86,9,29,0.82)_46%,rgba(92,10,34,0.28)_100%)]" />
 
         <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8">
-          <Link href="/" className="text-xl font-semibold tracking-[0.18em] uppercase">
-            Andromeda
+          <Link href="/" className="flex items-center gap-3 text-xl font-semibold uppercase">
+            <span className="inline-flex size-10 items-center justify-center rounded-full bg-white text-base font-black text-[#7a1027]">
+              FL
+            </span>
+            <span className="tracking-[0.18em]">FoodLike</span>
           </Link>
-          <nav className="hidden items-center gap-7 text-sm font-medium text-white/78 md:flex">
+          <nav className="hidden items-center gap-7 text-sm font-medium text-white/82 md:flex">
             <a href="#menu" className="transition hover:text-white">
               Меню
             </a>
@@ -117,34 +128,34 @@ export default async function Home() {
           </nav>
           <Link
             href="/login"
-            className="rounded-full border border-white/28 px-4 py-2 text-sm font-semibold text-white transition hover:border-white hover:bg-white hover:text-[#121614]"
+            className="rounded-full border border-white/28 px-4 py-2 text-sm font-semibold text-white transition hover:border-white hover:bg-white hover:text-[#7a1027]"
           >
-            CRM
+            Сотрудникам
           </Link>
         </header>
 
         <div className="relative z-10 mx-auto flex min-h-[calc(92vh-88px)] max-w-7xl items-end px-5 pb-14 pt-12 sm:px-8 lg:pb-20">
           <div className="max-w-3xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.32em] text-[#f3c14b]">
+            <p className="text-sm font-semibold uppercase tracking-[0.32em] text-[#ffd7a1]">
               Доставка еды
             </p>
             <h1 className="mt-5 text-5xl font-semibold leading-[0.96] sm:text-7xl lg:text-8xl">
-              Andromeda
+              FoodLike
             </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-white/82 sm:text-xl">
-              Горячие блюда, роллы и пицца для быстрых обедов, уютных вечеров и
-              командных заказов. Готовим по техкартам, доставляем аккуратно.
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-white/84 sm:text-xl">
+              Пицца, роллы и горячие блюда для обеда, вечера и больших заказов.
+              Готовим свежим, упаковываем аккуратно, привозим без лишней суеты.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <a
                 href="#menu"
-                className="inline-flex justify-center rounded-full bg-[#f3c14b] px-6 py-3 text-sm font-semibold text-[#121614] transition hover:bg-[#f7d674]"
+                className="inline-flex justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-[#7a1027] transition hover:bg-[#ffd7a1]"
               >
                 Смотреть меню
               </a>
               <a
                 href="tel:+79990000000"
-                className="inline-flex justify-center rounded-full border border-white/30 px-6 py-3 text-sm font-semibold text-white transition hover:border-white hover:bg-white hover:text-[#121614]"
+                className="inline-flex justify-center rounded-full border border-white/34 px-6 py-3 text-sm font-semibold text-white transition hover:border-white hover:bg-white hover:text-[#7a1027]"
               >
                 Позвонить
               </a>
@@ -153,22 +164,22 @@ export default async function Home() {
         </div>
       </section>
 
-      <section id="menu" className="bg-[#f7faf5] py-16 sm:py-20">
+      <section id="menu" className="bg-[#fffaf7] py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-5 sm:px-8">
           <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#0f7a5a]">
-                Клиентский прайс
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#9b1733]">
+                Меню FoodLike
               </p>
-              <h2 className="mt-3 text-3xl font-semibold text-[#121614] sm:text-5xl">
-                Популярное в меню
+              <h2 className="mt-3 text-3xl font-semibold text-[#241316] sm:text-5xl">
+                Популярное сегодня
               </h2>
             </div>
             <div className="flex flex-wrap gap-2">
               {categories.map((category) => (
                 <span
                   key={category}
-                  className="rounded-full border border-[#cbded2] bg-white/70 px-4 py-2 text-sm font-semibold text-[#24463a]"
+                  className="rounded-full border border-[#efd8dd] bg-white px-4 py-2 text-sm font-semibold text-[#6d2433]"
                 >
                   {category}
                 </span>
@@ -180,9 +191,9 @@ export default async function Home() {
             {menuItems.map((item) => (
               <article
                 key={item.id}
-                className="overflow-hidden rounded-[8px] border border-[#d7e5dc] bg-white shadow-sm shadow-[#0f2a21]/6"
+                className="overflow-hidden rounded-[8px] border border-[#f0d9dd] bg-white shadow-sm shadow-[#4b0615]/8"
               >
-                <div className="aspect-[4/3] overflow-hidden bg-[#e3efe8]">
+                <div className="aspect-[4/3] overflow-hidden bg-[#f8e9ec]">
                   <Image
                     src={item.imageUrl}
                     alt={item.name}
@@ -196,18 +207,18 @@ export default async function Home() {
                 <div className="p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#0f7a5a]">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#9b1733]">
                         {item.category}
                       </p>
-                      <h3 className="mt-2 text-xl font-semibold text-[#121614]">
+                      <h3 className="mt-2 text-xl font-semibold text-[#241316]">
                         {item.name}
                       </h3>
                     </div>
-                    <p className="shrink-0 text-lg font-semibold text-[#121614]">
+                    <p className="shrink-0 text-lg font-semibold text-[#7a1027]">
                       {formatMoney(item.priceCents)}
                     </p>
                   </div>
-                  <p className="mt-3 text-sm leading-6 text-[#596962]">{item.description}</p>
+                  <p className="mt-3 text-sm leading-6 text-[#6b5960]">{item.description}</p>
                 </div>
               </article>
             ))}
@@ -215,54 +226,50 @@ export default async function Home() {
         </div>
       </section>
 
-      <section id="delivery" className="bg-[#eef6ee] py-16 sm:py-20">
+      <section id="delivery" className="bg-[#f8edf0] py-16 sm:py-20">
         <div className="mx-auto grid max-w-7xl gap-8 px-5 sm:px-8 lg:grid-cols-[0.9fr_1.1fr]">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#0f7a5a]">
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#9b1733]">
               Как работаем
             </p>
-            <h2 className="mt-3 text-3xl font-semibold text-[#121614] sm:text-5xl">
-              Заказ без лишней суеты
+            <h2 className="mt-3 text-3xl font-semibold text-[#241316] sm:text-5xl">
+              Быстро от кухни до двери
             </h2>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
-            {[
-              ["01", "Принимаем заказ", "Уточняем блюда, адрес и удобное время."],
-              ["02", "Готовим по карте", "Кухня видит состав, граммовки и статус заказа."],
-              ["03", "Доставляем", "Передаём горячее и отмечаем заказ в CRM."],
-            ].map(([number, title, text]) => (
-              <article key={number} className="rounded-[8px] bg-white p-5 shadow-sm shadow-[#0f2a21]/6">
-                <p className="text-sm font-semibold text-[#0f7a5a]">{number}</p>
-                <h3 className="mt-4 text-lg font-semibold text-[#121614]">{title}</h3>
-                <p className="mt-2 text-sm leading-6 text-[#596962]">{text}</p>
+            {DELIVERY_STEPS.map(([number, title, text]) => (
+              <article key={number} className="rounded-[8px] bg-white p-5 shadow-sm shadow-[#4b0615]/8">
+                <p className="text-sm font-semibold text-[#9b1733]">{number}</p>
+                <h3 className="mt-4 text-lg font-semibold text-[#241316]">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-[#6b5960]">{text}</p>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="contacts" className="bg-[#121614] py-14 text-white">
+      <section id="contacts" className="bg-[#4b0615] py-14 text-white">
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 px-5 sm:px-8 lg:flex-row lg:items-center">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#f3c14b]">
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#ffd7a1]">
               Контакты
             </p>
-            <h2 className="mt-3 text-3xl font-semibold">Готовы принять заказ</h2>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-white/70">
-              Телефон и мессенджеры можно заменить на реальные контакты, когда
-              финализируем публичную витрину и онлайн-заказы.
+            <h2 className="mt-3 text-3xl font-semibold">FoodLike на связи</h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-white/72">
+              Здесь поставим реальные телефон, адрес и мессенджеры, когда
+              финализируем клиентскую витрину и онлайн-заказы.
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
             <a
               href="tel:+79990000000"
-              className="rounded-full bg-white px-6 py-3 text-center text-sm font-semibold text-[#121614] transition hover:bg-[#f3c14b]"
+              className="rounded-full bg-white px-6 py-3 text-center text-sm font-semibold text-[#7a1027] transition hover:bg-[#ffd7a1]"
             >
               +7 999 000-00-00
             </a>
             <Link
               href="/login"
-              className="rounded-full border border-white/25 px-6 py-3 text-center text-sm font-semibold text-white transition hover:border-white hover:bg-white hover:text-[#121614]"
+              className="rounded-full border border-white/25 px-6 py-3 text-center text-sm font-semibold text-white transition hover:border-white hover:bg-white hover:text-[#7a1027]"
             >
               Вход для сотрудников
             </Link>
