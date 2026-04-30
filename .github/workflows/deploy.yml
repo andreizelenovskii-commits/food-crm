@@ -79,7 +79,10 @@ jobs:
           npm run build
           ln -sfn "$RELEASE_DIR" "$APP_DIR/current"
           cd "$APP_DIR/current"
-          pm2 startOrReload ecosystem.config.cjs --only food-crm-frontend --update-env
+          pm2 delete food-crm-frontend || true
+          pm2 start ecosystem.config.cjs --only food-crm-frontend --update-env
+          sleep 5
+          curl -fsS http://127.0.0.1:3000 >/dev/null
           pm2 save
           find "$APP_DIR/releases" -mindepth 1 -maxdepth 1 -type d | sort | head -n -5 | xargs -r rm -rf
           REMOTE
