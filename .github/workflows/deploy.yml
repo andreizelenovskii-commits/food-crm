@@ -83,15 +83,7 @@ jobs:
           pm2 start ecosystem.config.cjs --only food-crm-frontend --update-env
           sleep 5
           curl -fsS http://127.0.0.1:3000 >/dev/null
-          if ! curl -fsS http://127.0.0.1:3000/login >/dev/null; then
-            {
-              echo "=== pm2 status ==="
-              pm2 status
-              echo
-              echo "=== frontend logs ==="
-              pm2 logs food-crm-frontend --lines 160 --nostream || true
-            } > public/deploy-debug.txt
-          fi
+          curl -fsS http://127.0.0.1:3000/login >/dev/null
           pm2 save
           find "$APP_DIR/releases" -mindepth 1 -maxdepth 1 -type d | sort | head -n -5 | xargs -r rm -rf
           REMOTE
