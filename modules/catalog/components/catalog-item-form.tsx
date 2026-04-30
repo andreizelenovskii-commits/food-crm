@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import {
   addCatalogItemAction,
   updateCatalogItemAction,
+  uploadCatalogImageAction,
 } from "@/modules/catalog/catalog.actions";
 import type { CatalogFormState, CatalogFormValues } from "@/modules/catalog/catalog.form-types";
 import {
@@ -44,6 +45,7 @@ export function CatalogItemForm({
       priceListType: "",
       category: "",
       description: "",
+      imageUrl: "",
       price: "",
       technologicalCardId: "",
     },
@@ -54,6 +56,9 @@ export function CatalogItemForm({
   const [selectedTechCardId, setSelectedTechCardId] = useState(
     initialState.values.technologicalCardId,
   );
+  const [imageUrl, setImageUrl] = useState(initialState.values.imageUrl);
+  const [imageUploadError, setImageUploadError] = useState<string | null>(null);
+  const [isImageUploading, setIsImageUploading] = useState(false);
 
   const selectedTechCard =
     techCardOptions.find((option) => String(option.id) === selectedTechCardId) ?? null;
@@ -88,6 +93,26 @@ export function CatalogItemForm({
   const fieldClassName =
     "w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5";
 
+  const uploadImage = async (file: File | undefined) => {
+    if (!file) {
+      return;
+    }
+
+    setImageUploadError(null);
+    setIsImageUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      const upload = await uploadCatalogImageAction(formData);
+      setImageUrl(upload.imageUrl);
+    } catch (error) {
+      setImageUploadError(error instanceof Error ? error.message : "Не удалось загрузить фото");
+    } finally {
+      setIsImageUploading(false);
+    }
+  };
+
   return (
     <form
       action={formAction}
@@ -116,6 +141,57 @@ export function CatalogItemForm({
           required
         />
       </label>
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_12rem]">
+        <label className="block space-y-2.5">
+          <span className="text-sm font-medium text-zinc-700">Фото товара</span>
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            onChange={(event) => {
+              void uploadImage(event.target.files?.[0]);
+            }}
+            className="w-full rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 px-4 py-3 text-sm text-zinc-700 file:mr-4 file:rounded-xl file:border-0 file:bg-zinc-950 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:bg-zinc-100"
+            required={!imageUrl}
+          />
+          <input
+            name="imageUrl"
+            type="text"
+            value={imageUrl}
+            onChange={(event) => setImageUrl(event.target.value)}
+            placeholder="Ссылка появится после загрузки фото"
+            className={fieldClassName}
+            required
+            readOnly={isImageUploading}
+          />
+          {isImageUploading ? (
+            <p className="text-xs leading-5 text-zinc-500">Загружаем фото...</p>
+          ) : null}
+          {imageUploadError ? (
+            <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {imageUploadError}
+            </p>
+          ) : null}
+          <p className="text-xs leading-5 text-zinc-500">
+            Фото обязательно для клиентского сайта и внутреннего сопоставления позиций.
+          </p>
+        </label>
+
+        <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-100">
+          {imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={imageUrl}
+              alt="Превью фото товара"
+              className="h-48 w-full object-cover lg:h-full"
+            />
+          ) : (
+            <div className="flex h-48 items-center justify-center px-4 text-center text-sm text-zinc-500 lg:h-full">
+              Превью появится после ссылки на фото
+            </div>
+          )}
+        </div>
+      </div>
 
       <div className="space-y-2.5">
         <div className="flex items-center justify-between gap-3">
@@ -326,12 +402,14 @@ export function CatalogItemForm({
 
       <button
         type="submit"
-        disabled={isPending}
+        disabled={isPending || isImageUploading}
         className="w-full rounded-2xl bg-zinc-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-500"
       >
-        {isPending
-          ? "Сохраняем..."
-          : (submitLabel ?? (mode === "edit" ? "Сохранить изменения" : "Добавить в каталог"))}
+        {isImageUploading
+          ? "Загружаем фото..."
+          : isPending
+            ? "Сохраняем..."
+            : (submitLabel ?? (mode === "edit" ? "Сохранить изменения" : "Добавить в каталог"))}
       </button>
     </form>
   );

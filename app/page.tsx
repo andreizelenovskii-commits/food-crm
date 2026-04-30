@@ -49,7 +49,7 @@ const FALLBACK_MENU_ITEMS: PublicMenuItem[] = [
   },
 ];
 
-const MENU_IMAGES = [
+const FALLBACK_MENU_IMAGES = [
   "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=900&q=80",
   "https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&w=900&q=80",
   "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=900&q=80",
@@ -85,7 +85,7 @@ async function getPublicMenuItems(): Promise<PublicMenuItem[]> {
         item.description ??
         `Позиция из клиентского прайса${item.pizzaSize ? `, размер ${item.pizzaSize}` : ""}.`,
       priceCents: item.priceCents,
-      imageUrl: MENU_IMAGES[index % MENU_IMAGES.length],
+      imageUrl: item.imageUrl ?? FALLBACK_MENU_IMAGES[index % FALLBACK_MENU_IMAGES.length],
     }));
 
   return publicItems?.length ? publicItems : FALLBACK_MENU_ITEMS;
@@ -194,14 +194,12 @@ export default async function Home() {
                 className="overflow-hidden rounded-[8px] border border-[#f0d9dd] bg-white shadow-sm shadow-[#4b0615]/8"
               >
                 <div className="aspect-[4/3] overflow-hidden bg-[#f8e9ec]">
-                  <Image
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
                     src={item.imageUrl}
                     alt={item.name}
                     className="h-full w-full object-cover transition duration-500 hover:scale-105"
                     loading="lazy"
-                    width={900}
-                    height={675}
-                    sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
                   />
                 </div>
                 <div className="p-5">

@@ -2,7 +2,7 @@
 
 import { ValidationError } from "@/shared/errors/app-error";
 import { parseCatalogItemInput } from "@/modules/catalog/catalog.validation";
-import { browserBackendJson } from "@/shared/api/browser-backend";
+import { browserBackendFormData, browserBackendJson } from "@/shared/api/browser-backend";
 import type { CatalogFormState, CatalogFormValues } from "@/modules/catalog/catalog.form-types";
 
 function getCatalogFormValues(formData: FormData): CatalogFormValues {
@@ -13,6 +13,7 @@ function getCatalogFormValues(formData: FormData): CatalogFormValues {
     priceListType: read("priceListType"),
     category: read("category"),
     description: read("description"),
+    imageUrl: read("imageUrl"),
     price: read("price"),
     technologicalCardId: read("technologicalCardId"),
   };
@@ -95,4 +96,12 @@ export async function deleteCatalogItemAction(formData: FormData) {
   return {
     redirectTo: redirectTo || "/dashboard/catalog",
   };
+}
+
+export async function uploadCatalogImageAction(formData: FormData) {
+  return browserBackendFormData<{
+    filename: string;
+    originalFilename: string;
+    imageUrl: string;
+  }>("/api/v1/catalog/uploads", formData);
 }

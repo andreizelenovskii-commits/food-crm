@@ -1,17 +1,26 @@
 const DEFAULT_BACKEND_PORT = "4000";
 
 export function getBrowserBackendApiUrl() {
-  if (process.env.NEXT_PUBLIC_BACKEND_API_URL?.trim()) {
-    return process.env.NEXT_PUBLIC_BACKEND_API_URL.trim().replace(/\/$/, "");
+  const { protocol, hostname } = window.location;
+  const envApiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL?.trim();
+
+  if (hostname === "localhost" || hostname === "127.0.0.1") {
+    return envApiUrl?.replace(/\/$/, "") || `${protocol}//${hostname}:${DEFAULT_BACKEND_PORT}`;
   }
 
-  const { protocol, hostname } = window.location;
-  return `${protocol}//${hostname}:${DEFAULT_BACKEND_PORT}`;
+  return "";
 }
 
 function getBackendUnavailableMessage(path: string) {
+  const apiUrl = getBrowserBackendApiUrl();
+  const target = apiUrl
+    ? `${apiUrl}${path.startsWith("/") ? path : `/${path}`}`
+    : path.startsWith("/")
+      ? path
+      : `/${path}`;
+
   return [
-    `Backend API is unavailable at ${getBrowserBackendApiUrl()}${path.startsWith("/") ? path : `/${path}`}.`,
+    `Backend API is unavailable at ${target}.`,
     "Start it locally with `cd backend && npm run start`.",
   ].join(" ");
 }
@@ -36,7 +45,8 @@ export async function browserBackendJson<T>(
     body?: unknown;
   } = {},
 ) {
-  const url = `${getBrowserBackendApiUrl()}${path.startsWith("/") ? path : `/${path}`}`;
+  const apiUrl = getBrowserBackendApiUrl();
+  const url = `${apiUrl}${path.startsWith("/") ? path : `/${path}`}`;
 
   try {
     return parseResponse<T>(await fetch(url, {
@@ -46,6 +56,25 @@ export async function browserBackendJson<T>(
         "content-type": "application/json",
       },
       body: init.body === undefined ? undefined : JSON.stringify(init.body),
+    }));
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error(getBackendUnavailableMessage(path), { cause: error });
+    }
+
+    throw error;
+  }
+}
+
+export async function browserBackendFormData<T>(path: string, formData: FormData) {
+  const apiUrl = getBrowserBackendApiUrl();
+  const url = `${apiUrl}${path.startsWith("/") ? path : `/${path}`}`;
+
+  try {
+    return parseResponse<T>(await fetch(url, {
+      method: "POST",
+      credentials: "include",
+      body: formData,
     }));
   } catch (error) {
     if (error instanceof TypeError) {

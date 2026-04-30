@@ -3,6 +3,7 @@ export type CatalogFormValues = {
   priceListType: string;
   category: string;
   description: string;
+  imageUrl: string;
   price: string;
   technologicalCardId: string;
 };

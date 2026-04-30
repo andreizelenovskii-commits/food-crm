@@ -36,6 +36,7 @@ export default async function CatalogItemEditPage(props: {
     priceListType: catalogItem.priceListType,
     category: catalogItem.category ?? "",
     description: catalogItem.description ?? "",
+    imageUrl: catalogItem.imageUrl ?? "",
     price: formatPriceInput(catalogItem.priceCents),
     technologicalCardId: String(catalogItem.technologicalCardId),
   };

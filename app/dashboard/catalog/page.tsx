@@ -34,6 +34,7 @@ export default async function CatalogPage(props: {
   const clientPriceItems = filteredItems.filter((item) => item.priceListType === "CLIENT");
   const internalPriceItems = filteredItems.filter((item) => item.priceListType === "INTERNAL");
   const linkedCount = catalogItems.filter((item) => item.technologicalCardId > 0).length;
+  const itemsWithPhotosCount = catalogItems.filter((item) => item.imageUrl).length;
 
   return (
     <PageShell
@@ -69,8 +70,13 @@ export default async function CatalogPage(props: {
                 <p className="mt-3 text-3xl font-semibold text-zinc-950">{internalPriceItems.length}</p>
               </div>
               <div className="rounded-2xl border border-white/80 bg-white/80 p-4 md:col-span-3">
-                <p className="text-sm font-medium text-zinc-500">Связано с техкартами</p>
-                <p className="mt-3 text-3xl font-semibold text-zinc-950">{linkedCount}</p>
+                <p className="text-sm font-medium text-zinc-500">Готовность к сайту</p>
+                <p className="mt-3 text-3xl font-semibold text-zinc-950">
+                  {itemsWithPhotosCount}/{linkedCount}
+                </p>
+                <p className="mt-2 text-xs leading-5 text-zinc-500">
+                  Позиций с фото из связанных с техкартами
+                </p>
               </div>
             </div>
           </article>
@@ -80,7 +86,7 @@ export default async function CatalogPage(props: {
             <div className="mt-4 space-y-4 text-sm leading-6 text-zinc-600">
               <p>Каждая новая позиция сразу получает обязательный тип прайса: клиентский или внутренний.</p>
               <p>Категория выбирается только из тех же категорий, что и в технологических картах, чтобы структура не расползалась.</p>
-              <p>Позиция каталога по-прежнему привязана к техкарте, так что цена и состав остаются в одной логике.</p>
+              <p>Фото, цена и привязка к техкарте обязательны, чтобы клиентский сайт показывал именно рабочие позиции прайса.</p>
             </div>
           </article>
 
@@ -161,7 +167,25 @@ export default async function CatalogPage(props: {
                           className="rounded-3xl border border-zinc-200 bg-zinc-50 p-5"
                         >
                           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                            <div className="space-y-3">
+                            <div className="flex min-w-0 flex-col gap-4 sm:flex-row">
+                              <div className="h-28 w-full shrink-0 overflow-hidden rounded-2xl bg-zinc-200 sm:w-36">
+                                {item.imageUrl ? (
+                                  <>
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                      src={item.imageUrl}
+                                      alt={item.name}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  </>
+                                ) : (
+                                  <div className="flex h-full items-center justify-center px-3 text-center text-xs text-zinc-500">
+                                    Нет фото
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="space-y-3">
                               <div className="flex flex-wrap items-center gap-3">
                                 <h4 className="text-lg font-semibold text-zinc-950">{item.name}</h4>
                                 <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-zinc-500 ring-1 ring-zinc-200">
@@ -185,6 +209,7 @@ export default async function CatalogPage(props: {
                               {item.description ? (
                                 <p className="text-sm leading-6 text-zinc-600">{item.description}</p>
                               ) : null}
+                              </div>
                             </div>
 
                             {hasPermission(user, "manage_catalog") ? (
@@ -221,7 +246,7 @@ export default async function CatalogPage(props: {
               <p>Наполнение клиентского и внутреннего прайса рабочими позициями.</p>
               <p>Жёсткая привязка каждой позиции к технологической карте.</p>
               <p>Подготовка данных для сайта и внутренней операционной работы.</p>
-              <p>Дальше сюда можно добавить фото, состав и отдельные правила показа.</p>
+              <p>Фото, цена, категория и технологическая карта собираются в одной карточке прайса.</p>
             </div>
           </aside>
         )}
