@@ -1,11 +1,14 @@
 const DEFAULT_BACKEND_PORT = "4000";
 
 export function getBrowserBackendApiUrl() {
+  if (process.env.NEXT_PUBLIC_BACKEND_API_URL?.trim()) {
+    return process.env.NEXT_PUBLIC_BACKEND_API_URL.trim().replace(/\/$/, "");
+  }
+
   const { protocol, hostname } = window.location;
-  const envApiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL?.trim();
 
   if (hostname === "localhost" || hostname === "127.0.0.1") {
-    return envApiUrl?.replace(/\/$/, "") || `${protocol}//${hostname}:${DEFAULT_BACKEND_PORT}`;
+    return `${protocol}//${hostname}:${DEFAULT_BACKEND_PORT}`;
   }
 
   return "";
