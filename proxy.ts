@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const BACKEND_SESSION_COOKIE_NAME = "food_crm_api_session";
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const hasSession = Boolean(request.cookies.get(BACKEND_SESSION_COOKIE_NAME)?.value);
 
   if (hasSession) {
