@@ -4,7 +4,8 @@ import { hasPermission, type AuthPermission } from "@/modules/auth/authz";
 import type { SessionUser } from "@/modules/auth/auth.types";
 import { backendGetOptional } from "@/shared/api/backend";
 
-const BACKEND_SESSION_COOKIE_NAME = "food_crm_api_session";
+const BACKEND_SESSION_COOKIE_NAME =
+  process.env.BACKEND_SESSION_COOKIE_NAME?.trim() || "food_crm_api_session";
 
 export async function setBackendSessionCookie(token: string, expiresAt: string) {
   const cookieStore = await cookies();
