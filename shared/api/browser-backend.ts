@@ -1,4 +1,5 @@
 const DEFAULT_BACKEND_PORT = "4000";
+const FORM_DATA_TIMEOUT_MS = 30_000;
 
 export function getBrowserBackendApiUrl() {
   if (process.env.NEXT_PUBLIC_BACKEND_API_URL?.trim()) {
@@ -72,18 +73,29 @@ export async function browserBackendJson<T>(
 export async function browserBackendFormData<T>(path: string, formData: FormData) {
   const apiUrl = getBrowserBackendApiUrl();
   const url = `${apiUrl}${path.startsWith("/") ? path : `/${path}`}`;
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), FORM_DATA_TIMEOUT_MS);
 
   try {
     return parseResponse<T>(await fetch(url, {
       method: "POST",
       credentials: "include",
       body: formData,
+      signal: controller.signal,
     }));
   } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error("Сервер не ответил на загрузку фото за 30 секунд. Попробуй выбрать файл ещё раз.", {
+        cause: error,
+      });
+    }
+
     if (error instanceof TypeError) {
       throw new Error(getBackendUnavailableMessage(path), { cause: error });
     }
 
     throw error;
+  } finally {
+    window.clearTimeout(timeoutId);
   }
 }
