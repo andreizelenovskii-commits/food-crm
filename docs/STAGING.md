@@ -65,9 +65,7 @@ When staging is approved, merge `dev` into `main` and push `main` to deploy prod
 
 1. В GitHub открой упавший run → job **deploy** → шаг **Migrate and activate release** и прочитай лог на сервере (последние строки после SSH).
 
-2. Частая причина: на VPS в **`/home/deploy/apps/food-crm-backend-staging/shared/.env`** в строке **`DATABASE_URL`** должна быть **staging**-база, в URL должно встречаться имя **`food_crm_staging`**. Workflow явно проверяет это (`grep`). Если при первом деплое скопировался продовский `.env` с базой **`food_crm`** (без `_staging`), шаг **сразу завершится с кодом 1**.
-
-   **Что сделать:** на сервере под `deploy` поправь `DATABASE_URL` на подключение к `food_crm_staging`, либо заново выполни workflow **Setup staging infrastructure** (см. выше), затем снова **Deploy backend staging**.
+2. Workflow **Deploy backend staging** при каждом запуске сам подставляет **`DATABASE_URL`** для **`food_crm_staging`**, вычисляя его из продового **`/home/deploy/apps/food-crm-backend/shared/.env`** (та же `sed`-подстановка, что в **Setup staging**). Нужен корректный **`DATABASE_URL`** у **прода** с именем базы **`food_crm`** в пути. Если продовский URL другой — поправь **Setup staging** / логику в `deploy-staging.yml` под свой формат.
 
 3. Другие варианты: неверный **`DEPLOY_SSH_KEY_B64`** в Secrets репозитория, падение **`npm run typecheck`** на раннем шаге (тогда красный будет **Typecheck**), ошибка **`npm run db:deploy`** или health-check после PM2 — смотри тот шаг, который красный в UI.
 
