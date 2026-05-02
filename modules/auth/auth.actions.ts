@@ -7,6 +7,15 @@ import {
 import { parseLoginInput } from "@/modules/auth/auth.validation";
 import { browserBackendJson } from "@/shared/api/browser-backend";
 
+/** API мог ещё отдавать текст про email — показываем единообразно про телефон. */
+function loginErrorMessageForUi(message: string): string {
+  if (message === "Неверный email или пароль") {
+    return "Неверный телефон или пароль";
+  }
+
+  return message;
+}
+
 export async function loginAction(
   _previousState: { errorMessage: string | null },
   formData: FormData,
@@ -33,7 +42,7 @@ export async function loginAction(
       error instanceof Error
     ) {
       return {
-        errorMessage: error.message,
+        errorMessage: loginErrorMessageForUi(error.message),
       };
     }
 
