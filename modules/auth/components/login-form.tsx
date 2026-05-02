@@ -172,7 +172,7 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
             name="phone"
             type="tel"
             inputMode="tel"
-            placeholder="+7 900 123-45-67"
+            placeholder="Номер из доступа (не демо)"
             className={inputClassName}
             autoComplete="username"
             autoCapitalize="none"

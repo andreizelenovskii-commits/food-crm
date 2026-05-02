@@ -2,6 +2,8 @@
 
 Staging is the draft mirror for development changes before production deploy.
 
+Краткая схема «сначала зеркало, потом домен» по-русски: [mirror-workflow.md](mirror-workflow.md).
+
 ## Domains
 
 Create DNS A records:
