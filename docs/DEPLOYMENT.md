@@ -50,6 +50,15 @@ Backend:
 andreizelenovskii-commits/food-crm-backend
 ```
 
+## Порядок выката (production)
+
+Всегда **сначала бэкенд, потом фронт**:
+
+1. **`food-crm-backend`**: merge/push в `main` → дождаться зелёного workflow **Deploy backend** (`npm run db:deploy` на сервере, PM2 API).
+2. **`food-crm`**: затем push в `main` → **Deploy frontend**.
+
+Так на домене сначала поднимается актуальный API и схема БД, затем UI, который к нему ходит.
+
 ## Required GitHub Secrets
 
 В обоих репозиториях нужен secret:
