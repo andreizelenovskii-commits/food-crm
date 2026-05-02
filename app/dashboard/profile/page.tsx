@@ -4,6 +4,20 @@ import { SessionUserActions } from "@/modules/auth/components/session-user-actio
 import { fetchEmployeeById, fetchEmployees } from "@/modules/employees/employees.api";
 import { EmployeeSelfProfilePage } from "@/modules/profile/components/profile-page";
 import { normalizeProfileMonth } from "@/modules/profile/profile.page-model";
+import { formatRuMobileLoginDigits, isValidRuMobileDigits, normalizeRuPhoneDigits } from "@/shared/phone";
+
+function employeeMatchesLoginPhone(
+  employeePhone: string | null | undefined,
+  loginDigits: string,
+): boolean {
+  if (!isValidRuMobileDigits(loginDigits)) {
+    return false;
+  }
+
+  const employeeDigits = normalizeRuPhoneDigits(String(employeePhone ?? ""));
+
+  return isValidRuMobileDigits(employeeDigits) && employeeDigits === loginDigits;
+}
 
 export default async function ProfilePage(props: {
   searchParams?: Promise<{ month?: string }>;
@@ -12,8 +26,8 @@ export default async function ProfilePage(props: {
   const searchParams = await props.searchParams;
   const month = normalizeProfileMonth(searchParams?.month);
   const employees = await fetchEmployees();
-  const currentEmployee = employees.find(
-    (employee) => employee.email?.toLowerCase() === user.email.toLowerCase(),
+  const currentEmployee = employees.find((employee) =>
+    employeeMatchesLoginPhone(employee.phone, user.phone),
   );
 
   if (!currentEmployee) {
@@ -27,12 +41,15 @@ export default async function ProfilePage(props: {
             Карточка сотрудника не найдена
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">
-            Для этого аккаунта нужен сотрудник с таким же email в разделе
-            “Сотрудники”. После связки здесь появятся имя и фамилия, график,
-            зарплата, авансы, штрафы, долги и показатели за месяц.
+            Для этого аккаунта в разделе «Сотрудники» должна быть карточка с тем же мобильным номером, что
+            и для входа. После связки здесь появятся имя и фамилия, график, зарплата, авансы, штрафы,
+            долги и показатели за месяц.
           </p>
           <div className="mt-4 rounded-[14px] border border-red-950/10 bg-[#fffafa] p-3.5 text-sm text-zinc-700">
-            Текущий email: <span className="font-semibold text-zinc-950">{user.email}</span>
+            Текущий телефон для входа:{" "}
+            <span className="font-semibold text-zinc-950">
+              {formatRuMobileLoginDigits(user.phone)}
+            </span>
           </div>
         </section>
       </PageShell>

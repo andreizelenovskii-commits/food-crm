@@ -3,7 +3,9 @@ import { SessionUserActions } from "@/modules/auth/components/session-user-actio
 import type { SessionUser } from "@/modules/auth/auth.types";
 import { EMPLOYEE_ADJUSTMENT_LABELS } from "@/modules/employees/employees.types";
 import type { EmployeeProfile } from "@/modules/employees/employees.types";
+import { ChangePasswordCard } from "@/modules/profile/components/change-password-card";
 import { buildProfileViewModel } from "@/modules/profile/profile.page-model";
+import { formatRuMobileLoginDigits } from "@/shared/phone";
 
 type ProfilePageProps = {
   user: SessionUser;
@@ -69,6 +71,24 @@ export function EmployeeSelfProfilePage({ user, employee, month }: ProfilePagePr
             </form>
           </div>
         </section>
+
+        <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
+          <section className="rounded-[16px] border border-red-950/10 bg-[#fffafa] p-4 shadow-sm shadow-red-950/5">
+            <p className="text-xs font-medium uppercase tracking-[0.14em] text-red-800/75">
+              Вход в CRM
+            </p>
+            <h2 className="mt-2 text-lg font-semibold text-zinc-950">Телефон для входа</h2>
+            <p className="mt-2 text-sm leading-6 text-zinc-600">
+              Номер, который ты вводишь на странице входа. Изменить его может только руководитель с правом
+              управления сотрудниками — в карточке сотрудника в разделе «Сотрудники».
+            </p>
+            <p className="mt-3 rounded-[12px] border border-red-950/10 bg-white/90 px-4 py-3 text-base font-semibold text-zinc-950">
+              {formatRuMobileLoginDigits(user.phone)}
+            </p>
+          </section>
+
+          <ChangePasswordCard />
+        </div>
 
         <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {profile.employeeInfo.map((item) => (

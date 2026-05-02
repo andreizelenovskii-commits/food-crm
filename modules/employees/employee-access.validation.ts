@@ -1,41 +1,39 @@
-import { assertStrongPassword } from "@/modules/auth/auth.password";
 import { ValidationError } from "@/shared/errors/app-error";
+import { meetsStrongPasswordRules, STRONG_PASSWORD_HINT_RU } from "@/shared/password-policy";
+import { isValidRuMobileDigits, normalizeRuPhoneDigits } from "@/shared/phone";
 
 function normalizeInput(value: FormDataEntryValue | null) {
   return String(value ?? "").trim();
 }
 
 export type IssueEmployeeAccessInput = {
-  email: string;
+  phone: string;
   password: string;
 };
 
 export function parseIssueEmployeeAccessInput(
   formData: FormData,
 ): IssueEmployeeAccessInput {
-  const email = normalizeInput(formData.get("email")).toLowerCase();
+  const phoneRaw =
+    normalizeInput(formData.get("phone")) || normalizeInput(formData.get("email"));
   const password = normalizeInput(formData.get("password"));
 
-  if (!email || !password) {
-    throw new ValidationError("Заполните логин и пароль для сотрудника");
+  if (!phoneRaw || !password) {
+    throw new ValidationError("Заполните номер телефона и пароль для сотрудника");
   }
 
-  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const phone = normalizeRuPhoneDigits(phoneRaw);
 
-  if (!isValidEmail) {
-    throw new ValidationError("Введите корректный email для входа");
+  if (!isValidRuMobileDigits(phone)) {
+    throw new ValidationError("Введи номер телефона в формате +7 и ещё 10 цифр");
   }
 
-  try {
-    assertStrongPassword(password);
-  } catch {
-    throw new ValidationError(
-      "Пароль должен быть не короче 12 символов и содержать строчные и заглавные буквы, цифру и спецсимвол",
-    );
+  if (!meetsStrongPasswordRules(password)) {
+    throw new ValidationError(STRONG_PASSWORD_HINT_RU);
   }
 
   return {
-    email,
+    phone,
     password,
   };
 }

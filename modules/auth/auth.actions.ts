@@ -39,6 +39,54 @@ export async function loginAction(
   return { errorMessage: null };
 }
 
+export type ChangePasswordFormState = {
+  errorMessage: string | null;
+  successMessage: string | null;
+};
+
+export async function changePasswordAction(
+  _previousState: ChangePasswordFormState,
+  formData: FormData,
+): Promise<ChangePasswordFormState> {
+  const currentPassword = String(formData.get("currentPassword") ?? "").trim();
+  const newPassword = String(formData.get("newPassword") ?? "").trim();
+  const confirmNewPassword = String(formData.get("confirmNewPassword") ?? "").trim();
+
+  if (!currentPassword || !newPassword) {
+    return {
+      errorMessage: "Заполни текущий и новый пароль",
+      successMessage: null,
+    };
+  }
+
+  if (newPassword !== confirmNewPassword) {
+    return {
+      errorMessage: "Новый пароль и подтверждение не совпадают",
+      successMessage: null,
+    };
+  }
+
+  try {
+    await browserBackendJson<{ success: boolean }>("/api/v1/auth/change-password", {
+      body: { currentPassword, newPassword },
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      return {
+        errorMessage: error.message,
+        successMessage: null,
+      };
+    }
+
+    throw error;
+  }
+
+  return {
+    errorMessage: null,
+    successMessage: "Пароль обновлён. При следующем входе используй новый пароль.",
+  };
+}
+
 export async function logoutAction(formData: FormData) {
   const returnTo = String(formData.get("returnTo") ?? "").trim();
   await browserBackendJson("/api/v1/auth/logout");

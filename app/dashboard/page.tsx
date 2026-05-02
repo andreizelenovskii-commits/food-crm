@@ -5,7 +5,7 @@ import { DashboardPage } from "@/modules/dashboard/components/dashboard-page";
 import { resolveDashboardSelectedMonth, type DashboardPageSearchParams } from "@/modules/dashboard/dashboard.page-model";
 import {
   getDashboardMetrics,
-  getEmployeeDashboardMetricsByEmail,
+  getEmployeeDashboardMetricsForSession,
 } from "@/modules/dashboard/dashboard.api";
 
 const STAFF_ROLES = new Set(["Повар", "Курьер", "Диспетчер"]);
@@ -22,7 +22,7 @@ export default async function DashboardRoutePage(props: {
   ]);
   const clientsViewModel = buildClientsPageViewModel(clients, "");
   const employeeDashboard = STAFF_ROLES.has(user.role)
-    ? await getEmployeeDashboardMetricsByEmail(user.email, selectedMonth)
+    ? await getEmployeeDashboardMetricsForSession(selectedMonth)
     : null;
 
   return (

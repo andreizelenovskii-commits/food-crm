@@ -10,8 +10,7 @@ export async function getDashboardMetrics(): Promise<DashboardSnapshot> {
   return data.dashboard;
 }
 
-export async function getEmployeeDashboardMetricsByEmail(
-  _email: string,
+export async function getEmployeeDashboardMetricsForSession(
   monthKey?: string | null,
 ): Promise<EmployeeDashboardSnapshot | null> {
   const query = monthKey ? `?month=${encodeURIComponent(monthKey)}` : "";

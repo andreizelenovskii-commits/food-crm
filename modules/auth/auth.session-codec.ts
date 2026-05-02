@@ -6,7 +6,7 @@ export const SESSION_TTL_MS = 1000 * 60 * 60 * 12;
 
 export type SessionPayload = {
   userId: number;
-  email: string;
+  phone: string;
   role: string;
   expiresAt: number;
 };

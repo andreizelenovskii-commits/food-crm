@@ -167,11 +167,12 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
         </div>
 
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-zinc-700">Email</span>
+          <span className="text-sm font-medium text-zinc-700">Телефон для входа</span>
           <input
-            name="email"
-            type="email"
-            placeholder="admin@example.com"
+            name="phone"
+            type="tel"
+            inputMode="tel"
+            placeholder="+7 900 123-45-67"
             className={inputClassName}
             autoComplete="username"
             autoCapitalize="none"

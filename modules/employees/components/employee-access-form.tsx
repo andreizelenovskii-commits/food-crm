@@ -6,63 +6,7 @@ import {
   type EmployeeAccessFormState,
 } from "@/modules/employees/employees.actions";
 import type { EmployeeProfile } from "@/modules/employees/employees.types";
-
-const CYRILLIC_TO_LATIN_MAP: Record<string, string> = {
-  а: "a",
-  б: "b",
-  в: "v",
-  г: "g",
-  д: "d",
-  е: "e",
-  ё: "e",
-  ж: "zh",
-  з: "z",
-  и: "i",
-  й: "i",
-  к: "k",
-  л: "l",
-  м: "m",
-  н: "n",
-  о: "o",
-  п: "p",
-  р: "r",
-  с: "s",
-  т: "t",
-  у: "u",
-  ф: "f",
-  х: "h",
-  ц: "c",
-  ч: "ch",
-  ш: "sh",
-  щ: "sch",
-  ъ: "",
-  ы: "y",
-  ь: "",
-  э: "e",
-  ю: "yu",
-  я: "ya",
-};
-
-function transliterateNamePart(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .split("")
-    .map((char) => CYRILLIC_TO_LATIN_MAP[char] ?? char)
-    .join("")
-    .replace(/[^a-z0-9]+/g, "")
-    .replace(/^\.+|\.+$/g, "");
-}
-
-function buildEmployeeLogin(name: string) {
-  const [firstName = "", lastName = ""] = name
-    .split(/\s+/)
-    .map(transliterateNamePart)
-    .filter(Boolean);
-  const loginBase = [firstName, lastName].filter(Boolean).join(".");
-
-  return `${loginBase || "employee"}@staff.local`;
-}
+import { isValidRuMobileDigits, normalizeRuPhoneDigits } from "@/shared/phone";
 
 function pickRandom(characters: string, randomByte: number) {
   return characters[randomByte % characters.length];
@@ -105,13 +49,18 @@ function generateStrongPassword() {
   return shuffleCharacters(passwordCharacters.join(""));
 }
 
+function defaultLoginPhone(employee: EmployeeProfile): string {
+  const digits = normalizeRuPhoneDigits(String(employee.phone ?? ""));
+  return isValidRuMobileDigits(digits) ? digits : "";
+}
+
 export function EmployeeAccessForm({ employee }: { employee: EmployeeProfile }) {
-  const generatedLogin = employee.email ?? buildEmployeeLogin(employee.name);
+  const initialPhone = defaultLoginPhone(employee);
   const initialState: EmployeeAccessFormState = {
     errorMessage: null,
     successMessage: null,
     values: {
-      email: generatedLogin,
+      phone: initialPhone,
       password: "",
     },
   };
@@ -120,25 +69,25 @@ export function EmployeeAccessForm({ employee }: { employee: EmployeeProfile }) 
     issueEmployeeAccessAction,
     initialState,
   );
-  const [email, setEmail] = useState(initialState.values.email);
+  const [phone, setPhone] = useState(initialState.values.phone);
   const [password, setPassword] = useState(initialState.values.password);
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
 
   const handleCopyCredentials = async () => {
-    if (!email.trim() || !password.trim()) {
-      setCopyMessage("Сначала заполни логин и пароль, чтобы было что копировать.");
+    if (!phone.trim() || !password.trim()) {
+      setCopyMessage("Сначала заполни телефон и пароль, чтобы было что копировать.");
       return;
     }
 
     const payload = [
       `Доступ в CRM для ${employee.name}:`,
-      `Логин: ${email.trim()}`,
+      `Телефон для входа: ${phone.trim()}`,
       `Пароль: ${password.trim()}`,
     ].join("\n");
 
     try {
       await navigator.clipboard.writeText(payload);
-      setCopyMessage("Логин и пароль скопированы. Можно отправлять сотруднику.");
+      setCopyMessage("Телефон и пароль скопированы. Можно отправить сотруднику.");
     } catch {
       setCopyMessage("Не удалось скопировать данные. Попробуй ещё раз.");
     }
@@ -149,7 +98,7 @@ export function EmployeeAccessForm({ employee }: { employee: EmployeeProfile }) 
       <div className="space-y-2">
         <h2 className="text-xl font-semibold text-zinc-950">Доступ в систему</h2>
         <p className="text-sm leading-6 text-zinc-600">
-          Выдай сотруднику логин и пароль для входа. Роль в аккаунте будет совпадать с его ролью в карточке.
+          Выдай сотруднику номер телефона и пароль для входа. Роль в аккаунте будет совпадать с его ролью в карточке.
         </p>
       </div>
 
@@ -157,18 +106,19 @@ export function EmployeeAccessForm({ employee }: { employee: EmployeeProfile }) 
         <input type="hidden" name="employeeId" value={employee.id} />
 
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-zinc-700">Логин</span>
+          <span className="text-sm font-medium text-zinc-700">Телефон для входа</span>
           <input
-            name="email"
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="alina.rezenova@staff.local"
+            name="phone"
+            type="tel"
+            inputMode="tel"
+            value={phone}
+            onChange={(event) => setPhone(event.target.value)}
+            placeholder="+7 900 123-45-67"
             className="w-full rounded-2xl border border-zinc-300 px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
             required
           />
           <p className="text-xs text-zinc-500">
-            Логин создаётся автоматически по имени и фамилии сотрудника, но ты можешь поправить его вручную.
+            Если в карточке уже указан мобильный номер, он подставится сюда. Можно заменить на другой номер для входа.
           </p>
         </label>
 
@@ -221,7 +171,7 @@ export function EmployeeAccessForm({ employee }: { employee: EmployeeProfile }) 
             disabled={isPending}
             className="flex-1 rounded-2xl bg-zinc-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-500"
           >
-            {isPending ? "Сохраняем доступ..." : "Сохранить логин и пароль"}
+            {isPending ? "Сохраняем доступ..." : "Сохранить телефон и пароль"}
           </button>
           <button
             type="button"

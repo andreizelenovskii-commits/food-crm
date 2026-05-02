@@ -249,7 +249,7 @@ unset DATABASE_URL
 ```bash
 cd ~/apps/food-crm-backend/current
 read -s -p "Admin password: " ADMIN_PASSWORD; echo
-ADMIN_EMAIL="email@example.com" ADMIN_PASSWORD="$ADMIN_PASSWORD" npm run admin:create
+ADMIN_PHONE="+79001234567" ADMIN_PASSWORD="$ADMIN_PASSWORD" npm run admin:create
 unset ADMIN_PASSWORD
 ```
 

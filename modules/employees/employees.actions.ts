@@ -6,22 +6,8 @@ import {
   parseCreateEmployeeAdjustmentInput,
   parseUpdateEmployeeInput,
 } from "@/modules/employees/employees.validation";
+import { parseIssueEmployeeAccessInput } from "@/modules/employees/employee-access.validation";
 import { browserBackendJson } from "@/shared/api/browser-backend";
-
-function parseClientIssueEmployeeAccessInput(formData: FormData) {
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
-  const password = String(formData.get("password") ?? "").trim();
-
-  if (!email || !password) {
-    throw new ValidationError("Заполните логин и пароль для сотрудника");
-  }
-
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    throw new ValidationError("Введите корректный email для входа");
-  }
-
-  return { email, password };
-}
 
 export async function addEmployeeAction(formData: FormData) {
   const input = parseCreateEmployeeInput(formData);
@@ -78,7 +64,7 @@ export type EmployeeAccessFormState = {
   errorMessage: string | null;
   successMessage: string | null;
   values: {
-    email: string;
+    phone: string;
     password: string;
   };
 };
@@ -88,7 +74,7 @@ export async function issueEmployeeAccessAction(
   formData: FormData,
 ): Promise<EmployeeAccessFormState> {
   const employeeId = Number(String(formData.get("employeeId") ?? "").trim());
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const phone = String(formData.get("phone") ?? "").trim();
   const password = String(formData.get("password") ?? "").trim();
 
   if (!Number.isInteger(employeeId) || employeeId <= 0) {
@@ -96,14 +82,14 @@ export async function issueEmployeeAccessAction(
       errorMessage: "Сотрудник не найден",
       successMessage: null,
       values: {
-        email,
+        phone,
         password,
       },
     };
   }
 
   try {
-    const input = parseClientIssueEmployeeAccessInput(formData);
+    const input = parseIssueEmployeeAccessInput(formData);
     await browserBackendJson(`/api/v1/employees/${employeeId}/access`, {
       body: input,
     });
@@ -113,7 +99,7 @@ export async function issueEmployeeAccessAction(
         errorMessage: error.message,
         successMessage: null,
         values: {
-          email,
+          phone,
           password,
         },
       };
@@ -126,7 +112,7 @@ export async function issueEmployeeAccessAction(
     errorMessage: null,
     successMessage: "Доступ в систему выдан. Сотрудник может войти по новым данным.",
     values: {
-      email,
+      phone,
       password: "",
     },
   };

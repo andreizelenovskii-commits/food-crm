@@ -23,6 +23,16 @@ const eslintConfig = defineConfig([
     },
   },
   {
+    files: ["**/*.{ts,tsx}"],
+    ignores: ["backend/**", "node_modules/**", ".next/**"],
+    rules: {
+      "max-lines": [
+        "warn",
+        { max: 400, skipBlankLines: true, skipComments: true },
+      ],
+    },
+  },
+  {
     files: ["components/**/*.{ts,tsx}", "modules/**/components/**/*.{ts,tsx}"],
     rules: {
       "no-restricted-imports": [

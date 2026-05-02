@@ -89,7 +89,11 @@ export function buildProfileViewModel(employee: EmployeeProfile, month: string) 
     selectedMonth,
     monthLabel: formatMonthLabel(selectedMonth),
     employeeInfo: [
-      { label: "Имя и фамилия", value: employee.name, hint: employee.email ?? "Email не указан" },
+      {
+        label: "Имя и фамилия",
+        value: employee.name,
+        hint: employee.phone?.trim() ? `Контакт: ${employee.phone}` : "Телефон в карточке не указан",
+      },
       { label: "Должность", value: employee.role, hint: employee.phone ?? "Телефон не указан" },
       { label: "Дата приема", value: employee.hireDate ? new Date(employee.hireDate).toLocaleDateString("ru-RU") : "Не указана", hint: "Стаж и история работы" },
       { label: "KPI", value: `${employee.kpd}%`, hint: "Текущий показатель эффективности" },

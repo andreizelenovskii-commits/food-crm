@@ -1,5 +1,6 @@
 import { createHmac, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { getOptionalEnv } from "@/shared/config/env";
+import { meetsStrongPasswordRules } from "@/shared/password-policy";
 
 const HASH_PREFIX = "scrypt";
 const HASH_VERSION = "v3";
@@ -34,19 +35,7 @@ export type PasswordVerificationResult = {
 };
 
 export function assertStrongPassword(password: string) {
-  const hasMinLength = password.length >= 12;
-  const hasLowercase = /[a-z]/.test(password);
-  const hasUppercase = /[A-Z]/.test(password);
-  const hasDigit = /\d/.test(password);
-  const hasSpecialCharacter = /[^A-Za-z0-9]/.test(password);
-
-  if (
-    !hasMinLength ||
-    !hasLowercase ||
-    !hasUppercase ||
-    !hasDigit ||
-    !hasSpecialCharacter
-  ) {
+  if (!meetsStrongPasswordRules(password)) {
     throw new Error(
       "Password must be at least 12 characters long and include uppercase, lowercase, number, and special character.",
     );
