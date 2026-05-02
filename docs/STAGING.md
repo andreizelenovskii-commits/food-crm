@@ -60,3 +60,15 @@ Deploy backend staging
 ```
 
 When staging is approved, merge `dev` into `main` and push `main` to deploy production.
+
+## Если «Deploy backend staging» падает с exit code 1
+
+1. В GitHub открой упавший run → job **deploy** → шаг **Migrate and activate release** и прочитай лог на сервере (последние строки после SSH).
+
+2. Частая причина: на VPS в **`/home/deploy/apps/food-crm-backend-staging/shared/.env`** в строке **`DATABASE_URL`** должна быть **staging**-база, в URL должно встречаться имя **`food_crm_staging`**. Workflow явно проверяет это (`grep`). Если при первом деплое скопировался продовский `.env` с базой **`food_crm`** (без `_staging`), шаг **сразу завершится с кодом 1**.
+
+   **Что сделать:** на сервере под `deploy` поправь `DATABASE_URL` на подключение к `food_crm_staging`, либо заново выполни workflow **Setup staging infrastructure** (см. выше), затем снова **Deploy backend staging**.
+
+3. Другие варианты: неверный **`DEPLOY_SSH_KEY_B64`** в Secrets репозитория, падение **`npm run typecheck`** на раннем шаге (тогда красный будет **Typecheck**), ошибка **`npm run db:deploy`** или health-check после PM2 — смотри тот шаг, который красный в UI.
+
+Предупреждения GitHub про Node 20 в `actions/checkout` — это **warning**, не причина падения, пока job не помечен как failed из‑за них.
