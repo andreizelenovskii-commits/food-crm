@@ -19,7 +19,12 @@ export async function loginAction(
       token: string;
       expiresAt: string;
     }>("/api/v1/auth/login", {
-      body: input,
+      // Старый API читал только `email`; новый — `phone` или `email`. Оба ключа — плавный переход.
+      body: {
+        phone: input.phone,
+        email: input.phone,
+        password: input.password,
+      },
     });
   } catch (error) {
     if (
