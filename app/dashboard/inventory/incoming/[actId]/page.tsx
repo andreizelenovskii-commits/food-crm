@@ -51,7 +51,7 @@ export default async function IncomingActDetailsPage(props: {
           responsibleOptions={responsibleOptions}
         />
       ) : (
-        <div className="rounded-3xl border border-zinc-200 bg-white/90 p-6 text-sm text-zinc-600 shadow-sm shadow-zinc-950/5">
+        <div className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 text-sm text-zinc-600 shadow-sm shadow-zinc-950/5">
           У твоей роли нет прав на редактирование актов поступления.
         </div>
       )}

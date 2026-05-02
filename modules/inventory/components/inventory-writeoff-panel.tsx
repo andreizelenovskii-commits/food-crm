@@ -270,7 +270,7 @@ export function InventoryWriteoffPanel({
   };
 
   const renderCompletedAct = (act: WriteoffActSummary) => (
-    <article key={act.id} className="rounded-3xl border border-zinc-200 bg-zinc-50/80 p-5">
+    <article key={act.id} className="rounded-[14px] border border-zinc-200 bg-zinc-50/80 p-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">
@@ -310,7 +310,7 @@ export function InventoryWriteoffPanel({
                   <td className="px-4 py-4 font-medium text-zinc-950">
                     {item.stockQuantityBefore === null ? "—" : formatInventoryQuantity(item.stockQuantityBefore)} {item.productUnit}
                   </td>
-                  <td className="px-4 py-4 font-medium text-red-600">
+                  <td className="px-4 py-4 font-medium text-red-700">
                     -{formatInventoryQuantity(item.quantity)} {item.productUnit}
                   </td>
                   <td className="px-4 py-4 font-medium text-zinc-950">
@@ -328,7 +328,7 @@ export function InventoryWriteoffPanel({
           <button
             type="button"
             onClick={() => setDeleteCandidate(act)}
-            className="rounded-2xl border border-red-200 bg-red-50 px-5 py-3 text-sm font-medium text-red-700 transition hover:border-red-300 hover:bg-red-100"
+            className="rounded-2xl border border-red-200 bg-red-50 px-5 py-3 text-sm font-medium text-red-800 transition hover:border-red-200 hover:bg-red-100"
           >
             Удалить акт
           </button>
@@ -338,9 +338,9 @@ export function InventoryWriteoffPanel({
   );
 
   return (
-    <div className="grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
-      <div className="space-y-6">
-        <section className="rounded-3xl border border-zinc-200 bg-[linear-gradient(180deg,#fffdfa_0%,#f7ece7_100%)] p-6 shadow-sm shadow-zinc-950/5">
+    <div className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+      <div className="space-y-5">
+        <section className="rounded-[14px] border border-zinc-200 bg-[linear-gradient(180deg,#ffffff_0%,#fff0ef_100%)] p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
           <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">
             Списание товара
           </p>
@@ -354,55 +354,55 @@ export function InventoryWriteoffPanel({
           <div className="mt-5 grid gap-4 md:grid-cols-3">
             <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
               <p className="text-sm font-medium text-zinc-500">Открытых актов</p>
-              <p className="mt-3 text-3xl font-semibold text-zinc-950">{openActs.length}</p>
+              <p className="mt-3 text-2xl font-semibold text-zinc-950">{openActs.length}</p>
             </div>
             <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
               <p className="text-sm font-medium text-zinc-500">Завершённых актов</p>
-              <p className="mt-3 text-3xl font-semibold text-zinc-950">{completedActs.length}</p>
+              <p className="mt-3 text-2xl font-semibold text-zinc-950">{completedActs.length}</p>
             </div>
             <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
               <p className="text-sm font-medium text-zinc-500">Сумма списаний</p>
-              <p className="mt-3 text-3xl font-semibold text-zinc-950">{formatMoney(totalCompletedWriteoffCents)}</p>
+              <p className="mt-3 text-2xl font-semibold text-zinc-950">{formatMoney(totalCompletedWriteoffCents)}</p>
             </div>
           </div>
         </section>
 
         {completeState.errorMessage ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             {completeState.errorMessage}
           </div>
         ) : null}
         {deleteState.errorMessage ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             {deleteState.errorMessage}
           </div>
         ) : null}
         {completeState.successMessage ? (
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             {completeState.successMessage}
           </div>
         ) : null}
         {deleteState.successMessage ? (
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             {deleteState.successMessage}
           </div>
         ) : null}
 
-        <section className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+        <section className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
           <h2 className="text-xl font-semibold text-zinc-950">Открытые акты списания</h2>
           <p className="mt-2 text-sm leading-6 text-zinc-600">
             В открытом акте состав уже зафиксирован, но остатки на складе изменятся только после завершения.
           </p>
-          <div className="mt-6 space-y-4">
+          <div className="mt-4 space-y-4">
             {openActs.length === 0 ? (
-              <div className="rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-sm text-zinc-500">
+              <div className="rounded-[14px] border border-dashed border-zinc-300 bg-zinc-50 p-4 sm:p-5 text-sm text-zinc-500">
                 Пока нет ни одного открытого акта списания.
               </div>
             ) : (
               openActs.map((act) => (
                 <article
                   key={act.id}
-                  className="rounded-3xl border border-zinc-200 bg-zinc-50/80 p-5"
+                  className="rounded-[14px] border border-zinc-200 bg-zinc-50/80 p-5"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
@@ -454,7 +454,7 @@ export function InventoryWriteoffPanel({
                               <td className="px-4 py-4 font-medium text-zinc-950">
                                 {formatInventoryQuantity(item.currentStockQuantity)} {item.productUnit}
                               </td>
-                              <td className="px-4 py-4 font-medium text-red-600">
+                              <td className="px-4 py-4 font-medium text-red-700">
                                 -{formatInventoryQuantity(item.quantity)} {item.productUnit}
                               </td>
                               <td className="px-4 py-4 font-medium text-zinc-950">
@@ -472,7 +472,7 @@ export function InventoryWriteoffPanel({
                       <button
                         type="button"
                         onClick={() => setDeleteCandidate(act)}
-                        className="rounded-2xl border border-red-200 bg-red-50 px-5 py-3 text-sm font-medium text-red-700 transition hover:border-red-300 hover:bg-red-100"
+                        className="rounded-2xl border border-red-200 bg-red-50 px-5 py-3 text-sm font-medium text-red-800 transition hover:border-red-200 hover:bg-red-100"
                       >
                         Удалить акт
                       </button>
@@ -494,7 +494,7 @@ export function InventoryWriteoffPanel({
           </div>
         </section>
 
-        <section className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+        <section className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <h2 className="text-xl font-semibold text-zinc-950">Завершённые акты списания</h2>
@@ -515,9 +515,9 @@ export function InventoryWriteoffPanel({
               </button>
             ) : null}
           </div>
-          <div className="mt-6 space-y-4">
+          <div className="mt-4 space-y-4">
             {latestCompletedAct === null ? (
-              <div className="rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-sm text-zinc-500">
+              <div className="rounded-[14px] border border-dashed border-zinc-300 bg-zinc-50 p-4 sm:p-5 text-sm text-zinc-500">
                 Пока нет завершённых актов списания.
               </div>
             ) : (
@@ -534,7 +534,7 @@ export function InventoryWriteoffPanel({
         </section>
       </div>
 
-      <aside className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5 xl:sticky xl:top-28 xl:self-start">
+      <aside className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5 xl:sticky xl:top-28 xl:self-start">
         <div className="space-y-2">
           <h2 className="text-xl font-semibold text-zinc-950">Новый акт списания</h2>
           <p className="text-sm leading-6 text-zinc-600">
@@ -543,20 +543,20 @@ export function InventoryWriteoffPanel({
         </div>
 
         {createState.errorMessage ? (
-          <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             {createState.errorMessage}
           </div>
         ) : null}
 
         {createState.successMessage ? (
-          <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             {createState.successMessage}
           </div>
         ) : null}
 
-        <form action={canManageInventory ? createFormAction : undefined} className="mt-6 space-y-5">
+        <form action={canManageInventory ? createFormAction : undefined} className="mt-4 space-y-5">
           <div className="grid gap-4">
-            <section className="rounded-[28px] border border-zinc-200 bg-[linear-gradient(180deg,#fffdfa_0%,#f4f0e8_100%)] p-4">
+            <section className="rounded-[14px] border border-zinc-200 bg-[linear-gradient(180deg,#ffffff_0%,#fff4f2_100%)] p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Ответственный</p>
@@ -594,7 +594,7 @@ export function InventoryWriteoffPanel({
               </div>
             </section>
 
-            <section className="rounded-[28px] border border-zinc-200 bg-[linear-gradient(180deg,#fff7f4_0%,#f7ece7_100%)] p-4">
+            <section className="rounded-[14px] border border-zinc-200 bg-[linear-gradient(180deg,#fff7f4_0%,#fff0ef_100%)] p-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Причина списания</p>
               <h3 className="mt-2 text-base font-semibold text-zinc-950">Почему уходит товар</h3>
               <input type="hidden" name="reason" value={reason} />
@@ -640,7 +640,7 @@ export function InventoryWriteoffPanel({
             </div>
           ))}
 
-          <section className="rounded-[28px] border border-zinc-200 bg-white p-4">
+          <section className="rounded-[14px] border border-zinc-200 bg-white p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Состав акта</p>
@@ -671,7 +671,7 @@ export function InventoryWriteoffPanel({
                   const projectedStock = quantity ? product.stockQuantity - parsedQuantity : product.stockQuantity;
                   const projectedTone =
                     projectedStock < 0
-                      ? "text-red-600"
+                      ? "text-red-700"
                       : projectedStock === 0
                         ? "text-amber-600"
                         : "text-zinc-600";
@@ -679,7 +679,7 @@ export function InventoryWriteoffPanel({
                   return (
                     <article
                       key={product.id}
-                      className="grid gap-4 rounded-[24px] border border-zinc-200 bg-zinc-50/80 p-4"
+                      className="grid gap-4 rounded-[12px] border border-zinc-200 bg-zinc-50/80 p-4"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0 space-y-2">
@@ -744,7 +744,7 @@ export function InventoryWriteoffPanel({
             </div>
           </section>
 
-          <div className="flex flex-col gap-3 rounded-[28px] border border-zinc-200 bg-zinc-50 px-5 py-4">
+          <div className="flex flex-col gap-3 rounded-[14px] border border-zinc-200 bg-zinc-50 px-5 py-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <p className="text-sm text-zinc-600">
                 {canManageInventory
@@ -789,7 +789,7 @@ export function InventoryWriteoffPanel({
             role="dialog"
             aria-modal="true"
             aria-label="Поиск товара для списания"
-            className="max-h-[calc(100vh-4rem)] w-full max-w-3xl overflow-y-auto rounded-[32px] border border-zinc-200 bg-[#fcfbf8] p-6 shadow-2xl shadow-zinc-950/20"
+            className="max-h-[calc(100vh-4rem)] w-full max-w-3xl overflow-y-auto rounded-[14px] border border-zinc-200 bg-[#fffdfc] p-4 sm:p-5 shadow-2xl shadow-zinc-950/20"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">
@@ -813,7 +813,7 @@ export function InventoryWriteoffPanel({
               </button>
             </div>
 
-            <div className="mt-6 grid gap-4">
+            <div className="mt-4 grid gap-4">
               <label className="space-y-2">
                 <span className="text-sm font-medium text-zinc-700">Поиск по товару</span>
                 <input
@@ -862,7 +862,7 @@ export function InventoryWriteoffPanel({
               </div>
             </div>
 
-            <div className="mt-6 space-y-5">
+            <div className="mt-4 space-y-5">
               {filteredProductsByCategory.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-zinc-300 bg-white px-4 py-5 text-sm text-zinc-500">
                   По текущему фильтру товары не найдены.
@@ -926,7 +926,7 @@ export function InventoryWriteoffPanel({
             role="dialog"
             aria-modal="true"
             aria-label="Архив завершённых актов списания"
-            className="max-h-[calc(100vh-4rem)] w-full max-w-6xl overflow-y-auto rounded-[32px] border border-zinc-200 bg-[#fcfbf8] p-6 shadow-2xl shadow-zinc-950/20"
+            className="max-h-[calc(100vh-4rem)] w-full max-w-6xl overflow-y-auto rounded-[14px] border border-zinc-200 bg-[#fffdfc] p-4 sm:p-5 shadow-2xl shadow-zinc-950/20"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">
@@ -950,7 +950,7 @@ export function InventoryWriteoffPanel({
               </button>
             </div>
 
-            <div className="mt-6 flex flex-wrap gap-2">
+            <div className="mt-4 flex flex-wrap gap-2">
               {completedActsByReason.map((group) => {
                 const isActive = group.reason === visibleCompletedReason;
 
@@ -971,14 +971,14 @@ export function InventoryWriteoffPanel({
               })}
             </div>
 
-            <div className="mt-6 rounded-2xl border border-zinc-200 bg-white px-4 py-3">
+            <div className="mt-4 rounded-2xl border border-zinc-200 bg-white px-4 py-3">
               <p className="text-sm font-semibold text-zinc-950">{visibleCompletedReason}</p>
               <p className="text-xs text-zinc-500">
                 {visibleCompletedActs.length} актов в выбранной категории списания
               </p>
             </div>
 
-            <div className="mt-6 space-y-4">
+            <div className="mt-4 space-y-4">
               {visibleCompletedActs.map((act) => renderCompletedAct(act))}
             </div>
           </div>
@@ -995,12 +995,12 @@ export function InventoryWriteoffPanel({
             role="dialog"
             aria-modal="true"
             aria-label="Подтверждение удаления акта списания"
-            className="w-full max-w-xl rounded-[32px] border border-zinc-200 bg-[#fcfbf8] p-6 shadow-2xl shadow-zinc-950/20"
+            className="w-full max-w-xl rounded-[14px] border border-zinc-200 bg-[#fffdfc] p-4 sm:p-5 shadow-2xl shadow-zinc-950/20"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-red-600">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-red-700">
                   Подтверждение удаления
                 </p>
                 <h3 className="text-[1.5rem] font-semibold tracking-[-0.02em] text-zinc-950">
@@ -1023,7 +1023,7 @@ export function InventoryWriteoffPanel({
               </button>
             </div>
 
-            <div className="mt-6 rounded-[24px] border border-red-100 bg-red-50/70 p-4">
+            <div className="mt-4 rounded-[12px] border border-red-100 bg-red-50/70 p-4">
               <p className="text-sm font-medium text-zinc-950">
                 {deleteCandidate.responsibleEmployeeName} • {formatDateTime(deleteCandidate.createdAt)}
               </p>
@@ -1035,7 +1035,7 @@ export function InventoryWriteoffPanel({
               </p>
             </div>
 
-            <form action={deleteFormAction} className="mt-6 flex flex-wrap justify-end gap-3">
+            <form action={deleteFormAction} className="mt-4 flex flex-wrap justify-end gap-3">
               <input type="hidden" name="actId" value={deleteCandidate.id} />
               <button
                 type="button"
@@ -1048,7 +1048,7 @@ export function InventoryWriteoffPanel({
               <button
                 type="submit"
                 disabled={isDeletePending}
-                className="rounded-2xl bg-red-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-300"
+                className="rounded-2xl bg-red-800 px-5 py-3 text-sm font-medium text-white transition hover:bg-red-900 disabled:cursor-not-allowed disabled:bg-red-300"
               >
                 {isDeletePending ? "Удаляем..." : "Подтвердить удаление"}
               </button>

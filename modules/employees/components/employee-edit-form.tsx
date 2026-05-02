@@ -9,7 +9,7 @@ export function EmployeeEditForm({ employee }: { employee: Employee }) {
   const [selectedRole, setSelectedRole] = useState<EmployeeRole>(employee.role);
 
   return (
-    <form action={(formData: FormData) => updateEmployeeAction(employee.id, formData)} className="space-y-5 rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+    <form action={(formData: FormData) => updateEmployeeAction(employee.id, formData)} className="space-y-5 rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
       <div className="space-y-2">
         <h2 className="text-xl font-semibold text-zinc-950">Редактировать сотрудника</h2>
         <p className="text-sm leading-6 text-zinc-600">Обнови данные сотрудника.</p>

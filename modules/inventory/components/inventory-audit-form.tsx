@@ -8,60 +8,17 @@ import {
 } from "@/modules/inventory/inventory.actions";
 import { formatInventoryQuantity } from "@/modules/inventory/inventory.format";
 import {
+  INVENTORY_AUDIT_DRAFT_KEY,
+  type InventoryAuditDraft,
+  normalizeAuditDecimalDraft,
+  normalizeAuditDraftValue,
+  readInventoryAuditDraft,
+} from "@/modules/inventory/components/inventory-audit-draft";
+import {
   PRODUCT_CATEGORIES,
   type ProductCategory,
   type ProductItem,
 } from "@/modules/inventory/inventory.types";
-
-const INVENTORY_AUDIT_DRAFT_KEY = "food-crm.inventory-audit.draft";
-
-type InventoryAuditDraft = Record<string, string>;
-
-function readDraft(): InventoryAuditDraft {
-  if (typeof window === "undefined") {
-    return {};
-  }
-
-  try {
-    const rawDraft = window.localStorage.getItem(INVENTORY_AUDIT_DRAFT_KEY);
-
-    if (!rawDraft) {
-      return {};
-    }
-
-    const parsedDraft = JSON.parse(rawDraft);
-
-    if (!parsedDraft || typeof parsedDraft !== "object" || Array.isArray(parsedDraft)) {
-      return {};
-    }
-
-    return Object.entries(parsedDraft).reduce<InventoryAuditDraft>((acc, [key, value]) => {
-      if (typeof value === "string") {
-        acc[key] = value;
-      }
-
-      return acc;
-    }, {});
-  } catch {
-    return {};
-  }
-}
-
-function normalizeDraftValue(value: string) {
-  return value.trim();
-}
-
-function normalizeDecimalDraft(value: string) {
-  const normalized = value.replace(/[^\d.,]/g, "").replace(".", ",");
-  const [integerPart = "", ...rest] = normalized.split(",");
-  const fractionalPart = rest.join("").slice(0, 2);
-
-  if (!rest.length) {
-    return integerPart;
-  }
-
-  return `${integerPart},${fractionalPart}`;
-}
 
 export function InventoryAuditForm({
   products,
@@ -91,7 +48,7 @@ export function InventoryAuditForm({
 
   useEffect(() => {
     const frameId = window.requestAnimationFrame(() => {
-      setDraft(readDraft());
+      setDraft(readInventoryAuditDraft());
       setIsDraftLoaded(true);
     });
 
@@ -161,7 +118,7 @@ export function InventoryAuditForm({
   const draftEntries = useMemo(
     () =>
       Object.entries(draft).flatMap(([productId, value]) => {
-        const normalizedValue = normalizeDraftValue(value);
+        const normalizedValue = normalizeAuditDraftValue(value);
 
         if (!normalizedValue) {
           return [];
@@ -189,7 +146,7 @@ export function InventoryAuditForm({
 
   const setDraftValue = (productId: number, value: string) => {
     setDraft((currentDraft) => {
-      const normalizedValue = normalizeDecimalDraft(value);
+      const normalizedValue = normalizeAuditDecimalDraft(value);
       const nextDraft = { ...currentDraft };
 
       if (!normalizedValue) {
@@ -203,7 +160,7 @@ export function InventoryAuditForm({
   };
 
   return (
-    <section className="rounded-[32px] border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5 xl:p-7">
+    <section className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5 xl:p-5">
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div className="space-y-2">
           <h2 className="text-[1.4rem] font-semibold tracking-[-0.02em] text-zinc-950">
@@ -225,7 +182,7 @@ export function InventoryAuditForm({
         </div>
       </div>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
+      <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
         <label className="space-y-2">
           <span className="text-sm font-medium text-zinc-700">Поиск по товару</span>
           <input
@@ -273,8 +230,8 @@ export function InventoryAuditForm({
               onClick={() => setSelectedCategory(item.category)}
               className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                 isActive
-                  ? "bg-emerald-600 text-white shadow-sm shadow-emerald-700/20"
-                  : "border border-emerald-100 bg-emerald-50/70 text-emerald-800 hover:border-emerald-200 hover:bg-emerald-100"
+                  ? "bg-red-800 text-white shadow-sm shadow-red-950/20"
+                  : "border border-red-100 bg-red-50/70 text-red-800 hover:border-red-200 hover:bg-red-100"
               }`}
             >
               {item.category} {item.count}
@@ -284,18 +241,18 @@ export function InventoryAuditForm({
       </div>
 
       {state.errorMessage ? (
-        <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {state.errorMessage}
         </div>
       ) : null}
 
       {state.successMessage ? (
-        <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {state.successMessage}
         </div>
       ) : null}
 
-      <form action={canManageInventory ? formAction : undefined} className="mt-6 space-y-4">
+      <form action={canManageInventory ? formAction : undefined} className="mt-4 space-y-4">
         {draftEntries.map((entry) => (
           <div key={entry.productId}>
             <input type="hidden" name="productId" value={entry.productId} />
@@ -305,7 +262,7 @@ export function InventoryAuditForm({
 
         <div className="space-y-3">
           {filteredProducts.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 px-5 py-6 text-sm text-zinc-500">
+            <div className="rounded-[14px] border border-dashed border-zinc-300 bg-zinc-50 px-5 py-4 sm:py-5 text-sm text-zinc-500">
               По этому фильтру товары не найдены.
             </div>
           ) : (
@@ -318,15 +275,15 @@ export function InventoryAuditForm({
                   : 0;
               const differenceTone =
                 difference > 0
-                  ? "text-emerald-700"
+                  ? "text-red-800"
                   : difference < 0
-                    ? "text-red-600"
+                    ? "text-red-700"
                     : "text-zinc-500";
 
               return (
                 <article
                   key={product.id}
-                  className="grid gap-4 rounded-[28px] border border-zinc-200 bg-zinc-50/80 p-5 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)] lg:items-center"
+                  className="grid gap-4 rounded-[14px] border border-zinc-200 bg-zinc-50/80 p-5 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)] lg:items-center"
                 >
                   <div className="space-y-3">
                     <div className="space-y-1">
@@ -367,7 +324,7 @@ export function InventoryAuditForm({
                         onChange={(event) => setDraftValue(product.id, event.target.value)}
                         placeholder={formatInventoryQuantity(product.stockQuantity)}
                         disabled={!canManageInventory || isPending}
-                        className="w-full rounded-[24px] border border-zinc-300 bg-white px-4 py-3 pr-16 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-500"
+                        className="w-full rounded-[12px] border border-zinc-300 bg-white px-4 py-3 pr-16 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-500"
                       />
                       <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm font-medium text-zinc-500">
                         {product.unit}
@@ -380,7 +337,7 @@ export function InventoryAuditForm({
           )}
         </div>
 
-        <div className="flex flex-col gap-3 rounded-[28px] border border-zinc-200 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-[14px] border border-zinc-200 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-sm text-zinc-600">
             {canManageInventory
               ? "Сохраняются только позиции, в которых ты ввёл фактический остаток."

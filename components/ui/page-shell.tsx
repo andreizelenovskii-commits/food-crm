@@ -1,9 +1,9 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
+import { AppSidebar } from "@/components/ui/app-sidebar";
 
 type PageShellProps = {
   title: string;
-  description: string;
+  description?: string;
   children: ReactNode;
   align?: "center" | "top";
   action?: ReactNode;
@@ -12,66 +12,38 @@ type PageShellProps = {
 
 export function PageShell({
   title,
-  description,
   children,
   align = "top",
   action,
-  backHref,
 }: PageShellProps) {
+  const showSidebar = align !== "center";
   const layoutClassName =
     align === "center"
-      ? "flex min-h-screen items-center justify-center px-6 py-12"
-      : "min-h-screen px-6 py-10";
+      ? "flex min-h-screen items-center justify-center px-4 sm:px-5 py-12"
+      : "min-h-screen";
 
   return (
-    <main className={layoutClassName}>
-      <div className="mx-auto w-full max-w-6xl">
-        <div className="sticky top-4 z-20 mb-6 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            {backHref ? (
-              <Link
-                href={backHref}
-                aria-label="Вернуться на предыдущую страницу"
-                className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-zinc-200 bg-white/90 text-zinc-700 shadow-lg shadow-zinc-950/8 backdrop-blur-sm transition hover:-translate-x-0.5 hover:border-zinc-300 hover:text-zinc-950"
-              >
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-5 w-5"
-                >
-                  <path d="M15 18l-6-6 6-6" />
-                  <path d="M9 12h10" />
-                </svg>
-              </Link>
-            ) : null}
-
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center rounded-full border border-emerald-200 bg-[linear-gradient(180deg,#f6fff7_0%,#eaf7ec_100%)] px-5 py-2.5 text-base font-semibold uppercase tracking-[0.28em] text-emerald-800 shadow-lg shadow-emerald-950/8 backdrop-blur-sm transition hover:-translate-y-0.5 hover:border-emerald-300 hover:text-emerald-950 hover:shadow-xl hover:shadow-emerald-950/10 sm:px-6 sm:py-3"
-            >
-              Food CRM
-            </Link>
+    <main className={`${layoutClassName} bg-transparent`}>
+      <div className={showSidebar ? "min-h-screen md:flex" : ""}>
+        {showSidebar ? <AppSidebar /> : null}
+        <div
+          className={`mx-auto w-full ${
+            showSidebar
+              ? "min-w-0 flex-1 px-4 pb-4 pt-16 sm:px-5 md:pt-4 lg:px-6"
+              : "max-w-6xl"
+          }`}
+        >
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold leading-tight text-zinc-950 sm:text-[28px]">
+                {title}
+              </h1>
+            </div>
+            {action ? <div className="shrink-0">{action}</div> : null}
           </div>
-        </div>
 
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="space-y-2">
-            <h1 className="text-3xl font-semibold text-zinc-950 sm:text-4xl">
-              {title}
-            </h1>
-            <p className="max-w-2xl text-sm leading-6 text-zinc-600 sm:text-base">
-              {description}
-            </p>
-          </div>
-          {action}
+          {children}
         </div>
-
-        {children}
       </div>
     </main>
   );

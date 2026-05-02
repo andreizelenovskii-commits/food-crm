@@ -1,4 +1,5 @@
 {
+  "css.lint.unknownAtRules": "ignore",
   "debug.javascript.autoAttachFilter": "disabled",
   "typescript.tsdk": "node_modules/typescript/lib",
   "search.exclude": {

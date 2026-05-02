@@ -168,3 +168,7 @@ export function formatClientMoney(cents: number) {
     maximumFractionDigits: 0,
   }).format(cents / 100);
 }
+
+export function formatClientAverageCheck(totalSpentCents: number, ordersCount: number) {
+  return formatClientMoney(ordersCount > 0 ? Math.round(totalSpentCents / ordersCount) : 0);
+}

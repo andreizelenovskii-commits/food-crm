@@ -55,7 +55,7 @@ export function ClientForm({
   return (
     <form
       action={formAction}
-      className="space-y-5 rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5"
+      className="space-y-5 rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5"
     >
       <input type="hidden" name="type" value={type} />
       {initialClient ? <input type="hidden" name="clientId" value={initialClient.id} /> : null}
@@ -146,7 +146,7 @@ export function ClientForm({
       </label>
 
       {state.errorMessage ? (
-        <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {state.errorMessage}
         </p>
       ) : null}

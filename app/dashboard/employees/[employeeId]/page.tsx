@@ -41,7 +41,7 @@ export default async function EmployeeProfilePage(props: {
           />
         }
       >
-        <div className="rounded-3xl border border-red-200 bg-red-50 p-6 text-red-700">
+        <div className="rounded-[14px] border border-red-200 bg-red-50 p-4 sm:p-5 text-red-800">
           Сотрудник не найден.
         </div>
         <Link href="/dashboard/employees" className="text-sm text-zinc-700 underline">
@@ -70,7 +70,7 @@ export default async function EmployeeProfilePage(props: {
         />
       }
     >
-      <div className="space-y-6">
+      <div className="space-y-5">
         {hasPermission(user, "manage_employees") ? (
           <EmployeeAccessForm employee={employee} />
         ) : null}

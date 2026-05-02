@@ -58,7 +58,7 @@ export function ClientAddressFieldsWithDefaults({
     fieldDefaults?.apartment ?? parseAddressPart(defaultAddress, /кв\.\s*([^,]+)/i);
 
   return (
-    <div className="space-y-3 rounded-3xl border border-zinc-200 bg-zinc-50/80 p-4">
+    <div className="space-y-3 rounded-[14px] border border-zinc-200 bg-zinc-50/80 p-4">
       <div className="space-y-1">
         <p className="text-sm font-medium text-zinc-700">Адрес</p>
         <p className="text-xs leading-5 text-zinc-500">
@@ -168,7 +168,7 @@ export function ClientAddressFieldsWithDefaults({
             </label>
           </>
         ) : (
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 sm:col-span-2">
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 sm:col-span-2">
             Для частного дома достаточно указать город, улицу и дом.
           </div>
         )}

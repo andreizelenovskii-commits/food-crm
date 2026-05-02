@@ -10,7 +10,7 @@ export function LowStockPanel({ products }: { products: ProductItem[] }) {
   const visibleProducts = isExpanded ? products : products.slice(0, 3);
 
   return (
-    <section className="rounded-3xl border border-amber-200 bg-[linear-gradient(180deg,#fffaf2_0%,#fff3df_100%)] p-6 shadow-sm shadow-amber-950/5">
+    <section className="rounded-[14px] border border-amber-200 bg-[linear-gradient(180deg,#fffaf2_0%,#fff3df_100%)] p-4 sm:p-5 shadow-sm shadow-amber-950/5">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm font-medium uppercase tracking-[0.18em] text-amber-700/80">

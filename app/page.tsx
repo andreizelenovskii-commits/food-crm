@@ -110,8 +110,16 @@ export default async function Home() {
 
         <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8">
           <Link href="/" className="flex items-center gap-3 text-xl font-semibold uppercase">
-            <span className="inline-flex size-10 items-center justify-center rounded-full bg-white text-base font-black text-[#7a1027]">
-              FL
+            <span className="relative inline-flex size-11 overflow-hidden rounded-[12px] bg-white/95 shadow-sm shadow-black/20">
+              <Image
+                src="/foodlike-app-icon-v3.png"
+                alt=""
+                fill
+                unoptimized
+                sizes="44px"
+                className="object-contain"
+                style={{ objectPosition: "50% 50%" }}
+              />
             </span>
             <span className="tracking-[0.18em]">FoodLike</span>
           </Link>

@@ -2,6 +2,10 @@
 
 import { useMemo, useState } from "react";
 import {
+  EmployeeDayScheduleDialog,
+  type EmployeeDayDraft,
+} from "@/modules/employees/components/employee-day-schedule-dialog";
+import {
   CALENDAR_WEEKDAYS,
   MAX_SCHEDULE_HOURS,
   MIN_SCHEDULE_HOURS,
@@ -20,12 +24,6 @@ import type { EmployeeSchedule } from "@/modules/employees/employees.types";
 type EmployeeScheduleEditorProps = {
   value: EmployeeSchedule;
   onChange: (schedule: EmployeeSchedule) => void;
-};
-
-type DayDraft = {
-  dateKey: string;
-  isWorkingDay: boolean;
-  hours: number;
 };
 
 const WEEKDAY_NUMBERS = [1, 2, 3, 4, 5, 6, 0] as const;
@@ -63,7 +61,7 @@ export function EmployeeScheduleEditor({ value, onChange }: EmployeeScheduleEdit
   const [currentMonth, setCurrentMonth] = useState(() => getInitialMonth(value));
   const [selectedWeekdays, setSelectedWeekdays] = useState<number[]>([1, 2, 3, 4, 5]);
   const [templateHours, setTemplateHours] = useState(8);
-  const [dayDraft, setDayDraft] = useState<DayDraft | null>(null);
+  const [dayDraft, setDayDraft] = useState<EmployeeDayDraft | null>(null);
 
   const totalStats = useMemo(() => getScheduleStats(value), [value]);
   const monthDays = useMemo(() => getMonthDays(currentMonth), [currentMonth]);
@@ -177,8 +175,8 @@ export function EmployeeScheduleEditor({ value, onChange }: EmployeeScheduleEdit
   });
 
   return (
-    <div className="space-y-5 rounded-[28px] border border-zinc-200 bg-zinc-50/80 p-4 sm:p-5">
-      <div className="flex flex-col gap-3 rounded-[24px] border border-zinc-200 bg-white p-4 lg:flex-row lg:items-start lg:justify-between">
+    <div className="space-y-5 rounded-[14px] border border-zinc-200 bg-zinc-50/80 p-4 sm:p-5">
+      <div className="flex flex-col gap-3 rounded-[12px] border border-zinc-200 bg-white p-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-1">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500">График работы</p>
           <p className="text-base font-semibold text-zinc-900">Рабочие дни по календарю</p>
@@ -203,7 +201,7 @@ export function EmployeeScheduleEditor({ value, onChange }: EmployeeScheduleEdit
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[18rem_minmax(0,1fr)]">
-        <div className="space-y-5 rounded-[24px] border border-zinc-200 bg-white p-4">
+        <div className="space-y-5 rounded-[12px] border border-zinc-200 bg-white p-4">
           <div className="space-y-2">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500">Шаблон месяца</p>
             <label className="block space-y-2">
@@ -288,7 +286,7 @@ export function EmployeeScheduleEditor({ value, onChange }: EmployeeScheduleEdit
               <button
                 type="button"
                 onClick={clearCurrentMonth}
-                className="min-h-12 rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 transition hover:bg-red-100 sm:col-span-2 xl:col-span-1"
+                className="min-h-12 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800 transition hover:bg-red-100 sm:col-span-2 xl:col-span-1"
               >
                 Очистить месяц
               </button>
@@ -296,7 +294,7 @@ export function EmployeeScheduleEditor({ value, onChange }: EmployeeScheduleEdit
           </div>
         </div>
 
-        <div className="space-y-4 rounded-[24px] border border-zinc-200 bg-white p-4">
+        <div className="space-y-4 rounded-[12px] border border-zinc-200 bg-white p-4">
           <div className="flex items-center justify-between gap-3">
             <button
               type="button"
@@ -388,96 +386,13 @@ export function EmployeeScheduleEditor({ value, onChange }: EmployeeScheduleEdit
       </div>
 
       {dayDraft ? (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-zinc-950/35 px-4">
-          <div className="w-full max-w-md rounded-[28px] border border-zinc-200 bg-white p-5 shadow-2xl shadow-zinc-950/20">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500">Дата</p>
-                <h3 className="mt-1 text-lg font-semibold capitalize text-zinc-950">
-                  {formatPopupDate(dayDraft.dateKey)}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setDayDraft(null)}
-                className="rounded-full border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
-              >
-                Закрыть
-              </button>
-            </div>
-
-            <div className="mt-5 space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setDayDraft((prev) => (prev ? { ...prev, isWorkingDay: true } : prev))}
-                  className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${
-                    dayDraft.isWorkingDay
-                      ? "bg-zinc-950 text-white"
-                      : "border border-zinc-300 bg-white text-zinc-950 hover:bg-zinc-50"
-                  }`}
-                >
-                  Рабочий день
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDayDraft((prev) => (prev ? { ...prev, isWorkingDay: false } : prev))}
-                  className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${
-                    !dayDraft.isWorkingDay
-                      ? "bg-zinc-950 text-white"
-                      : "border border-zinc-300 bg-white text-zinc-950 hover:bg-zinc-50"
-                  }`}
-                >
-                  Выходной
-                </button>
-              </div>
-
-              {dayDraft.isWorkingDay ? (
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium text-zinc-900">Рабочие часы</span>
-                  <select
-                    value={dayDraft.hours}
-                    onChange={(event) =>
-                      setDayDraft((prev) =>
-                        prev
-                          ? { ...prev, hours: clampScheduleHours(Number(event.target.value)) }
-                          : prev,
-                      )
-                    }
-                    className="w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm font-medium text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
-                  >
-                    {HOUR_OPTIONS.map((hours) => (
-                      <option key={hours} value={hours}>
-                        {hours} ч
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              ) : (
-                <div className="rounded-2xl bg-zinc-100 px-4 py-3 text-sm leading-6 text-zinc-600">
-                  Этот день будет сохранён как выходной и исчезнет из списка рабочих дней.
-                </div>
-              )}
-            </div>
-
-            <div className="mt-6 flex gap-3">
-              <button
-                type="button"
-                onClick={applyDayDraft}
-                className="flex-1 rounded-2xl bg-zinc-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-zinc-800"
-              >
-                Сохранить день
-              </button>
-              <button
-                type="button"
-                onClick={() => setDayDraft(null)}
-                className="rounded-2xl border border-zinc-300 px-4 py-3 text-sm font-medium text-zinc-950 transition hover:border-zinc-500"
-              >
-                Отмена
-              </button>
-            </div>
-          </div>
-        </div>
+        <EmployeeDayScheduleDialog
+          draft={dayDraft}
+          title={formatPopupDate(dayDraft.dateKey)}
+          onChange={setDayDraft}
+          onClose={() => setDayDraft(null)}
+          onApply={applyDayDraft}
+        />
       ) : null}
     </div>
   );

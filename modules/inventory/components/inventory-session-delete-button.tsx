@@ -20,7 +20,7 @@ export function InventorySessionDeleteButton({
         { name: "sessionId", value: sessionId },
         { name: "redirectTo", value: "/dashboard/inventory?tab=audit" },
       ]}
-      buttonClassName="rounded-2xl border border-red-300 bg-red-50 px-5 py-3 text-sm font-medium text-red-700 transition hover:border-red-400 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+      buttonClassName="rounded-2xl border border-red-200 bg-red-50 px-5 py-3 text-sm font-medium text-red-800 transition hover:border-red-300 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
     />
   );
 }

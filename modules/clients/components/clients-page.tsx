@@ -5,6 +5,7 @@ import { ClientCreatePanel } from "@/modules/clients/components/client-create-pa
 import { ClientDeleteButton } from "@/modules/clients/components/client-delete-button";
 import {
   formatClientDate,
+  formatClientAverageCheck,
   formatClientMoney,
   formatDaysUntilBirthday,
   type ClientsPageProps,
@@ -25,9 +26,9 @@ export function ClientsPage({
       backHref="/dashboard"
       action={<SessionUserActions user={user} />}
     >
-      <div className="grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="space-y-6">
-          <section className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+      <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
+        <div className="space-y-5">
+          <section className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">
@@ -72,7 +73,7 @@ export function ClientsPage({
             ) : null}
           </section>
 
-          <section className="rounded-3xl border border-zinc-200 bg-[linear-gradient(180deg,#fffdfa_0%,#f8f3e9_100%)] p-6 shadow-sm shadow-zinc-950/5">
+          <section className="rounded-[14px] border border-zinc-200 bg-[linear-gradient(180deg,#ffffff_0%,#fff4f2_100%)] p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">
@@ -112,9 +113,9 @@ export function ClientsPage({
             </div>
           </section>
 
-          <section className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+          <section className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
             <h2 className="text-xl font-semibold text-zinc-950">Список клиентов</h2>
-            <div className="mt-6 space-y-4">
+            <div className="mt-4 space-y-4">
               {peopleClients.length === 0 ? (
                 <p className="text-sm text-zinc-600">
                   {rawQuery ? "Поиск не нашёл клиентов." : "Пока нет ни одного клиента."}
@@ -124,7 +125,7 @@ export function ClientsPage({
                   {peopleClients.map((client) => (
                     <div
                       key={client.id}
-                      className="rounded-3xl border border-zinc-200 bg-zinc-50 p-4 transition hover:border-zinc-300 hover:bg-white"
+                      className="rounded-[14px] border border-zinc-200 bg-zinc-50 p-4 transition hover:border-zinc-300 hover:bg-white"
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0">
@@ -157,6 +158,9 @@ export function ClientsPage({
                           </p>
                           <p className="text-sm text-zinc-500">
                             Сумма заказов: {formatClientMoney(client.totalSpentCents)}
+                          </p>
+                          <p className="text-sm text-zinc-500">
+                            Средний чек: {formatClientAverageCheck(client.totalSpentCents, client.ordersCount)}
                           </p>
                           {client.notes ? (
                             <p className="mt-2 text-sm leading-6 text-zinc-600">
@@ -196,9 +200,9 @@ export function ClientsPage({
             </div>
           </section>
 
-          <section className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+          <section className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
             <h2 className="text-xl font-semibold text-zinc-950">Список организаций</h2>
-            <div className="mt-6 space-y-4">
+            <div className="mt-4 space-y-4">
               {organizations.length === 0 ? (
                 <p className="text-sm text-zinc-600">
                   {rawQuery ? "Поиск не нашёл организаций." : "Пока нет ни одной организации."}
@@ -208,7 +212,7 @@ export function ClientsPage({
                   {organizations.map((client) => (
                     <div
                       key={client.id}
-                      className="rounded-3xl border border-zinc-200 bg-zinc-50 p-4 transition hover:border-zinc-300 hover:bg-white"
+                      className="rounded-[14px] border border-zinc-200 bg-zinc-50 p-4 transition hover:border-zinc-300 hover:bg-white"
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0">
@@ -231,6 +235,9 @@ export function ClientsPage({
                           </p>
                           <p className="text-sm text-zinc-500">
                             Сумма заказов: {formatClientMoney(client.totalSpentCents)}
+                          </p>
+                          <p className="text-sm text-zinc-500">
+                            Средний чек: {formatClientAverageCheck(client.totalSpentCents, client.ordersCount)}
                           </p>
                           {client.notes ? (
                             <p className="mt-2 text-sm leading-6 text-zinc-600">
@@ -272,7 +279,7 @@ export function ClientsPage({
         </div>
 
         {canManageClients ? (
-          <div className="space-y-6">
+          <div className="space-y-5">
             <ClientCreatePanel />
           </div>
         ) : null}

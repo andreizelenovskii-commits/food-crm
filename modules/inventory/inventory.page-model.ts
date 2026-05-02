@@ -72,6 +72,17 @@ function buildCategorySummaries<TCategory extends string, TItem extends { catego
     .filter((item) => item.count > 0);
 }
 
+function resolveCategory<TCategory extends string>(
+  rawCategory: string | undefined,
+  categories: readonly TCategory[],
+): TCategory | "" {
+  const normalizedCategory = rawCategory?.trim() ?? "";
+
+  return categories.includes(normalizedCategory as TCategory)
+    ? (normalizedCategory as TCategory)
+    : "";
+}
+
 export function buildInventoryPageViewModel({
   products,
   techCards,
@@ -79,8 +90,8 @@ export function buildInventoryPageViewModel({
 }: Pick<InventoryPageProps, "products" | "techCards" | "searchParams">) {
   const rawQuery = searchParams?.q?.trim() ?? "";
   const normalizedQuery = rawQuery.toLowerCase();
-  const selectedCategory = searchParams?.category?.trim() ?? "";
-  const selectedRecipeCategory = searchParams?.recipeCategory?.trim() ?? "";
+  const selectedCategory = resolveCategory(searchParams?.category, PRODUCT_CATEGORIES);
+  const selectedRecipeCategory = resolveCategory(searchParams?.recipeCategory, TECH_CARD_CATEGORIES);
   const activeTab = resolveActiveTab(searchParams?.tab);
   const totalStock = products.reduce((sum, product) => sum + product.stockQuantity, 0);
   const totalValueCents = products.reduce(

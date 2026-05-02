@@ -238,7 +238,7 @@ export function InventoryIncomingPanel({
   };
 
   const renderAct = (act: IncomingActSummary, canComplete: boolean) => (
-    <article key={act.id} className="rounded-3xl border border-zinc-200 bg-zinc-50/80 p-5">
+    <article key={act.id} className="rounded-[14px] border border-zinc-200 bg-zinc-50/80 p-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Акт #{act.id}</p>
@@ -289,7 +289,7 @@ export function InventoryIncomingPanel({
                     )}{" "}
                     {item.productUnit}
                   </td>
-                  <td className="px-4 py-4 font-medium text-emerald-700">
+                  <td className="px-4 py-4 font-medium text-red-800">
                     +{formatInventoryQuantity(item.quantity)} {item.productUnit}
                   </td>
                   <td className="px-4 py-4 font-medium text-zinc-950">
@@ -341,9 +341,9 @@ export function InventoryIncomingPanel({
   );
 
   return (
-    <div className="grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
-      <div className="space-y-6">
-        <section className="rounded-3xl border border-zinc-200 bg-[linear-gradient(180deg,#fffdfa_0%,#eef6ea_100%)] p-6 shadow-sm shadow-zinc-950/5">
+    <div className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+      <div className="space-y-5">
+        <section className="rounded-[14px] border border-zinc-200 bg-[linear-gradient(180deg,#ffffff_0%,#fff1f1_100%)] p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
           <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">Поступление товара</p>
           <h2 className="mt-2 text-xl font-semibold text-zinc-950">Приход на склад</h2>
           <p className="mt-3 text-sm leading-6 text-zinc-600">
@@ -352,38 +352,38 @@ export function InventoryIncomingPanel({
           <div className="mt-5 grid gap-4 md:grid-cols-3">
             <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
               <p className="text-sm font-medium text-zinc-500">Открытых актов</p>
-              <p className="mt-3 text-3xl font-semibold text-zinc-950">{openActs.length}</p>
+              <p className="mt-3 text-2xl font-semibold text-zinc-950">{openActs.length}</p>
             </div>
             <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
               <p className="text-sm font-medium text-zinc-500">Приходов сегодня</p>
-              <p className="mt-3 text-3xl font-semibold text-zinc-950">{incomingTodayCount}</p>
+              <p className="mt-3 text-2xl font-semibold text-zinc-950">{incomingTodayCount}</p>
             </div>
             <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
               <p className="text-sm font-medium text-zinc-500">Проведено на сумму закупок</p>
-              <p className="mt-3 text-3xl font-semibold text-zinc-950">{formatMoney(totalCompletedIncomingCents)}</p>
+              <p className="mt-3 text-2xl font-semibold text-zinc-950">{formatMoney(totalCompletedIncomingCents)}</p>
             </div>
           </div>
         </section>
 
         {completeState.errorMessage ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             {completeState.errorMessage}
           </div>
         ) : null}
         {completeState.successMessage ? (
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             {completeState.successMessage}
           </div>
         ) : null}
 
-        <section className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+        <section className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
           <h2 className="text-xl font-semibold text-zinc-950">Открытые акты поступления</h2>
           <p className="mt-2 text-sm leading-6 text-zinc-600">
             В открытом акте приход зафиксирован, но остаток на складе увеличится только после завершения.
           </p>
-          <div className="mt-6 space-y-4">
+          <div className="mt-4 space-y-4">
             {openActs.length === 0 ? (
-              <div className="rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-sm text-zinc-500">
+              <div className="rounded-[14px] border border-dashed border-zinc-300 bg-zinc-50 p-4 sm:p-5 text-sm text-zinc-500">
                 Пока нет ни одного открытого акта поступления.
               </div>
             ) : (
@@ -392,14 +392,14 @@ export function InventoryIncomingPanel({
           </div>
         </section>
 
-        <section className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+        <section className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
           <h2 className="text-xl font-semibold text-zinc-950">Завершённые поступления</h2>
           <p className="mt-2 text-sm leading-6 text-zinc-600">
             После завершения акта остатки по товарам увеличиваются на количество в приходе.
           </p>
-          <div className="mt-6 space-y-4">
+          <div className="mt-4 space-y-4">
             {completedActs.length === 0 ? (
-              <div className="rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-sm text-zinc-500">
+              <div className="rounded-[14px] border border-dashed border-zinc-300 bg-zinc-50 p-4 sm:p-5 text-sm text-zinc-500">
                 Пока нет завершённых поступлений.
               </div>
             ) : (
@@ -417,7 +417,7 @@ export function InventoryIncomingPanel({
         </section>
       </div>
 
-      <aside className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5 xl:sticky xl:top-28 xl:self-start">
+      <aside className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5 xl:sticky xl:top-28 xl:self-start">
         <div className="space-y-2">
           <h2 className="text-xl font-semibold text-zinc-950">Новое поступление</h2>
           <p className="text-sm leading-6 text-zinc-600">
@@ -426,18 +426,18 @@ export function InventoryIncomingPanel({
         </div>
 
         {createState.errorMessage ? (
-          <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             {createState.errorMessage}
           </div>
         ) : null}
         {createState.successMessage ? (
-          <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             {createState.successMessage}
           </div>
         ) : null}
 
-        <form action={canManageInventory ? createFormAction : undefined} className="mt-6 space-y-5">
-          <section className="rounded-[28px] border border-zinc-200 bg-[linear-gradient(180deg,#fffdfa_0%,#f0f7ec_100%)] p-4">
+        <form action={canManageInventory ? createFormAction : undefined} className="mt-4 space-y-5">
+          <section className="rounded-[14px] border border-zinc-200 bg-[linear-gradient(180deg,#ffffff_0%,#fff1f1_100%)] p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Ответственный</p>
@@ -499,7 +499,7 @@ export function InventoryIncomingPanel({
             </div>
           ))}
 
-          <section className="rounded-[28px] border border-zinc-200 bg-white p-4">
+          <section className="rounded-[14px] border border-zinc-200 bg-white p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Состав поставки</p>
@@ -526,11 +526,11 @@ export function InventoryIncomingPanel({
                   const projectedStock = product.stockQuantity + parsedQuantity;
 
                   return (
-                    <article key={product.id} className="grid gap-4 rounded-[24px] border border-zinc-200 bg-zinc-50/80 p-4">
+                    <article key={product.id} className="grid gap-4 rounded-[12px] border border-zinc-200 bg-zinc-50/80 p-4">
                       <div className="space-y-2">
                         <div className="flex flex-wrap items-center gap-2">
                           <h4 className="text-base font-semibold text-zinc-950">{product.name}</h4>
-                          <span className="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-800 ring-1 ring-emerald-200">
+                          <span className="rounded-full bg-red-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-red-800 ring-1 ring-red-200">
                             Приход в {product.unit}
                           </span>
                         </div>
@@ -584,7 +584,7 @@ export function InventoryIncomingPanel({
             </div>
           </section>
 
-          <div className="flex flex-col gap-3 rounded-[28px] border border-zinc-200 bg-zinc-50 px-5 py-4">
+          <div className="flex flex-col gap-3 rounded-[14px] border border-zinc-200 bg-zinc-50 px-5 py-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <p className="text-sm text-zinc-600">
                 {canManageInventory
@@ -621,7 +621,7 @@ export function InventoryIncomingPanel({
             role="dialog"
             aria-modal="true"
             aria-label="Поиск товара для поступления"
-            className="max-h-[calc(100vh-4rem)] w-full max-w-3xl overflow-y-auto rounded-[32px] border border-zinc-200 bg-[#fcfbf8] p-6 shadow-2xl shadow-zinc-950/20"
+            className="max-h-[calc(100vh-4rem)] w-full max-w-3xl overflow-y-auto rounded-[14px] border border-zinc-200 bg-[#fffdfc] p-4 sm:p-5 shadow-2xl shadow-zinc-950/20"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">
@@ -643,7 +643,7 @@ export function InventoryIncomingPanel({
               </button>
             </div>
 
-            <div className="mt-6 grid gap-4">
+            <div className="mt-4 grid gap-4">
               <label className="space-y-2">
                 <span className="text-sm font-medium text-zinc-700">Поиск по товару</span>
                 <input
@@ -681,8 +681,8 @@ export function InventoryIncomingPanel({
                       onClick={() => setSelectedCategory(category)}
                       className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                         selectedCategory === category
-                          ? "bg-emerald-600 text-white"
-                          : "border border-emerald-100 bg-emerald-50 text-emerald-800 hover:border-emerald-200 hover:bg-emerald-100"
+                          ? "bg-red-800 text-white"
+                          : "border border-red-100 bg-red-50 text-red-800 hover:border-red-200 hover:bg-red-100"
                       }`}
                     >
                       {category} {count}
@@ -692,7 +692,7 @@ export function InventoryIncomingPanel({
               </div>
             </div>
 
-            <div className="mt-6 space-y-5">
+            <div className="mt-4 space-y-5">
               {filteredProductsByCategory.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-zinc-300 bg-white px-4 py-5 text-sm text-zinc-500">
                   По текущему фильтру товары не найдены.

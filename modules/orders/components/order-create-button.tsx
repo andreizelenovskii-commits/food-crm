@@ -242,7 +242,7 @@ export function OrderCreateButton({
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-30 inline-flex items-center gap-3 rounded-full bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-700/25 transition hover:bg-emerald-500"
+        className="fixed bottom-6 right-6 z-30 inline-flex items-center gap-3 rounded-full bg-red-800 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-red-950/25 transition hover:bg-red-900"
         aria-label="Создать заказ"
       >
         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/16">
@@ -269,7 +269,7 @@ export function OrderCreateButton({
           >
             <form
               action={formAction}
-              className="flex max-h-[calc(100vh-2rem)] flex-col p-6 sm:max-h-[calc(100vh-3rem)]"
+              className="flex max-h-[calc(100vh-2rem)] flex-col p-4 sm:p-5 sm:max-h-[calc(100vh-3rem)]"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-2">
@@ -290,9 +290,9 @@ export function OrderCreateButton({
                 </button>
               </div>
 
-              <div className="mt-6 min-h-0 flex-1 overflow-y-auto pr-1">
-                <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
-                <div className="space-y-6">
+              <div className="mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
+                <div className="grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">
+                <div className="space-y-5">
                   <div className="space-y-2.5">
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-sm font-medium text-zinc-700">Тип заказа</span>
@@ -313,7 +313,7 @@ export function OrderCreateButton({
                               onClick={() => switchOrderType(option.value)}
                               className={`rounded-[18px] px-4 py-3 text-left transition ${
                                 isSelected
-                                  ? "bg-white text-zinc-950 shadow-sm ring-1 ring-emerald-500/25"
+                                  ? "bg-white text-zinc-950 shadow-sm ring-1 ring-red-500/25"
                                   : "bg-transparent text-zinc-600 hover:bg-white/70 hover:text-zinc-950"
                               }`}
                             >
@@ -375,7 +375,7 @@ export function OrderCreateButton({
 
                     <div className="max-h-[26rem] space-y-3 overflow-y-auto pr-1">
                       {filteredCatalogItems.length === 0 ? (
-                        <div className="rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-5 text-sm text-zinc-500">
+                        <div className="rounded-[14px] border border-dashed border-zinc-300 bg-zinc-50 p-5 text-sm text-zinc-500">
                           Ничего не найдено по выбранной категории или поисковому запросу.
                         </div>
                       ) : (
@@ -385,7 +385,7 @@ export function OrderCreateButton({
                           return (
                             <div
                               key={item.id}
-                              className="rounded-3xl border border-zinc-200 bg-zinc-50 p-4"
+                              className="rounded-[14px] border border-zinc-200 bg-zinc-50 p-4"
                             >
                               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                                 <div className="space-y-2">
@@ -438,7 +438,7 @@ export function OrderCreateButton({
                   </div>
                 </div>
 
-                <aside className="space-y-5 rounded-[28px] border border-zinc-200 bg-[linear-gradient(180deg,#fffdfa_0%,#f4efe5_100%)] p-5">
+                <aside className="space-y-5 rounded-[14px] border border-zinc-200 bg-[linear-gradient(180deg,#ffffff_0%,#fff4f2_100%)] p-5">
                   <div className="space-y-1">
                     <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-zinc-500">
                       Параметры заказа
@@ -475,11 +475,11 @@ export function OrderCreateButton({
                   </label>
 
                   {!isInternal && selectedClient?.loyaltyLevel ? (
-                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+                    <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
                       <p className="font-medium">
                         У клиента уровень {LOYALTY_LEVEL_LABELS[selectedClient.loyaltyLevel]}
                       </p>
-                      <p className="mt-1 text-emerald-800">
+                      <p className="mt-1 text-red-800">
                         Автоматическая скидка на заказ: {discountPercent}%
                       </p>
                     </div>
@@ -581,7 +581,7 @@ export function OrderCreateButton({
 
                   <input type="hidden" name="items" value={itemsPayload} />
 
-                  <div className="rounded-3xl border border-white/80 bg-white/80 p-4">
+                  <div className="rounded-[14px] border border-white/80 bg-white/80 p-4">
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-sm font-medium text-zinc-600">Выбрано позиций</span>
                       <span className="text-sm font-semibold text-zinc-950">
@@ -629,7 +629,7 @@ export function OrderCreateButton({
                         <span className="text-sm font-medium text-zinc-600">
                           Скидка по лояльности ({discountPercent}%)
                         </span>
-                        <span className="text-base font-semibold text-emerald-700">
+                        <span className="text-base font-semibold text-red-800">
                           -{formatMoney(discountCents)}
                         </span>
                       </div>
@@ -643,7 +643,7 @@ export function OrderCreateButton({
                   </div>
 
                   {state.errorMessage ? (
-                    <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
                       {state.errorMessage}
                     </p>
                   ) : null}
@@ -674,7 +674,7 @@ export function OrderCreateButton({
 
       {activePicker === "client" ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/40 px-4 py-6 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/40 px-4 py-4 sm:py-5 backdrop-blur-sm"
           onClick={closePicker}
         >
           <div
@@ -754,7 +754,7 @@ export function OrderCreateButton({
 
       {activePicker === "employee" ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/40 px-4 py-6 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/40 px-4 py-4 sm:py-5 backdrop-blur-sm"
           onClick={closePicker}
         >
           <div

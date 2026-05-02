@@ -1,4 +1,6 @@
 import { requirePermission } from "@/modules/auth/auth.session";
+import { fetchClients } from "@/modules/clients/clients.api";
+import { buildClientsPageViewModel } from "@/modules/clients/clients.page-model";
 import { DashboardPage } from "@/modules/dashboard/components/dashboard-page";
 import { resolveDashboardSelectedMonth, type DashboardPageSearchParams } from "@/modules/dashboard/dashboard.page-model";
 import {
@@ -14,7 +16,11 @@ export default async function DashboardRoutePage(props: {
   const user = await requirePermission("view_dashboard");
   const searchParams = await props.searchParams;
   const selectedMonth = resolveDashboardSelectedMonth(searchParams);
-  const dashboard = await getDashboardMetrics();
+  const [dashboard, clients] = await Promise.all([
+    getDashboardMetrics(),
+    fetchClients(),
+  ]);
+  const clientsViewModel = buildClientsPageViewModel(clients, "");
   const employeeDashboard = STAFF_ROLES.has(user.role)
     ? await getEmployeeDashboardMetricsByEmail(user.email, selectedMonth)
     : null;
@@ -24,6 +30,7 @@ export default async function DashboardRoutePage(props: {
       user={user}
       dashboard={dashboard}
       employeeDashboard={employeeDashboard}
+      upcomingBirthdays={clientsViewModel.upcomingBirthdays}
     />
   );
 }

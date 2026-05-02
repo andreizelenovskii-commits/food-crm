@@ -19,7 +19,7 @@ type ConfirmDeleteButtonProps = {
 };
 
 const DEFAULT_BUTTON_CLASS_NAME =
-  "relative z-10 rounded-2xl border border-red-200 px-4 py-2 text-sm font-medium text-red-600 transition hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:text-zinc-400";
+  "relative z-10 rounded-2xl border border-red-200 px-4 py-2 text-sm font-medium text-red-700 transition hover:border-red-200 hover:bg-red-50 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:text-zinc-400";
 
 export function ConfirmDeleteButton({
   action,
@@ -92,18 +92,18 @@ export function ConfirmDeleteButton({
 
       {isConfirmOpen ? (
         <div
-          className="fixed inset-0 z-40 flex items-center justify-center bg-zinc-950/45 px-4 py-6 backdrop-blur-sm"
+          className="fixed inset-0 z-40 flex items-center justify-center bg-zinc-950/45 px-4 py-4 sm:py-5 backdrop-blur-sm"
           onClick={() => setIsConfirmOpen(false)}
         >
           <div
             role="dialog"
             aria-modal="true"
             aria-label={ariaLabel}
-            className="w-full max-w-md rounded-[32px] border border-zinc-200 bg-[linear-gradient(180deg,#ffffff_0%,#fff8f8_100%)] p-6 shadow-2xl shadow-zinc-950/25"
+            className="w-full max-w-md rounded-[14px] border border-zinc-200 bg-[linear-gradient(180deg,#ffffff_0%,#fff8f8_100%)] p-4 sm:p-5 shadow-2xl shadow-zinc-950/25"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="space-y-2">
-              <div className="inline-flex rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-red-700">
+              <div className="inline-flex rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-red-800">
                 Подтверждение удаления
               </div>
               <h2 className="text-xl font-semibold text-zinc-950">
@@ -128,7 +128,7 @@ export function ConfirmDeleteButton({
               ) : null}
             </div>
 
-            <div className="mt-6 flex flex-wrap justify-end gap-3">
+            <div className="mt-4 flex flex-wrap justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setIsConfirmOpen(false)}
@@ -140,7 +140,7 @@ export function ConfirmDeleteButton({
                 type="button"
                 disabled={disabled}
                 onClick={handleConfirmDelete}
-                className="rounded-2xl bg-red-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-zinc-300"
+                className="rounded-2xl bg-red-800 px-4 py-3 text-sm font-medium text-white transition hover:bg-red-900 disabled:cursor-not-allowed disabled:bg-zinc-300"
               >
                 {isPending ? "Удаляем..." : "Да, удалить"}
               </button>

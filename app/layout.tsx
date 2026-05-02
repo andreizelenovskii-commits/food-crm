@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Food CRM",
-  description: "Модульная CRM для доставки еды на Next.js",
+  title: "FoodLike",
+  description: "Минималистичная CRM для доставки еды",
 };
 
 export default function RootLayout({

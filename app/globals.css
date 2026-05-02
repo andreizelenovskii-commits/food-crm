@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fffaf7;
-  --foreground: #241316;
+  --background: #f7f3f2;
+  --foreground: #211719;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans:
-    "Manrope",
-    "Segoe UI Variable",
-    "SF Pro Display",
+    "Aptos",
+    "Inter",
+    "SF Pro Text",
     "Segoe UI",
     "Helvetica Neue",
     Arial,
@@ -32,14 +32,68 @@ body {
   background: var(--background);
   color: var(--foreground);
   background-image:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.84), transparent 34%),
-    linear-gradient(180deg, #fffaf7 0%, #f8edf0 100%);
+    linear-gradient(180deg, #fbf8f7 0%, #f3eeee 100%);
   font-family: var(--font-sans);
   text-rendering: optimizeLegibility;
   font-feature-settings: "liga" 1, "kern" 1;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(153, 27, 27, 0.16);
+  color: #1f1617;
+}
+
+@layer base {
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}
+
+@keyframes foodlike-float-soft {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -8px, 0);
+  }
+}
+
+@keyframes foodlike-float-slow {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, 10px, 0);
+  }
+}
+
+@keyframes module-slide-in {
+  from {
+    opacity: 0;
+    transform: translate3d(18px, 0, 0) scale(0.985);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.foodlike-float-soft {
+  animation: foodlike-float-soft 7s ease-in-out infinite;
+}
+
+.foodlike-float-slow {
+  animation: foodlike-float-slow 9s ease-in-out infinite;
 }

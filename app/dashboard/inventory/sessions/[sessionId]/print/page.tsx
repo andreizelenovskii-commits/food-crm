@@ -42,7 +42,7 @@ export default async function InventorySessionPrintPage(props: {
   }, 0);
 
   return (
-    <main className="min-h-screen bg-[#f6f3ec] px-4 py-6 text-zinc-950 print:bg-white print:px-0 print:py-0">
+    <main className="min-h-screen bg-[#f7f3f2] px-4 py-4 sm:py-5 text-zinc-950 print:bg-white print:px-0 print:py-0">
       <style>{`
         @page {
           size: A4 portrait;
@@ -113,7 +113,7 @@ export default async function InventorySessionPrintPage(props: {
       `}</style>
 
       <div className="print-root">
-        <div className="print-sheet mx-auto max-w-6xl rounded-[32px] border border-zinc-200 bg-white p-6 shadow-xl shadow-zinc-950/10 print:rounded-none print:p-0">
+        <div className="print-sheet mx-auto max-w-6xl rounded-[14px] border border-zinc-200 bg-white p-4 sm:p-5 shadow-xl shadow-zinc-950/10 print:rounded-none print:p-0">
         <div className="mb-6 flex flex-wrap items-start justify-between gap-3 print:hidden">
           <div className="flex flex-wrap gap-3">
             <Link
@@ -129,13 +129,13 @@ export default async function InventorySessionPrintPage(props: {
           </p>
         </div>
 
-        <section className="print-break-avoid rounded-[28px] border border-zinc-200 bg-[linear-gradient(180deg,#fffdfa_0%,#f5f1e7_100%)] p-6 print:border-zinc-300">
-          <div className="flex flex-wrap items-start justify-between gap-6">
+        <section className="print-break-avoid rounded-[14px] border border-zinc-200 bg-[linear-gradient(180deg,#ffffff_0%,#fff4f2_100%)] p-4 sm:p-5 print:border-zinc-300">
+          <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-zinc-500">
                 Инвентаризационный лист
               </p>
-              <h1 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-zinc-950">
+              <h1 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-zinc-950">
                 Инвентаризация #{session.id}
               </h1>
               <p className="mt-3 text-sm leading-6 text-zinc-600">
@@ -169,7 +169,7 @@ export default async function InventorySessionPrintPage(props: {
               </div>
               <div className="rounded-2xl border border-zinc-200 bg-white/80 px-4 py-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Отклонение</p>
-                <p className={`mt-2 text-xl font-semibold ${totalVarianceValueCents < 0 ? "text-red-600" : totalVarianceValueCents > 0 ? "text-emerald-700" : "text-zinc-950"}`}>
+                <p className={`mt-2 text-xl font-semibold ${totalVarianceValueCents < 0 ? "text-red-700" : totalVarianceValueCents > 0 ? "text-red-800" : "text-zinc-950"}`}>
                   {totalVarianceValueCents > 0 ? "+" : ""}
                   {formatMoney(totalVarianceValueCents)}
                 </p>
@@ -178,7 +178,7 @@ export default async function InventorySessionPrintPage(props: {
           </div>
         </section>
 
-        <section className="mt-6 rounded-[28px] border border-zinc-200 bg-white print:border-zinc-300">
+        <section className="mt-4 rounded-[14px] border border-zinc-200 bg-white print:border-zinc-300">
           <div className="border-b border-zinc-200 px-5 py-4">
             <h2 className="text-lg font-semibold text-zinc-950">Лист пересчёта для печати</h2>
             <p className="mt-1 text-sm leading-6 text-zinc-500">
@@ -249,12 +249,12 @@ export default async function InventorySessionPrintPage(props: {
           </div>
         </section>
 
-        <section className="mt-6 grid gap-4 md:grid-cols-2">
-          <div className="print-break-avoid rounded-[24px] border border-zinc-200 bg-zinc-50 p-5">
+        <section className="mt-4 grid gap-4 md:grid-cols-2">
+          <div className="print-break-avoid rounded-[12px] border border-zinc-200 bg-zinc-50 p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">Примечания</p>
             <div className="mt-4 min-h-32 rounded-2xl border border-dashed border-zinc-300 bg-white" />
           </div>
-          <div className="print-break-avoid rounded-[24px] border border-zinc-200 bg-zinc-50 p-5">
+          <div className="print-break-avoid rounded-[12px] border border-zinc-200 bg-zinc-50 p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">Подпись ответственного</p>
             <div className="mt-10 border-b border-zinc-400" />
             <p className="mt-3 text-sm text-zinc-500">

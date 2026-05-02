@@ -43,9 +43,9 @@ export default async function CatalogPage(props: {
       backHref="/dashboard"
       action={<SessionUserActions user={user} />}
     >
-      <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-        <section className="space-y-6">
-          <article className="rounded-3xl border border-zinc-200 bg-[linear-gradient(180deg,#fffdfa_0%,#eef4eb_100%)] p-6 shadow-sm shadow-zinc-950/5">
+      <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+        <section className="space-y-5">
+          <article className="rounded-[14px] border border-zinc-200 bg-[linear-gradient(180deg,#ffffff_0%,#fff1f1_100%)] p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
             <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">
               Прайсы и структура
             </p>
@@ -56,22 +56,22 @@ export default async function CatalogPage(props: {
               Здесь мы храним реальные позиции каталога и сразу решаем, куда они попадут: в клиентский прайс или во внутренний.
             </p>
 
-            <div className="mt-6 grid gap-4 md:grid-cols-3">
+            <div className="mt-4 grid gap-4 md:grid-cols-3">
               <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
                 <p className="text-sm font-medium text-zinc-500">Всего позиций</p>
-                <p className="mt-3 text-3xl font-semibold text-zinc-950">{catalogItems.length}</p>
+                <p className="mt-3 text-2xl font-semibold text-zinc-950">{catalogItems.length}</p>
               </div>
               <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
                 <p className="text-sm font-medium text-zinc-500">Клиентский прайс</p>
-                <p className="mt-3 text-3xl font-semibold text-zinc-950">{clientPriceItems.length}</p>
+                <p className="mt-3 text-2xl font-semibold text-zinc-950">{clientPriceItems.length}</p>
               </div>
               <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
                 <p className="text-sm font-medium text-zinc-500">Внутренний прайс</p>
-                <p className="mt-3 text-3xl font-semibold text-zinc-950">{internalPriceItems.length}</p>
+                <p className="mt-3 text-2xl font-semibold text-zinc-950">{internalPriceItems.length}</p>
               </div>
               <div className="rounded-2xl border border-white/80 bg-white/80 p-4 md:col-span-3">
                 <p className="text-sm font-medium text-zinc-500">Готовность к сайту</p>
-                <p className="mt-3 text-3xl font-semibold text-zinc-950">
+                <p className="mt-3 text-2xl font-semibold text-zinc-950">
                   {itemsWithPhotosCount}/{linkedCount}
                 </p>
                 <p className="mt-2 text-xs leading-5 text-zinc-500">
@@ -81,7 +81,7 @@ export default async function CatalogPage(props: {
             </div>
           </article>
 
-          <article className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+          <article className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
             <h2 className="text-xl font-semibold text-zinc-950">Как будет устроен модуль</h2>
             <div className="mt-4 space-y-4 text-sm leading-6 text-zinc-600">
               <p>Каждая новая позиция сразу получает обязательный тип прайса: клиентский или внутренний.</p>
@@ -90,7 +90,7 @@ export default async function CatalogPage(props: {
             </div>
           </article>
 
-          <article className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+          <article className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
             <h2 className="text-xl font-semibold text-zinc-950">Позиции каталога</h2>
             <p className="mt-2 text-sm leading-6 text-zinc-600">
               Здесь находятся реальные позиции прайсов, уже связанные с технологическими картами.
@@ -134,9 +134,9 @@ export default async function CatalogPage(props: {
                 );
               })}
             </div>
-            <div className="mt-6 space-y-6">
+            <div className="mt-4 space-y-5">
               {filteredItems.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-sm text-zinc-500">
+                <div className="rounded-[14px] border border-dashed border-zinc-300 bg-zinc-50 p-4 sm:p-5 text-sm text-zinc-500">
                   {selectedCategory
                     ? "В этой категории пока нет позиций."
                     : "Пока каталог ещё не наполнен."}
@@ -156,7 +156,7 @@ export default async function CatalogPage(props: {
                   </div>
 
                   {group.items.length === 0 ? (
-                    <div className="rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-5 text-sm text-zinc-500">
+                    <div className="rounded-[14px] border border-dashed border-zinc-300 bg-zinc-50 p-5 text-sm text-zinc-500">
                       Пока пусто.
                     </div>
                   ) : (
@@ -164,7 +164,7 @@ export default async function CatalogPage(props: {
                       {group.items.map((item) => (
                         <article
                           key={item.id}
-                          className="rounded-3xl border border-zinc-200 bg-zinc-50 p-5"
+                          className="rounded-[14px] border border-zinc-200 bg-zinc-50 p-5"
                         >
                           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                             <div className="flex min-w-0 flex-col gap-4 sm:flex-row">
@@ -240,7 +240,7 @@ export default async function CatalogPage(props: {
         {hasPermission(user, "manage_catalog") ? (
           <CatalogItemForm techCardOptions={techCardOptions} />
         ) : (
-          <aside className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+          <aside className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
             <h2 className="text-xl font-semibold text-zinc-950">Что будет дальше</h2>
             <div className="mt-4 space-y-3 text-sm leading-6 text-zinc-600">
               <p>Наполнение клиентского и внутреннего прайса рабочими позициями.</p>

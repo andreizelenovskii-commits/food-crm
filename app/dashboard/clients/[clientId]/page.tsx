@@ -30,6 +30,9 @@ export default async function ClientProfilePage(props: {
       currency: "RUB",
       maximumFractionDigits: 0,
     }).format(cents / 100);
+  const averageCheckCents = client.ordersCount > 0
+    ? Math.round(client.totalSpentCents / client.ordersCount)
+    : 0;
 
   return (
     <PageShell
@@ -38,8 +41,8 @@ export default async function ClientProfilePage(props: {
       backHref="/dashboard/clients"
       action={<SessionUserActions user={user} />}
     >
-      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <section className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+      <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+        <section className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">
@@ -69,7 +72,7 @@ export default async function ClientProfilePage(props: {
             ) : null}
           </div>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl bg-zinc-50 p-4">
               <p className="text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">
                 Телефон
@@ -112,12 +115,20 @@ export default async function ClientProfilePage(props: {
               </p>
               <p className="mt-2 text-lg font-semibold text-zinc-950">{client.ordersCount}</p>
             </div>
-            <div className="rounded-2xl bg-zinc-50 p-4 sm:col-span-2">
+            <div className="rounded-2xl bg-zinc-50 p-4">
               <p className="text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">
                 Сумма заказов
               </p>
               <p className="mt-2 text-lg font-semibold text-zinc-950">
                 {formatMoney(client.totalSpentCents)}
+              </p>
+            </div>
+            <div className="rounded-2xl bg-zinc-50 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">
+                Средний чек
+              </p>
+              <p className="mt-2 text-lg font-semibold text-zinc-950">
+                {formatMoney(averageCheckCents)}
               </p>
             </div>
           </div>

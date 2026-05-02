@@ -105,7 +105,7 @@ export function ProductForm({ initialProduct }: { initialProduct?: ProductItem }
       ref={formRef}
       action={initialProduct ? formAction : undefined}
       onSubmit={initialProduct ? undefined : handleCreateSubmit}
-      className="space-y-5 rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5"
+      className="space-y-5 rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5"
     >
       {initialProduct ? <input type="hidden" name="productId" value={initialProduct.id} /> : null}
 
@@ -141,7 +141,7 @@ export function ProductForm({ initialProduct }: { initialProduct?: ProductItem }
             onChange={(event) => setSelectedCategory(event.target.value as ProductCategory | "")}
             className={`w-full appearance-none rounded-2xl border px-4 py-3 pr-12 outline-none transition focus:ring-2 ${
               selectedCategory
-                ? "border-emerald-200 bg-emerald-50/60 text-zinc-950 focus:border-emerald-400 focus:ring-emerald-500/10"
+                ? "border-red-200 bg-red-50/60 text-zinc-950 focus:border-red-400 focus:ring-red-500/10"
                 : "border-zinc-300 bg-white text-zinc-500 focus:border-zinc-500 focus:ring-zinc-950/5"
             }`}
             required
@@ -153,7 +153,7 @@ export function ProductForm({ initialProduct }: { initialProduct?: ProductItem }
               </option>
             ))}
           </select>
-          <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm text-emerald-700">
+          <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm text-red-800">
             ▾
           </span>
         </div>
@@ -227,13 +227,13 @@ export function ProductForm({ initialProduct }: { initialProduct?: ProductItem }
       </label>
 
       {activeState.errorMessage ? (
-        <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {activeState.errorMessage}
         </p>
       ) : null}
 
       {!initialProduct && activeState.successMessage ? (
-        <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {activeState.successMessage}
         </p>
       ) : null}

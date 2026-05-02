@@ -216,10 +216,10 @@ export function IncomingActEditForm({
 
   return (
     <>
-      <form action={formAction} className="space-y-6">
+      <form action={formAction} className="space-y-5">
         <input type="hidden" name="actId" value={act.id} />
 
-        <section className="rounded-[32px] border border-zinc-200 bg-[linear-gradient(180deg,#fffdfa_0%,#eef6ea_100%)] p-6 shadow-sm shadow-zinc-950/5">
+        <section className="rounded-[14px] border border-zinc-200 bg-[linear-gradient(180deg,#ffffff_0%,#fff1f1_100%)] p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">
@@ -246,14 +246,14 @@ export function IncomingActEditForm({
         </section>
 
         {state.errorMessage ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             {state.errorMessage}
           </div>
         ) : null}
 
-        <section className="grid gap-6 xl:grid-cols-[0.92fr_1.08fr]">
-          <div className="space-y-6">
-            <section className="rounded-[28px] border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-950/5">
+        <section className="grid gap-4 xl:grid-cols-[0.92fr_1.08fr]">
+          <div className="space-y-5">
+            <section className="rounded-[14px] border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-950/5">
               <div className="space-y-2">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
                   Ответственный
@@ -288,7 +288,7 @@ export function IncomingActEditForm({
               </div>
             </section>
 
-            <section className="rounded-[28px] border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-950/5">
+            <section className="rounded-[14px] border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-950/5">
               <div className="grid gap-5">
                 <label className="space-y-2">
                   <span className="text-sm font-medium text-zinc-700">Поставщик</span>
@@ -317,7 +317,7 @@ export function IncomingActEditForm({
             </section>
           </div>
 
-          <section className="rounded-[28px] border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-950/5">
+          <section className="rounded-[14px] border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-950/5">
             {draftEntries.map((entry) => (
               <div key={entry.productId}>
                 <input type="hidden" name="productId" value={entry.productId} />
@@ -356,13 +356,13 @@ export function IncomingActEditForm({
                   return (
                     <article
                       key={product.id}
-                      className="grid gap-4 rounded-[24px] border border-zinc-200 bg-zinc-50/80 p-4"
+                      className="grid gap-4 rounded-[12px] border border-zinc-200 bg-zinc-50/80 p-4"
                     >
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="space-y-2">
                           <div className="flex flex-wrap items-center gap-2">
                             <h4 className="text-base font-semibold text-zinc-950">{product.name}</h4>
-                            <span className="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-800 ring-1 ring-emerald-200">
+                            <span className="rounded-full bg-red-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-red-800 ring-1 ring-red-200">
                               Приход в {product.unit}
                             </span>
                           </div>
@@ -381,7 +381,7 @@ export function IncomingActEditForm({
                         <button
                           type="button"
                           onClick={() => removeProductFromDraft(product.id)}
-                          className="rounded-2xl border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition hover:border-red-300 hover:bg-red-50"
+                          className="rounded-2xl border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-700 transition hover:border-red-200 hover:bg-red-50"
                         >
                           Убрать
                         </button>
@@ -430,7 +430,7 @@ export function IncomingActEditForm({
               )}
             </div>
 
-            <div className="mt-6 flex flex-wrap justify-end gap-3">
+            <div className="mt-4 flex flex-wrap justify-end gap-3">
               <Link
                 href="/dashboard/inventory?tab=incoming"
                 className="rounded-2xl border border-zinc-300 bg-white px-5 py-3 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-950"
@@ -459,7 +459,7 @@ export function IncomingActEditForm({
             role="dialog"
             aria-modal="true"
             aria-label="Поиск товара для акта поступления"
-            className="max-h-[calc(100vh-4rem)] w-full max-w-3xl overflow-y-auto rounded-[32px] border border-zinc-200 bg-[#fcfbf8] p-6 shadow-2xl shadow-zinc-950/20"
+            className="max-h-[calc(100vh-4rem)] w-full max-w-3xl overflow-y-auto rounded-[14px] border border-zinc-200 bg-[#fffdfc] p-4 sm:p-5 shadow-2xl shadow-zinc-950/20"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">
@@ -481,7 +481,7 @@ export function IncomingActEditForm({
               </button>
             </div>
 
-            <div className="mt-6 grid gap-4">
+            <div className="mt-4 grid gap-4">
               <label className="space-y-2">
                 <span className="text-sm font-medium text-zinc-700">Поиск по товару</span>
                 <input
@@ -519,8 +519,8 @@ export function IncomingActEditForm({
                       onClick={() => setSelectedCategory(category)}
                       className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                         selectedCategory === category
-                          ? "bg-emerald-600 text-white"
-                          : "border border-emerald-100 bg-emerald-50 text-emerald-800 hover:border-emerald-200 hover:bg-emerald-100"
+                          ? "bg-red-800 text-white"
+                          : "border border-red-100 bg-red-50 text-red-800 hover:border-red-200 hover:bg-red-100"
                       }`}
                     >
                       {category} {count}
@@ -530,7 +530,7 @@ export function IncomingActEditForm({
               </div>
             </div>
 
-            <div className="mt-6 space-y-5">
+            <div className="mt-4 space-y-5">
               {filteredProductsByCategory.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-zinc-300 bg-white px-4 py-5 text-sm text-zinc-500">
                   По текущему фильтру товары не найдены.

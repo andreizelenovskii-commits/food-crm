@@ -10,7 +10,7 @@ export function EmployeeForm() {
   const [selectedRole, setSelectedRole] = useState<EmployeeRole>(EMPLOYEE_ROLES[0]);
 
   return (
-    <form action={addEmployeeAction} className="space-y-5 rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+    <form action={addEmployeeAction} className="space-y-5 rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
       <div className="space-y-2">
         <h2 className="text-xl font-semibold text-zinc-950">Добавить сотрудника</h2>
         <p className="text-sm leading-6 text-zinc-600">Заполни данные и выбери роль.</p>

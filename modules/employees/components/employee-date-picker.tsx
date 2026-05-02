@@ -130,9 +130,9 @@ export function EmployeeDatePicker({
         </button>
 
         {pickerOpen && (
-          <div className="absolute left-0 top-full z-20 mt-3 w-full overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-lg">
+          <div className="absolute left-0 top-full z-20 mt-3 w-full overflow-hidden rounded-[14px] border border-zinc-200 bg-white shadow-lg">
             <div className="grid gap-4 p-4 sm:grid-cols-3">
-              <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-3">
+              <div className="rounded-[14px] border border-zinc-200 bg-zinc-50 p-3">
                 <div className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">День</div>
                 <div className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-300 scrollbar-track-zinc-100">
                   {days.map((day) => (
@@ -152,7 +152,7 @@ export function EmployeeDatePicker({
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-3">
+              <div className="rounded-[14px] border border-zinc-200 bg-zinc-50 p-3">
                 <div className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Месяц</div>
                 <div className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-300 scrollbar-track-zinc-100">
                   {MONTH_NAMES.map((month, index) => (
@@ -172,7 +172,7 @@ export function EmployeeDatePicker({
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-3">
+              <div className="rounded-[14px] border border-zinc-200 bg-zinc-50 p-3">
                 <div className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Год</div>
                 <div className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-300 scrollbar-track-zinc-100">
                   {years.map((year) => (
@@ -222,7 +222,7 @@ export function EmployeeDatePicker({
                   event.stopPropagation();
                   clearDate();
                 }}
-                className="rounded-2xl border border-red-300 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-100"
+                className="rounded-2xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-800 transition hover:bg-red-100"
               >
                 Очистить
               </button>

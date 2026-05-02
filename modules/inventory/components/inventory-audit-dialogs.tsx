@@ -231,7 +231,7 @@ export function InventoryAuditDialogs({
 
   return (
     <>
-      <aside className="rounded-[32px] border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5 xl:p-7">
+      <aside className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5 xl:p-5">
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">
             Действия
@@ -244,11 +244,11 @@ export function InventoryAuditDialogs({
           </p>
         </div>
 
-        <div className="mt-6 grid gap-4">
+        <div className="mt-4 grid gap-4">
           <button
             type="button"
             onClick={() => setIsCreateDialogOpen(true)}
-            className="rounded-[28px] border border-zinc-950 bg-zinc-950 px-5 py-5 text-left text-white transition hover:bg-zinc-800"
+            className="rounded-[14px] border border-zinc-950 bg-zinc-950 px-5 py-5 text-left text-white transition hover:bg-zinc-800"
           >
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/70">
               Новая сессия
@@ -267,7 +267,7 @@ export function InventoryAuditDialogs({
               setSelectedSessionId(activeSessions[0]?.id ?? null);
               setIsActiveDialogOpen(true);
             }}
-            className="rounded-[28px] border border-amber-200 bg-amber-50 px-5 py-5 text-left transition hover:border-amber-300 hover:bg-amber-100/60"
+            className="rounded-[14px] border border-amber-200 bg-amber-50 px-5 py-5 text-left transition hover:border-amber-300 hover:bg-amber-100/60"
           >
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-700">
               В работе
@@ -286,7 +286,7 @@ export function InventoryAuditDialogs({
               setSelectedSessionId(closedSessions[0]?.id ?? activeSessions[0]?.id ?? null);
               setIsHistoryDialogOpen(true);
             }}
-            className="rounded-[28px] border border-zinc-200 bg-zinc-50 px-5 py-5 text-left transition hover:border-zinc-300 hover:bg-white"
+            className="rounded-[14px] border border-zinc-200 bg-zinc-50 px-5 py-5 text-left transition hover:border-zinc-300 hover:bg-white"
           >
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-zinc-400">
               Архив
@@ -300,7 +300,7 @@ export function InventoryAuditDialogs({
           </button>
         </div>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-4">
+        <div className="mt-4 grid gap-3 sm:grid-cols-4">
           <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">На складе</p>
             <p className="mt-2 text-xl font-semibold tracking-[-0.03em] text-zinc-950">{products.length}</p>
@@ -330,7 +330,7 @@ export function InventoryAuditDialogs({
             role="dialog"
             aria-modal="true"
             aria-label="Создать инвентаризацию"
-            className="max-h-[calc(100vh-4rem)] w-full max-w-7xl overflow-y-auto rounded-[32px] border border-zinc-200 bg-[#fcfbf8] p-4 shadow-2xl shadow-zinc-950/20 sm:p-6"
+            className="max-h-[calc(100vh-4rem)] w-full max-w-7xl overflow-y-auto rounded-[14px] border border-zinc-200 bg-[#fffdfc] p-4 shadow-2xl shadow-zinc-950/20 sm:p-6"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-5 flex items-start justify-between gap-4">
@@ -355,19 +355,19 @@ export function InventoryAuditDialogs({
             </div>
 
             {createState.errorMessage ? (
-              <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
                 {createState.errorMessage}
               </div>
             ) : null}
 
             {createState.successMessage ? (
-              <div className="mb-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
                 {createState.successMessage}
               </div>
             ) : null}
 
-            <form action={canManageInventory ? createFormAction : undefined} className="grid gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(360px,0.75fr)]">
-              <section className="space-y-5 rounded-[28px] border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-950/5">
+            <form action={canManageInventory ? createFormAction : undefined} className="grid gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(360px,0.75fr)]">
+              <section className="space-y-5 rounded-[14px] border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-950/5">
                 <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(280px,320px)]">
                   <label className="space-y-2">
                     <span className="text-sm font-medium text-zinc-700">Поиск по товарам</span>
@@ -433,8 +433,8 @@ export function InventoryAuditDialogs({
                         onClick={() => setSelectedCategory(item.category)}
                         className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                           isActive
-                            ? "bg-emerald-600 text-white shadow-sm shadow-emerald-700/20"
-                            : "border border-emerald-100 bg-emerald-50/70 text-emerald-800 hover:border-emerald-200 hover:bg-emerald-100"
+                            ? "bg-red-800 text-white shadow-sm shadow-red-950/20"
+                            : "border border-red-100 bg-red-50/70 text-red-800 hover:border-red-200 hover:bg-red-100"
                         }`}
                       >
                         {item.category} {item.count}
@@ -445,7 +445,7 @@ export function InventoryAuditDialogs({
 
                 <div className="space-y-3">
                   {filteredProducts.length === 0 ? (
-                    <div className="rounded-[24px] border border-dashed border-zinc-300 bg-zinc-50 px-5 py-6 text-sm text-zinc-500">
+                    <div className="rounded-[12px] border border-dashed border-zinc-300 bg-zinc-50 px-5 py-4 sm:py-5 text-sm text-zinc-500">
                       По этому фильтру товары не найдены.
                     </div>
                   ) : (
@@ -457,15 +457,15 @@ export function InventoryAuditDialogs({
                           key={product.id}
                           type="button"
                           onClick={() => toggleProduct(product.id)}
-                          className={`grid w-full gap-4 rounded-[24px] border px-5 py-4 text-left transition lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center ${
+                          className={`grid w-full gap-4 rounded-[12px] border px-5 py-4 text-left transition lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center ${
                             isSelected
-                              ? "border-emerald-300 bg-emerald-50/80"
+                              ? "border-red-200 bg-red-50/80"
                               : "border-zinc-200 bg-zinc-50/80 hover:border-zinc-300 hover:bg-white"
                           }`}
                         >
                           <span
                             className={`mt-1 h-5 w-5 rounded-full border ${
-                              isSelected ? "border-emerald-600 bg-emerald-600" : "border-zinc-300 bg-white"
+                              isSelected ? "border-red-800 bg-red-800" : "border-zinc-300 bg-white"
                             }`}
                           />
                           <div className="space-y-1">
@@ -485,7 +485,7 @@ export function InventoryAuditDialogs({
                 </div>
               </section>
 
-              <section className="space-y-5 rounded-[28px] border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-950/5">
+              <section className="space-y-5 rounded-[14px] border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-950/5">
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-400">
                     Итоговый лист
@@ -513,7 +513,7 @@ export function InventoryAuditDialogs({
                   </div>
                 </div>
 
-                <div className="space-y-3 rounded-[24px] border border-zinc-200 bg-zinc-50/80 p-4">
+                <div className="space-y-3 rounded-[12px] border border-zinc-200 bg-zinc-50/80 p-4">
                   {selectedProducts.length === 0 ? (
                     <p className="text-sm leading-6 text-zinc-500">
                       Пока лист пустой. Выбери товары слева, и они появятся в итоговой ведомости.
@@ -573,7 +573,7 @@ export function InventoryAuditDialogs({
             role="dialog"
             aria-modal="true"
             aria-label="Действующие инвентаризации"
-            className="max-h-[calc(100vh-4rem)] w-full max-w-7xl overflow-y-auto rounded-[32px] border border-zinc-200 bg-[#fcfbf8] p-6 shadow-2xl shadow-zinc-950/20"
+            className="max-h-[calc(100vh-4rem)] w-full max-w-7xl overflow-y-auto rounded-[14px] border border-zinc-200 bg-[#fffdfc] p-4 sm:p-5 shadow-2xl shadow-zinc-950/20"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">
@@ -598,11 +598,11 @@ export function InventoryAuditDialogs({
             </div>
 
             {activeSessions.length === 0 ? (
-              <div className="mt-6 rounded-[28px] border border-dashed border-zinc-300 bg-zinc-50 px-5 py-6 text-sm leading-6 text-zinc-500">
+              <div className="mt-4 rounded-[14px] border border-dashed border-zinc-300 bg-zinc-50 px-5 py-4 sm:py-5 text-sm leading-6 text-zinc-500">
                 Сейчас нет ни одной действующей инвентаризации.
               </div>
             ) : (
-              <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(280px,0.72fr)_minmax(0,1.28fr)]">
+              <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(280px,0.72fr)_minmax(0,1.28fr)]">
                 <div className="space-y-3">
                   {activeSessions.map((session) => {
                     const isActive = session.id === selectedSessionId;
@@ -613,7 +613,7 @@ export function InventoryAuditDialogs({
                         key={session.id}
                         type="button"
                         onClick={() => setSelectedSessionId(session.id)}
-                        className={`w-full rounded-[24px] border px-5 py-4 text-left transition ${
+                        className={`w-full rounded-[12px] border px-5 py-4 text-left transition ${
                           isActive
                             ? "border-zinc-950 bg-zinc-950 text-white shadow-sm shadow-zinc-950/15"
                             : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50"
@@ -639,26 +639,26 @@ export function InventoryAuditDialogs({
                 {selectedSession ? (
                   <div className="space-y-4">
                     {saveState.errorMessage ? (
-                      <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                      <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
                         {saveState.errorMessage}
                       </div>
                     ) : null}
                     {saveState.successMessage ? (
-                      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                      <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
                         {saveState.successMessage}
                       </div>
                     ) : null}
                     {closeState.errorMessage ? (
-                      <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                      <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
                         {closeState.errorMessage}
                       </div>
                     ) : null}
                     {closeState.successMessage ? (
-                      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                      <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
                         {closeState.successMessage}
                       </div>
                     ) : null}
-                    <div className="rounded-[28px] border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-950/5">
+                    <div className="rounded-[14px] border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-950/5">
                       <div className="flex flex-wrap items-start justify-between gap-4">
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
@@ -699,7 +699,7 @@ export function InventoryAuditDialogs({
 
                     <form action={canManageInventory ? saveFormAction : undefined} className="space-y-4">
                       <input type="hidden" name="sessionId" value={selectedSession.id} />
-                      <div className="overflow-hidden rounded-[28px] border border-zinc-200 bg-white shadow-sm shadow-zinc-950/5">
+                      <div className="overflow-hidden rounded-[14px] border border-zinc-200 bg-white shadow-sm shadow-zinc-950/5">
                         <div className="overflow-x-auto">
                           <table className="min-w-full text-sm">
                             <thead className="bg-zinc-50">
@@ -725,9 +725,9 @@ export function InventoryAuditDialogs({
                                   varianceQuantity === null
                                     ? "text-zinc-400"
                                     : varianceQuantity > 0
-                                      ? "text-emerald-700"
+                                      ? "text-red-800"
                                       : varianceQuantity < 0
-                                        ? "text-red-600"
+                                        ? "text-red-700"
                                         : "text-zinc-600";
 
                                 return (
@@ -825,7 +825,7 @@ export function InventoryAuditDialogs({
             role="dialog"
             aria-modal="true"
             aria-label="Закрытые инвентаризации"
-            className="max-h-[calc(100vh-4rem)] w-full max-w-6xl overflow-y-auto rounded-[32px] border border-zinc-200 bg-[#fcfbf8] p-6 shadow-2xl shadow-zinc-950/20"
+            className="max-h-[calc(100vh-4rem)] w-full max-w-6xl overflow-y-auto rounded-[14px] border border-zinc-200 bg-[#fffdfc] p-4 sm:p-5 shadow-2xl shadow-zinc-950/20"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">
@@ -850,11 +850,11 @@ export function InventoryAuditDialogs({
             </div>
 
             {closedSessions.length === 0 ? (
-              <div className="mt-6 rounded-[28px] border border-dashed border-zinc-300 bg-zinc-50 px-5 py-6 text-sm leading-6 text-zinc-500">
+              <div className="mt-4 rounded-[14px] border border-dashed border-zinc-300 bg-zinc-50 px-5 py-4 sm:py-5 text-sm leading-6 text-zinc-500">
                 Пока нет ни одной закрытой инвентаризации.
               </div>
             ) : (
-              <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(280px,0.8fr)_minmax(0,1.2fr)]">
+              <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(280px,0.8fr)_minmax(0,1.2fr)]">
                 <div className="space-y-3">
                   {closedSessions.map((session) => {
                     const isActive = session.id === selectedSessionId;
@@ -864,7 +864,7 @@ export function InventoryAuditDialogs({
                         key={session.id}
                         type="button"
                         onClick={() => setSelectedSessionId(session.id)}
-                        className={`w-full rounded-[24px] border px-5 py-4 text-left transition ${
+                        className={`w-full rounded-[12px] border px-5 py-4 text-left transition ${
                           isActive
                             ? "border-zinc-950 bg-zinc-950 text-white shadow-sm shadow-zinc-950/15"
                             : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50"
@@ -884,7 +884,7 @@ export function InventoryAuditDialogs({
                   })}
                 </div>
 
-                <div className="rounded-[28px] border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-950/5">
+                <div className="rounded-[14px] border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-950/5">
                   {selectedSession ? (
                     <div className="space-y-5">
                       <div className="space-y-2">
@@ -928,7 +928,7 @@ export function InventoryAuditDialogs({
                         </div>
                       </div>
 
-                      <div className="overflow-hidden rounded-[28px] border border-zinc-200 bg-white shadow-sm shadow-zinc-950/5">
+                      <div className="overflow-hidden rounded-[14px] border border-zinc-200 bg-white shadow-sm shadow-zinc-950/5">
                         <div className="overflow-x-auto">
                           <table className="min-w-full text-sm">
                             <thead className="bg-zinc-50">
@@ -947,9 +947,9 @@ export function InventoryAuditDialogs({
                                   item.varianceQuantity === null
                                     ? "text-zinc-400"
                                     : item.varianceQuantity > 0
-                                      ? "text-emerald-700"
+                                      ? "text-red-800"
                                       : item.varianceQuantity < 0
-                                        ? "text-red-600"
+                                        ? "text-red-700"
                                         : "text-zinc-600";
 
                                 return (

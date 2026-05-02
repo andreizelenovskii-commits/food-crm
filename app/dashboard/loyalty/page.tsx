@@ -26,8 +26,8 @@ export default async function LoyaltyPage() {
       backHref="/dashboard"
       action={<SessionUserActions user={user} />}
     >
-      <div className="space-y-6">
-        <section className="rounded-3xl border border-zinc-200 bg-[linear-gradient(180deg,#fffdfa_0%,#edf4ea_100%)] p-6 shadow-sm shadow-zinc-950/5">
+      <div className="space-y-5">
+        <section className="rounded-[14px] border border-zinc-200 bg-[linear-gradient(180deg,#ffffff_0%,#fff1f1_100%)] p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
           <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">
             Лояльность
           </p>
@@ -38,18 +38,18 @@ export default async function LoyaltyPage() {
             Базовая логика уже готова: уровень клиента определяется по общей сумме покупок, а дальше на этой основе можно строить скидки, бонусы и персональные предложения.
           </p>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
             <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
               <p className="text-sm font-medium text-zinc-500">Участников</p>
-              <p className="mt-3 text-3xl font-semibold text-zinc-950">{snapshot.participantsCount}</p>
+              <p className="mt-3 text-2xl font-semibold text-zinc-950">{snapshot.participantsCount}</p>
             </div>
             <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
               <p className="text-sm font-medium text-zinc-500">Активных уровней</p>
-              <p className="mt-3 text-3xl font-semibold text-zinc-950">{snapshot.activeLevelsCount}</p>
+              <p className="mt-3 text-2xl font-semibold text-zinc-950">{snapshot.activeLevelsCount}</p>
             </div>
             <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
               <p className="text-sm font-medium text-zinc-500">Клиентов с заказами</p>
-              <p className="mt-3 text-3xl font-semibold text-zinc-950">{snapshot.monthlyParticipantsCount}</p>
+              <p className="mt-3 text-2xl font-semibold text-zinc-950">{snapshot.monthlyParticipantsCount}</p>
             </div>
           </div>
         </section>
@@ -58,12 +58,12 @@ export default async function LoyaltyPage() {
           {snapshot.byLevel.map((entry) => (
             <article
               key={entry.level}
-              className={`rounded-3xl border bg-gradient-to-br p-5 shadow-sm shadow-zinc-950/5 ${LOYALTY_LEVEL_STYLES[entry.level]}`}
+              className={`rounded-[14px] border bg-gradient-to-br p-5 shadow-sm shadow-zinc-950/5 ${LOYALTY_LEVEL_STYLES[entry.level]}`}
             >
               <p className="text-xs font-semibold uppercase tracking-[0.18em] opacity-70">
                 {LOYALTY_LEVEL_LABELS[entry.level]}
               </p>
-              <p className="mt-3 text-3xl font-semibold">{entry.config.discountPercent}%</p>
+              <p className="mt-3 text-2xl font-semibold">{entry.config.discountPercent}%</p>
               <p className="mt-2 text-sm opacity-80">
                 от {formatMoney(entry.config.minSpentCents)} общего оборота клиента
               </p>
@@ -79,13 +79,13 @@ export default async function LoyaltyPage() {
           ))}
         </section>
 
-        <section className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+        <section className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
           <h2 className="text-xl font-semibold text-zinc-950">Клиенты по уровням</h2>
           <p className="mt-2 text-sm leading-6 text-zinc-600">
             Здесь видно, кто уже дошёл до более высокого уровня и сколько осталось до следующего.
           </p>
 
-          <div className="mt-6 space-y-6">
+          <div className="mt-4 space-y-5">
             {snapshot.byLevel.map((entry) => (
               <section key={entry.level} className="space-y-4">
                 <div className="flex items-center justify-between gap-3">
@@ -98,7 +98,7 @@ export default async function LoyaltyPage() {
                 </div>
 
                 {entry.clients.length === 0 ? (
-                  <div className="rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-5 text-sm text-zinc-500">
+                  <div className="rounded-[14px] border border-dashed border-zinc-300 bg-zinc-50 p-5 text-sm text-zinc-500">
                     Пока никто не попал в этот уровень.
                   </div>
                 ) : (
@@ -106,7 +106,7 @@ export default async function LoyaltyPage() {
                     {entry.clients.map((client) => (
                       <article
                         key={client.id}
-                        className="rounded-3xl border border-zinc-200 bg-zinc-50 p-5"
+                        className="rounded-[14px] border border-zinc-200 bg-zinc-50 p-5"
                       >
                         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                           <div className="space-y-2">

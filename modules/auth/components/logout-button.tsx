@@ -13,7 +13,7 @@ export function LogoutButton() {
       <input type="hidden" name="returnTo" value={currentUrl} />
       <button
         type="submit"
-        className="rounded-2xl border border-emerald-200 bg-white px-4 py-2 text-sm font-medium text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-900"
+        className="rounded-[12px] border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-800 transition hover:border-red-200 hover:bg-red-50 hover:text-red-900"
       >
         Выйти
       </button>

@@ -14,7 +14,7 @@ export function EmployeeAdjustmentForm({ employeeId, defaultType }: { employeeId
   const defaultDate = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   return (
-    <form action={addEmployeeAdjustmentAction} className="space-y-5 rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+    <form action={addEmployeeAdjustmentAction} className="space-y-5 rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
       <div className="space-y-2">
         <h2 className="text-xl font-semibold text-zinc-950">Добавить запись</h2>
         <p className="text-sm leading-6 text-zinc-600">Занеси аванс, штраф или долг сотруднику.</p>

@@ -51,15 +51,14 @@ export async function browserBackendJson<T>(
 ) {
   const apiUrl = getBrowserBackendApiUrl();
   const url = `${apiUrl}${path.startsWith("/") ? path : `/${path}`}`;
+  const hasBody = init.body !== undefined;
 
   try {
     return parseResponse<T>(await fetch(url, {
       method: init.method ?? "POST",
       credentials: "include",
-      headers: {
-        "content-type": "application/json",
-      },
-      body: init.body === undefined ? undefined : JSON.stringify(init.body),
+      headers: hasBody ? { "content-type": "application/json" } : undefined,
+      body: hasBody ? JSON.stringify(init.body) : undefined,
     }));
   } catch (error) {
     if (error instanceof TypeError) {

@@ -1,11 +1,12 @@
 import { hasPermission } from "@/modules/auth/authz";
 import { USER_ROLE_LABELS, type SessionUser } from "@/modules/auth/auth.types";
+import type { UpcomingBirthdayClient } from "@/modules/clients/clients.page-model";
+import type { ModuleIconName } from "@/components/ui/module-icon";
 import type {
   DashboardSnapshot,
   EmployeeDashboardSnapshot,
 } from "@/modules/dashboard/dashboard.types";
 
-const NUMBER_FORMATTER = new Intl.NumberFormat("ru-RU");
 const STAFF_ROLES = new Set(["Повар", "Курьер", "Диспетчер"]);
 
 export type DashboardPageSearchParams = {
@@ -16,6 +17,16 @@ export type DashboardPageProps = {
   user: SessionUser;
   dashboard: DashboardSnapshot;
   employeeDashboard: EmployeeDashboardSnapshot;
+  upcomingBirthdays?: UpcomingBirthdayClient[];
+};
+
+type ModuleCard = {
+  href: string;
+  label: string;
+  value: string | number;
+  description: string;
+  icon: ModuleIconName;
+  visible: boolean;
 };
 
 function formatMonthKey(value: Date) {
@@ -53,12 +64,29 @@ export function buildDashboardPageViewModel({
       }
     : null;
 
-  const moduleCards = [
+  const moduleCards: ModuleCard[] = [
+    {
+      href: "/dashboard/sales",
+      label: "Продажи",
+      value: "BI",
+      description: "Аналитика и маржа",
+      icon: "chart",
+      visible: hasPermission(user, "view_orders"),
+    },
+    {
+      href: "/dashboard/reports",
+      label: "Отчеты",
+      value: "PDF",
+      description: "Месячные срезы",
+      icon: "report",
+      visible: hasPermission(user, "view_dashboard"),
+    },
     {
       href: "/dashboard/orders",
       label: "Заказы",
       value: dashboard.entityCounts.orders,
       description: "Список заказов",
+      icon: "receipt",
       visible: hasPermission(user, "view_orders"),
     },
     {
@@ -66,6 +94,7 @@ export function buildDashboardPageViewModel({
       label: "Клиенты",
       value: dashboard.entityCounts.clients,
       description: "Список и создание",
+      icon: "users",
       visible: hasPermission(user, "view_clients"),
     },
     {
@@ -73,6 +102,7 @@ export function buildDashboardPageViewModel({
       label: "Склад",
       value: dashboard.entityCounts.products,
       description: "Товары и остатки",
+      icon: "box",
       visible: hasPermission(user, "view_inventory"),
     },
     {
@@ -80,6 +110,7 @@ export function buildDashboardPageViewModel({
       label: "Каталог",
       value: "Site",
       description: "Прайс и позиции сайта",
+      icon: "book",
       visible: hasPermission(user, "view_catalog"),
     },
     {
@@ -87,6 +118,7 @@ export function buildDashboardPageViewModel({
       label: "Наш сайт",
       value: "Web",
       description: "Ссылка и быстрый переход",
+      icon: "globe",
       visible: true,
     },
     {
@@ -94,6 +126,7 @@ export function buildDashboardPageViewModel({
       label: "Отзывы",
       value: "New",
       description: "Оценки и комментарии",
+      icon: "message",
       visible: true,
     },
     {
@@ -101,6 +134,7 @@ export function buildDashboardPageViewModel({
       label: "Система лояльности",
       value: "CRM",
       description: "Баллы, скидки, уровни",
+      icon: "star",
       visible: true,
     },
     {
@@ -108,6 +142,7 @@ export function buildDashboardPageViewModel({
       label: "Настройки",
       value: "Core",
       description: "ОФД, кассы, интеграции",
+      icon: "settings",
       visible: hasPermission(user, "view_settings"),
     },
     {
@@ -115,6 +150,7 @@ export function buildDashboardPageViewModel({
       label: "Сотрудники",
       value: dashboard.entityCounts.employees,
       description: "Профили",
+      icon: "badge",
       visible: hasPermission(user, "view_employees"),
     },
     {
@@ -122,46 +158,15 @@ export function buildDashboardPageViewModel({
       label: "Мой профиль",
       value: USER_ROLE_LABELS[user.role],
       description: "Аккаунт и роль в системе",
+      icon: "user",
       visible: true,
     },
   ];
-
-  const visibleStatistics = [
-    hasPermission(user, "view_orders")
-      ? {
-          label: "Всего заказов",
-          value: NUMBER_FORMATTER.format(dashboard.entityCounts.orders),
-          hint: "Все заказы, доступные для просмотра",
-        }
-      : null,
-    hasPermission(user, "view_clients")
-      ? {
-          label: "Клиентская база",
-          value: NUMBER_FORMATTER.format(dashboard.entityCounts.clients),
-          hint: "Клиенты и организации в базе",
-        }
-      : null,
-    hasPermission(user, "view_inventory")
-      ? {
-          label: "Складские позиции",
-          value: NUMBER_FORMATTER.format(dashboard.entityCounts.products),
-          hint: "Товары, доступные для продажи",
-        }
-      : null,
-    hasPermission(user, "view_employees")
-      ? {
-          label: "Команда",
-          value: NUMBER_FORMATTER.format(dashboard.entityCounts.employees),
-          hint: "Сотрудники с заведёнными профилями",
-        }
-      : null,
-  ].filter((item): item is NonNullable<typeof item> => Boolean(item));
 
   return {
     isStaffRole,
     monthNavigation,
     showSalesSection: hasPermission(user, "view_orders") && !isStaffRole,
     visibleModuleCards: moduleCards.filter((card) => card.visible),
-    visibleStatistics,
   };
 }

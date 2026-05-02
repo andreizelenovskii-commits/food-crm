@@ -11,7 +11,7 @@ export function SurfaceCard({
 }: SurfaceCardProps) {
   return (
     <div
-      className={`rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5 ${className}`.trim()}
+      className={`rounded-[14px] border border-red-950/10 bg-white/95 p-4 shadow-sm shadow-red-950/5 sm:p-5 ${className}`.trim()}
     >
       {children}
     </div>

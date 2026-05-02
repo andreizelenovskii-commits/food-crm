@@ -1,15 +1,19 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useActionState } from "react";
+import { useActionState, useMemo, useState } from "react";
 import {
   addCatalogItemAction,
   updateCatalogItemAction,
   uploadCatalogImageAction,
 } from "@/modules/catalog/catalog.actions";
-import type { CatalogFormState, CatalogFormValues } from "@/modules/catalog/catalog.form-types";
 import {
-  type CatalogItem,
+  CATALOG_FIELD_CLASS_NAME,
+  type CatalogItemFormProps,
+  EMPTY_CATALOG_FORM_VALUES,
+  resolveInitialPizzaSize,
+} from "@/modules/catalog/components/catalog-item-form.model";
+import type { CatalogFormState } from "@/modules/catalog/catalog.form-types";
+import {
   CATALOG_PRICE_LIST_LABELS,
   CATALOG_PRICE_LIST_TYPES,
 } from "@/modules/catalog/catalog.types";
@@ -25,30 +29,11 @@ export function CatalogItemForm({
   initialValues,
   submitLabel,
   techCardOptions,
-}: {
-  mode?: "create" | "edit";
-  initialItem?: CatalogItem;
-  initialValues?: CatalogFormValues;
-  submitLabel?: string;
-  techCardOptions: Array<{
-    id: number;
-    name: string;
-    category: string;
-    pizzaSize: string | null;
-  }>;
-}) {
+}: CatalogItemFormProps) {
   const action = mode === "edit" ? updateCatalogItemAction : addCatalogItemAction;
   const initialState: CatalogFormState = {
     errorMessage: null,
-    values: initialValues ?? {
-      name: "",
-      priceListType: "",
-      category: "",
-      description: "",
-      imageUrl: "",
-      price: "",
-      technologicalCardId: "",
-    },
+    values: initialValues ?? EMPTY_CATALOG_FORM_VALUES,
   };
   const [state, formAction, isPending] = useActionState(action, initialState);
   const [selectedPriceListType, setSelectedPriceListType] = useState(initialState.values.priceListType);
@@ -63,9 +48,7 @@ export function CatalogItemForm({
   const selectedTechCard =
     techCardOptions.find((option) => String(option.id) === selectedTechCardId) ?? null;
   const [selectedPizzaSize, setSelectedPizzaSize] = useState<TechCardPizzaSize | "">(
-    selectedTechCard?.pizzaSize && TECH_CARD_PIZZA_SIZES.includes(selectedTechCard.pizzaSize as TechCardPizzaSize)
-      ? (selectedTechCard.pizzaSize as TechCardPizzaSize)
-      : "",
+    resolveInitialPizzaSize(selectedTechCard?.pizzaSize),
   );
 
   const sortedTechCardOptions = useMemo(
@@ -90,9 +73,6 @@ export function CatalogItemForm({
       return true;
     });
   }, [selectedCategory, selectedPizzaSize, sortedTechCardOptions]);
-  const fieldClassName =
-    "w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5";
-
   const uploadImage = async (file: File | undefined) => {
     if (!file) {
       return;
@@ -116,7 +96,7 @@ export function CatalogItemForm({
   return (
     <form
       action={formAction}
-      className="space-y-6 rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5"
+      className="space-y-5 rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5"
     >
       {initialItem ? <input type="hidden" name="catalogItemId" value={initialItem.id} /> : null}
       <div className="space-y-3">
@@ -137,7 +117,7 @@ export function CatalogItemForm({
           type="text"
           defaultValue={state.values.name}
           placeholder="Например: Пицца Маргарита"
-          className={fieldClassName}
+          className={CATALOG_FIELD_CLASS_NAME}
           required
         />
       </label>
@@ -160,7 +140,7 @@ export function CatalogItemForm({
             value={imageUrl}
             onChange={(event) => setImageUrl(event.target.value)}
             placeholder="Ссылка появится после загрузки фото"
-            className={fieldClassName}
+            className={CATALOG_FIELD_CLASS_NAME}
             required
             readOnly={isImageUploading}
           />
@@ -168,7 +148,7 @@ export function CatalogItemForm({
             <p className="text-xs leading-5 text-zinc-500">Загружаем фото...</p>
           ) : null}
           {imageUploadError ? (
-            <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
               {imageUploadError}
             </p>
           ) : null}
@@ -261,7 +241,7 @@ export function CatalogItemForm({
                   setSelectedPizzaSize("");
                 }
               }}
-              className={`${fieldClassName} appearance-none pr-12`}
+              className={`${CATALOG_FIELD_CLASS_NAME} appearance-none pr-12`}
               required
             >
               <option value="">Выбери категорию</option>
@@ -289,7 +269,7 @@ export function CatalogItemForm({
               step="0.01"
               defaultValue={state.values.price}
               placeholder="0"
-              className={`${fieldClassName} pl-11`}
+              className={`${CATALOG_FIELD_CLASS_NAME} pl-11`}
               required
             />
             <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-sm font-medium text-zinc-500">
@@ -357,7 +337,7 @@ export function CatalogItemForm({
                   );
                 }
               }}
-              className={`${fieldClassName} appearance-none pr-12`}
+              className={`${CATALOG_FIELD_CLASS_NAME} appearance-none pr-12`}
               required
             >
               <option value="">Выбери техкарту</option>
@@ -390,12 +370,12 @@ export function CatalogItemForm({
           rows={4}
           defaultValue={state.values.description}
           placeholder="Короткое описание позиции для сайта"
-          className={`${fieldClassName} min-h-[9rem] resize-y`}
+          className={`${CATALOG_FIELD_CLASS_NAME} min-h-[9rem] resize-y`}
         />
       </label>
 
       {state.errorMessage ? (
-        <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {state.errorMessage}
         </p>
       ) : null}

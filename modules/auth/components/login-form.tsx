@@ -12,19 +12,91 @@ const ACCESS_VIEWS = [
   {
     id: "admin",
     label: "Управляющий",
-    hint: "Полный доступ к заказам, персоналу и настройкам.",
+    icon: "manager",
+  },
+  {
+    id: "cook",
+    label: "Повар",
+    icon: "chef",
+  },
+  {
+    id: "courier",
+    label: "Курьер",
+    icon: "courier",
   },
   {
     id: "dispatch",
     label: "Диспетчер",
-    hint: "Оперативная работа с входящими заявками и статусами.",
-  },
-  {
-    id: "kitchen",
-    label: "Кухня",
-    hint: "Контроль состава, сборки и исполнения заказов.",
+    icon: "dispatch",
   },
 ] as const;
+
+type RoleIconName = (typeof ACCESS_VIEWS)[number]["icon"];
+
+function RoleIcon({
+  name,
+  className,
+}: {
+  name: RoleIconName;
+  className?: string;
+}) {
+  const sharedProps = {
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.8,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    className,
+    "aria-hidden": true,
+  };
+
+  if (name === "manager") {
+    return (
+      <svg {...sharedProps}>
+        <path d="M8.5 8.2a3.5 3.5 0 0 1 7 0v1.2a3.5 3.5 0 0 1-7 0V8.2Z" />
+        <path d="M6.2 21v-1.4A4.6 4.6 0 0 1 10.8 15h2.4a4.6 4.6 0 0 1 4.6 4.6V21" />
+        <path d="m10.2 15.2 1.8 2.2 1.8-2.2" />
+        <path d="m11 18.8 1-1.4 1 1.4" />
+        <path d="M9.2 5.7h5.6" />
+      </svg>
+    );
+  }
+
+  if (name === "chef") {
+    return (
+      <svg {...sharedProps}>
+        <path d="M7.2 10.8a3.2 3.2 0 1 1 3.3-5.1A3.4 3.4 0 0 1 17 7.2a3 3 0 0 1-.3 5.9" />
+        <path d="M7.2 11.2h9.6v6.6a2.2 2.2 0 0 1-2.2 2.2H9.4a2.2 2.2 0 0 1-2.2-2.2v-6.6Z" />
+        <path d="M9.7 15.2h4.6" />
+        <path d="M10 18h4" />
+      </svg>
+    );
+  }
+
+  if (name === "courier") {
+    return (
+      <svg {...sharedProps}>
+        <path d="M4 15.5V7.8A1.8 1.8 0 0 1 5.8 6h8.4A1.8 1.8 0 0 1 16 7.8v7.7" />
+        <path d="M16 10h2.4l1.6 2.6v2.9" />
+        <path d="M6.5 18.5a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4Z" />
+        <path d="M17.5 18.5a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4Z" />
+        <path d="M8.2 16h7.6" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg {...sharedProps}>
+      <path d="M6.8 12.5v-1.8a5.2 5.2 0 0 1 10.4 0v1.8" />
+      <path d="M6.8 12.2H5.7a1.7 1.7 0 0 0-1.7 1.7v1.2a1.7 1.7 0 0 0 1.7 1.7h1.1v-4.6Z" />
+      <path d="M17.2 12.2h1.1a1.7 1.7 0 0 1 1.7 1.7v1.2a1.7 1.7 0 0 1-1.7 1.7h-1.1v-4.6Z" />
+      <path d="M17.2 16.8v.4a2.3 2.3 0 0 1-2.3 2.3h-2" />
+      <path d="M10.7 19.5h2.2" />
+      <path d="M10 10.4h4" />
+    </svg>
+  );
+}
 
 export function LoginForm({ returnTo }: { returnTo?: string }) {
   const [state, formAction, isPending] = useActionState(
@@ -35,56 +107,33 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
     useState<(typeof ACCESS_VIEWS)[number]["id"]>("admin");
   const [showPassword, setShowPassword] = useState(false);
 
-  const currentView =
-    ACCESS_VIEWS.find((view) => view.id === selectedView) ?? ACCESS_VIEWS[0];
   const inputClassName =
-    "w-full rounded-2xl border border-zinc-300 bg-white/90 px-4 py-3 text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5";
+    "w-full rounded-[8px] border border-red-950/15 bg-white/90 px-4 py-3 text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-red-400 focus:ring-2 focus:ring-red-800/10";
 
   return (
-    <SurfaceCard className="mx-auto max-w-xl overflow-hidden border-zinc-200/80 bg-white/95 p-0 shadow-xl shadow-zinc-950/8">
-      <div className="border-b border-zinc-200 bg-[linear-gradient(180deg,rgba(250,249,246,0.98)_0%,rgba(245,242,236,0.92)_100%)] px-6 py-6 sm:px-7">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+    <SurfaceCard className="mx-auto max-w-xl overflow-hidden border-red-950/10 bg-white/95 p-0 shadow-xl shadow-red-950/10">
+      <div className="border-b border-red-950/10 bg-[linear-gradient(135deg,#ffffff_0%,#fff3f3_100%)] px-5 py-5">
+        <div className="flex items-start justify-between gap-4">
           <div className="space-y-3">
-            <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-800">
-              Secure Access
+            <span className="inline-flex items-center rounded-[8px] border border-red-200 bg-red-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-red-800">
+              FoodLike Access
             </span>
-            <div className="space-y-2">
-              <h2 className="text-2xl font-semibold text-zinc-950 sm:text-3xl">
-                Вход в CRM
-              </h2>
-              <p className="max-w-md text-sm leading-6 text-zinc-600">
-                Аккуратный экран авторизации для команды: без лишнего шума, с
-                понятной навигацией и быстрым доступом к рабочей панели.
-              </p>
-            </div>
-          </div>
-
-          <div className="min-w-[180px] rounded-3xl border border-white/80 bg-white/80 p-4 shadow-sm shadow-zinc-950/5 backdrop-blur">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
-              Активный режим
-            </p>
-            <p className="mt-2 text-base font-semibold text-zinc-950">
-              {currentView.label}
-            </p>
-            <p className="mt-1 text-sm leading-5 text-zinc-600">
-              {currentView.hint}
-            </p>
+            <h2 className="text-2xl font-semibold text-zinc-950 sm:text-2xl">
+              Вход в CRM
+            </h2>
           </div>
         </div>
       </div>
 
-      <form action={formAction} className="space-y-6 px-6 py-6 sm:px-7 sm:py-7">
+      <form action={formAction} className="space-y-5 px-5 py-5">
         <input type="hidden" name="returnTo" value={returnTo ?? ""} />
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-3">
             <span className="text-sm font-medium text-zinc-700">
-              Рабочий контур
-            </span>
-            <span className="text-xs text-zinc-500">
-              Переключает вид и подсказки
+              Должность
             </span>
           </div>
-          <div className="grid gap-2 rounded-3xl border border-zinc-200 bg-zinc-50 p-2 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3">
             {ACCESS_VIEWS.map((view) => {
               const isActive = selectedView === view.id;
               return (
@@ -92,20 +141,24 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
                   key={view.id}
                   type="button"
                   onClick={() => setSelectedView(view.id)}
-                  className={`rounded-2xl px-4 py-3 text-left text-sm font-medium transition ${
+                  className={`group flex min-h-20 min-w-0 items-center gap-3 rounded-[14px] border px-3 py-3 text-left transition ${
                     isActive
-                      ? "border border-zinc-950 bg-zinc-950 text-white shadow-sm"
-                      : "border border-transparent bg-transparent text-zinc-600 hover:border-zinc-200 hover:bg-white hover:text-zinc-950"
+                      ? "border-red-800 bg-red-800 text-white shadow-lg shadow-red-950/18"
+                      : "border-red-950/10 bg-white text-zinc-700 shadow-sm shadow-red-950/5 hover:border-red-200 hover:bg-red-50/70 hover:text-red-800"
                   }`}
                   aria-pressed={isActive}
                 >
-                  <span className="block">{view.label}</span>
                   <span
-                    className={`mt-1 block text-xs leading-5 ${
-                      isActive ? "text-zinc-300" : "text-zinc-500"
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] transition ${
+                      isActive
+                        ? "bg-white/14 text-white"
+                        : "bg-red-50 text-red-800 group-hover:bg-white"
                     }`}
                   >
-                    {view.hint}
+                    <RoleIcon name={view.icon} className="h-6 w-6" />
+                  </span>
+                  <span className="min-w-0 text-base font-semibold leading-5">
+                    {view.label}
                   </span>
                 </button>
               );
@@ -135,8 +188,8 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
               onClick={() => setShowPassword((current) => !current)}
               className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
                 showPassword
-                  ? "border-zinc-950 bg-zinc-950 text-white"
-                  : "border-zinc-300 bg-white text-zinc-700 hover:border-zinc-400 hover:text-zinc-950"
+                  ? "border-red-800 bg-red-800 text-white"
+                  : "border-red-200 bg-white text-red-800 hover:border-red-200 hover:text-red-900"
               }`}
               aria-pressed={showPassword}
             >
@@ -153,38 +206,22 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
               autoComplete="current-password"
               required
             />
-            <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-xs font-medium uppercase tracking-[0.16em] text-zinc-400">
-              {showPassword ? "Visible" : "Hidden"}
-            </span>
           </div>
         </label>
 
         {state.errorMessage ? (
-          <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <p className="rounded-[8px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             {state.errorMessage}
           </p>
         ) : null}
 
-        <div className="rounded-3xl border border-zinc-200 bg-zinc-50/80 p-3">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-1 px-2 py-1">
-              <p className="text-sm font-medium text-zinc-950">
-                Доступ будет открыт для роли «{currentView.label}»
-              </p>
-              <p className="text-xs leading-5 text-zinc-500">
-                После входа откроется рабочая панель с нужным контекстом.
-              </p>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isPending}
-              className="w-full rounded-2xl bg-zinc-950 px-5 py-3 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-500 sm:w-auto sm:min-w-[180px]"
-            >
-              {isPending ? "Входим..." : "Перейти в систему"}
-            </button>
-          </div>
-        </div>
+        <button
+          type="submit"
+          disabled={isPending}
+          className="w-full rounded-[14px] bg-red-800 px-5 py-3 text-sm font-medium text-white transition hover:bg-red-900 disabled:cursor-not-allowed disabled:bg-zinc-500"
+        >
+          {isPending ? "Входим..." : "Перейти в систему"}
+        </button>
       </form>
     </SurfaceCard>
   );

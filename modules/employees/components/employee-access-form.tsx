@@ -145,7 +145,7 @@ export function EmployeeAccessForm({ employee }: { employee: EmployeeProfile }) 
   };
 
   return (
-    <section className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+    <section className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
       <div className="space-y-2">
         <h2 className="text-xl font-semibold text-zinc-950">Доступ в систему</h2>
         <p className="text-sm leading-6 text-zinc-600">
@@ -178,7 +178,7 @@ export function EmployeeAccessForm({ employee }: { employee: EmployeeProfile }) 
             <button
               type="button"
               onClick={() => setPassword(generateStrongPassword())}
-              className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100"
+              className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-800 transition hover:border-red-200 hover:bg-red-100"
             >
               Сгенерировать пароль
             </button>
@@ -198,19 +198,19 @@ export function EmployeeAccessForm({ employee }: { employee: EmployeeProfile }) 
         </div>
 
         {state.errorMessage ? (
-          <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             {state.errorMessage}
           </p>
         ) : null}
 
         {state.successMessage ? (
-          <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             {state.successMessage}
           </p>
         ) : null}
 
         {copyMessage ? (
-          <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             {copyMessage}
           </p>
         ) : null}
@@ -226,7 +226,7 @@ export function EmployeeAccessForm({ employee }: { employee: EmployeeProfile }) 
           <button
             type="button"
             onClick={() => void handleCopyCredentials()}
-            className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100"
+            className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800 transition hover:border-red-200 hover:bg-red-100"
           >
             Копировать данные
           </button>

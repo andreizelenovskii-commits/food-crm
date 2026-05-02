@@ -71,11 +71,11 @@ export default async function EmployeesPage() {
       backHref="/dashboard"
       action={<SessionUserActions user={user} />}
     >
-      <div className="grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="space-y-6">
-          <section className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+      <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
+        <div className="space-y-5">
+          <section className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
             <h2 className="text-xl font-semibold text-zinc-950">Список сотрудников</h2>
-            <div className="mt-6 space-y-4">
+            <div className="mt-4 space-y-4">
               {employees.length === 0 ? (
                 <p className="text-sm text-zinc-600">Пока нет ни одного сотрудника.</p>
               ) : (
@@ -83,12 +83,12 @@ export default async function EmployeesPage() {
                   {employees.map((employee) => (
                     <div
                       key={employee.id}
-                      className="group relative rounded-3xl border border-zinc-200 bg-zinc-50 p-4 transition hover:border-zinc-300 hover:bg-white"
+                      className="group relative rounded-[14px] border border-zinc-200 bg-zinc-50 p-4 transition hover:border-zinc-300 hover:bg-white"
                     >
                       <Link
                         href={`/dashboard/employees/${employee.id}`}
                         aria-label={`Открыть профиль сотрудника ${employee.name}`}
-                        className="absolute inset-0 rounded-3xl"
+                        className="absolute inset-0 rounded-[14px]"
                       />
                       <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0">
@@ -123,7 +123,7 @@ export default async function EmployeesPage() {
         </div>
 
         {hasPermission(user, "manage_employees") ? (
-          <div className="space-y-6">
+          <div className="space-y-5">
             <EmployeeForm />
           </div>
         ) : null}

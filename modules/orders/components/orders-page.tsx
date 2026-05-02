@@ -46,7 +46,7 @@ function OrderCard({
   const canShowCancel = canCancelOrder(order.status, user.role);
 
   return (
-    <article className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-950/5">
+    <article className="rounded-[14px] border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-950/5">
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-3">
           <h3 className="text-lg font-semibold text-zinc-950">Заказ #{order.id}</h3>
@@ -87,7 +87,7 @@ function OrderCard({
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">Сумма</p>
           <p className="mt-2 text-2xl font-semibold text-zinc-950">{formatMoney(order.totalCents)}</p>
           {order.discountPercent > 0 ? (
-            <p className="mt-1 text-xs text-emerald-700">
+            <p className="mt-1 text-xs text-red-800">
               скидка {order.discountPercent}% от {formatMoney(order.subtotalCents)}
             </p>
           ) : null}
@@ -127,7 +127,7 @@ function OrderCard({
                 orderId={order.id}
                 status="CANCELLED"
                 label="Отменить"
-                className="rounded-2xl border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-2xl border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-800 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
               />
             ) : null}
           </div>
@@ -149,7 +149,7 @@ function OrderColumn({
   user: SessionUser;
 }) {
   return (
-    <section className="rounded-3xl border border-zinc-200 bg-white/90 p-5 shadow-sm shadow-zinc-950/5">
+    <section className="rounded-[14px] border border-zinc-200 bg-white/90 p-5 shadow-sm shadow-zinc-950/5">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
           <h2 className="text-lg font-semibold text-zinc-950">{title}</h2>
@@ -162,7 +162,7 @@ function OrderColumn({
 
       <div className="mt-5 space-y-4">
         {orders.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-5 text-sm text-zinc-500">
+          <div className="rounded-[14px] border border-dashed border-zinc-300 bg-zinc-50 p-5 text-sm text-zinc-500">
             Пока пусто.
           </div>
         ) : (
@@ -201,27 +201,27 @@ export function OrdersPage({
       backHref="/dashboard"
       action={<SessionUserActions user={user} />}
     >
-      <div className="space-y-6 pb-24">
+      <div className="space-y-5 pb-12">
         <section className="grid gap-4 md:grid-cols-4">
-          <article className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+          <article className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
             <p className="text-sm font-medium text-zinc-500">Всего заказов</p>
-            <p className="mt-3 text-3xl font-semibold text-zinc-950">{orders.length}</p>
+            <p className="mt-3 text-2xl font-semibold text-zinc-950">{orders.length}</p>
           </article>
-          <article className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+          <article className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
             <p className="text-sm font-medium text-zinc-500">В работе</p>
-            <p className="mt-3 text-3xl font-semibold text-zinc-950">{activeOrders.length}</p>
+            <p className="mt-3 text-2xl font-semibold text-zinc-950">{activeOrders.length}</p>
           </article>
-          <article className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+          <article className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
             <p className="text-sm font-medium text-zinc-500">Доставлены и оплачены</p>
-            <p className="mt-3 text-3xl font-semibold text-zinc-950">{deliveredOrdersCount}</p>
+            <p className="mt-3 text-2xl font-semibold text-zinc-950">{deliveredOrdersCount}</p>
           </article>
-          <article className="rounded-3xl border border-zinc-200 bg-white/90 p-6 shadow-sm shadow-zinc-950/5">
+          <article className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
             <p className="text-sm font-medium text-zinc-500">Сумма заказов</p>
-            <p className="mt-3 text-3xl font-semibold text-zinc-950">{formatMoney(totalRevenueCents)}</p>
+            <p className="mt-3 text-2xl font-semibold text-zinc-950">{formatMoney(totalRevenueCents)}</p>
           </article>
         </section>
 
-        <section className="rounded-3xl border border-zinc-200 bg-[linear-gradient(180deg,#fffdfa_0%,#eef4eb_100%)] p-6 shadow-sm shadow-zinc-950/5">
+        <section className="rounded-[14px] border border-zinc-200 bg-[linear-gradient(180deg,#ffffff_0%,#fff1f1_100%)] p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
           <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">Доска заказов</p>
           <h2 className="mt-2 text-2xl font-semibold text-zinc-950">
             Поэтапный поток заказов
@@ -231,7 +231,7 @@ export function OrdersPage({
           </p>
         </section>
 
-        <div className="grid gap-6 xl:grid-cols-3">
+        <div className="grid gap-4 xl:grid-cols-3">
           <OrderColumn
             title="Активные заказы"
             description="Заказы, которые ещё проходят обязательные этапы кухни, сборки и доставки."
