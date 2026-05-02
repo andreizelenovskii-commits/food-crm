@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { CrmEnvironmentLinks } from "@/components/ui/crm-environment-links";
 import { ModuleIcon } from "@/components/ui/module-icon";
 
 const NAV_ITEMS = [
@@ -124,10 +125,13 @@ export function AppSidebar() {
 
         <div className="border-t border-red-950/10 p-3">
           <div className="rounded-[12px] border border-red-100 bg-white p-3 shadow-sm shadow-red-950/5">
-            <p className="text-xs font-semibold text-zinc-950">Dev mirror</p>
+            <p className="text-xs font-semibold text-zinc-950">Окружения</p>
             <p className="mt-1 text-xs leading-5 text-zinc-500">
-              Рабочий контур для быстрых правок интерфейса.
+              Прод и dev-стенд в одном месте — открываются в новой вкладке.
             </p>
+            <div className="mt-3">
+              <CrmEnvironmentLinks layout="column" className="w-full [&_a]:w-full" />
+            </div>
           </div>
         </div>
       </aside>

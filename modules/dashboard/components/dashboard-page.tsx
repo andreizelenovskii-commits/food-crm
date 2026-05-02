@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { CrmEnvironmentLinks } from "@/components/ui/crm-environment-links";
 import { PageShell } from "@/components/ui/page-shell";
+import { PUBLIC_SITE_URL } from "@/shared/deploy-public-urls";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
 import { BirthdayCarousel } from "@/modules/dashboard/components/birthday-carousel";
 import { ModuleCarousel } from "@/modules/dashboard/components/module-carousel";
@@ -192,15 +194,16 @@ export function DashboardPage({
               Продажи, отчеты, команда и склад собраны в одном спокойном
               экране. Сначала видны главные решения, детали всегда рядом.
             </p>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <Link
-                href="/"
+            <div className="mt-5 flex flex-wrap items-center gap-2">
+              <a
+                href={PUBLIC_SITE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-full bg-red-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-900"
+                className="rounded-full border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-800 transition hover:border-red-300 hover:bg-red-50/80"
               >
-                Открыть сайт
-              </Link>
+                Публичный сайт
+              </a>
+              <CrmEnvironmentLinks />
             </div>
           </GlassPanel>
 

@@ -1,5 +1,6 @@
-import Link from "next/link";
+import { CrmEnvironmentLinks } from "@/components/ui/crm-environment-links";
 import { PageShell } from "@/components/ui/page-shell";
+import { PUBLIC_SITE_URL } from "@/shared/deploy-public-urls";
 import { requirePermission } from "@/modules/auth/auth.session";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
 
@@ -98,14 +99,17 @@ export default async function WebsitePage() {
               Публичный сайт доступен по домену crmandromeda.ru. После настройки
               онлайн-заказов эта ссылка станет входной точкой для клиентов.
             </p>
-            <Link
-              href="https://crmandromeda.ru"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-4 inline-flex rounded-full border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-800 transition hover:border-red-200 hover:bg-red-100/60"
-            >
-              Открыть сайт
-            </Link>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <a
+                href={PUBLIC_SITE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex rounded-full border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-800 transition hover:border-red-200 hover:bg-red-100/60"
+              >
+                Публичный сайт
+              </a>
+              <CrmEnvironmentLinks />
+            </div>
           </div>
         </aside>
       </div>
