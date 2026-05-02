@@ -125,7 +125,7 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
         </div>
       </div>
 
-      <form action={formAction} className="space-y-5 px-5 py-5">
+      <form action={formAction} className="space-y-5 px-5 py-5" noValidate>
         <input type="hidden" name="returnTo" value={returnTo ?? ""} />
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-3">
