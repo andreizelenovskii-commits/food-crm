@@ -1,0 +1,86 @@
+# Ручной «одна кнопка»: сначала Deploy backend, после успеха — Deploy frontend.
+# GitHub → Actions → «Deploy full stack» → Run workflow.
+# Нужен secret DEPLOY_STACK_PAT (classic: repo + workflow, или fine-grained: Actions RW на оба репо).
+
+name: Deploy full stack
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: deploy-stack-orchestrator
+  cancel-in-progress: false
+
+jobs:
+  backend-then-frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Require DEPLOY_STACK_PAT
+        env:
+          PAT: ${{ secrets.DEPLOY_STACK_PAT }}
+        run: |
+          if [ -z "$PAT" ]; then
+            echo "::error::В репозитории food-crm добавь секрет DEPLOY_STACK_PAT (PAT с правом запускать Actions в food-crm-backend и food-crm). См. docs/DEPLOYMENT.md."
+            exit 1
+          fi
+
+      - name: Dispatch backend, wait; then dispatch frontend, wait
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.DEPLOY_STACK_PAT }}
+          script: |
+            const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+            const ownerBackend = "andreizelenovskii-commits";
+            const repoBackend = "food-crm-backend";
+            const ownerFrontend = "andreizelenovskii-commits";
+            const repoFrontend = "food-crm";
+            const workflowFile = "deploy.yml";
+
+            async function dispatchAndWait(owner, repo, label) {
+              const t0 = Date.now() - 3000;
+              await github.rest.actions.createWorkflowDispatch({
+                owner,
+                repo,
+                workflow_id: workflowFile,
+                ref: "main",
+              });
+              core.info(`Dispatched ${label}`);
+
+              for (let i = 0; i < 90; i += 1) {
+                await sleep(10000);
+                const { data } = await github.rest.actions.listWorkflowRuns({
+                  owner,
+                  repo,
+                  workflow_id: workflowFile,
+                  per_page: 20,
+                });
+                const run = data.workflow_runs
+                  .filter((w) => new Date(w.created_at).getTime() >= t0)
+                  .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+
+                if (!run) {
+                  core.info(`${label}: ждём появления run…`);
+                  continue;
+                }
+
+                core.info(`${label}: run ${run.id} status=${run.status} conclusion=${run.conclusion ?? ""}`);
+
+                if (run.status === "completed") {
+                  if (run.conclusion !== "success") {
+                    throw new Error(`${label}: workflow завершился с ${run.conclusion}`);
+                  }
+                  core.info(`${label}: OK`);
+                  return;
+                }
+              }
+
+              throw new Error(`${label}: таймаут ожидания workflow`);
+            }
+
+            await dispatchAndWait(ownerBackend, repoBackend, "Backend");
+            await dispatchAndWait(ownerFrontend, repoFrontend, "Frontend");
+            core.info("Стек выкатан: backend → frontend.");

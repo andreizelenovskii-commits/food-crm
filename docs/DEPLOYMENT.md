@@ -59,6 +59,14 @@ andreizelenovskii-commits/food-crm-backend
 
 Так на домене сначала поднимается актуальный API и схема БД, затем UI, который к нему ходит.
 
+### Одна кнопка в GitHub (оркестратор)
+
+В репозитории **`food-crm`** есть workflow **`Deploy full stack`** (файл `.github/workflows/deploy-stack.yml`).
+
+1. В GitHub: **Actions → Deploy full stack → Run workflow** — сначала запускается **Deploy backend** в `food-crm-backend`, после успешного завершения — **Deploy frontend** в `food-crm`.
+2. В секретах репозитория **`food-crm`** добавь **`DEPLOY_STACK_PAT`**: Personal Access Token с правом **запускать Actions** в обоих репозиториях (classic: scope **`repo`** + **`workflow`**, либо fine-grained: **Read and write** для Actions на `food-crm` и `food-crm-backend`). Без секрета workflow сразу завершится с ошибкой.
+3. В интерфейсе CRM на экране входа есть ссылка **«Деплой прод (бэк→фронт)»** — она ведёт на страницу этого workflow (запуск по-прежнему только из GitHub, пока ты не авторизован в браузере).
+
 ## Required GitHub Secrets
 
 В обоих репозиториях нужен secret:
