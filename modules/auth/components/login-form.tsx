@@ -172,7 +172,7 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
             name="phone"
             type="tel"
             inputMode="tel"
-            placeholder="Номер из доступа (не демо)"
+            placeholder="+7 999 123-45-67"
             className={inputClassName}
             autoComplete="username"
             autoCapitalize="none"
@@ -202,7 +202,7 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
             <input
               name="password"
               type={showPassword ? "text" : "password"}
-              placeholder="Введите ваш пароль"
+              placeholder="Пароль от вашей учётной записи"
               className={`${inputClassName} pr-24`}
               autoComplete="current-password"
               required
