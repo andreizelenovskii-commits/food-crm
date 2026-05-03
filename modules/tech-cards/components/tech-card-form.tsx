@@ -1,32 +1,19 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { PRODUCT_CATEGORIES } from "@/modules/inventory/inventory.types";
-import {
-  TECH_CARD_FORM_DRAFT_KEY,
-  TECH_CARD_INGREDIENTS_DRAFT_KEY,
-  type SelectedIngredient,
-  type TechCardDraft,
-  readTechCardFormDraft,
-  readTechCardIngredientsDraft,
-} from "@/modules/tech-cards/components/tech-card-draft";
+import { useActionState } from "react";
 import { TechCardFormFooter } from "@/modules/tech-cards/components/tech-card-form-footer";
 import { TechCardFormHeader } from "@/modules/tech-cards/components/tech-card-form-header";
 import { TechCardIngredientDialog } from "@/modules/tech-cards/components/tech-card-ingredient-dialog";
 import { TechCardIngredientsSection } from "@/modules/tech-cards/components/tech-card-ingredients-section";
-import { TechCardMainFields, type OutputUnit } from "@/modules/tech-cards/components/tech-card-main-fields";
+import { TechCardMainFields } from "@/modules/tech-cards/components/tech-card-main-fields";
+import { useTechCardFormState } from "@/modules/tech-cards/components/use-tech-card-form-state";
 import {
   addTechCardAction,
   type TechCardFormState,
   updateTechCardAction,
 } from "@/modules/tech-cards/tech-cards.actions";
 import {
-  TECH_CARD_CATEGORIES,
-  type TechCardCategory,
   type TechCardItem,
-  TECH_CARD_PIZZA_SIZES,
-  type TechCardPizzaSize,
   type TechCardProductOption,
 } from "@/modules/tech-cards/tech-cards.types";
 
@@ -88,249 +75,8 @@ function TechCardFormContent({
   clearDraft: boolean;
   initialTechCard?: TechCardItem;
 }) {
-  const router = useRouter();
   const isEditMode = Boolean(initialTechCard);
-  const [name, setName] = useState(state.values.name);
-  const [selectedTechCardCategory, setSelectedTechCardCategory] = useState<TechCardCategory | "">(
-    TECH_CARD_CATEGORIES.includes(state.values.category as TechCardCategory)
-      ? (state.values.category as TechCardCategory)
-      : "",
-  );
-  const [selectedPizzaSize, setSelectedPizzaSize] = useState<TechCardPizzaSize | "">(
-    TECH_CARD_PIZZA_SIZES.includes(state.values.pizzaSize as TechCardPizzaSize)
-      ? (state.values.pizzaSize as TechCardPizzaSize)
-      : "",
-  );
-  const [selectedUnit, setSelectedUnit] = useState<OutputUnit>(
-    state.values.outputUnit === "кг" ? "кг" : "шт",
-  );
-  const [outputQuantity, setOutputQuantity] = useState(state.values.outputQuantity);
-  const [description, setDescription] = useState(state.values.description);
-  const [isIngredientDialogOpen, setIsIngredientDialogOpen] = useState(false);
-  const [ingredientQuery, setIngredientQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [pendingIngredientIds, setPendingIngredientIds] = useState<string[]>([]);
-  const normalizedStateIngredients = useMemo<SelectedIngredient[]>(
-    () =>
-      state.values.ingredients.map((ingredient) => ({
-        productId: ingredient.productId,
-        quantity: ingredient.quantity,
-        unit: ingredient.unit === "кг" ? "кг" : "шт",
-      })),
-    [state.values.ingredients],
-  );
-  const [selectedIngredients, setSelectedIngredients] = useState<SelectedIngredient[]>(
-    normalizedStateIngredients,
-  );
-  const productsById = useMemo(
-    () => new Map(products.map((product) => [String(product.id), product])),
-    [products],
-  );
-  const availableCategories = useMemo(() => {
-    const categorySet = new Set(
-      products
-        .map((product) => product.category)
-        .filter((category): category is string => Boolean(category)),
-    );
-
-    return PRODUCT_CATEGORIES.filter((category) => categorySet.has(category));
-  }, [products]);
-  const filteredProducts = products.filter((product) => {
-    const query = ingredientQuery.trim().toLowerCase();
-    const matchesCategory = !selectedCategory || product.category === selectedCategory;
-
-    if (!matchesCategory) {
-      return false;
-    }
-
-    if (!query) {
-      return true;
-    }
-
-    return (
-      product.name.toLowerCase().includes(query) ||
-      product.unit.toLowerCase().includes(query) ||
-      product.category?.toLowerCase().includes(query)
-    );
-  });
-
-  useEffect(() => {
-    if (isEditMode) {
-      return;
-    }
-
-    if (clearDraft) {
-      window.localStorage.removeItem(TECH_CARD_INGREDIENTS_DRAFT_KEY);
-      window.localStorage.removeItem(TECH_CARD_FORM_DRAFT_KEY);
-      router.replace("/dashboard/inventory?tab=recipes", { scroll: false });
-    }
-  }, [clearDraft, isEditMode, router]);
-
-  useEffect(() => {
-    if (isEditMode) {
-      return;
-    }
-
-    if (clearDraft || normalizedStateIngredients.length > 0 || selectedIngredients.length > 0) {
-      return;
-    }
-
-    const draftIngredients = readTechCardIngredientsDraft().filter((ingredient) =>
-      productsById.has(ingredient.productId),
-    );
-
-    if (draftIngredients.length > 0) {
-      const frameId = window.requestAnimationFrame(() => {
-        setSelectedIngredients(draftIngredients);
-      });
-
-      return () => window.cancelAnimationFrame(frameId);
-    }
-  }, [clearDraft, isEditMode, normalizedStateIngredients.length, productsById, selectedIngredients.length]);
-
-  useEffect(() => {
-    if (isEditMode) {
-      return;
-    }
-
-    if (
-      clearDraft ||
-      state.values.name ||
-      state.values.category ||
-      state.values.pizzaSize ||
-      state.values.outputQuantity ||
-      state.values.description
-    ) {
-      return;
-    }
-
-    const draft = readTechCardFormDraft();
-
-    if (!draft) {
-      return;
-    }
-
-    const frameId = window.requestAnimationFrame(() => {
-      setName(draft.name);
-      setSelectedTechCardCategory(draft.category);
-      setSelectedPizzaSize(draft.pizzaSize);
-      setOutputQuantity(draft.outputQuantity);
-      setSelectedUnit(draft.outputUnit);
-      setDescription(draft.description);
-    });
-
-    return () => window.cancelAnimationFrame(frameId);
-  }, [
-    clearDraft,
-    isEditMode,
-    state.values.name,
-    state.values.category,
-    state.values.pizzaSize,
-    state.values.outputQuantity,
-    state.values.description,
-  ]);
-
-  useEffect(() => {
-    if (isEditMode) {
-      return;
-    }
-
-    if (selectedIngredients.length === 0) {
-      window.localStorage.removeItem(TECH_CARD_INGREDIENTS_DRAFT_KEY);
-      return;
-    }
-
-    window.localStorage.setItem(
-      TECH_CARD_INGREDIENTS_DRAFT_KEY,
-      JSON.stringify(selectedIngredients),
-    );
-  }, [isEditMode, selectedIngredients]);
-
-  useEffect(() => {
-    if (isEditMode) {
-      return;
-    }
-
-    const draft: TechCardDraft = {
-      name,
-      category: selectedTechCardCategory,
-      pizzaSize: selectedPizzaSize,
-      outputQuantity,
-      outputUnit: selectedUnit,
-      description,
-    };
-
-    const hasDraft =
-      draft.name ||
-      draft.category ||
-      draft.pizzaSize ||
-      draft.outputQuantity ||
-      draft.description ||
-      draft.outputUnit !== "шт";
-
-    if (!hasDraft) {
-      window.localStorage.removeItem(TECH_CARD_FORM_DRAFT_KEY);
-      return;
-    }
-
-    window.localStorage.setItem(TECH_CARD_FORM_DRAFT_KEY, JSON.stringify(draft));
-  }, [description, isEditMode, name, outputQuantity, selectedPizzaSize, selectedTechCardCategory, selectedUnit]);
-
-  const handleAddIngredient = (productId: string) => {
-    setSelectedIngredients((current) => {
-      if (current.some((ingredient) => ingredient.productId === productId)) {
-        return current;
-      }
-
-      const product = productsById.get(productId);
-      const defaultUnit: OutputUnit = product?.unit === "кг" ? "кг" : "шт";
-
-      return [
-        ...current,
-        {
-          productId,
-          quantity: defaultUnit === "кг" ? "0.1" : "1",
-          unit: defaultUnit,
-        },
-      ];
-    });
-  };
-
-  const handleTogglePendingIngredient = (productId: string) => {
-    setPendingIngredientIds((current) =>
-      current.includes(productId)
-        ? current.filter((id) => id !== productId)
-        : [...current, productId],
-    );
-  };
-
-  const handleAddPendingIngredients = () => {
-    if (pendingIngredientIds.length === 0) {
-      return;
-    }
-
-    pendingIngredientIds.forEach((productId) => {
-      handleAddIngredient(productId);
-    });
-    setPendingIngredientIds([]);
-    setIngredientQuery("");
-    setSelectedCategory("");
-    setIsIngredientDialogOpen(false);
-  };
-
-  const handleIngredientQuantityChange = (productId: string, quantity: string) => {
-    setSelectedIngredients((current) =>
-      current.map((ingredient) =>
-        ingredient.productId === productId ? { ...ingredient, quantity } : ingredient,
-      ),
-    );
-  };
-
-  const handleRemoveIngredient = (productId: string) => {
-    setSelectedIngredients((current) =>
-      current.filter((ingredient) => ingredient.productId !== productId),
-    );
-  };
+  const form = useTechCardFormState({ products, state, clearDraft, isEditMode });
 
   return (
     <div>
@@ -345,55 +91,56 @@ function TechCardFormContent({
         />
 
         <TechCardMainFields
-          name={name}
-          category={selectedTechCardCategory}
-          pizzaSize={selectedPizzaSize}
-          outputQuantity={outputQuantity}
-          outputUnit={selectedUnit}
-          onNameChange={setName}
-          onCategoryChange={setSelectedTechCardCategory}
-          onPizzaSizeChange={setSelectedPizzaSize}
-          onOutputQuantityChange={setOutputQuantity}
-          onOutputUnitChange={setSelectedUnit}
+          name={form.name}
+          category={form.selectedTechCardCategory}
+          pizzaSize={form.selectedPizzaSize}
+          outputQuantity={form.outputQuantity}
+          outputUnit={form.selectedUnit}
+          onNameChange={form.setName}
+          onCategoryChange={form.setSelectedTechCardCategory}
+          onPizzaSizeChange={form.setSelectedPizzaSize}
+          onOutputQuantityChange={form.setOutputQuantity}
+          onOutputUnitChange={form.setSelectedUnit}
         />
         <TechCardIngredientsSection
-          selectedIngredients={selectedIngredients}
-          productsById={productsById}
+          selectedIngredients={form.selectedIngredients}
+          productsById={form.productsById}
           onOpenDialog={() => {
-            setIngredientQuery("");
-            setSelectedCategory("");
-            setPendingIngredientIds([]);
-            setIsIngredientDialogOpen(true);
+            form.setIngredientQuery("");
+            form.setSelectedCategory("");
+            form.setPendingIngredientIds([]);
+            form.setIsIngredientDialogOpen(true);
           }}
-          onQuantityChange={handleIngredientQuantityChange}
-          onRemove={handleRemoveIngredient}
+          onQuantityChange={form.handleIngredientQuantityChange}
+          onRemove={form.handleRemoveIngredient}
         />
         <TechCardFormFooter
-          description={description}
+          description={form.description}
           isPending={isPending}
           isEditMode={Boolean(initialTechCard)}
-          onDescriptionChange={setDescription}
+          onDescriptionChange={form.setDescription}
         />
       </form>
 
-      {isIngredientDialogOpen ? (
+      {form.isIngredientDialogOpen ? (
         <TechCardIngredientDialog
-          ingredientQuery={ingredientQuery}
-          selectedCategory={selectedCategory}
-          availableCategories={availableCategories}
-          filteredProducts={filteredProducts}
-          selectedIngredients={selectedIngredients}
-          pendingIngredientIds={pendingIngredientIds}
-          onQueryChange={setIngredientQuery}
-          onCategoryChange={setSelectedCategory}
-          onTogglePending={handleTogglePendingIngredient}
-          onResetPending={() => setPendingIngredientIds([])}
-          onAddPending={handleAddPendingIngredients}
+          ingredientQuery={form.ingredientQuery}
+          selectedCategory={form.selectedCategory}
+          availableCategories={form.availableCategories}
+          filteredProducts={form.filteredProducts}
+          selectedIngredients={form.selectedIngredients}
+          pendingIngredientIds={form.pendingIngredientIds}
+          onQueryChange={form.setIngredientQuery}
+          onCategoryChange={form.setSelectedCategory}
+          onTogglePending={form.handleTogglePendingIngredient}
+          onResetPending={() => form.setPendingIngredientIds([])}
+          onAddPending={form.handleAddPendingIngredients}
           onClose={() => {
-            setPendingIngredientIds([]);
-            setIsIngredientDialogOpen(false);
+            form.setPendingIngredientIds([]);
+            form.setIsIngredientDialogOpen(false);
           }}
         />
-      ) : null}    </div>
+      ) : null}
+    </div>
   );
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PageShell } from "@/components/ui/page-shell";
+import { PaginatedList } from "@/components/ui/paginated-list";
 import { hasPermission } from "@/modules/auth/authz";
 import { EmployeeDeleteButton } from "@/modules/employees/components/employee-delete-button";
 import { EmployeeForm } from "@/modules/employees/components/employee-form";
@@ -79,7 +80,7 @@ export default async function EmployeesPage() {
               {employees.length === 0 ? (
                 <p className="text-sm text-zinc-600">Пока нет ни одного сотрудника.</p>
               ) : (
-                <div className="space-y-4">
+                <PaginatedList itemLabel="сотрудников">
                   {employees.map((employee) => (
                     <div
                       key={employee.id}
@@ -116,7 +117,7 @@ export default async function EmployeesPage() {
                       </div>
                     </div>
                   ))}
-                </div>
+                </PaginatedList>
               )}
             </div>
           </section>

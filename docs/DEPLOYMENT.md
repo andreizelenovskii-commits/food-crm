@@ -1,10 +1,8 @@
 # Deployment Guide
-
 Короткая инструкция по деплою CRM Andromeda. Большой operational runbook лежит в
 [PRODUCTION_RUNBOOK.md](PRODUCTION_RUNBOOK.md).
 
 ## Production Layout
-
 ```text
 VPS:      163.5.29.68, Ubuntu 24.04
 SSH:      deploy@163.5.29.68
@@ -14,7 +12,6 @@ DB:       PostgreSQL на этой же VPS
 ```
 
 Домены:
-
 ```text
 crm.crmandromeda.ru       -> frontend, port 3000
 api.crmandromeda.ru       -> backend, port 4000
@@ -22,14 +19,12 @@ crmandromeda.ru, www      -> public site, frontend, port 3000
 ```
 
 Директории на сервере:
-
 ```text
 /home/deploy/apps/food-crm
 /home/deploy/apps/food-crm-backend
 ```
 
 Внутри каждой:
-
 ```text
 current/        активный release
 releases/       последние releases
@@ -65,7 +60,6 @@ andreizelenovskii-commits/food-crm-backend
 
 1. В GitHub: **Actions → Deploy full stack → Run workflow** — сначала запускается **Deploy backend** в `food-crm-backend`, после успешного завершения — **Deploy frontend** в `food-crm`.
 2. В секретах репозитория **`food-crm`** добавь **`DEPLOY_STACK_PAT`**: Personal Access Token с правом **запускать Actions** в обоих репозиториях (classic: scope **`repo`** + **`workflow`**, либо fine-grained: **Read and write** для Actions на `food-crm` и `food-crm-backend`). Без секрета workflow сразу завершится с ошибкой.
-3. В интерфейсе CRM на экране входа есть ссылка **«Деплой прод (бэк→фронт)»** — она ведёт на страницу этого workflow (запуск по-прежнему только из GitHub, пока ты не авторизован в браузере).
 
 ## Required GitHub Secrets
 

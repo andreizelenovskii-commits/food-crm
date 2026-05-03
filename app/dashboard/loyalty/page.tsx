@@ -1,4 +1,5 @@
 import { PageShell } from "@/components/ui/page-shell";
+import { PaginatedList } from "@/components/ui/paginated-list";
 import { requirePermission } from "@/modules/auth/auth.session";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
 import { fetchLoyaltySnapshot } from "@/modules/loyalty/loyalty.api";
@@ -58,7 +59,7 @@ export default async function LoyaltyPage() {
           {snapshot.byLevel.map((entry) => (
             <article
               key={entry.level}
-              className={`rounded-[14px] border bg-gradient-to-br p-5 shadow-sm shadow-zinc-950/5 ${LOYALTY_LEVEL_STYLES[entry.level]}`}
+              className={`rounded-[14px] border bg-linear-to-br p-5 shadow-sm shadow-zinc-950/5 ${LOYALTY_LEVEL_STYLES[entry.level]}`}
             >
               <p className="text-xs font-semibold uppercase tracking-[0.18em] opacity-70">
                 {LOYALTY_LEVEL_LABELS[entry.level]}
@@ -102,7 +103,7 @@ export default async function LoyaltyPage() {
                     Пока никто не попал в этот уровень.
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <PaginatedList itemLabel="клиентов">
                     {entry.clients.map((client) => (
                       <article
                         key={client.id}
@@ -133,7 +134,7 @@ export default async function LoyaltyPage() {
                         </div>
                       </article>
                     ))}
-                  </div>
+                  </PaginatedList>
                 )}
               </section>
             ))}

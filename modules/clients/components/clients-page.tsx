@@ -1,23 +1,46 @@
 import Link from "next/link";
 import { PageShell } from "@/components/ui/page-shell";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
+import { BestClientCard } from "@/modules/clients/components/best-client-card";
 import { ClientCreatePanel } from "@/modules/clients/components/client-create-panel";
-import { ClientDeleteButton } from "@/modules/clients/components/client-delete-button";
+import { ClientLiveSearch } from "@/modules/clients/components/client-live-search";
 import {
-  formatClientDate,
-  formatClientAverageCheck,
-  formatClientMoney,
   formatDaysUntilBirthday,
   type ClientsPageProps,
 } from "@/modules/clients/clients.page-model";
-import { LOYALTY_LEVEL_LABELS } from "@/modules/loyalty/loyalty.types";
+import type { ClientLoyaltyLevel } from "@/modules/clients/clients.types";
+import { LOYALTY_LEVEL_LABELS, LOYALTY_LEVELS } from "@/modules/loyalty/loyalty.types";
+
+function buildClientsHref(rawQuery: string, loyaltyLevel: ClientLoyaltyLevel | null) {
+  const params = new URLSearchParams();
+
+  if (rawQuery) {
+    params.set("q", rawQuery);
+  }
+
+  if (loyaltyLevel) {
+    params.set("loyalty", loyaltyLevel);
+  }
+
+  const query = params.toString();
+
+  return query ? `/dashboard/clients?${query}` : "/dashboard/clients";
+}
 
 export function ClientsPage({
   user,
   canManageClients,
   viewModel,
 }: ClientsPageProps) {
-  const { rawQuery, peopleClients, organizations, upcomingBirthdays } = viewModel;
+  const {
+    rawQuery,
+    activeLoyaltyLevel,
+    bestClients,
+    peopleClientsTotal,
+    loyaltyCounts,
+    searchCandidates,
+    upcomingBirthdays,
+  } = viewModel;
 
   return (
     <PageShell
@@ -26,15 +49,18 @@ export function ClientsPage({
       backHref="/dashboard"
       action={<SessionUserActions user={user} />}
     >
-      <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="space-y-5">
-          <section className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
+      <div className="relative overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#fffdfc_0%,#fff3f2_48%,#f7eeee_100%)] p-4 shadow-[0_24px_80px_rgba(127,29,29,0.12)] sm:p-5">
+        <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-red-300/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-28 left-1/3 h-72 w-72 rounded-full bg-white/80 blur-3xl" />
+
+        <div className="relative space-y-4">
+          <section className="rounded-[22px] border border-white/70 bg-white/74 p-4 shadow-[0_18px_60px_rgba(127,29,29,0.08)] backdrop-blur-2xl sm:p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">
                   Поиск
                 </p>
-                <h2 className="mt-2 text-xl font-semibold text-zinc-950">
+                <h2 className="mt-1 text-base font-semibold text-zinc-950">
                   По имени или номеру телефона
                 </h2>
               </div>
@@ -42,44 +68,63 @@ export function ClientsPage({
               {rawQuery ? (
                 <Link
                   href="/dashboard/clients"
-                  className="rounded-2xl border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-500 hover:text-zinc-950"
+                  className="inline-flex h-8 items-center rounded-full border border-red-100 bg-white/90 px-3 text-xs font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white"
                 >
                   Сбросить
                 </Link>
               ) : null}
             </div>
 
-            <form action="/dashboard/clients" className="mt-5 flex flex-col gap-3 sm:flex-row">
-              <input
-                name="q"
-                type="search"
-                defaultValue={rawQuery}
-                placeholder="Например: Иван Петров или 79001234567"
-                className="w-full rounded-2xl border border-zinc-300 px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
-              />
-              <button
-                type="submit"
-                className="rounded-2xl bg-zinc-950 px-5 py-3 text-sm font-medium text-white transition hover:bg-zinc-800"
-              >
-                Найти
-              </button>
-            </form>
+            <ClientLiveSearch
+              initialQuery={rawQuery}
+              activeLoyaltyLevel={activeLoyaltyLevel}
+              clients={searchCandidates}
+              action={canManageClients ? <ClientCreatePanel /> : null}
+            />
 
-            {rawQuery ? (
-              <p className="mt-3 text-sm text-zinc-500">
-                По запросу <span className="font-medium text-zinc-900">{rawQuery}</span> найдено:{" "}
-                {peopleClients.length + organizations.length}
+            <div className="mt-4 rounded-[18px] border border-red-950/10 bg-white/55 p-2">
+              <p className="px-2 pb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-red-800/60">
+                Категория лояльности
               </p>
-            ) : null}
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  href={buildClientsHref(rawQuery, null)}
+                  className={`inline-flex h-8 items-center rounded-full px-3 text-xs font-semibold transition ${
+                    activeLoyaltyLevel
+                      ? "border border-red-100 bg-white/80 text-red-800 hover:border-red-800 hover:bg-red-800 hover:text-white"
+                      : "bg-red-800 text-white shadow-sm shadow-red-950/20"
+                  }`}
+                >
+                  Все · {peopleClientsTotal}
+                </Link>
+                {LOYALTY_LEVELS.map((level) => {
+                  const isActive = activeLoyaltyLevel === level;
+
+                  return (
+                    <Link
+                      key={level}
+                      href={buildClientsHref(rawQuery, level)}
+                      className={`inline-flex h-8 items-center rounded-full px-3 text-xs font-semibold transition ${
+                        isActive
+                          ? "bg-red-800 text-white shadow-sm shadow-red-950/20"
+                          : "border border-red-100 bg-white/80 text-red-800 hover:border-red-800 hover:bg-red-800 hover:text-white"
+                      }`}
+                    >
+                      {LOYALTY_LEVEL_LABELS[level]} · {loyaltyCounts[level]}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
           </section>
 
-          <section className="rounded-[14px] border border-zinc-200 bg-[linear-gradient(180deg,#ffffff_0%,#fff4f2_100%)] p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
+          <section className="rounded-[22px] border border-white/70 bg-white/70 p-4 shadow-[0_18px_60px_rgba(127,29,29,0.08)] backdrop-blur-2xl sm:p-5">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">
                   Скоро день рождения
                 </p>
-                <h2 className="mt-2 text-xl font-semibold text-zinc-950">
+                <h2 className="mt-1 text-base font-semibold text-zinc-950">
                   Клиенты ближайшей недели
                 </h2>
               </div>
@@ -87,23 +132,23 @@ export function ClientsPage({
 
             <div className="mt-5 space-y-3">
               {upcomingBirthdays.length === 0 ? (
-                <p className="text-sm text-zinc-600">
+                <p className="text-xs leading-5 text-zinc-600">
                   В ближайшую неделю дней рождения у клиентов не найдено.
                 </p>
               ) : (
                 upcomingBirthdays.map((client) => (
                   <div
                     key={client.id}
-                    className="rounded-2xl border border-white/80 bg-white/80 px-4 py-3"
+                    className="rounded-[18px] border border-red-950/10 bg-white/78 px-4 py-3 shadow-sm shadow-red-950/5"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
-                        <p className="font-semibold text-zinc-950">{client.name}</p>
-                        <p className="text-sm text-zinc-500">
+                        <p className="text-sm font-semibold text-zinc-950">{client.name}</p>
+                        <p className="text-xs text-zinc-500">
                           {client.formattedDate} · {client.phone}
                         </p>
                       </div>
-                      <span className="rounded-full bg-zinc-950 px-3 py-1 text-xs font-medium text-white">
+                      <span className="inline-flex h-8 items-center rounded-full bg-red-800 px-3 text-xs font-semibold text-white">
                         {formatDaysUntilBirthday(client.daysUntilBirthday)}
                       </span>
                     </div>
@@ -113,176 +158,29 @@ export function ClientsPage({
             </div>
           </section>
 
-          <section className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
-            <h2 className="text-xl font-semibold text-zinc-950">Список клиентов</h2>
-            <div className="mt-4 space-y-4">
-              {peopleClients.length === 0 ? (
-                <p className="text-sm text-zinc-600">
-                  {rawQuery ? "Поиск не нашёл клиентов." : "Пока нет ни одного клиента."}
+          <section className="rounded-[22px] border border-white/70 bg-white/72 p-4 shadow-[0_18px_60px_rgba(127,29,29,0.08)] backdrop-blur-2xl sm:p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">
+                  Лучшие клиенты
                 </p>
-              ) : (
-                <div className="space-y-4">
-                  {peopleClients.map((client) => (
-                    <div
-                      key={client.id}
-                      className="rounded-[14px] border border-zinc-200 bg-zinc-50 p-4 transition hover:border-zinc-300 hover:bg-white"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="min-w-0">
-                          <p className="text-base font-semibold text-zinc-950">
-                            <Link href={`/dashboard/clients/${client.id}`} className="hover:text-zinc-700">
-                              {client.name}
-                            </Link>
-                          </p>
-                          {client.loyaltyLevel ? (
-                            <p className="mt-1">
-                              <span className="rounded-full bg-zinc-950 px-3 py-1 text-xs font-medium text-white">
-                                {LOYALTY_LEVEL_LABELS[client.loyaltyLevel]}
-                              </span>
-                            </p>
-                          ) : null}
-                          <p className="text-sm text-zinc-500">
-                            Телефон: {client.phone}
-                          </p>
-                          <p className="text-sm text-zinc-500">
-                            Дата рождения: {formatClientDate(client.birthDate)}
-                          </p>
-                          <p className="text-sm text-zinc-500">
-                            Email: {client.email || "Не указан"}
-                          </p>
-                          <p className="text-sm text-zinc-500">
-                            Адрес: {client.address || "Не указан"}
-                          </p>
-                          <p className="text-sm text-zinc-500">
-                            Заказов: {client.ordersCount}
-                          </p>
-                          <p className="text-sm text-zinc-500">
-                            Сумма заказов: {formatClientMoney(client.totalSpentCents)}
-                          </p>
-                          <p className="text-sm text-zinc-500">
-                            Средний чек: {formatClientAverageCheck(client.totalSpentCents, client.ordersCount)}
-                          </p>
-                          {client.notes ? (
-                            <p className="mt-2 text-sm leading-6 text-zinc-600">
-                              {client.notes}
-                            </p>
-                          ) : null}
-                        </div>
-
-                        <div className="relative z-10 flex shrink-0 gap-2">
-                          <Link
-                            href={`/dashboard/clients/${client.id}`}
-                            className="rounded-2xl border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-500 hover:bg-zinc-50 hover:text-zinc-950"
-                          >
-                            Профиль
-                          </Link>
-                          {canManageClients ? (
-                            <>
-                              <Link
-                                href={`/dashboard/clients/${client.id}/edit`}
-                                className="rounded-2xl border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-500 hover:bg-zinc-50 hover:text-zinc-950"
-                              >
-                                Редактировать
-                              </Link>
-                              <ClientDeleteButton
-                                clientId={client.id}
-                                clientName={client.name}
-                                disabled={client.ordersCount > 0}
-                              />
-                            </>
-                          ) : null}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                <h2 className="mt-1 text-base font-semibold text-zinc-950">Топ покупок за всё время</h2>
+              </div>
+              <span className="inline-flex h-8 items-center rounded-full bg-red-50 px-3 text-xs font-semibold text-red-800">
+                {bestClients.length}
+              </span>
             </div>
-          </section>
-
-          <section className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
-            <h2 className="text-xl font-semibold text-zinc-950">Список организаций</h2>
             <div className="mt-4 space-y-4">
-              {organizations.length === 0 ? (
-                <p className="text-sm text-zinc-600">
-                  {rawQuery ? "Поиск не нашёл организаций." : "Пока нет ни одной организации."}
+              {bestClients.length === 0 ? (
+                <p className="text-xs leading-5 text-zinc-600">
+                  {rawQuery ? "Поиск не нашёл клиентов." : "Пока нет клиентов с покупками."}
                 </p>
               ) : (
-                <div className="space-y-4">
-                  {organizations.map((client) => (
-                    <div
-                      key={client.id}
-                      className="rounded-[14px] border border-zinc-200 bg-zinc-50 p-4 transition hover:border-zinc-300 hover:bg-white"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="min-w-0">
-                          <p className="text-base font-semibold text-zinc-950">
-                            <Link href={`/dashboard/clients/${client.id}`} className="hover:text-zinc-700">
-                              {client.name}
-                            </Link>
-                          </p>
-                          <p className="text-sm text-zinc-500">
-                            Телефон: {client.phone}
-                          </p>
-                          <p className="text-sm text-zinc-500">
-                            Email: {client.email || "Не указан"}
-                          </p>
-                          <p className="text-sm text-zinc-500">
-                            Адрес: {client.address || "Не указан"}
-                          </p>
-                          <p className="text-sm text-zinc-500">
-                            Заказов: {client.ordersCount}
-                          </p>
-                          <p className="text-sm text-zinc-500">
-                            Сумма заказов: {formatClientMoney(client.totalSpentCents)}
-                          </p>
-                          <p className="text-sm text-zinc-500">
-                            Средний чек: {formatClientAverageCheck(client.totalSpentCents, client.ordersCount)}
-                          </p>
-                          {client.notes ? (
-                            <p className="mt-2 text-sm leading-6 text-zinc-600">
-                              {client.notes}
-                            </p>
-                          ) : null}
-                        </div>
-
-                        <div className="relative z-10 flex shrink-0 gap-2">
-                          <Link
-                            href={`/dashboard/clients/${client.id}`}
-                            className="rounded-2xl border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-500 hover:bg-zinc-50 hover:text-zinc-950"
-                          >
-                            Профиль
-                          </Link>
-                          {canManageClients ? (
-                            <>
-                              <Link
-                                href={`/dashboard/clients/${client.id}/edit`}
-                                className="rounded-2xl border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-500 hover:bg-zinc-50 hover:text-zinc-950"
-                              >
-                                Редактировать
-                              </Link>
-                              <ClientDeleteButton
-                                clientId={client.id}
-                                clientName={client.name}
-                                disabled={client.ordersCount > 0}
-                              />
-                            </>
-                          ) : null}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                bestClients.map((client) => <BestClientCard key={client.id} client={client} />)
               )}
             </div>
           </section>
         </div>
-
-        {canManageClients ? (
-          <div className="space-y-5">
-            <ClientCreatePanel />
-          </div>
-        ) : null}
       </div>
     </PageShell>
   );

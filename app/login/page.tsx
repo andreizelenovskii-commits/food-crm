@@ -1,4 +1,3 @@
-import { CrmEnvironmentLinks } from "@/components/ui/crm-environment-links";
 import { PageShell } from "@/components/ui/page-shell";
 import { LoginForm } from "@/modules/auth/components/login-form";
 import { PUBLIC_SITE_URL } from "@/shared/deploy-public-urls";
@@ -31,7 +30,6 @@ export default async function LoginPage(props: {
             >
               Публичный сайт
             </a>
-            <CrmEnvironmentLinks className="justify-center" />
           </div>
         </div>
       </div>

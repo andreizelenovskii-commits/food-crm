@@ -6,6 +6,9 @@ import {
   updateCatalogItemAction,
   uploadCatalogImageAction,
 } from "@/modules/catalog/catalog.actions";
+import { CatalogItemImageField } from "@/modules/catalog/components/catalog-item-image-field";
+import { CatalogPriceListPicker } from "@/modules/catalog/components/catalog-price-list-picker";
+import { CatalogTechCardFields } from "@/modules/catalog/components/catalog-tech-card-fields";
 import {
   CATALOG_FIELD_CLASS_NAME,
   type CatalogItemFormProps,
@@ -13,15 +16,8 @@ import {
   resolveInitialPizzaSize,
 } from "@/modules/catalog/components/catalog-item-form.model";
 import type { CatalogFormState } from "@/modules/catalog/catalog.form-types";
-import {
-  CATALOG_PRICE_LIST_LABELS,
-  CATALOG_PRICE_LIST_TYPES,
-} from "@/modules/catalog/catalog.types";
-import {
-  TECH_CARD_CATEGORIES,
-  TECH_CARD_PIZZA_SIZES,
-  type TechCardPizzaSize,
-} from "@/modules/tech-cards/tech-cards.types";
+import type { CatalogPriceListType } from "@/modules/catalog/catalog.types";
+import type { TechCardPizzaSize } from "@/modules/tech-cards/tech-cards.types";
 
 export function CatalogItemForm({
   mode = "create",
@@ -36,7 +32,11 @@ export function CatalogItemForm({
     values: initialValues ?? EMPTY_CATALOG_FORM_VALUES,
   };
   const [state, formAction, isPending] = useActionState(action, initialState);
-  const [selectedPriceListType, setSelectedPriceListType] = useState(initialState.values.priceListType);
+  const [selectedPriceListType, setSelectedPriceListType] = useState<CatalogPriceListType | "">(
+    initialState.values.priceListType === "CLIENT" || initialState.values.priceListType === "INTERNAL"
+      ? initialState.values.priceListType
+      : "",
+  );
   const [selectedCategory, setSelectedCategory] = useState(initialState.values.category);
   const [selectedTechCardId, setSelectedTechCardId] = useState(
     initialState.values.technologicalCardId,
@@ -122,246 +122,32 @@ export function CatalogItemForm({
         />
       </label>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_12rem]">
-        <label className="block space-y-2.5">
-          <span className="text-sm font-medium text-zinc-700">Фото товара</span>
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
-            onChange={(event) => {
-              void uploadImage(event.target.files?.[0]);
-            }}
-            className="w-full rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 px-4 py-3 text-sm text-zinc-700 file:mr-4 file:rounded-xl file:border-0 file:bg-zinc-950 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:bg-zinc-100"
-            required={!imageUrl}
-          />
-          <input
-            name="imageUrl"
-            type="text"
-            value={imageUrl}
-            onChange={(event) => setImageUrl(event.target.value)}
-            placeholder="Ссылка появится после загрузки фото"
-            className={CATALOG_FIELD_CLASS_NAME}
-            required
-            readOnly={isImageUploading}
-          />
-          {isImageUploading ? (
-            <p className="text-xs leading-5 text-zinc-500">Загружаем фото...</p>
-          ) : null}
-          {imageUploadError ? (
-            <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-              {imageUploadError}
-            </p>
-          ) : null}
-          <p className="text-xs leading-5 text-zinc-500">
-            Фото обязательно для клиентского сайта и внутреннего сопоставления позиций.
-          </p>
-        </label>
+      <CatalogItemImageField
+        imageUrl={imageUrl}
+        imageUploadError={imageUploadError}
+        isImageUploading={isImageUploading}
+        onImageUrlChange={setImageUrl}
+        onUploadImage={(file) => {
+          void uploadImage(file);
+        }}
+      />
 
-        <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-100">
-          {imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={imageUrl}
-              alt="Превью фото товара"
-              className="h-48 w-full object-cover lg:h-full"
-            />
-          ) : (
-            <div className="flex h-48 items-center justify-center px-4 text-center text-sm text-zinc-500 lg:h-full">
-              Превью появится после ссылки на фото
-            </div>
-          )}
-        </div>
-      </div>
+      <CatalogPriceListPicker
+        selectedPriceListType={selectedPriceListType}
+        onChange={setSelectedPriceListType}
+      />
 
-      <div className="space-y-2.5">
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-sm font-medium text-zinc-700">Куда добавить позицию</span>
-          <span className="text-xs text-zinc-500">Обязательный выбор</span>
-        </div>
-
-        <div className="rounded-[22px] border border-zinc-200 bg-zinc-50/90 p-1.5">
-          <div className="grid gap-1.5 sm:grid-cols-2">
-          {CATALOG_PRICE_LIST_TYPES.map((priceListType) => {
-            const isSelected = selectedPriceListType === priceListType;
-
-            return (
-              <button
-                key={priceListType}
-                type="button"
-                onClick={() => setSelectedPriceListType(priceListType)}
-                className={`rounded-[18px] px-4 py-3 text-left transition ${
-                  isSelected
-                    ? "bg-white text-zinc-950 shadow-sm ring-1 ring-zinc-950/10"
-                    : "bg-transparent text-zinc-600 hover:bg-white/70 hover:text-zinc-950"
-                }`}
-                aria-pressed={isSelected}
-              >
-                <span className="flex items-start gap-3">
-                  <span
-                    className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[10px] font-semibold transition ${
-                      isSelected
-                        ? "border-zinc-950 bg-zinc-950 text-white"
-                        : "border-zinc-300 bg-white text-zinc-400"
-                    }`}
-                  >
-                    {priceListType === "CLIENT" ? "C" : "I"}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-sm font-semibold">
-                      {CATALOG_PRICE_LIST_LABELS[priceListType]}
-                    </span>
-                    <span className="mt-1 block text-xs text-zinc-500">
-                      {priceListType === "CLIENT"
-                        ? "Для клиентского прайса и внешней витрины."
-                        : "Для внутренней работы и служебного прайса."}
-                    </span>
-                  </span>
-                </span>
-              </button>
-            );
-          })}
-          </div>
-        </div>
-        <input name="priceListType" type="hidden" value={selectedPriceListType} />
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_12rem]">
-        <label className="block space-y-2.5">
-          <span className="text-sm font-medium text-zinc-700">Категория</span>
-          <div className="relative">
-            <select
-              name="category"
-              value={selectedCategory}
-              onChange={(event) => {
-                const nextCategory = event.target.value;
-                setSelectedCategory(nextCategory);
-                setSelectedTechCardId("");
-
-                if (nextCategory !== "Пиццы") {
-                  setSelectedPizzaSize("");
-                }
-              }}
-              className={`${CATALOG_FIELD_CLASS_NAME} appearance-none pr-12`}
-              required
-            >
-              <option value="">Выбери категорию</option>
-              {TECH_CARD_CATEGORIES.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
-            <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-zinc-400">
-              <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5" aria-hidden="true">
-                <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </span>
-          </div>
-        </label>
-
-        <label className="block space-y-2.5">
-          <span className="text-sm font-medium text-zinc-700">Цена</span>
-          <div className="relative">
-            <input
-              name="price"
-              type="number"
-              min="0"
-              step="0.01"
-              defaultValue={state.values.price}
-              placeholder="0"
-              className={`${CATALOG_FIELD_CLASS_NAME} pl-11`}
-              required
-            />
-            <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-sm font-medium text-zinc-500">
-              ₽
-            </span>
-          </div>
-        </label>
-      </div>
-
-      {selectedCategory === "Пиццы" ? (
-        <div className="space-y-2.5">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-sm font-medium text-zinc-700">Размер пиццы</span>
-            <span className="text-xs text-zinc-500">Обязательный выбор</span>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-3">
-            {TECH_CARD_PIZZA_SIZES.map((size) => {
-              const isSelected = selectedPizzaSize === size;
-
-              return (
-                <button
-                  key={size}
-                  type="button"
-                  onClick={() => {
-                    setSelectedPizzaSize(size);
-                    setSelectedTechCardId("");
-                  }}
-                  className={`rounded-2xl border px-4 py-3 text-sm font-medium transition ${
-                    isSelected
-                      ? "border-zinc-950 bg-zinc-950 text-white shadow-sm"
-                      : "border-zinc-300 bg-white text-zinc-700 hover:border-zinc-500 hover:text-zinc-950"
-                  }`}
-                  aria-pressed={isSelected}
-                >
-                  {size}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      ) : null}
-
-      <div className="grid gap-4">
-        <label className="block space-y-2.5">
-          <span className="text-sm font-medium text-zinc-700">Технологическая карта</span>
-          <div className="relative">
-            <select
-              name="technologicalCardId"
-              value={selectedTechCardId}
-              onChange={(event) => {
-                const nextId = event.target.value;
-                setSelectedTechCardId(nextId);
-
-                const nextTechCard =
-                  techCardOptions.find((option) => String(option.id) === nextId) ?? null;
-
-                if (selectedCategory === "Пиццы") {
-                  setSelectedPizzaSize(
-                    nextTechCard?.pizzaSize &&
-                      TECH_CARD_PIZZA_SIZES.includes(
-                        nextTechCard.pizzaSize as TechCardPizzaSize,
-                      )
-                      ? (nextTechCard.pizzaSize as TechCardPizzaSize)
-                      : "",
-                  );
-                }
-              }}
-              className={`${CATALOG_FIELD_CLASS_NAME} appearance-none pr-12`}
-              required
-            >
-              <option value="">Выбери техкарту</option>
-              {filteredTechCardOptions.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.name} - {option.category}
-                  {option.pizzaSize ? ` - ${option.pizzaSize}` : ""}
-                </option>
-              ))}
-            </select>
-            <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-zinc-400">
-              <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5" aria-hidden="true">
-                <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </span>
-          </div>
-          <p className="text-xs leading-5 text-zinc-500">
-            Привязка к техкарте обязательна, чтобы прайс не расходился с производственной логикой.
-            {selectedCategory === "Пиццы"
-              ? " Для пиццы выбирается техкарта с конкретным размером."
-              : ""}
-          </p>
-        </label>
-      </div>
+      <CatalogTechCardFields
+        priceDefaultValue={state.values.price}
+        selectedCategory={selectedCategory}
+        selectedPizzaSize={selectedPizzaSize}
+        selectedTechCardId={selectedTechCardId}
+        techCardOptions={techCardOptions}
+        filteredTechCardOptions={filteredTechCardOptions}
+        onCategoryChange={setSelectedCategory}
+        onPizzaSizeChange={setSelectedPizzaSize}
+        onTechCardIdChange={setSelectedTechCardId}
+      />
 
       <label className="block space-y-2.5">
         <span className="text-sm font-medium text-zinc-700">Описание</span>

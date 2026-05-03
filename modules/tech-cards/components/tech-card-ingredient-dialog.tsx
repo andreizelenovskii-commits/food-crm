@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedList } from "@/components/ui/paginated-list";
 import type { SelectedIngredient } from "@/modules/tech-cards/components/tech-card-draft";
 import type { TechCardProductOption } from "@/modules/tech-cards/tech-cards.types";
 
@@ -107,20 +108,22 @@ export function TechCardIngredientDialog({
                 Ничего не найдено. Попробуй другой запрос.
               </div>
             ) : (
-              filteredProducts.map((product) => {
-                const isSelected = selectedIngredients.some((ingredient) => ingredient.productId === String(product.id));
-                const isPendingSelected = pendingIngredientIds.includes(String(product.id));
+              <PaginatedList itemLabel="товаров" className="grid gap-3">
+                {filteredProducts.map((product) => {
+                  const isSelected = selectedIngredients.some((ingredient) => ingredient.productId === String(product.id));
+                  const isPendingSelected = pendingIngredientIds.includes(String(product.id));
 
-                return (
-                  <IngredientPickerRow
-                    key={product.id}
-                    product={product}
-                    isSelected={isSelected}
-                    isPendingSelected={isPendingSelected}
-                    onToggle={() => onTogglePending(String(product.id))}
-                  />
-                );
-              })
+                  return (
+                    <IngredientPickerRow
+                      key={product.id}
+                      product={product}
+                      isSelected={isSelected}
+                      isPendingSelected={isPendingSelected}
+                      onToggle={() => onTogglePending(String(product.id))}
+                    />
+                  );
+                })}
+              </PaginatedList>
             )}
           </div>
         </div>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PageShell } from "@/components/ui/page-shell";
+import { PaginatedList } from "@/components/ui/paginated-list";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
 import { OrderCreateButton } from "@/modules/orders/components/order-create-button";
 import { OrderStatusButton } from "@/modules/orders/components/order-status-button";
@@ -166,7 +167,9 @@ function OrderColumn({
             Пока пусто.
           </div>
         ) : (
-          orders.map((order) => <OrderCard key={order.id} order={order} user={user} />)
+          <PaginatedList itemLabel="заказов">
+            {orders.map((order) => <OrderCard key={order.id} order={order} user={user} />)}
+          </PaginatedList>
         )}
       </div>
     </section>

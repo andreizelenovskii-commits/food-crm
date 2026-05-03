@@ -25,7 +25,7 @@ export function ClientDeleteButton({
         { name: "clientId", value: clientId },
         { name: "redirectTo", value: "/dashboard/clients" },
       ]}
-      buttonClassName="rounded-2xl border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-800 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:text-zinc-400"
+      buttonClassName="inline-flex h-8 items-center rounded-full border border-red-100 bg-white/90 px-3 text-xs font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white disabled:cursor-not-allowed disabled:border-zinc-200 disabled:text-zinc-400 disabled:hover:bg-white"
     />
   );
 }

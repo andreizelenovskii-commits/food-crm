@@ -6,7 +6,6 @@ import {
   type InventoryAuditFormState,
   submitInventoryAuditAction,
 } from "@/modules/inventory/inventory.actions";
-import { formatInventoryQuantity } from "@/modules/inventory/inventory.format";
 import {
   INVENTORY_AUDIT_DRAFT_KEY,
   type InventoryAuditDraft,
@@ -14,6 +13,12 @@ import {
   normalizeAuditDraftValue,
   readInventoryAuditDraft,
 } from "@/modules/inventory/components/inventory-audit-draft";
+import {
+  InventoryAuditFilters,
+  InventoryAuditFooter,
+  InventoryAuditHeader,
+  InventoryAuditProductRows,
+} from "@/modules/inventory/components/inventory-audit-form-parts";
 import {
   PRODUCT_CATEGORIES,
   type ProductCategory,
@@ -161,84 +166,14 @@ export function InventoryAuditForm({
 
   return (
     <section className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5 xl:p-5">
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div className="space-y-2">
-          <h2 className="text-[1.4rem] font-semibold tracking-[-0.02em] text-zinc-950">
-            Рабочая сверка остатков
-          </h2>
-          <p className="max-w-2xl text-sm leading-6 text-zinc-600">
-            Внеси фактические остатки по товарам, сохрани сверку и система обновит текущие значения на складе.
-          </p>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-400">Заполнено</p>
-            <p className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-zinc-950">{touchedCount}</p>
-          </div>
-          <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-400">Расхождения</p>
-            <p className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-zinc-950">{differenceCount}</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
-        <label className="space-y-2">
-          <span className="text-sm font-medium text-zinc-700">Поиск по товару</span>
-          <input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Например: сыр, соус или PRD-00012"
-            className="w-full rounded-2xl border border-zinc-300 px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
-          />
-        </label>
-
-        <div className="flex items-end">
-          <button
-            type="button"
-            onClick={() => {
-              setQuery("");
-              setSelectedCategory("");
-            }}
-            className="rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-950"
-          >
-            Сбросить фильтр
-          </button>
-        </div>
-      </div>
-
-      <div className="mt-5 flex flex-wrap gap-3">
-        <button
-          type="button"
-          onClick={() => setSelectedCategory("")}
-          className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-            !selectedCategory
-              ? "bg-zinc-950 text-white shadow-sm shadow-zinc-950/10"
-              : "border border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 hover:text-zinc-950"
-          }`}
-        >
-          Все категории
-        </button>
-        {categorySummaries.map((item) => {
-          const isActive = selectedCategory === item.category;
-
-          return (
-            <button
-              key={item.category}
-              type="button"
-              onClick={() => setSelectedCategory(item.category)}
-              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                isActive
-                  ? "bg-red-800 text-white shadow-sm shadow-red-950/20"
-                  : "border border-red-100 bg-red-50/70 text-red-800 hover:border-red-200 hover:bg-red-100"
-              }`}
-            >
-              {item.category} {item.count}
-            </button>
-          );
-        })}
-      </div>
+      <InventoryAuditHeader touchedCount={touchedCount} differenceCount={differenceCount} />
+      <InventoryAuditFilters
+        query={query}
+        selectedCategory={selectedCategory}
+        categorySummaries={categorySummaries}
+        onQueryChange={setQuery}
+        onCategoryChange={setSelectedCategory}
+      />
 
       {state.errorMessage ? (
         <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
@@ -261,108 +196,21 @@ export function InventoryAuditForm({
         ))}
 
         <div className="space-y-3">
-          {filteredProducts.length === 0 ? (
-            <div className="rounded-[14px] border border-dashed border-zinc-300 bg-zinc-50 px-5 py-4 sm:py-5 text-sm text-zinc-500">
-              По этому фильтру товары не найдены.
-            </div>
-          ) : (
-            filteredProducts.map((product) => {
-              const value = draft[String(product.id)] ?? "";
-              const hasValue = value.length > 0;
-              const difference =
-                hasValue && Number(value) !== product.stockQuantity
-                  ? Number(value) - product.stockQuantity
-                  : 0;
-              const differenceTone =
-                difference > 0
-                  ? "text-red-800"
-                  : difference < 0
-                    ? "text-red-700"
-                    : "text-zinc-500";
-
-              return (
-                <article
-                  key={product.id}
-                  className="grid gap-4 rounded-[14px] border border-zinc-200 bg-zinc-50/80 p-5 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)] lg:items-center"
-                >
-                  <div className="space-y-3">
-                    <div className="space-y-1">
-                      <h3 className="text-[1.1rem] font-semibold text-zinc-950">{product.name}</h3>
-                      <p className="text-sm text-zinc-500">
-                        Категория: {product.category ?? "Без категории"}
-                      </p>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2">
-                      <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-zinc-600 ring-1 ring-zinc-200">
-                        Система: {formatInventoryQuantity(product.stockQuantity)} {product.unit}
-                      </span>
-                      {product.sku ? (
-                        <span className="rounded-full bg-white px-3 py-1 text-xs font-medium uppercase tracking-[0.12em] text-zinc-400 ring-1 ring-zinc-200">
-                          {product.sku}
-                        </span>
-                      ) : null}
-                      {hasValue ? (
-                        <span className={`rounded-full bg-white px-3 py-1 text-xs font-medium ring-1 ring-zinc-200 ${differenceTone}`}>
-                          {difference === 0
-                            ? "Без расхождения"
-                            : difference > 0
-                              ? `Излишек: +${formatInventoryQuantity(difference)} ${product.unit}`
-                              : `Недостача: ${formatInventoryQuantity(difference)} ${product.unit}`}
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
-
-                  <label className="space-y-2">
-                    <span className="text-sm font-medium text-zinc-700">Фактический остаток</span>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        value={value}
-                        onChange={(event) => setDraftValue(product.id, event.target.value)}
-                        placeholder={formatInventoryQuantity(product.stockQuantity)}
-                        disabled={!canManageInventory || isPending}
-                        className="w-full rounded-[12px] border border-zinc-300 bg-white px-4 py-3 pr-16 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-500"
-                      />
-                      <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm font-medium text-zinc-500">
-                        {product.unit}
-                      </span>
-                    </div>
-                  </label>
-                </article>
-              );
-            })
-          )}
+          <InventoryAuditProductRows
+            products={filteredProducts}
+            draft={draft}
+            canManageInventory={canManageInventory}
+            isPending={isPending}
+            onDraftChange={setDraftValue}
+          />
         </div>
 
-        <div className="flex flex-col gap-3 rounded-[14px] border border-zinc-200 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="text-sm text-zinc-600">
-            {canManageInventory
-              ? "Сохраняются только позиции, в которых ты ввёл фактический остаток."
-              : "У твоей роли нет прав на проведение инвентаризации."}
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => setDraft({})}
-              disabled={touchedCount === 0 || isPending}
-              className="rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-950 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Очистить черновик
-            </button>
-            {canManageInventory ? (
-              <button
-                type="submit"
-                disabled={touchedCount === 0 || isPending}
-                className="rounded-2xl bg-zinc-950 px-5 py-3 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-400"
-              >
-                {isPending ? "Сохраняем..." : "Провести инвентаризацию"}
-              </button>
-            ) : null}
-          </div>
-        </div>
+        <InventoryAuditFooter
+          canManageInventory={canManageInventory}
+          isPending={isPending}
+          touchedCount={touchedCount}
+          onClearDraft={() => setDraft({})}
+        />
       </form>
     </section>
   );

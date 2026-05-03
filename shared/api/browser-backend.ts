@@ -3,7 +3,13 @@ const FORM_DATA_TIMEOUT_MS = 30_000;
 
 export function getBrowserBackendApiUrl() {
   if (process.env.NEXT_PUBLIC_BACKEND_API_URL?.trim()) {
-    return process.env.NEXT_PUBLIC_BACKEND_API_URL.trim().replace(/\/$/, "");
+    const apiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL.trim().replace(/\/$/, "");
+
+    if (typeof window !== "undefined" && window.location.hostname === "localhost") {
+      return apiUrl.replace("http://127.0.0.1:", "http://localhost:");
+    }
+
+    return apiUrl;
   }
 
   const { protocol, hostname } = window.location;

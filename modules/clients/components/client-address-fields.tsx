@@ -2,6 +2,13 @@
 
 import { useState } from "react";
 import { OHA_CLIENT_ADDRESS_SUGGESTIONS } from "@/modules/clients/client-addresses";
+import {
+  createEmptyAddressDraft,
+  formatAddressDraft,
+  getInitialAddressDrafts,
+  type AddressDraft,
+  type AddressFieldDefaults,
+} from "@/modules/clients/components/client-address-draft";
 
 function extractStreetName(address: string) {
   const match = address.match(/ул\.\s*([^,]+)/i);
@@ -16,163 +23,254 @@ export function ClientAddressFields() {
   return <ClientAddressFieldsWithDefaults />;
 }
 
-function parseAddressPart(address: string | null | undefined, pattern: RegExp) {
-  if (!address) {
-    return "";
-  }
-
-  const match = address.match(pattern);
-  return match?.[1]?.trim() ?? "";
-}
-
 export function ClientAddressFieldsWithDefaults({
   defaultAddress,
+  addressesJsonDefault,
   fieldDefaults,
 }: {
   defaultAddress?: string | null;
-  fieldDefaults?: {
-    residenceType?: string;
-    city?: string;
-    street?: string;
-    house?: string;
-    entrance?: string;
-    floor?: string;
-    apartment?: string;
-  };
+  addressesJsonDefault?: string;
+  fieldDefaults?: AddressFieldDefaults;
 }) {
-  const initialResidenceType =
-    fieldDefaults?.residenceType ||
-    (defaultAddress?.toLowerCase().includes("частный дом") ? "PRIVATE_HOUSE" : "APARTMENT");
-  const [residenceType, setResidenceType] = useState(initialResidenceType);
-  const defaultCity =
-    (fieldDefaults?.city ?? parseAddressPart(defaultAddress, /г\.\s*([^,]+)/i)) || "Оха";
-  const defaultStreet =
-    fieldDefaults?.street ?? parseAddressPart(defaultAddress, /ул\.\s*([^,]+)/i);
-  const defaultHouse =
-    fieldDefaults?.house ?? parseAddressPart(defaultAddress, /д\.\s*([^,]+)/i);
-  const defaultEntrance =
-    fieldDefaults?.entrance ?? parseAddressPart(defaultAddress, /подъезд\s*([^,]+)/i);
-  const defaultFloor =
-    fieldDefaults?.floor ?? parseAddressPart(defaultAddress, /этаж\s*([^,]+)/i);
-  const defaultApartment =
-    fieldDefaults?.apartment ?? parseAddressPart(defaultAddress, /кв\.\s*([^,]+)/i);
+  const [addresses, setAddresses] = useState<AddressDraft[]>(() =>
+    getInitialAddressDrafts(defaultAddress, addressesJsonDefault, fieldDefaults),
+  );
+  const serializedAddresses = JSON.stringify(
+    addresses
+      .map(formatAddressDraft)
+      .filter(Boolean),
+  );
+
+  const updateAddress = (id: string, patch: Partial<AddressDraft>) => {
+    setAddresses((current) =>
+      current.map((address) => (address.id === id ? { ...address, ...patch } : address)),
+    );
+  };
+
+  const collapseAddress = (id: string) => {
+    setAddresses((current) =>
+      current.map((address) => (address.id === id ? { ...address, isCollapsed: true } : address)),
+    );
+  };
+
+  const expandAddress = (id: string) => {
+    setAddresses((current) =>
+      current.map((address) => (address.id === id ? { ...address, isCollapsed: false } : address)),
+    );
+  };
+
+  const addAddress = () => {
+    setAddresses((current) => [...current, createEmptyAddressDraft()]);
+  };
+
+  const removeAddress = (id: string) => {
+    setAddresses((current) =>
+      current.length === 1 ? [createEmptyAddressDraft()] : current.filter((address) => address.id !== id),
+    );
+  };
 
   return (
-    <div className="space-y-3 rounded-[14px] border border-zinc-200 bg-zinc-50/80 p-4">
+    <div className="space-y-3 rounded-[18px] border border-red-950/10 bg-white/55 p-3">
       <div className="space-y-1">
-        <p className="text-sm font-medium text-zinc-700">Адрес</p>
-        <p className="text-xs leading-5 text-zinc-500">
-          Заполни части адреса отдельно. Город по умолчанию можно не менять.
+        <p className="text-[11px] font-semibold text-zinc-900">Адреса</p>
+        <p className="text-[11px] leading-4 text-zinc-500">
+          Можно добавить несколько адресов доставки для одного клиента.
         </p>
       </div>
+
+      <input type="hidden" name="addressesJson" value={serializedAddresses} />
+
+      <div className="space-y-3">
+        {addresses.map((address, index) => (
+          <AddressDraftFields
+            key={address.id}
+            address={address}
+            index={index}
+            canRemove={addresses.length > 1 || Boolean(formatAddressDraft(address))}
+            onChange={(patch) => updateAddress(address.id, patch)}
+            onSave={() => collapseAddress(address.id)}
+            onEdit={() => expandAddress(address.id)}
+            onRemove={() => removeAddress(address.id)}
+          />
+        ))}
+      </div>
+
+      <button
+        type="button"
+        onClick={addAddress}
+        className="inline-flex h-9 w-full items-center justify-center rounded-full border border-red-100 bg-white/85 px-4 text-xs font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white"
+      >
+        Добавить ещё адрес
+      </button>
+    </div>
+  );
+}
+
+function AddressDraftFields({
+  address,
+  index,
+  canRemove,
+  onChange,
+  onSave,
+  onEdit,
+  onRemove,
+}: {
+  address: AddressDraft;
+  index: number;
+  canRemove: boolean;
+  onChange: (patch: Partial<AddressDraft>) => void;
+  onSave: () => void;
+  onEdit: () => void;
+  onRemove: () => void;
+}) {
+  const summary = formatAddressDraft(address);
+
+  if (address.isCollapsed && summary) {
+    return (
+      <div className="animate-[module-slide-in_260ms_ease-out] rounded-[16px] border border-red-950/10 bg-white/85 px-3 py-2.5 shadow-sm shadow-red-950/5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-red-800/60">
+              Адрес {index + 1}
+            </p>
+            <p className="mt-1 truncate text-xs font-medium text-zinc-950">{summary}</p>
+          </div>
+          <div className="flex shrink-0 gap-2">
+            <button
+              type="button"
+              onClick={onEdit}
+              className="inline-flex h-8 items-center rounded-full border border-red-100 bg-white px-3 text-xs font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white"
+            >
+              Изменить
+            </button>
+            {canRemove ? (
+              <button
+                type="button"
+                onClick={onRemove}
+                className="inline-flex h-8 items-center rounded-full border border-red-100 bg-white px-3 text-xs font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white"
+              >
+                Удалить
+              </button>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="animate-[module-slide-in_260ms_ease-out] space-y-3 rounded-[16px] border border-red-950/10 bg-white/85 p-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-xs font-semibold text-zinc-950">Адрес {index + 1}</p>
+        {canRemove ? (
+          <button
+            type="button"
+            onClick={onRemove}
+            className="inline-flex h-8 items-center rounded-full border border-red-100 bg-white px-3 text-xs font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white"
+          >
+            Удалить
+          </button>
+        ) : null}
+      </div>
+
+      {summary ? (
+        <p className="rounded-[16px] bg-red-50/70 px-3 py-2 text-xs leading-5 text-red-900">
+          {summary}
+        </p>
+      ) : null}
 
       <div className="grid gap-2 sm:grid-cols-2">
         <button
           type="button"
-          onClick={() => setResidenceType("APARTMENT")}
-          className={`rounded-2xl border px-4 py-3 text-sm font-medium transition ${
-            residenceType === "APARTMENT"
-              ? "border-zinc-950 bg-zinc-950 text-white shadow-sm"
-              : "border-zinc-300 bg-white text-zinc-950 hover:border-zinc-500 hover:bg-zinc-50"
+          onClick={() => onChange({ residenceType: "APARTMENT" })}
+          className={`h-9 rounded-full border px-4 text-xs font-semibold transition ${
+            address.residenceType === "APARTMENT"
+              ? "border-red-800 bg-red-800 text-white shadow-sm shadow-red-950/20"
+              : "border-red-100 bg-white text-red-800 hover:border-red-800 hover:bg-red-800 hover:text-white"
           }`}
         >
           Квартира
         </button>
         <button
           type="button"
-          onClick={() => setResidenceType("PRIVATE_HOUSE")}
-          className={`rounded-2xl border px-4 py-3 text-sm font-medium transition ${
-            residenceType === "PRIVATE_HOUSE"
-              ? "border-zinc-950 bg-zinc-950 text-white shadow-sm"
-              : "border-zinc-300 bg-white text-zinc-950 hover:border-zinc-500 hover:bg-zinc-50"
+          onClick={() => onChange({ residenceType: "PRIVATE_HOUSE" })}
+          className={`h-9 rounded-full border px-4 text-xs font-semibold transition ${
+            address.residenceType === "PRIVATE_HOUSE"
+              ? "border-red-800 bg-red-800 text-white shadow-sm shadow-red-950/20"
+              : "border-red-100 bg-white text-red-800 hover:border-red-800 hover:bg-red-800 hover:text-white"
           }`}
         >
           Частный дом
         </button>
       </div>
 
-      <input type="hidden" name="addressResidenceType" value={residenceType} />
+      <div className="grid gap-2.5 sm:grid-cols-2">
+        <AddressInput label="Город" value={address.city} onChange={(city) => onChange({ city })} />
+        <AddressInput
+          label="Улица"
+          value={address.street}
+          placeholder="Например: Ленина"
+          list="oha-client-streets"
+          onChange={(street) => onChange({ street })}
+        />
+        <AddressInput label="Дом" value={address.house} placeholder="10" onChange={(house) => onChange({ house })} />
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="block space-y-2">
-          <span className="text-sm font-medium text-zinc-700">Город</span>
-          <input
-            name="addressCity"
-            type="text"
-            defaultValue={defaultCity}
-            className="w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
-          />
-        </label>
-
-        <label className="block space-y-2">
-          <span className="text-sm font-medium text-zinc-700">Улица</span>
-          <input
-            name="addressStreet"
-            type="text"
-            list="oha-client-streets"
-            placeholder="Например: Ленина"
-            defaultValue={defaultStreet}
-            className="w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
-          />
-          <datalist id="oha-client-streets">
-            {OHA_STREET_OPTIONS.map((street) => (
-              <option key={street} value={street} />
-            ))}
-          </datalist>
-        </label>
-
-        <label className="block space-y-2">
-          <span className="text-sm font-medium text-zinc-700">Дом</span>
-          <input
-            name="addressHouse"
-            type="text"
-            placeholder="10"
-            defaultValue={defaultHouse}
-            className="w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
-          />
-        </label>
-
-        {residenceType === "APARTMENT" ? (
+        {address.residenceType === "APARTMENT" ? (
           <>
-            <label className="block space-y-2">
-              <span className="text-sm font-medium text-zinc-700">Подъезд</span>
-              <input
-                name="addressEntrance"
-                type="text"
-                placeholder="2"
-                defaultValue={defaultEntrance}
-                className="w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
-              />
-            </label>
-
-            <label className="block space-y-2">
-              <span className="text-sm font-medium text-zinc-700">Этаж</span>
-              <input
-                name="addressFloor"
-                type="text"
-                placeholder="5"
-                defaultValue={defaultFloor}
-                className="w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
-              />
-            </label>
-
-            <label className="block space-y-2 sm:col-span-2">
-              <span className="text-sm font-medium text-zinc-700">Квартира</span>
-              <input
-                name="addressApartment"
-                type="text"
-                placeholder="17"
-                defaultValue={defaultApartment}
-                className="w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
-              />
-            </label>
+            <AddressInput label="Подъезд" value={address.entrance} placeholder="2" onChange={(entrance) => onChange({ entrance })} />
+            <AddressInput label="Этаж" value={address.floor} placeholder="5" onChange={(floor) => onChange({ floor })} />
+            <AddressInput label="Квартира" value={address.apartment} placeholder="17" onChange={(apartment) => onChange({ apartment })} />
           </>
         ) : (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 sm:col-span-2">
+          <div className="rounded-[18px] border border-red-100 bg-red-50/70 px-3 py-2 text-xs leading-5 text-red-800 sm:col-span-2">
             Для частного дома достаточно указать город, улицу и дом.
           </div>
         )}
       </div>
+
+      <datalist id="oha-client-streets">
+        {OHA_STREET_OPTIONS.map((street) => (
+          <option key={street} value={street} />
+        ))}
+      </datalist>
+
+      <button
+        type="button"
+        onClick={onSave}
+        disabled={!summary}
+        className="inline-flex h-9 w-full items-center justify-center rounded-full border border-red-100 bg-white/85 px-4 text-xs font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white hover:shadow-sm hover:shadow-red-950/20 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:text-zinc-400 disabled:hover:bg-white disabled:hover:shadow-none"
+      >
+        Сохранить адрес
+      </button>
     </div>
   );
 }
+
+function AddressInput({
+  label,
+  value,
+  placeholder,
+  list,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  placeholder?: string;
+  list?: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="block space-y-1.5">
+      <span className="text-[11px] font-semibold text-zinc-700">{label}</span>
+      <input
+        type="text"
+        value={value}
+        placeholder={placeholder}
+        list={list}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-9 w-full rounded-full border border-red-950/10 bg-white/85 px-4 text-xs font-medium text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
+      />
+    </label>
+  );
+}
+

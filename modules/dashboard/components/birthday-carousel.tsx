@@ -44,7 +44,7 @@ export function BirthdayCarousel({ clients }: { clients: BirthdayClient[] }) {
   const activeClient = clients[activeIndex];
 
   return (
-    <section className="rounded-[22px] border border-white/70 bg-white/72 p-4 shadow-[0_18px_60px_rgba(127,29,29,0.10)] backdrop-blur-2xl">
+    <section className="h-full rounded-[22px] border border-white/70 bg-white/72 p-4 shadow-[0_18px_60px_rgba(127,29,29,0.10)] backdrop-blur-2xl">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">

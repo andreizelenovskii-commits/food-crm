@@ -28,21 +28,8 @@ const eslintConfig = defineConfig([
     rules: {
       "max-lines": [
         "warn",
-        { max: 400, skipBlankLines: true, skipComments: true },
+        { max: 300, skipBlankLines: true, skipComments: true },
       ],
-    },
-  },
-  // Legacy panels — split planned; until then avoid max-lines noise in CI.
-  {
-    files: [
-      "modules/inventory/components/incoming-act-edit-form.tsx",
-      "modules/inventory/components/inventory-audit-dialogs.tsx",
-      "modules/inventory/components/inventory-incoming-panel.tsx",
-      "modules/inventory/components/inventory-writeoff-panel.tsx",
-      "modules/orders/components/order-create-button.tsx",
-    ],
-    rules: {
-      "max-lines": "off",
     },
   },
   {

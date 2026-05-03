@@ -1,10 +1,9 @@
-import { redirect } from "next/navigation";
 import { hasPermission } from "@/modules/auth/authz";
 import { requirePermission } from "@/modules/auth/auth.session";
 import { ClientsPage } from "@/modules/clients/components/clients-page";
 import {
   buildClientsPageViewModel,
-  findExactClientPhoneMatch,
+  resolveClientsLoyaltyLevel,
   resolveClientsQuery,
   type ClientsPageSearchParams,
 } from "@/modules/clients/clients.page-model";
@@ -17,17 +16,13 @@ export default async function ClientsRoutePage(props: {
   const searchParams = await props.searchParams;
   const clients = await fetchClients();
   const rawQuery = resolveClientsQuery(searchParams);
-  const exactPhoneMatch = findExactClientPhoneMatch(clients, rawQuery);
-
-  if (exactPhoneMatch) {
-    redirect(`/dashboard/clients/${exactPhoneMatch.id}`);
-  }
+  const activeLoyaltyLevel = resolveClientsLoyaltyLevel(searchParams);
 
   return (
     <ClientsPage
       user={user}
       canManageClients={hasPermission(user, "manage_clients")}
-      viewModel={buildClientsPageViewModel(clients, rawQuery)}
+      viewModel={buildClientsPageViewModel(clients, rawQuery, activeLoyaltyLevel)}
     />
   );
 }

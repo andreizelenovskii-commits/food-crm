@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PageShell } from "@/components/ui/page-shell";
+import { PaginatedList } from "@/components/ui/paginated-list";
 import { hasPermission } from "@/modules/auth/authz";
 import { requirePermission } from "@/modules/auth/auth.session";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
@@ -160,7 +161,7 @@ export default async function CatalogPage(props: {
                       Пока пусто.
                     </div>
                   ) : (
-                    <div className="space-y-4">
+                    <PaginatedList itemLabel="позиций">
                       {group.items.map((item) => (
                         <article
                           key={item.id}
@@ -229,7 +230,7 @@ export default async function CatalogPage(props: {
                           </div>
                         </article>
                       ))}
-                    </div>
+                    </PaginatedList>
                   )}
                 </section>
               ))}

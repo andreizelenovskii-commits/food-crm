@@ -7,6 +7,8 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
+    "check:lines": "node scripts/check-file-lines.mjs",
+    "mirror:check": "node scripts/check-dev-mirror.mjs",
     "local:db:up": "docker compose up -d",
     "local:db:down": "docker compose down",
     "local:db:logs": "docker compose logs -f postgres"

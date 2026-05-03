@@ -90,6 +90,19 @@ textarea {
   }
 }
 
+@keyframes date-picker-flip {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0) scale(0.98);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
 .foodlike-float-soft {
   animation: foodlike-float-soft 7s ease-in-out infinite;
 }

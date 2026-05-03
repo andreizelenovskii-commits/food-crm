@@ -1,8 +1,10 @@
 import type { SessionUser } from "@/modules/auth/auth.types";
-import type { Client } from "@/modules/clients/clients.types";
+import type { Client, ClientLoyaltyLevel } from "@/modules/clients/clients.types";
+import { LOYALTY_LEVELS } from "@/modules/loyalty/loyalty.types";
 
 export type ClientsPageSearchParams = {
   q?: string;
+  loyalty?: string;
 };
 
 export type UpcomingBirthdayClient = Client & {
@@ -12,7 +14,12 @@ export type UpcomingBirthdayClient = Client & {
 
 export type ClientsPageViewModel = {
   rawQuery: string;
+  activeLoyaltyLevel: ClientLoyaltyLevel | null;
+  peopleClientsTotal: number;
+  loyaltyCounts: Record<ClientLoyaltyLevel, number>;
+  searchCandidates: Client[];
   peopleClients: Client[];
+  bestClients: Client[];
   organizations: Client[];
   upcomingBirthdays: UpcomingBirthdayClient[];
 };
@@ -71,6 +78,12 @@ export function resolveClientsQuery(searchParams?: ClientsPageSearchParams) {
   return searchParams?.q?.trim() ?? "";
 }
 
+export function resolveClientsLoyaltyLevel(searchParams?: ClientsPageSearchParams) {
+  const rawLevel = searchParams?.loyalty?.trim().toUpperCase();
+
+  return LOYALTY_LEVELS.find((level) => level === rawLevel) ?? null;
+}
+
 export function findExactClientPhoneMatch(clients: Client[], rawQuery: string) {
   const queryPhone = normalizePhone(rawQuery);
 
@@ -81,9 +94,24 @@ export function findExactClientPhoneMatch(clients: Client[], rawQuery: string) {
   return clients.find((client) => normalizePhone(client.phone) === queryPhone) ?? null;
 }
 
+function matchesClientSearch(client: Client, normalizedQuery: string, queryPhone: string) {
+  if (!normalizedQuery) {
+    return true;
+  }
+
+  const nameTokens = normalizedQuery.split(/\s+/).filter(Boolean);
+  const normalizedName = client.name.toLowerCase();
+  const searchablePhone = normalizePhone(client.phone);
+  const matchesName = nameTokens.every((token) => normalizedName.includes(token));
+  const matchesPhone = queryPhone.length > 0 && searchablePhone.includes(queryPhone);
+
+  return matchesName || matchesPhone;
+}
+
 export function buildClientsPageViewModel(
   clients: Client[],
   rawQuery: string,
+  activeLoyaltyLevel: ClientLoyaltyLevel | null = null,
 ): ClientsPageViewModel {
   const normalizedQuery = rawQuery.toLowerCase();
   const queryPhone = normalizePhone(rawQuery);
@@ -103,23 +131,47 @@ export function buildClientsPageViewModel(
     })
     .filter((client): client is UpcomingBirthdayClient => Boolean(client))
     .sort((left, right) => left.daysUntilBirthday - right.daysUntilBirthday);
-  const filteredClients = clients.filter((client) => {
+  const queryFilteredClients = clients.filter((client) => {
     if (!normalizedQuery) {
       return true;
     }
 
-    const searchablePhone = normalizePhone(client.phone);
-
-    return (
-      client.name.toLowerCase().includes(normalizedQuery) ||
-      (queryPhone.length > 0 && searchablePhone.includes(queryPhone))
-    );
+    return matchesClientSearch(client, normalizedQuery, queryPhone);
   });
+  const loyaltyCounts = LOYALTY_LEVELS.reduce(
+    (counts, level) => ({
+      ...counts,
+      [level]: queryFilteredClients.filter(
+        (client) => client.type === "CLIENT" && client.loyaltyLevel === level,
+      ).length,
+    }),
+    {} as Record<ClientLoyaltyLevel, number>,
+  );
+  const filteredClients = activeLoyaltyLevel
+    ? queryFilteredClients.filter(
+        (client) => client.type === "CLIENT" && client.loyaltyLevel === activeLoyaltyLevel,
+      )
+    : queryFilteredClients;
+  const peopleClients = filteredClients.filter((client) => client.type === "CLIENT");
 
   return {
     rawQuery,
-    peopleClients: filteredClients.filter((client) => client.type === "CLIENT"),
-    organizations: filteredClients.filter((client) => client.type === "ORGANIZATION"),
+    activeLoyaltyLevel,
+    peopleClientsTotal: queryFilteredClients.filter((client) => client.type === "CLIENT").length,
+    loyaltyCounts,
+    searchCandidates: clients.filter((client) => client.type === "CLIENT"),
+    peopleClients,
+    bestClients: peopleClients
+      .filter((client) => client.ordersCount > 0 || client.totalSpentCents > 0)
+      .sort((left, right) => {
+        const spentDifference = right.totalSpentCents - left.totalSpentCents;
+
+        return spentDifference || right.ordersCount - left.ordersCount;
+      })
+      .slice(0, 3),
+    organizations: activeLoyaltyLevel
+      ? []
+      : filteredClients.filter((client) => client.type === "ORGANIZATION"),
     upcomingBirthdays,
   };
 }

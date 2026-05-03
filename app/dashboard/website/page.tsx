@@ -1,4 +1,3 @@
-import { CrmEnvironmentLinks } from "@/components/ui/crm-environment-links";
 import { PageShell } from "@/components/ui/page-shell";
 import { PUBLIC_SITE_URL } from "@/shared/deploy-public-urls";
 import { requirePermission } from "@/modules/auth/auth.session";
@@ -108,7 +107,6 @@ export default async function WebsitePage() {
               >
                 Публичный сайт
               </a>
-              <CrmEnvironmentLinks />
             </div>
           </div>
         </aside>

@@ -2,34 +2,31 @@
 
 import { useState } from "react";
 import { updateEmployeeAction } from "@/modules/employees/employees.actions";
-import { EmployeeAdjustmentForm } from "@/modules/employees/components/employee-adjustment-form";
 import { EmployeeContactsCard } from "@/modules/employees/components/employee-contacts-card";
 import {
   type ContactsDraft,
   buildContactsDraft,
   buildEditableSchedule,
-  formatDate,
-  formatMoney,
   formatMonthLabel,
   getInitialPreviewMonth,
   getMonthKey,
   getMonthPreviewStats,
   isDateInMonth,
 } from "@/modules/employees/components/employee-profile.helpers";
+import {
+  EmployeeAdjustmentsPanel,
+  EmployeeMetricsPanel,
+  EmployeeProfileTabs,
+  EmployeeScheduleEditorDialog,
+  EmployeeWorkResultsPanel,
+  type EmployeeProfileTab,
+} from "@/modules/employees/components/employee-profile-panels";
 import { EmployeeSchedulePreview } from "@/modules/employees/components/employee-schedule-preview";
-import { EmployeeScheduleEditor } from "@/modules/employees/components/employee-schedule-editor";
+import { formatScheduleSummary } from "@/modules/employees/employees.schedule";
 import {
-  formatHours,
-  formatScheduleSummary,
-} from "@/modules/employees/employees.schedule";
-import {
-  EMPLOYEE_ADJUSTMENT_LABELS,
-  type EmployeeAdjustment,
   type EmployeeProfile,
   type EmployeeSchedule,
 } from "@/modules/employees/employees.types";
-
-type Tab = 'general' | 'advances' | 'fines' | 'debts';
 
 export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile }) {
   const showOrderMetrics = employee.role === "Повар" || employee.role === "Курьер";
@@ -38,7 +35,7 @@ export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile 
     ? JSON.stringify(initialSchedule)
     : "";
   const initialContactsDraft = buildContactsDraft(employee);
-  const [activeTab, setActiveTab] = useState<Tab>('general');
+  const [activeTab, setActiveTab] = useState<EmployeeProfileTab>("general");
   const [schedule, setSchedule] = useState<EmployeeSchedule>(() => buildEditableSchedule(employee));
   const [selectedMonth, setSelectedMonth] = useState(() => getInitialPreviewMonth(initialSchedule));
   const [isEditingContacts, setIsEditingContacts] = useState(false);
@@ -88,42 +85,26 @@ export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile 
   };
 
   const tabs = [
-    { id: 'general' as Tab, label: 'Общая информация' },
-    { id: 'advances' as Tab, label: 'Авансы' },
-    { id: 'fines' as Tab, label: 'Штрафы' },
-    { id: 'debts' as Tab, label: 'Долги' },
+    { id: "general" as EmployeeProfileTab, label: "Общая информация" },
+    { id: "advances" as EmployeeProfileTab, label: "Авансы" },
+    { id: "fines" as EmployeeProfileTab, label: "Штрафы" },
+    { id: "debts" as EmployeeProfileTab, label: "Долги" },
   ];
 
-  const filteredAdjustments = selectedMonthAdjustments.filter((adj: EmployeeAdjustment) => {
+  const filteredAdjustments = selectedMonthAdjustments.filter((adj) => {
     switch (activeTab) {
-      case 'advances': return adj.type === 'ADVANCE';
-      case 'fines': return adj.type === 'FINE';
-      case 'debts': return adj.type === 'DEBT';
+      case "advances": return adj.type === "ADVANCE";
+      case "fines": return adj.type === "FINE";
+      case "debts": return adj.type === "DEBT";
       default: return false;
     }
   });
 
   return (
     <div className="space-y-5">
-      {/* Tabs */}
-      <div className="flex border-b border-zinc-200">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 text-sm font-medium transition ${
-              activeTab === tab.id
-                ? 'border-b-2 border-zinc-950 text-zinc-950'
-                : 'text-zinc-600 hover:text-zinc-950'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <EmployeeProfileTabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
 
-      {/* Tab Content */}
-      {activeTab === 'general' && (
+      {activeTab === "general" && (
         <div className="grid gap-4 xl:grid-cols-[0.9fr_0.7fr]">
           <div className="space-y-5">
             <EmployeeContactsCard
@@ -153,167 +134,46 @@ export function EmployeeProfileClient({ employee }: { employee: EmployeeProfile 
             />
           </div>
 
-          <section className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
-            <div className="flex items-start justify-between gap-3">
-              <h2 className="text-xl font-semibold text-zinc-950">Показатели</h2>
-              <p className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium capitalize text-zinc-700">
-                {selectedMonthLabel}
-              </p>
-            </div>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-[14px] bg-zinc-50 p-4">
-                <p className="text-sm text-zinc-500">Авансы за месяц</p>
-                <p className="mt-3 text-2xl font-semibold text-zinc-950">{formatMoney(selectedMonthAdjustmentTotals.ADVANCE)}</p>
-              </div>
-              <div className="rounded-[14px] bg-zinc-50 p-4">
-                <p className="text-sm text-zinc-500">Штрафы</p>
-                <p className="mt-3 text-2xl font-semibold text-zinc-950">{formatMoney(selectedMonthAdjustmentTotals.FINE)}</p>
-              </div>
-              <div className="rounded-[14px] bg-zinc-50 p-4">
-                <p className="text-sm text-zinc-500">Долги</p>
-                <p className="mt-3 text-2xl font-semibold text-zinc-950">{formatMoney(selectedMonthAdjustmentTotals.DEBT)}</p>
-              </div>
-              <div className="rounded-[14px] bg-zinc-50 p-4">
-                <p className="text-sm text-zinc-500">Рабочие часы</p>
-                <p className="mt-3 text-2xl font-semibold text-zinc-950">{formatHours(scheduleStats.hours)}</p>
-              </div>
-              <div className="rounded-[14px] bg-zinc-50 p-4">
-                <p className="text-sm text-zinc-500">Рабочие дни</p>
-                <p className="mt-3 text-2xl font-semibold text-zinc-950">{scheduleStats.days}</p>
-              </div>
-              {showOrderMetrics ? (
-                <div className="rounded-[14px] bg-zinc-50 p-4">
-                  <p className="text-sm text-zinc-500">Заказы за месяц</p>
-                  <p className="mt-3 text-2xl font-semibold text-zinc-950">{selectedMonthOrderStats.ordersCount}</p>
-                </div>
-              ) : null}
-            </div>
-          </section>
+          <EmployeeMetricsPanel
+            monthLabel={selectedMonthLabel}
+            adjustmentTotals={selectedMonthAdjustmentTotals}
+            scheduleStats={scheduleStats}
+            showOrderMetrics={showOrderMetrics}
+            ordersCount={selectedMonthOrderStats.ordersCount}
+          />
         </div>
       )}
 
-      {activeTab === 'general' && (
-        <section className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
-          <div className="flex items-start justify-between gap-3">
-            <h2 className="text-xl font-semibold text-zinc-950">Рабочие результаты</h2>
-            <p className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium capitalize text-zinc-700">
-              {selectedMonthLabel}
-            </p>
-          </div>
-          <div className={`mt-5 grid gap-4 ${showOrderMetrics ? "sm:grid-cols-3" : "sm:grid-cols-1"}`}>
-            {showOrderMetrics ? (
-              <div className="rounded-[14px] bg-zinc-50 p-4">
-                <p className="text-sm text-zinc-500">Заказы за месяц</p>
-                <p className="mt-3 text-2xl font-semibold text-zinc-950">{selectedMonthOrderStats.ordersCount}</p>
-              </div>
-            ) : null}
-            {showOrderMetrics ? (
-              <div className="rounded-[14px] bg-zinc-50 p-4">
-                <p className="text-sm text-zinc-500">Сумма заказов</p>
-                <p className="mt-3 text-2xl font-semibold text-zinc-950">{formatMoney(selectedMonthOrderStats.revenueCents)}</p>
-              </div>
-            ) : null}
-            <div className="rounded-[14px] bg-zinc-50 p-4">
-              <p className="text-sm text-zinc-500">График на месяц</p>
-              <p className="mt-3 text-2xl font-semibold text-zinc-950">{scheduleStats.days} дн.</p>
-              <p className="mt-1 text-sm text-zinc-500">{formatHours(scheduleStats.hours)} ч</p>
-            </div>
-          </div>
-          <p className="mt-4 text-sm text-zinc-600">
-            Показатели на экране синхронизированы с месяцем, который выбран в календаре сотрудника.
-          </p>
-        </section>
+      {activeTab === "general" && (
+        <EmployeeWorkResultsPanel
+          monthLabel={selectedMonthLabel}
+          showOrderMetrics={showOrderMetrics}
+          ordersCount={selectedMonthOrderStats.ordersCount}
+          revenueCents={selectedMonthOrderStats.revenueCents}
+          scheduleStats={scheduleStats}
+        />
       )}
 
-      {(activeTab === 'advances' || activeTab === 'fines' || activeTab === 'debts') && (
-        <div className="grid gap-4 xl:grid-cols-[1.4fr_0.8fr]">
-          <section className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
-            <h2 className="text-xl font-semibold text-zinc-950">
-              {tabs.find(t => t.id === activeTab)?.label}
-            </h2>
-            <p className="mt-1 text-sm capitalize text-zinc-500">{selectedMonthLabel}</p>
-            <div className="mt-5 space-y-4">
-              {filteredAdjustments.length === 0 ? (
-                <p className="text-sm text-zinc-600">За выбранный месяц записей пока нет.</p>
-              ) : (
-                <div className="space-y-4">
-                  {filteredAdjustments.map((adjustment: EmployeeAdjustment) => (
-                    <div key={adjustment.id} className="rounded-[14px] border border-zinc-200 bg-zinc-50 p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <p className="font-semibold text-zinc-950">{EMPLOYEE_ADJUSTMENT_LABELS[adjustment.type]}</p>
-                        <p className="text-sm text-zinc-700">{formatDate(adjustment.createdAt)}</p>
-                      </div>
-                      <p className="mt-1 text-sm text-zinc-600">{adjustment.comment || "Без комментария"}</p>
-                      <p className="mt-3 text-xl font-semibold text-zinc-950">{formatMoney(adjustment.amountCents)}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </section>
-
-          <div>
-            <EmployeeAdjustmentForm
-              employeeId={employee.id}
-              defaultType={activeTab === 'advances' ? 'ADVANCE' : activeTab === 'fines' ? 'FINE' : 'DEBT'}
-            />
-          </div>
-        </div>
-      )}
+      {activeTab !== "general" ? (
+        <EmployeeAdjustmentsPanel
+          employeeId={employee.id}
+          activeTab={activeTab}
+          tabLabel={tabs.find((tab) => tab.id === activeTab)?.label ?? ""}
+          monthLabel={selectedMonthLabel}
+          adjustments={filteredAdjustments}
+        />
+      ) : null}
 
       {isScheduleEditorOpen ? (
-        <div
-          className="fixed inset-0 z-40 flex items-center justify-center bg-zinc-950/45 px-4 py-4 sm:py-5"
-          onClick={() => setIsScheduleEditorOpen(false)}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label="Редактирование графика работы"
-            className="flex max-h-[calc(100vh-3rem)] w-full max-w-6xl flex-col overflow-hidden rounded-[14px] border border-zinc-200 bg-white shadow-2xl shadow-zinc-950/25"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="flex items-start justify-between gap-4 border-b border-zinc-200 px-4 sm:px-5 py-5">
-              <div className="space-y-1">
-                <h2 className="text-xl font-semibold text-zinc-950">График работы</h2>
-                <p className="text-sm text-zinc-600">{scheduleSummary}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsScheduleEditorOpen(false)}
-                className="rounded-full border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
-              >
-                Закрыть
-              </button>
-            </div>
-
-            <div className="overflow-y-auto px-4 sm:px-5 py-5">
-              <EmployeeScheduleEditor
-                value={schedule}
-                onChange={setSchedule}
-              />
-            </div>
-
-            <div className="flex flex-wrap justify-end gap-2 border-t border-zinc-200 px-4 sm:px-5 py-4">
-              <button
-                type="button"
-                onClick={() => setSchedule(buildEditableSchedule(employee))}
-                disabled={!hasUnsavedScheduleChanges}
-                className="rounded-2xl border border-zinc-300 px-4 py-3 text-sm font-medium text-zinc-950 transition hover:border-zinc-500 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:text-zinc-400"
-              >
-                Сбросить
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveSchedule}
-                disabled={!hasUnsavedScheduleChanges}
-                className="rounded-2xl bg-zinc-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-300"
-              >
-                Сохранить график
-              </button>
-            </div>
-          </div>
-        </div>
+        <EmployeeScheduleEditorDialog
+          schedule={schedule}
+          scheduleSummary={scheduleSummary}
+          hasUnsavedChanges={hasUnsavedScheduleChanges}
+          onChange={setSchedule}
+          onReset={() => setSchedule(buildEditableSchedule(employee))}
+          onSave={handleSaveSchedule}
+          onClose={() => setIsScheduleEditorOpen(false)}
+        />
       ) : null}
     </div>
   );

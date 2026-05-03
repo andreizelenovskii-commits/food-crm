@@ -19,6 +19,7 @@ export type ClientFormValues = {
   addressEntrance: string;
   addressFloor: string;
   addressApartment: string;
+  addressesJson: string;
   notes: string;
 };
 
@@ -42,6 +43,7 @@ function getClientFormValues(formData: FormData): ClientFormValues {
     addressEntrance: read("addressEntrance"),
     addressFloor: read("addressFloor"),
     addressApartment: read("addressApartment"),
+    addressesJson: read("addressesJson"),
     notes: read("notes"),
   };
 }
