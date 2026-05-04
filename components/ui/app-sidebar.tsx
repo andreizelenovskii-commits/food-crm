@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { ModuleIcon } from "@/components/ui/module-icon";
 
@@ -21,6 +21,14 @@ const NAV_ITEMS = [
   { href: "/dashboard/settings", label: "Настройки", icon: "settings" },
 ] as const;
 
+const INVENTORY_SUB_ITEMS = [
+  { href: "/dashboard/inventory", label: "Товары", tab: "products" },
+  { href: "/dashboard/inventory?tab=incoming", label: "Поступление", tab: "incoming" },
+  { href: "/dashboard/inventory?tab=writeoff", label: "Списание", tab: "writeoff" },
+  { href: "/dashboard/inventory?tab=audit", label: "Инвентаризация", tab: "audit" },
+  { href: "/dashboard/inventory?tab=recipes", label: "Техкарты", tab: "recipes" },
+] as const;
+
 function isActivePath(pathname: string, href: string) {
   if (href === "/dashboard") {
     return pathname === href;
@@ -31,7 +39,11 @@ function isActivePath(pathname: string, href: string) {
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const isInventoryPath = isActivePath(pathname, "/dashboard/inventory");
+  const [isInventoryOpen, setIsInventoryOpen] = useState(isInventoryPath);
+  const activeInventoryTab = isInventoryPath ? (searchParams.get("tab") ?? "products") : "";
 
   return (
     <>
@@ -94,6 +106,93 @@ export function AppSidebar() {
           <div className="space-y-1">
             {NAV_ITEMS.map((item) => {
               const isActive = isActivePath(pathname, item.href);
+
+              if (item.href === "/dashboard/inventory") {
+                const showInventorySubnav = isInventoryOpen;
+
+                return (
+                  <div key={item.href} className="space-y-1">
+                    <div
+                      className={[
+                        "flex h-10 items-center gap-1 rounded-[12px] transition",
+                        isActive
+                          ? "bg-red-800 text-white shadow-md shadow-red-950/10"
+                          : "text-zinc-600 hover:bg-white hover:text-red-800 hover:shadow-sm hover:shadow-red-950/5",
+                      ].join(" ")}
+                    >
+                      <Link
+                        href={item.href}
+                        onClick={() => {
+                          setIsInventoryOpen(true);
+                          setIsMobileOpen(false);
+                        }}
+                        className="flex h-full min-w-0 flex-1 items-center gap-2.5 rounded-l-[12px] pl-2 text-sm font-medium"
+                      >
+                        <span
+                          className={[
+                            "flex h-7 w-7 shrink-0 items-center justify-center rounded-[9px]",
+                            isActive ? "bg-white/16 text-white" : "bg-red-50 text-red-800",
+                          ].join(" ")}
+                        >
+                          <ModuleIcon name={item.icon} />
+                        </span>
+                        <span className="whitespace-nowrap">{item.label}</span>
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => setIsInventoryOpen((current) => !current)}
+                        className={[
+                          "mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] transition",
+                          isActive
+                            ? "text-white hover:bg-white/14"
+                            : "text-red-800 hover:bg-red-50",
+                        ].join(" ")}
+                        aria-label={showInventorySubnav ? "Скрыть вкладки склада" : "Показать вкладки склада"}
+                        aria-expanded={showInventorySubnav}
+                      >
+                        <svg
+                          viewBox="0 0 20 20"
+                          aria-hidden="true"
+                          className={`h-4 w-4 transition-transform ${showInventorySubnav ? "rotate-90" : ""}`}
+                        >
+                          <path
+                            d="M7.5 4.75 12.25 10 7.5 15.25"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="1.8"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+
+                    {showInventorySubnav ? (
+                      <div className="space-y-1 pl-10 pr-1">
+                        {INVENTORY_SUB_ITEMS.map((subItem) => {
+                          const isSubActive = activeInventoryTab === subItem.tab;
+
+                          return (
+                            <Link
+                              key={subItem.href}
+                              href={subItem.href}
+                              onClick={() => setIsMobileOpen(false)}
+                              className={[
+                                "flex h-8 items-center rounded-[10px] px-3 text-xs font-semibold transition",
+                                isSubActive
+                                  ? "bg-red-50 text-red-800 shadow-sm shadow-red-950/5"
+                                  : "text-zinc-500 hover:bg-white hover:text-red-800",
+                              ].join(" ")}
+                            >
+                              {subItem.label}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              }
 
               return (
                 <Link

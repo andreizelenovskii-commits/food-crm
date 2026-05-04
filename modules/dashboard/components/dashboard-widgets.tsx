@@ -13,12 +13,15 @@ export function formatDashboardMoney(cents: number) {
 export function GlassPanel({
   children,
   className = "",
+  id,
 }: {
   children: React.ReactNode;
   className?: string;
+  id?: string;
 }) {
   return (
     <section
+      id={id}
       className={`rounded-[22px] border border-white/70 bg-white/72 shadow-[0_18px_60px_rgba(127,29,29,0.10)] backdrop-blur-2xl ${className}`.trim()}
     >
       {children}

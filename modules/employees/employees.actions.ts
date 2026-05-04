@@ -91,7 +91,10 @@ export async function issueEmployeeAccessAction(
   try {
     const input = parseIssueEmployeeAccessInput(formData);
     await browserBackendJson(`/api/v1/employees/${employeeId}/access`, {
-      body: input,
+      body: {
+        ...input,
+        login: input.phone,
+      },
     });
   } catch (error) {
     if (error instanceof ValidationError || error instanceof Error) {

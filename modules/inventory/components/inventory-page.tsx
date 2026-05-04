@@ -1,16 +1,29 @@
-import Link from "next/link";
 import { PageShell } from "@/components/ui/page-shell";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
+import {
+  GlassPanel,
+  KpiTile,
+  formatDashboardMoney,
+} from "@/modules/dashboard/components/dashboard-widgets";
 import { InventoryAuditTab } from "@/modules/inventory/components/inventory-audit-tab";
 import { InventoryIncomingPanel } from "@/modules/inventory/components/inventory-incoming-panel";
 import { InventoryRecipesTab } from "@/modules/inventory/components/inventory-recipes-tab";
 import { InventoryWriteoffPanel } from "@/modules/inventory/components/inventory-writeoff-panel";
 import { InventoryProductsTab } from "@/modules/inventory/components/inventory-products-tab";
+import { formatInventoryQuantity } from "@/modules/inventory/inventory.format";
 import {
   buildInventoryPageViewModel,
-  INVENTORY_TABS,
+  type InventoryTab,
   type InventoryPageProps,
 } from "@/modules/inventory/inventory.page-model";
+
+const INVENTORY_TAB_TITLES: Record<InventoryTab, string> = {
+  products: "Товары и остатки",
+  incoming: "Поступление товара",
+  writeoff: "Списание товара",
+  audit: "Инвентаризация",
+  recipes: "Технологические карты",
+};
 
 export function InventoryPage({
   user,
@@ -28,12 +41,9 @@ export function InventoryPage({
   const {
     activeTab,
     rawQuery,
-    selectedCategory,
     selectedRecipeCategory,
     totalStock,
     totalValueCents,
-    filteredProducts,
-    categorySummaries,
     lowStockProducts,
     lowStockCount,
     zeroStockCount,
@@ -53,43 +63,39 @@ export function InventoryPage({
       backHref="/dashboard"
       action={<SessionUserActions user={user} />}
     >
-      <div className="relative overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#fffdfc_0%,#fff3f2_48%,#f7eeee_100%)] p-4 shadow-[0_24px_80px_rgba(127,29,29,0.12)] sm:p-5">
-        <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-red-300/20 blur-3xl" />
+      <div className="relative overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#fffdfc_0%,#fff2f2_46%,#f8eeee_100%)] p-4 shadow-[0_24px_80px_rgba(127,29,29,0.12)] sm:p-5">
+        <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-red-300/25 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-28 left-1/3 h-72 w-72 rounded-full bg-white/80 blur-3xl" />
 
-        <section className="relative mb-4 rounded-[22px] border border-white/70 bg-white/74 p-2 shadow-[0_18px_60px_rgba(127,29,29,0.08)] backdrop-blur-2xl">
-          <div className="flex gap-2 overflow-x-auto">
-            {INVENTORY_TABS.map((tab) => {
-              const isActive = activeTab === tab.key;
+        <div className="relative grid gap-4 xl:grid-cols-[minmax(300px,0.86fr)_minmax(420px,1.14fr)]">
+          <GlassPanel className="foodlike-float-soft p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-red-800/75">
+              FoodLike inventory
+            </p>
+            <h2 className="mt-2 max-w-xl text-3xl font-semibold leading-tight text-zinc-950 sm:text-4xl">
+              {INVENTORY_TAB_TITLES[activeTab]}
+            </h2>
+            <p className="mt-3 max-w-lg text-sm leading-6 text-zinc-600">
+              Управляй остатками, приходами, списаниями и ревизиями из одной
+              спокойной рабочей зоны. Вкладки склада теперь раскрываются в
+              левом меню рядом с модулем.
+            </p>
+          </GlassPanel>
 
-              return (
-                <Link
-                  key={tab.key}
-                  href={tab.key === "products" ? "/dashboard/inventory" : `/dashboard/inventory?tab=${tab.key}`}
-                  className={`inline-flex h-9 shrink-0 items-center rounded-full px-4 text-xs font-semibold transition ${
-                    isActive
-                      ? "bg-red-800 text-white shadow-sm shadow-red-950/20"
-                      : "border border-red-100 bg-white/80 text-red-800 hover:border-red-800 hover:bg-red-800 hover:text-white"
-                  }`}
-                >
-                  {tab.label}
-                </Link>
-              );
-            })}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <KpiTile label="Позиций" value={products.length} hint="Складские товары" />
+            <KpiTile label="Всего единиц" value={formatInventoryQuantity(totalStock)} hint="Текущий остаток" />
+            <KpiTile label="Остаток" value={formatDashboardMoney(totalValueCents)} hint="Стоимость по закупке" />
+            <KpiTile label="Контроль" value={lowStockCount + zeroStockCount} hint="Мало или ноль остатка" />
           </div>
-        </section>
+        </div>
 
-        <div className="relative">
+        <div className="relative mt-4">
           {activeTab === "products" ? (
             <InventoryProductsTab
               products={products}
-              filteredProducts={filteredProducts}
               lowStockProducts={lowStockProducts}
-              categorySummaries={categorySummaries}
               rawQuery={rawQuery}
-              selectedCategory={selectedCategory}
-              totalStock={totalStock}
-              totalValueCents={totalValueCents}
               canManageInventory={canManageInventory}
             />
           ) : null}
