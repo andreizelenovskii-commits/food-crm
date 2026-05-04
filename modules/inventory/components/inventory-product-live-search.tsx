@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { ProductDetailDialog } from "@/modules/inventory/components/product-detail-dialog";
 import { ProductForm } from "@/modules/inventory/components/product-form";
 import { formatInventoryQuantity } from "@/modules/inventory/inventory.format";
 import type { ProductItem } from "@/modules/inventory/inventory.types";
@@ -15,11 +15,53 @@ function formatMoney(cents: number) {
   }).format(cents / 100);
 }
 
-function ProductResultCard({ product }: { product: ProductItem }) {
+function SearchIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
-    <Link
-      href={`/dashboard/inventory/${product.id}`}
-      className="block rounded-[18px] border border-red-950/10 bg-white/78 p-3.5 shadow-sm shadow-red-950/5 transition hover:-translate-y-0.5 hover:border-red-200 hover:bg-white"
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="m16 16 4 4" />
+    </svg>
+  );
+}
+
+function PlusIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+      className={className}
+    >
+      <path d="M12 5v14" />
+      <path d="M5 12h14" />
+    </svg>
+  );
+}
+
+function ProductResultCard({
+  product,
+  onOpen,
+}: {
+  product: ProductItem;
+  onOpen: (product: ProductItem) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(product)}
+      className="block w-full rounded-[18px] border border-red-950/10 bg-white/78 p-3.5 text-left shadow-sm shadow-red-950/5 transition hover:-translate-y-0.5 hover:border-red-200 hover:bg-white"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
@@ -42,7 +84,7 @@ function ProductResultCard({ product }: { product: ProductItem }) {
           <p className="mt-1">{formatMoney(product.priceCents)}</p>
         </div>
       </div>
-    </Link>
+    </button>
   );
 }
 
@@ -95,6 +137,7 @@ export function InventoryProductLiveSearch({
 }) {
   const [query, setQuery] = useState(initialQuery);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
   const trimmedQuery = query.trim();
   const results = useMemo(() => {
     const normalizedQuery = trimmedQuery.toLowerCase();
@@ -118,12 +161,13 @@ export function InventoryProductLiveSearch({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Например: Маргарита"
-            className="h-9 min-w-0 flex-1 rounded-full border border-red-950/10 bg-white/85 px-4 text-xs font-medium text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
+            className="h-9 min-w-0 flex-1 appearance-none rounded-full border border-red-950/10 bg-white/85 px-4 text-[13px] font-medium leading-none text-zinc-950 outline-none transition placeholder:text-zinc-400 hover:border-red-200 hover:bg-white hover:text-zinc-950 hover:placeholder:text-zinc-500 focus:border-red-300 focus:bg-white focus:text-zinc-950 focus:ring-2 focus:ring-red-800/10 focus:placeholder:text-zinc-500"
           />
           <button
             type="submit"
-            className="inline-flex h-9 shrink-0 items-center justify-center rounded-full border border-red-100 bg-white/85 px-4 text-xs font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white hover:shadow-sm hover:shadow-red-950/20"
+            className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-full bg-red-800 px-4 text-[13px] font-medium tracking-[-0.01em] text-white shadow-sm shadow-red-950/15 transition hover:bg-red-900 hover:shadow-red-950/25"
           >
+            <SearchIcon className="h-3.5 w-3.5" />
             Найти
           </button>
         </form>
@@ -132,8 +176,9 @@ export function InventoryProductLiveSearch({
           <button
             type="button"
             onClick={() => setIsCreateOpen(true)}
-            className="inline-flex h-9 shrink-0 items-center justify-center rounded-full border border-red-100 bg-white/85 px-4 text-xs font-semibold text-red-800 shadow-sm shadow-red-950/5 transition hover:border-red-800 hover:bg-red-800 hover:text-white hover:shadow-red-950/20 lg:w-44"
+            className="inline-flex h-9 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-red-100 bg-white/85 px-5 text-[13px] font-medium tracking-[-0.01em] text-red-800 shadow-sm shadow-red-950/5 transition hover:border-red-800 hover:bg-red-800 hover:text-white hover:shadow-red-950/20"
           >
+            <PlusIcon className="h-3.5 w-3.5" />
             Добавить товар
           </button>
         ) : null}
@@ -150,7 +195,11 @@ export function InventoryProductLiveSearch({
           {results.length > 0 ? (
             <div className="space-y-2">
               {results.map((product) => (
-                <ProductResultCard key={product.id} product={product} />
+                <ProductResultCard
+                  key={product.id}
+                  product={product}
+                  onOpen={setSelectedProduct}
+                />
               ))}
             </div>
           ) : (
@@ -163,6 +212,17 @@ export function InventoryProductLiveSearch({
 
       {isCreateOpen && typeof document !== "undefined"
         ? createPortal(<ProductCreateDialog onClose={() => setIsCreateOpen(false)} />, document.body)
+        : null}
+
+      {selectedProduct && typeof document !== "undefined"
+        ? createPortal(
+            <ProductDetailDialog
+              product={selectedProduct}
+              canManageInventory={canManageInventory}
+              onClose={() => setSelectedProduct(null)}
+            />,
+            document.body,
+          )
         : null}
     </>
   );

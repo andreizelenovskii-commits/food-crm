@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useRef, useState, useTransition } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   type ProductFormState,
@@ -65,6 +65,12 @@ export function ProductForm({ initialProduct }: { initialProduct?: ProductItem }
       : selectedUnit === "шт"
         ? "Средняя закупочная цена за шт"
         : "Средняя закупочная цена";
+
+  useEffect(() => {
+    if (initialProduct && state.successMessage) {
+      router.refresh();
+    }
+  }, [initialProduct, router, state.successMessage]);
 
   const handleCreateSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -236,7 +242,7 @@ export function ProductForm({ initialProduct }: { initialProduct?: ProductItem }
         </p>
       ) : null}
 
-      {!initialProduct && activeState.successMessage ? (
+      {activeState.successMessage ? (
         <p className="rounded-[18px] border border-red-100 bg-red-50/80 px-4 py-3 text-xs font-semibold leading-5 text-red-800 shadow-sm shadow-red-950/5">
           {activeState.successMessage}
         </p>
@@ -247,7 +253,7 @@ export function ProductForm({ initialProduct }: { initialProduct?: ProductItem }
         disabled={isPending}
         className="inline-flex h-10 w-full items-center justify-center rounded-full border border-red-100 bg-white/85 px-4 text-sm font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white hover:shadow-sm hover:shadow-red-950/20 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:text-zinc-400 disabled:hover:bg-white disabled:hover:shadow-none"
       >
-        {isPending ? "Сохраняем..." : title}
+        {isPending ? "Сохраняем..." : initialProduct ? "Сохранить" : title}
       </button>
     </form>
   );

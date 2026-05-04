@@ -1,16 +1,13 @@
 import { PageShell } from "@/components/ui/page-shell";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
-import {
-  GlassPanel,
-  KpiTile,
-  formatDashboardMoney,
-} from "@/modules/dashboard/components/dashboard-widgets";
+import { GlassPanel } from "@/modules/dashboard/components/dashboard-widgets";
 import { InventoryAuditTab } from "@/modules/inventory/components/inventory-audit-tab";
 import { InventoryIncomingPanel } from "@/modules/inventory/components/inventory-incoming-panel";
+import { InventoryProductsDialogButton } from "@/modules/inventory/components/inventory-products-dialog-button";
 import { InventoryRecipesTab } from "@/modules/inventory/components/inventory-recipes-tab";
+import { InventorySuppliersTab } from "@/modules/inventory/components/inventory-suppliers-tab";
 import { InventoryWriteoffPanel } from "@/modules/inventory/components/inventory-writeoff-panel";
 import { InventoryProductsTab } from "@/modules/inventory/components/inventory-products-tab";
-import { formatInventoryQuantity } from "@/modules/inventory/inventory.format";
 import {
   buildInventoryPageViewModel,
   type InventoryTab,
@@ -20,6 +17,7 @@ import {
 const INVENTORY_TAB_TITLES: Record<InventoryTab, string> = {
   products: "Товары и остатки",
   incoming: "Поступление товара",
+  suppliers: "Поставщики",
   writeoff: "Списание товара",
   audit: "Инвентаризация",
   recipes: "Технологические карты",
@@ -42,8 +40,6 @@ export function InventoryPage({
     activeTab,
     rawQuery,
     selectedRecipeCategory,
-    totalStock,
-    totalValueCents,
     lowStockProducts,
     lowStockCount,
     zeroStockCount,
@@ -82,12 +78,10 @@ export function InventoryPage({
             </p>
           </GlassPanel>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <KpiTile label="Позиций" value={products.length} hint="Складские товары" />
-            <KpiTile label="Всего единиц" value={formatInventoryQuantity(totalStock)} hint="Текущий остаток" />
-            <KpiTile label="Остаток" value={formatDashboardMoney(totalValueCents)} hint="Стоимость по закупке" />
-            <KpiTile label="Контроль" value={lowStockCount + zeroStockCount} hint="Мало или ноль остатка" />
-          </div>
+          <InventoryProductsDialogButton
+            products={products}
+            canManageInventory={canManageInventory}
+          />
         </div>
 
         <div className="relative mt-4">
@@ -107,6 +101,10 @@ export function InventoryPage({
               acts={incomingActs}
               canManageInventory={canManageInventory}
             />
+          ) : null}
+
+          {activeTab === "suppliers" ? (
+            <InventorySuppliersTab />
           ) : null}
 
           {activeTab === "writeoff" ? (

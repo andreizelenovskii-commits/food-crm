@@ -40,19 +40,30 @@ export function KpiTile({
   value: string | number;
   hint: string;
 }) {
+  const isInteractive = Boolean(href);
   const className = [
     "group block rounded-[18px] border border-red-950/10 bg-white/78 p-4 text-zinc-950 shadow-sm shadow-red-950/5 outline-none transition",
-    href
+    isInteractive
       ? "hover:-translate-y-1 hover:border-red-900/10 hover:bg-red-800 hover:text-white hover:shadow-red-950/15 focus-visible:bg-red-800 focus-visible:text-white focus-visible:ring-2 focus-visible:ring-red-800/20"
       : "",
   ].join(" ");
   const content = (
     <>
-      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70 transition group-hover:text-red-50/80 group-focus-visible:text-red-50/80">
+      <p
+        className={[
+          "text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70 transition",
+          isInteractive ? "group-hover:text-red-50/80 group-focus-visible:text-red-50/80" : "",
+        ].join(" ")}
+      >
         {label}
       </p>
       <p className="mt-2 text-2xl font-semibold leading-none">{value}</p>
-      <p className="mt-2 text-xs leading-5 text-zinc-500 transition group-hover:text-red-50/78 group-focus-visible:text-red-50/78">
+      <p
+        className={[
+          "mt-2 text-xs leading-5 text-zinc-500 transition",
+          isInteractive ? "group-hover:text-red-50/78 group-focus-visible:text-red-50/78" : "",
+        ].join(" ")}
+      >
         {hint}
       </p>
     </>

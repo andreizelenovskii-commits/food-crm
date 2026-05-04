@@ -24,6 +24,7 @@ const NAV_ITEMS = [
 const INVENTORY_SUB_ITEMS = [
   { href: "/dashboard/inventory", label: "Товары", tab: "products" },
   { href: "/dashboard/inventory?tab=incoming", label: "Поступление", tab: "incoming" },
+  { href: "/dashboard/inventory?tab=suppliers", label: "Поставщики", tab: "suppliers" },
   { href: "/dashboard/inventory?tab=writeoff", label: "Списание", tab: "writeoff" },
   { href: "/dashboard/inventory?tab=audit", label: "Инвентаризация", tab: "audit" },
   { href: "/dashboard/inventory?tab=recipes", label: "Техкарты", tab: "recipes" },
@@ -116,8 +117,8 @@ export function AppSidebar() {
                       className={[
                         "flex h-10 items-center gap-1 rounded-[12px] transition",
                         isActive
-                          ? "bg-red-800 text-white shadow-md shadow-red-950/10"
-                          : "text-zinc-600 hover:bg-white hover:text-red-800 hover:shadow-sm hover:shadow-red-950/5",
+                          ? "bg-red-800 text-white shadow-md shadow-red-950/10 hover:bg-red-800 hover:text-white"
+                          : "text-zinc-600 hover:bg-red-50/80 hover:text-red-900 hover:shadow-sm hover:shadow-red-950/5",
                       ].join(" ")}
                     >
                       <Link
@@ -144,8 +145,8 @@ export function AppSidebar() {
                         className={[
                           "mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] transition",
                           isActive
-                            ? "text-white hover:bg-white/14"
-                            : "text-red-800 hover:bg-red-50",
+                            ? "text-white hover:bg-white/14 hover:text-white"
+                            : "text-red-800 hover:bg-red-50 hover:text-red-900",
                         ].join(" ")}
                         aria-label={showInventorySubnav ? "Скрыть вкладки склада" : "Показать вкладки склада"}
                         aria-expanded={showInventorySubnav}
@@ -180,8 +181,8 @@ export function AppSidebar() {
                               className={[
                                 "flex h-8 items-center rounded-[10px] px-3 text-xs font-semibold transition",
                                 isSubActive
-                                  ? "bg-red-50 text-red-800 shadow-sm shadow-red-950/5"
-                                  : "text-zinc-500 hover:bg-white hover:text-red-800",
+                                  ? "bg-red-50 text-red-800 shadow-sm shadow-red-950/5 hover:text-red-800"
+                                  : "text-zinc-500 hover:bg-red-50/80 hover:text-red-900",
                               ].join(" ")}
                             >
                               {subItem.label}
@@ -202,8 +203,8 @@ export function AppSidebar() {
                   className={[
                     "flex h-10 items-center gap-2.5 rounded-[12px] px-2 text-sm font-medium transition",
                     isActive
-                      ? "bg-red-800 text-white shadow-md shadow-red-950/10"
-                      : "text-zinc-600 hover:bg-white hover:text-red-800 hover:shadow-sm hover:shadow-red-950/5",
+                      ? "bg-red-800 text-white shadow-md shadow-red-950/10 hover:bg-red-800 hover:text-white"
+                      : "text-zinc-600 hover:bg-red-50/80 hover:text-red-900 hover:shadow-sm hover:shadow-red-950/5",
                   ].join(" ")}
                 >
                   <span

@@ -54,8 +54,23 @@ function defaultLoginPhone(employee: EmployeeProfile): string {
   return isValidRuMobileDigits(digits) ? digits : "";
 }
 
+function formatAccessDate(value?: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  return new Intl.DateTimeFormat("ru-RU", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
 export function EmployeeAccessForm({ employee }: { employee: EmployeeProfile }) {
   const initialPhone = defaultLoginPhone(employee);
+  const passwordUpdatedLabel = formatAccessDate(employee.passwordUpdatedAt);
   const initialState: EmployeeAccessFormState = {
     errorMessage: null,
     successMessage: null,
@@ -100,6 +115,28 @@ export function EmployeeAccessForm({ employee }: { employee: EmployeeProfile }) 
         <p className="text-sm leading-6 text-zinc-600">
           Выдай сотруднику номер телефона и пароль для входа. Роль в аккаунте будет совпадать с его ролью в карточке.
         </p>
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-[18px] border border-red-950/10 bg-red-50/55 px-4 py-3">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-red-800/60">
+            Логин
+          </p>
+          <p className="mt-1 text-sm font-semibold text-zinc-950">
+            {initialPhone || "Телефон для входа ещё не задан"}
+          </p>
+        </div>
+        <div className="rounded-[18px] border border-red-950/10 bg-white px-4 py-3">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-red-800/60">
+            Пароль
+          </p>
+          <p className="mt-1 text-sm font-semibold text-zinc-950">
+            {passwordUpdatedLabel ? "Пароль изменён" : "Пароль ещё не сохраняли"}
+          </p>
+          {passwordUpdatedLabel ? (
+            <p className="mt-1 text-xs text-zinc-500">{passwordUpdatedLabel}</p>
+          ) : null}
+        </div>
       </div>
 
       <form action={formAction} className="mt-5 space-y-4">

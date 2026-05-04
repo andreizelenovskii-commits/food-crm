@@ -82,10 +82,9 @@ export async function updateProductAction(
     throw error;
   }
 
-  window.location.assign("/dashboard/inventory");
   return {
     errorMessage: null,
-    successMessage: null,
+    successMessage: "Товар обновлён.",
     values: getProductFormValues(formData),
   };
 }

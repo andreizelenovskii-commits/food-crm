@@ -19,6 +19,7 @@ import {
 export const INVENTORY_TABS = [
   { key: "products", label: "Товары" },
   { key: "incoming", label: "Поступление товара" },
+  { key: "suppliers", label: "Поставщики" },
   { key: "writeoff", label: "Списание товара" },
   { key: "audit", label: "Инвентаризация" },
   { key: "recipes", label: "Технологические карты" },
