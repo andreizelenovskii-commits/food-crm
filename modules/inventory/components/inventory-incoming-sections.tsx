@@ -3,8 +3,11 @@ import { ModuleIcon } from "@/components/ui/module-icon";
 import { GlassPanel } from "@/modules/dashboard/components/dashboard-widgets";
 import { InventoryIncomingActCard } from "@/modules/inventory/components/inventory-incoming-act-card";
 import { formatMoney } from "@/modules/inventory/components/inventory-panel-utils";
-import { formatInventoryQuantity } from "@/modules/inventory/inventory.format";
-import type { IncomingActSummary } from "@/modules/inventory/inventory.types";
+import type {
+  IncomingActSummary,
+  InventoryResponsibleOption,
+  ProductItem,
+} from "@/modules/inventory/inventory.types";
 
 type FormAction = (formData: FormData) => void;
 
@@ -12,25 +15,54 @@ export function IncomingOverview({
   openCount,
   incomingTodayCount,
   totalCompletedCents,
+  monthLabel,
+  onPreviousMonth,
+  onNextMonth,
 }: {
   openCount: number;
   incomingTodayCount: number;
   totalCompletedCents: number;
+  monthLabel: string;
+  onPreviousMonth: () => void;
+  onNextMonth: () => void;
 }) {
   return (
     <GlassPanel className="p-4 sm:p-5">
-      <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-red-800 text-white shadow-sm shadow-red-950/15">
-          <ModuleIcon name="receipt" className="h-5 w-5" />
-        </span>
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">
-            Поступление товара
-          </p>
-          <h2 className="mt-1 text-lg font-semibold text-zinc-950">Приход на склад</h2>
-          <p className="mt-2 text-xs leading-5 text-zinc-500">
-            Создавай акты по заведённым товарам и проводи их отдельно.
-          </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-red-800 text-white shadow-sm shadow-red-950/15">
+            <ModuleIcon name="receipt" className="h-5 w-5" />
+          </span>
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">
+              Поступление товара
+            </p>
+            <h2 className="mt-1 text-lg font-semibold text-zinc-950">Приход на склад</h2>
+            <p className="mt-2 text-xs leading-5 text-zinc-500">
+              Создавай акты по заведённым товарам и проводи их отдельно.
+            </p>
+          </div>
+        </div>
+        <div className="inline-flex items-center gap-2 rounded-full border border-red-950/10 bg-white/70 px-2 py-1 shadow-sm shadow-red-950/5">
+          <button
+            type="button"
+            onClick={onPreviousMonth}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-red-800 transition hover:bg-red-800 hover:text-white"
+            aria-label="Предыдущий месяц"
+          >
+            ←
+          </button>
+          <span className="min-w-32 px-2 text-center text-xs font-semibold text-zinc-700">
+            {monthLabel}
+          </span>
+          <button
+            type="button"
+            onClick={onNextMonth}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-red-800 transition hover:bg-red-800 hover:text-white"
+            aria-label="Следующий месяц"
+          >
+            →
+          </button>
         </div>
       </div>
       <div className="mt-5 grid gap-3 md:grid-cols-3">
@@ -55,11 +87,15 @@ export function IncomingOpenActsSection({
   canManageInventory,
   isCompletePending,
   completeFormAction,
+  products,
+  responsibleOptions,
 }: {
   acts: IncomingActSummary[];
   canManageInventory: boolean;
   isCompletePending: boolean;
   completeFormAction: FormAction;
+  products: ProductItem[];
+  responsibleOptions: InventoryResponsibleOption[];
 }) {
   return (
     <GlassPanel className="p-4 sm:p-5">
@@ -82,6 +118,8 @@ export function IncomingOpenActsSection({
                 canManageInventory={canManageInventory}
                 isCompletePending={isCompletePending}
                 completeFormAction={completeFormAction}
+                products={products}
+                responsibleOptions={responsibleOptions}
               />
             ))}
           </PaginatedList>
@@ -93,16 +131,18 @@ export function IncomingOpenActsSection({
 
 export function IncomingCompletedActsSection({
   acts,
-  totalCompletedUnits,
   canManageInventory,
   isCompletePending,
   completeFormAction,
+  products,
+  responsibleOptions,
 }: {
   acts: IncomingActSummary[];
-  totalCompletedUnits: number;
   canManageInventory: boolean;
   isCompletePending: boolean;
   completeFormAction: FormAction;
+  products: ProductItem[];
+  responsibleOptions: InventoryResponsibleOption[];
 }) {
   return (
     <GlassPanel className="p-4 sm:p-5">
@@ -116,26 +156,20 @@ export function IncomingCompletedActsSection({
         {acts.length === 0 ? (
           <EmptyIncomingState>Пока нет завершённых поступлений.</EmptyIncomingState>
         ) : (
-          <>
-            <PaginatedList itemLabel="актов">
-              {acts.map((act) => (
-                <InventoryIncomingActCard
-                  key={act.id}
-                  act={act}
-                  canComplete={false}
-                  canManageInventory={canManageInventory}
-                  isCompletePending={isCompletePending}
-                  completeFormAction={completeFormAction}
-                />
-              ))}
-            </PaginatedList>
-            <div className="rounded-[18px] border border-red-950/10 bg-white/65 px-4 py-3 text-sm text-zinc-500">
-              Всего проведено единиц товара:{" "}
-              <span className="font-semibold text-zinc-950">
-                {formatInventoryQuantity(totalCompletedUnits)}
-              </span>
-            </div>
-          </>
+          <PaginatedList itemLabel="актов" pageSize={10} className="space-y-2">
+            {acts.map((act) => (
+              <InventoryIncomingActCard
+                key={act.id}
+                act={act}
+                canComplete={false}
+                canManageInventory={canManageInventory}
+                isCompletePending={isCompletePending}
+                completeFormAction={completeFormAction}
+                products={products}
+                responsibleOptions={responsibleOptions}
+              />
+            ))}
+          </PaginatedList>
         )}
       </div>
     </GlassPanel>

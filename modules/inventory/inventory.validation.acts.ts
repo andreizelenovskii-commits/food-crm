@@ -75,7 +75,6 @@ export function parseCreateWriteoffActInput(formData: FormData): CreateWriteoffA
 export function parseCreateIncomingActInput(formData: FormData): CreateIncomingActInput {
   const responsibleEmployeeId = Number(normalizeInput(formData.get("responsibleEmployeeId")));
   const supplierName = normalizeInput(formData.get("supplierName"));
-  const notes = normalizeInput(formData.get("notes"));
   const productIds = formData
     .getAll("productId")
     .map((value) => Number(String(value ?? "").trim()));
@@ -85,6 +84,10 @@ export function parseCreateIncomingActInput(formData: FormData): CreateIncomingA
   const prices = formData.getAll("price").map((value) => normalizeInput(value));
 
   assertPositiveInteger(responsibleEmployeeId, "Выбери ответственного за поступление");
+
+  if (!supplierName) {
+    throw new ValidationError("Выбери поставщика из списка");
+  }
 
   if (
     productIds.length === 0 ||
@@ -131,8 +134,8 @@ export function parseCreateIncomingActInput(formData: FormData): CreateIncomingA
 
   return {
     responsibleEmployeeId,
-    supplierName: supplierName || null,
-    notes: notes || null,
+    supplierName,
+    notes: null,
     items,
   };
 }

@@ -8,7 +8,7 @@ import {
   type WriteoffActCreateFormState,
   type WriteoffActProgressFormState,
 } from "@/modules/inventory/inventory.actions";
-import { InventoryIncomingCreateForm } from "@/modules/inventory/components/inventory-incoming-create-form";
+import { InventoryIncomingDialogActions } from "@/modules/inventory/components/inventory-incoming-dialogs";
 import { InventoryProductSearchDialog } from "@/modules/inventory/components/inventory-product-search-dialog";
 import {
   formatPriceInput,
@@ -16,12 +16,15 @@ import {
   parseQuantity,
 } from "@/modules/inventory/components/inventory-panel-utils";
 import {
+  loadInventorySuppliers,
+  subscribeInventorySuppliers,
+  type InventorySupplierRecord,
+} from "@/modules/inventory/components/inventory-supplier-storage";
+import {
   filterInventoryProducts,
   groupInventoryProducts,
 } from "@/modules/inventory/components/inventory-product-grouping";
 import {
-  IncomingCompletedActsSection,
-  IncomingOpenActsSection,
   IncomingOverview,
   IncomingPanelMessage,
 } from "@/modules/inventory/components/inventory-incoming-sections";
@@ -31,6 +34,37 @@ import type {
   ProductCategory,
   ProductItem,
 } from "@/modules/inventory/inventory.types";
+
+function buildMonthKey(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function formatMonthLabel(monthKey: string) {
+  const [year, month] = monthKey.split("-").map(Number);
+  return new Intl.DateTimeFormat("ru-RU", {
+    month: "long",
+    year: "numeric",
+  }).format(new Date(year, month - 1, 1));
+}
+
+function shiftMonth(monthKey: string, offset: number) {
+  const [year, month] = monthKey.split("-").map(Number);
+  return buildMonthKey(new Date(year, month - 1 + offset, 1));
+}
+
+function buildSupplierOptions(
+  acts: IncomingActSummary[],
+  savedSuppliers: InventorySupplierRecord[],
+) {
+  return Array.from(
+    new Set(
+      [
+        ...savedSuppliers.map((supplier) => supplier.name.trim()),
+        ...acts.map((act) => act.supplierName?.trim()),
+      ].filter((supplier): supplier is string => Boolean(supplier)),
+    ),
+  ).sort((left, right) => left.localeCompare(right, "ru"));
+}
 
 export function InventoryIncomingPanel({
   products,
@@ -48,8 +82,11 @@ export function InventoryIncomingPanel({
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory | "">("");
   const [supplierName, setSupplierName] = useState("");
+  const [savedSuppliers, setSavedSuppliers] = useState<InventorySupplierRecord[]>(
+    loadInventorySuppliers,
+  );
   const [selectedResponsibleId, setSelectedResponsibleId] = useState("");
-  const [notes, setNotes] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState(() => buildMonthKey(new Date()));
   const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
   const [draft, setDraft] = useState<Record<number, string>>({});
   const [draftPrices, setDraftPrices] = useState<Record<number, string>>({});
@@ -81,7 +118,6 @@ export function InventoryIncomingPanel({
         setSelectedProductIds([]);
         setDraft({});
         setDraftPrices({});
-        setNotes("");
         setSupplierName("");
         setSelectedResponsibleId("");
         setIsSearchDialogOpen(false);
@@ -91,6 +127,12 @@ export function InventoryIncomingPanel({
 
     return () => window.cancelAnimationFrame(frameId);
   }, [completeState.successMessage, createState.successMessage, router]);
+
+  useEffect(() => {
+    return subscribeInventorySuppliers(() => {
+      setSavedSuppliers(loadInventorySuppliers());
+    });
+  }, []);
 
   const filteredProducts = useMemo(
     () => filterInventoryProducts(products, selectedCategory, query),
@@ -149,15 +191,17 @@ export function InventoryIncomingPanel({
     [selectedProducts],
   );
 
-  const openActs = acts.filter((act) => !act.isCompleted);
-  const completedActs = acts.filter((act) => act.isCompleted);
+  const monthActs = acts.filter((act) => buildMonthKey(new Date(act.createdAt)) === selectedMonth);
+  const openActs = monthActs.filter((act) => !act.isCompleted);
+  const completedActs = monthActs.filter((act) => act.isCompleted);
+  const supplierOptions = buildSupplierOptions(acts, savedSuppliers);
   const totalCompletedIncomingCents = completedActs.reduce((sum, act) => sum + act.totalCents, 0);
-  const incomingTodayCount = acts.filter((act) => {
+  const incomingTodayCount = monthActs.filter((act) => {
     const date = new Date(act.createdAt);
     const now = new Date();
     return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
   }).length;
-  const totalCompletedUnits = completedActs.reduce((sum, act) => sum + act.totalQuantity, 0);
+  const monthLabel = formatMonthLabel(selectedMonth);
 
   const setDraftValue = (productId: number, value: string) => {
     setDraft((current) => ({
@@ -187,46 +231,37 @@ export function InventoryIncomingPanel({
   };
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_430px]">
-      <div className="space-y-4">
-        <IncomingOverview
-          openCount={openActs.length}
-          incomingTodayCount={incomingTodayCount}
-          totalCompletedCents={totalCompletedIncomingCents}
-        />
+    <div className="space-y-4">
+      <IncomingOverview
+        openCount={openActs.length}
+        incomingTodayCount={incomingTodayCount}
+        totalCompletedCents={totalCompletedIncomingCents}
+        monthLabel={monthLabel}
+        onPreviousMonth={() => setSelectedMonth((current) => shiftMonth(current, -1))}
+        onNextMonth={() => setSelectedMonth((current) => shiftMonth(current, 1))}
+      />
         {completeState.errorMessage ? <IncomingPanelMessage>{completeState.errorMessage}</IncomingPanelMessage> : null}
         {completeState.successMessage ? <IncomingPanelMessage>{completeState.successMessage}</IncomingPanelMessage> : null}
-        <IncomingOpenActsSection
-          acts={openActs}
-          canManageInventory={canManageInventory}
-          isCompletePending={isCompletePending}
-          completeFormAction={completeFormAction}
-        />
-        <IncomingCompletedActsSection
-          acts={completedActs}
-          totalCompletedUnits={totalCompletedUnits}
-          canManageInventory={canManageInventory}
-          isCompletePending={isCompletePending}
-          completeFormAction={completeFormAction}
-        />
-      </div>
-
-      <InventoryIncomingCreateForm
+      <InventoryIncomingDialogActions
+        openActs={openActs}
+        completedActs={completedActs}
+        products={products}
         responsibleOptions={responsibleOptions}
+        supplierOptions={supplierOptions}
         selectedResponsibleId={selectedResponsibleId}
         supplierName={supplierName}
-        notes={notes}
         selectedProducts={selectedProducts}
         draftEntries={draftEntries}
         draftTotalCents={draftTotalCents}
         canManageInventory={canManageInventory}
         isCreatePending={isCreatePending}
+        isCompletePending={isCompletePending}
         errorMessage={createState.errorMessage}
         successMessage={createState.successMessage}
         createFormAction={createFormAction}
+        completeFormAction={completeFormAction}
         onResponsibleChange={setSelectedResponsibleId}
         onSupplierNameChange={setSupplierName}
-        onNotesChange={setNotes}
         onOpenSearch={() => setIsSearchDialogOpen(true)}
         onQuantityChange={setDraftValue}
         onPriceChange={setDraftPriceValue}

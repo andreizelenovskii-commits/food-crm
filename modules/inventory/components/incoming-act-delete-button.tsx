@@ -25,7 +25,7 @@ export function IncomingActDeleteButton({
         { name: "actId", value: actId },
         { name: "redirectTo", value: "/dashboard/inventory?tab=incoming" },
       ]}
-      buttonClassName="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800 transition hover:border-red-300 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+      buttonClassName="inline-flex h-9 items-center rounded-full border border-red-100 bg-white/85 px-4 text-xs font-semibold text-red-800 shadow-sm shadow-red-950/5 transition hover:border-red-800 hover:bg-red-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
     />
   );
 }

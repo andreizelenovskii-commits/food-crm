@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { ModuleIcon } from "@/components/ui/module-icon";
 import { formatInventoryQuantity } from "@/modules/inventory/inventory.format";
 import type {
@@ -18,7 +21,7 @@ export type IncomingDraftProduct = {
 
 export function IncomingFormMessage({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mt-4 rounded-[18px] border border-red-100 bg-red-50/80 px-4 py-3 text-xs font-semibold leading-5 text-red-800 shadow-sm shadow-red-950/5">
+    <div className="mt-3 rounded-[16px] border border-red-100 bg-red-50/80 px-3 py-2 text-xs font-semibold leading-5 text-red-800 shadow-sm shadow-red-950/5">
       {children}
     </div>
   );
@@ -33,34 +36,52 @@ export function IncomingResponsiblePicker({
   selectedResponsibleId: string;
   onChange: (value: string) => void;
 }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const selectedOption = options.find((option) => selectedResponsibleId === String(option.id));
+  const visibleOptions = selectedOption && !isExpanded ? [selectedOption] : options;
+
+  const handleSelect = (optionId: string) => {
+    onChange(optionId);
+    setIsExpanded(false);
+  };
+
   return (
-    <section className="rounded-[18px] border border-red-950/10 bg-white/62 p-3.5">
-      <div className="flex items-start gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-red-800 text-white shadow-sm shadow-red-950/15">
-          <ModuleIcon name="badge" className="h-4 w-4" />
+    <section className="rounded-[16px] border border-red-950/10 bg-white/62 p-2.5">
+      <div className="flex items-start gap-2.5">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[12px] bg-red-800 text-white shadow-sm shadow-red-950/15">
+          <ModuleIcon name="badge" className="h-3.5 w-3.5" />
         </span>
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-red-800/60">Ответственный</p>
-          <h3 className="mt-1 text-sm font-semibold text-zinc-950">Кто оформляет поступление</h3>
+          <h3 className="mt-0.5 text-sm font-semibold text-zinc-950">Кто оформляет поступление</h3>
         </div>
       </div>
       <input type="hidden" name="responsibleEmployeeId" value={selectedResponsibleId} />
-      <div className="mt-3 grid gap-2">
-        {options.map((option) => {
+      <div className="mt-2 grid gap-1.5">
+        {visibleOptions.map((option) => {
           const isActive = selectedResponsibleId === String(option.id);
 
           return (
             <button
               key={option.id}
               type="button"
-              onClick={() => onChange(String(option.id))}
-              className={`rounded-[16px] border px-3.5 py-3 text-left shadow-sm shadow-red-950/5 transition ${isActive ? "border-red-800 bg-red-800 text-white" : "border-red-100 bg-white/85 hover:border-red-200 hover:bg-white"}`}
+              onClick={() => handleSelect(String(option.id))}
+              className={`rounded-[14px] border px-3 py-2 text-left shadow-sm shadow-red-950/5 transition ${isActive ? "border-red-800 bg-red-800 text-white" : "border-red-100 bg-white/85 hover:border-red-200 hover:bg-white"}`}
             >
               <p className={`text-sm font-semibold ${isActive ? "text-white" : "text-zinc-950"}`}>{option.name}</p>
-              <p className={`mt-1 text-xs ${isActive ? "text-white/70" : "text-zinc-500"}`}>{option.role}</p>
+              <p className={`mt-0.5 text-[11px] ${isActive ? "text-white/70" : "text-zinc-500"}`}>{option.role}</p>
             </button>
           );
         })}
+        {selectedOption && !isExpanded ? (
+          <button
+            type="button"
+            onClick={() => setIsExpanded(true)}
+            className="inline-flex h-8 items-center justify-center rounded-full border border-red-100 bg-white/85 px-3 text-xs font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white"
+          >
+            Изменить ответственного
+          </button>
+        ) : null}
       </div>
     </section>
   );
@@ -80,25 +101,25 @@ export function IncomingDraftProducts({
   onRemoveProduct?: (productId: number) => void;
 }) {
   return (
-    <section className="rounded-[18px] border border-red-950/10 bg-white/62 p-3.5">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-red-800 text-white shadow-sm shadow-red-950/15">
-            <ModuleIcon name="box" className="h-4 w-4" />
+    <section className="rounded-[16px] border border-red-950/10 bg-white/62 p-2.5">
+      <div className="flex items-start justify-between gap-2.5">
+        <div className="flex items-start gap-2.5">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[12px] bg-red-800 text-white shadow-sm shadow-red-950/15">
+            <ModuleIcon name="box" className="h-3.5 w-3.5" />
           </span>
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-red-800/60">Состав поставки</p>
-            <h3 className="mt-1 text-sm font-semibold text-zinc-950">Выбранные товары</h3>
+            <h3 className="mt-0.5 text-sm font-semibold text-zinc-950">Выбранные товары</h3>
           </div>
         </div>
-        <button type="button" onClick={onOpenSearch} className="inline-flex h-9 shrink-0 items-center rounded-full border border-red-100 bg-white/85 px-4 text-xs font-semibold text-red-800 shadow-sm shadow-red-950/5 transition hover:border-red-800 hover:bg-red-800 hover:text-white">
+        <button type="button" onClick={onOpenSearch} className="inline-flex h-8 shrink-0 items-center rounded-full border border-red-100 bg-white/85 px-3.5 text-xs font-semibold text-red-800 shadow-sm shadow-red-950/5 transition hover:border-red-800 hover:bg-red-800 hover:text-white">
           Добавить товар
         </button>
       </div>
 
-      <div className="mt-4 space-y-3">
+      <div className="mt-2.5 space-y-2">
         {selectedProducts.length === 0 ? (
-          <div className="rounded-[18px] border border-dashed border-red-200 bg-white/55 px-4 py-5 text-sm text-zinc-500">
+          <div className="rounded-[14px] border border-dashed border-red-200 bg-white/55 px-3 py-3 text-xs text-zinc-500">
             Пока в акт ничего не добавлено.
           </div>
         ) : (
@@ -134,33 +155,31 @@ function IncomingDraftProductCard({
   const projectedStock = product.stockQuantity + parsedQuantity;
 
   return (
-    <article className="grid gap-3 rounded-[18px] border border-red-950/10 bg-white/78 p-3.5 shadow-sm shadow-red-950/5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
+    <article className="grid gap-3 rounded-[15px] border border-red-950/10 bg-white/78 p-2.5 shadow-sm shadow-red-950/5 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="space-y-1">
+          <div className="flex flex-wrap items-center gap-1.5">
             <h4 className="text-sm font-semibold text-zinc-950">{product.name}</h4>
-            <span className="rounded-full bg-red-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-red-800 ring-1 ring-red-200">
+            <span className="rounded-full bg-red-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-red-800 ring-1 ring-red-200">
               Приход в {product.unit}
             </span>
           </div>
           <p className="text-xs text-zinc-500">
             {product.category ?? "Без категории"} • Сейчас: {formatInventoryQuantity(product.stockQuantity)} {product.unit}
           </p>
-          <p className="text-xs font-medium text-zinc-700">
-            После завершения: {formatInventoryQuantity(projectedStock)} {product.unit}
-          </p>
-          <p className="text-xs font-medium text-zinc-700">
-            Сумма поставки: {formatMoney(parsedQuantity * parsedPriceCents)}
-          </p>
+          <p className="text-[11px] font-medium text-zinc-700">После: {formatInventoryQuantity(projectedStock)} {product.unit}</p>
+          <p className="text-[11px] font-medium text-zinc-700">Сумма: {formatMoney(parsedQuantity * parsedPriceCents)}</p>
         </div>
         {onRemoveProduct ? (
-          <button type="button" onClick={() => onRemoveProduct(product.id)} className="inline-flex h-8 items-center rounded-full border border-red-100 bg-white px-3 text-xs font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white">
+          <button type="button" onClick={() => onRemoveProduct(product.id)} className="inline-flex h-7 items-center rounded-full border border-red-100 bg-white px-2.5 text-xs font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white">
             Убрать
           </button>
         ) : null}
       </div>
-      <IncomingDraftInput label={`Количество к поступлению, ${product.unit}`} value={quantity} suffix={product.unit} placeholder="0" onChange={(value) => onQuantityChange(product.id, value)} />
-      <IncomingDraftInput label={`Закупочная цена за ${product.unit}`} value={price} suffix="RUB" placeholder={formatPriceInput(product.priceCents)} onChange={(value) => onPriceChange(product.id, value)} />
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+        <IncomingDraftInput label={`Кол-во, ${product.unit}`} value={quantity} suffix={product.unit} placeholder="0" onChange={(value) => onQuantityChange(product.id, value)} />
+        <IncomingDraftInput label={`Закупочная цена`} value={price} suffix="RUB" placeholder={formatPriceInput(product.priceCents)} onChange={(value) => onPriceChange(product.id, value)} />
+      </div>
     </article>
   );
 }
@@ -179,11 +198,11 @@ function IncomingDraftInput({
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="space-y-2">
+    <label className="space-y-1.5">
       <span className="text-[11px] font-semibold text-zinc-700">{label}</span>
       <div className="relative">
-        <input type="text" inputMode="decimal" value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="h-10 w-full rounded-full border border-red-950/10 bg-white/85 px-4 pr-16 text-sm font-medium text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-red-300 focus:ring-2 focus:ring-red-800/10" />
-        <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm font-medium text-zinc-500">
+        <input type="text" inputMode="decimal" value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="h-9 w-full rounded-full border border-red-950/10 bg-white/85 px-4 pr-16 text-sm font-medium text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-red-300 focus:ring-2 focus:ring-red-800/10" />
+        <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-xs font-medium text-zinc-500">
           {suffix}
         </span>
       </div>
@@ -195,31 +214,36 @@ export function IncomingCreateFooter({
   draftEntriesCount,
   draftTotalCents,
   selectedResponsibleId,
+  selectedSupplierName,
   canManageInventory,
   isCreatePending,
 }: {
   draftEntriesCount: number;
   draftTotalCents: number;
   selectedResponsibleId: string;
+  selectedSupplierName: string;
   canManageInventory: boolean;
   isCreatePending: boolean;
 }) {
+  const isDisabled =
+    draftEntriesCount === 0 || !selectedResponsibleId || !selectedSupplierName || isCreatePending;
+
   return (
-    <div className="flex flex-col gap-3 rounded-[18px] border border-red-950/10 bg-white/62 px-4 py-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <div className="flex flex-col gap-2.5 rounded-[16px] border border-red-950/10 bg-white/62 px-3 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-2.5">
         <p className="text-xs leading-5 text-zinc-500">
           {canManageInventory
             ? "После завершения акта средняя закупочная цена товара на складе пересчитается автоматически."
             : "У твоей роли нет прав на создание актов поступления."}
         </p>
-        <div className="rounded-[16px] border border-red-950/10 bg-white/80 px-4 py-3 shadow-sm shadow-red-950/5">
+        <div className="rounded-[14px] border border-red-950/10 bg-white/80 px-3 py-2 shadow-sm shadow-red-950/5">
           <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-red-800/55">Итого по акту</p>
-          <p className="mt-1 text-lg font-semibold text-zinc-950">{formatMoney(draftTotalCents)}</p>
+          <p className="mt-0.5 text-base font-semibold text-zinc-950">{formatMoney(draftTotalCents)}</p>
         </div>
       </div>
-      <div className="flex flex-wrap justify-end gap-3">
+      <div className="flex flex-wrap justify-end gap-2">
         {canManageInventory ? (
-          <button type="submit" disabled={draftEntriesCount === 0 || !selectedResponsibleId || isCreatePending} className="inline-flex h-10 items-center rounded-full bg-red-800 px-5 text-sm font-medium tracking-[-0.01em] text-white shadow-sm shadow-red-950/15 transition hover:bg-red-900 disabled:cursor-not-allowed disabled:bg-red-100 disabled:text-red-300 disabled:shadow-none">
+          <button type="submit" disabled={isDisabled} className="inline-flex h-9 items-center rounded-full bg-red-800 px-4 text-sm font-medium tracking-[-0.01em] text-white shadow-sm shadow-red-950/15 transition hover:bg-red-900 disabled:cursor-not-allowed disabled:bg-red-100 disabled:text-red-300 disabled:shadow-none">
             {isCreatePending ? "Создаём..." : "Создать акт"}
           </button>
         ) : null}

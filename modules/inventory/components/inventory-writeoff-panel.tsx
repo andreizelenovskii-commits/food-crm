@@ -10,15 +10,12 @@ import {
   type WriteoffActProgressFormState,
 } from "@/modules/inventory/inventory.actions";
 import { InventoryProductSearchDialog } from "@/modules/inventory/components/inventory-product-search-dialog";
-import { InventoryWriteoffCreateForm } from "@/modules/inventory/components/inventory-writeoff-create-form";
+import { InventoryWriteoffDialogActions } from "@/modules/inventory/components/inventory-writeoff-dialog-actions";
 import {
-  WriteoffCompletedActsDialog,
   WriteoffDeleteDialog,
 } from "@/modules/inventory/components/inventory-writeoff-dialogs";
 import {
   InventoryPanelMessage,
-  WriteoffCompletedActsSection,
-  WriteoffOpenActsSection,
   WriteoffOverview,
 } from "@/modules/inventory/components/inventory-writeoff-sections";
 import {
@@ -28,7 +25,6 @@ import {
 import {
   filterInventoryProducts,
   groupInventoryProducts,
-  groupWriteoffActsByReason,
 } from "@/modules/inventory/components/inventory-product-grouping";
 import {
   WRITEOFF_REASONS,
@@ -52,14 +48,11 @@ export function InventoryWriteoffPanel({
 }) {
   const router = useRouter();
   const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
-  const [isCompletedActsDialogOpen, setIsCompletedActsDialogOpen] = useState(false);
   const [deleteCandidate, setDeleteCandidate] = useState<WriteoffActSummary | null>(null);
-  const [selectedCompletedReason, setSelectedCompletedReason] = useState<WriteoffReason | "">("");
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory | "">("");
   const [selectedResponsibleId, setSelectedResponsibleId] = useState("");
   const [reason, setReason] = useState<WriteoffReason>(WRITEOFF_REASONS[0]);
-  const [notes, setNotes] = useState("");
   const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
   const [draft, setDraft] = useState<Record<number, string>>({});
   const createInitialState: WriteoffActCreateFormState = {
@@ -92,7 +85,6 @@ export function InventoryWriteoffPanel({
     const frameId = window.requestAnimationFrame(() => {
       if (createState.successMessage) {
         clearDraft();
-        setNotes("");
         setSelectedResponsibleId("");
         setReason(WRITEOFF_REASONS[0]);
         setIsSearchDialogOpen(false);
@@ -142,12 +134,7 @@ export function InventoryWriteoffPanel({
   );
   const openActs = acts.filter((act) => !act.isCompleted);
   const completedActs = acts.filter((act) => act.isCompleted);
-  const latestCompletedAct = completedActs[0] ?? null;
   const totalCompletedWriteoffCents = completedActs.reduce((sum, act) => sum + act.totalCents, 0);
-  const completedActsByReason = useMemo(() => groupWriteoffActsByReason(completedActs), [completedActs]);
-  const visibleCompletedReason = selectedCompletedReason || completedActsByReason[0]?.reason || "";
-  const visibleCompletedActs =
-    completedActsByReason.find((group) => group.reason === visibleCompletedReason)?.acts ?? [];
 
   function setDraftValue(productId: number, value: string) {
     setDraft((current) => ({ ...current, [productId]: normalizeDecimalDraft(value) }));
@@ -173,58 +160,39 @@ export function InventoryWriteoffPanel({
   }
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_430px]">
-      <div className="space-y-4">
-        <WriteoffOverview
-          openCount={openActs.length}
-          completedCount={completedActs.length}
-          totalCompletedCents={totalCompletedWriteoffCents}
-        />
-        {completeState.errorMessage ? <InventoryPanelMessage>{completeState.errorMessage}</InventoryPanelMessage> : null}
-        {deleteState.errorMessage ? <InventoryPanelMessage>{deleteState.errorMessage}</InventoryPanelMessage> : null}
-        {completeState.successMessage ? <InventoryPanelMessage>{completeState.successMessage}</InventoryPanelMessage> : null}
-        {deleteState.successMessage ? <InventoryPanelMessage>{deleteState.successMessage}</InventoryPanelMessage> : null}
-        <WriteoffOpenActsSection
-          acts={openActs}
-          canManageInventory={canManageInventory}
-          isCompletePending={isCompletePending}
-          completeFormAction={completeFormAction}
-          onDelete={setDeleteCandidate}
-        />
-        <WriteoffCompletedActsSection
-          latestAct={latestCompletedAct}
-          totalCount={completedActs.length}
-          canManageInventory={canManageInventory}
-          isCompletePending={isCompletePending}
-          completeFormAction={completeFormAction}
-          onOpenArchive={() => {
-            setSelectedCompletedReason(completedActsByReason[0]?.reason ?? "");
-            setIsCompletedActsDialogOpen(true);
-          }}
-          onDelete={setDeleteCandidate}
-        />
-      </div>
-
-      <InventoryWriteoffCreateForm
+    <div className="space-y-4">
+      <WriteoffOverview
+        openCount={openActs.length}
+        completedCount={completedActs.length}
+        totalCompletedCents={totalCompletedWriteoffCents}
+      />
+      {completeState.errorMessage ? <InventoryPanelMessage>{completeState.errorMessage}</InventoryPanelMessage> : null}
+      {deleteState.errorMessage ? <InventoryPanelMessage>{deleteState.errorMessage}</InventoryPanelMessage> : null}
+      {completeState.successMessage ? <InventoryPanelMessage>{completeState.successMessage}</InventoryPanelMessage> : null}
+      {deleteState.successMessage ? <InventoryPanelMessage>{deleteState.successMessage}</InventoryPanelMessage> : null}
+      <InventoryWriteoffDialogActions
+        openActs={openActs}
+        completedActs={completedActs}
         responsibleOptions={responsibleOptions}
         selectedResponsibleId={selectedResponsibleId}
         reason={reason}
-        notes={notes}
         selectedProducts={selectedProducts}
         draftEntries={draftEntries}
         draftTotalCents={draftTotalCents}
         canManageInventory={canManageInventory}
         isCreatePending={isCreatePending}
+        isCompletePending={isCompletePending}
         errorMessage={createState.errorMessage}
         successMessage={createState.successMessage}
         createFormAction={createFormAction}
+        completeFormAction={completeFormAction}
         onResponsibleChange={setSelectedResponsibleId}
         onReasonChange={setReason}
-        onNotesChange={setNotes}
         onOpenSearch={() => setIsSearchDialogOpen(true)}
         onQuantityChange={setDraftValue}
         onRemoveProduct={removeProductFromDraft}
         onClearDraft={clearDraft}
+        onDelete={setDeleteCandidate}
       />
 
       {isSearchDialogOpen ? (
@@ -243,20 +211,6 @@ export function InventoryWriteoffPanel({
           onCategoryChange={setSelectedCategory}
           onAddProduct={addProductToDraft}
           productNote={(product) => `Списание проводится в ${product.unit}`}
-        />
-      ) : null}
-
-      {isCompletedActsDialogOpen ? (
-        <WriteoffCompletedActsDialog
-          groups={completedActsByReason}
-          visibleReason={visibleCompletedReason}
-          visibleActs={visibleCompletedActs}
-          canManageInventory={canManageInventory}
-          isCompletePending={isCompletePending}
-          completeFormAction={completeFormAction}
-          onReasonChange={setSelectedCompletedReason}
-          onClose={() => setIsCompletedActsDialogOpen(false)}
-          onDelete={setDeleteCandidate}
         />
       ) : null}
 

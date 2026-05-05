@@ -63,7 +63,12 @@ export function InventoryPage({
         <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-red-300/25 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-28 left-1/3 h-72 w-72 rounded-full bg-white/80 blur-3xl" />
 
-        <div className="relative grid gap-4 xl:grid-cols-[minmax(300px,0.86fr)_minmax(420px,1.14fr)]">
+        <div
+          className={[
+            "relative grid gap-4",
+            activeTab === "products" ? "xl:grid-cols-[minmax(300px,0.86fr)_minmax(420px,1.14fr)]" : "",
+          ].join(" ")}
+        >
           <GlassPanel className="foodlike-float-soft p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-red-800/75">
               FoodLike inventory
@@ -78,10 +83,12 @@ export function InventoryPage({
             </p>
           </GlassPanel>
 
-          <InventoryProductsDialogButton
-            products={products}
-            canManageInventory={canManageInventory}
-          />
+          {activeTab === "products" ? (
+            <InventoryProductsDialogButton
+              products={products}
+              canManageInventory={canManageInventory}
+            />
+          ) : null}
         </div>
 
         <div className="relative mt-4">
@@ -104,7 +111,7 @@ export function InventoryPage({
           ) : null}
 
           {activeTab === "suppliers" ? (
-            <InventorySuppliersTab />
+            <InventorySuppliersTab acts={incomingActs} />
           ) : null}
 
           {activeTab === "writeoff" ? (

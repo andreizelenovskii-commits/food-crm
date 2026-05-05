@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ModuleIcon } from "@/components/ui/module-icon";
 import type { InventoryResponsibleOption } from "@/modules/inventory/inventory.types";
 import {
@@ -10,11 +11,94 @@ import {
 
 type FormAction = (formData: FormData) => void;
 
+function SelectArrowIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-4 w-4"
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
+function SupplierPicker({
+  supplierOptions,
+  supplierName,
+  onSupplierNameChange,
+}: {
+  supplierOptions: string[];
+  supplierName: string;
+  onSupplierNameChange: (value: string) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const hasSupplierOptions = supplierOptions.length > 0;
+
+  return (
+    <label className="mb-2 block space-y-1.5">
+      <span className="text-[11px] font-semibold text-zinc-700">Поставщик</span>
+      <input type="hidden" name="supplierName" value={supplierName} />
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setIsOpen((current) => !current)}
+          disabled={!hasSupplierOptions}
+          className="flex h-10 w-full items-center justify-between gap-3 rounded-full border border-red-950/10 bg-white/85 px-4 text-left text-sm font-medium text-zinc-950 shadow-sm shadow-red-950/5 outline-none transition hover:border-red-200 hover:bg-white focus:border-red-300 focus:bg-white focus:ring-2 focus:ring-red-800/10 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-400"
+        >
+          <span className={supplierName ? "truncate" : "truncate text-zinc-400"}>
+            {supplierName || (hasSupplierOptions ? "Выбери поставщика" : "Поставщиков пока нет")}
+          </span>
+          <span className="shrink-0 text-red-800/60">
+            <SelectArrowIcon />
+          </span>
+        </button>
+        {isOpen ? (
+          <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-20 overflow-hidden rounded-[18px] border border-red-100 bg-white/95 p-1.5 shadow-[0_18px_50px_rgba(127,29,29,0.16)] backdrop-blur-xl">
+            {supplierOptions.map((supplier) => {
+              const isActive = supplierName === supplier;
+
+              return (
+                <button
+                  key={supplier}
+                  type="button"
+                  onClick={() => {
+                    onSupplierNameChange(supplier);
+                    setIsOpen(false);
+                  }}
+                  className={[
+                    "block w-full rounded-[14px] px-3.5 py-2 text-left text-sm font-semibold transition",
+                    isActive
+                      ? "bg-red-800 text-white"
+                      : "text-zinc-800 hover:bg-red-50 hover:text-red-800",
+                  ].join(" ")}
+                >
+                  {supplier}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
+      </div>
+      {!hasSupplierOptions ? (
+        <span className="block text-xs leading-5 text-zinc-500">
+          Сначала добавь поставщика во вкладке «Поставщики».
+        </span>
+      ) : null}
+    </label>
+  );
+}
+
 export function InventoryIncomingCreateForm({
   responsibleOptions,
+  supplierOptions,
   selectedResponsibleId,
   supplierName,
-  notes,
   selectedProducts,
   draftEntries,
   draftTotalCents,
@@ -25,15 +109,15 @@ export function InventoryIncomingCreateForm({
   createFormAction,
   onResponsibleChange,
   onSupplierNameChange,
-  onNotesChange,
   onOpenSearch,
   onQuantityChange,
   onPriceChange,
+  variant = "panel",
 }: {
   responsibleOptions: InventoryResponsibleOption[];
+  supplierOptions: string[];
   selectedResponsibleId: string;
   supplierName: string;
-  notes: string;
   selectedProducts: IncomingDraftProduct[];
   draftEntries: Array<{ productId: string; quantity: string; price: string }>;
   draftTotalCents: number;
@@ -44,60 +128,54 @@ export function InventoryIncomingCreateForm({
   createFormAction: FormAction;
   onResponsibleChange: (value: string) => void;
   onSupplierNameChange: (value: string) => void;
-  onNotesChange: (value: string) => void;
   onOpenSearch: () => void;
   onQuantityChange: (productId: number, value: string) => void;
   onPriceChange: (productId: number, value: string) => void;
+  variant?: "panel" | "dialog";
 }) {
+  const containerClassName =
+    variant === "dialog"
+      ? "rounded-[20px] border border-white/70 bg-white/72 p-3 shadow-[0_18px_60px_rgba(127,29,29,0.10)] backdrop-blur-2xl sm:p-4"
+      : "rounded-[20px] border border-white/70 bg-white/72 p-3 shadow-[0_18px_60px_rgba(127,29,29,0.10)] backdrop-blur-2xl sm:p-4 xl:sticky xl:top-28 xl:self-start";
+  const Container = variant === "dialog" ? "section" : "aside";
+  const shouldShowHeader = variant !== "dialog";
+
   return (
-    <aside className="rounded-[22px] border border-white/70 bg-white/72 p-4 shadow-[0_18px_60px_rgba(127,29,29,0.10)] backdrop-blur-2xl sm:p-5 xl:sticky xl:top-28 xl:self-start">
-      <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-red-800 text-white shadow-sm shadow-red-950/15">
-          <ModuleIcon name="receipt" className="h-5 w-5" />
-        </span>
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">
-            Новый акт
-          </p>
-          <h2 className="mt-1 text-lg font-semibold text-zinc-950">Новое поступление</h2>
-          <p className="mt-2 text-xs leading-5 text-zinc-500">
-            Добавляй существующие товары. Остатки попадут в систему после завершения акта.
-          </p>
+    <Container className={containerClassName}>
+      {shouldShowHeader ? (
+        <div className="flex items-start gap-2.5">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[12px] bg-red-800 text-white shadow-sm shadow-red-950/15">
+            <ModuleIcon name="receipt" className="h-4 w-4" />
+          </span>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-red-800/70">
+              Новый акт
+            </p>
+            <h2 className="mt-0.5 text-base font-semibold text-zinc-950">Новое поступление</h2>
+            <p className="mt-1 text-xs leading-5 text-zinc-500">
+              Товары попадут в остатки после завершения акта.
+            </p>
+          </div>
         </div>
-      </div>
+      ) : null}
 
       {errorMessage ? <IncomingFormMessage>{errorMessage}</IncomingFormMessage> : null}
       {successMessage ? <IncomingFormMessage>{successMessage}</IncomingFormMessage> : null}
 
-      <form action={canManageInventory ? createFormAction : undefined} className="mt-4 space-y-4">
+      <form
+        action={canManageInventory ? createFormAction : undefined}
+        className={shouldShowHeader ? "mt-3 space-y-3" : "space-y-3"}
+      >
         <IncomingResponsiblePicker
           options={responsibleOptions}
           selectedResponsibleId={selectedResponsibleId}
           onChange={onResponsibleChange}
         />
-        <label className="space-y-2">
-          <span className="text-[11px] font-semibold text-zinc-700">Поставщик</span>
-          <input
-            name="supplierName"
-            type="text"
-            value={supplierName}
-            onChange={(event) => onSupplierNameChange(event.target.value)}
-            placeholder="Например: Фермерский двор"
-            className="h-10 w-full rounded-full border border-red-950/10 bg-white/85 px-4 text-sm font-medium text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
-          />
-        </label>
-        <label className="space-y-2">
-          <span className="text-[11px] font-semibold text-zinc-700">Комментарий</span>
-          <textarea
-            name="notes"
-            value={notes}
-            onChange={(event) => onNotesChange(event.target.value)}
-            rows={3}
-            placeholder="Например: поставка по утренней закупке"
-            className="w-full rounded-[18px] border border-red-950/10 bg-white/85 px-4 py-2.5 text-xs font-medium text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
-          />
-        </label>
-
+        <SupplierPicker
+          supplierOptions={supplierOptions}
+          supplierName={supplierName}
+          onSupplierNameChange={onSupplierNameChange}
+        />
         {draftEntries.map((entry) => (
           <div key={entry.productId}>
             <input type="hidden" name="productId" value={entry.productId} />
@@ -116,10 +194,11 @@ export function InventoryIncomingCreateForm({
           draftEntriesCount={draftEntries.length}
           draftTotalCents={draftTotalCents}
           selectedResponsibleId={selectedResponsibleId}
+          selectedSupplierName={supplierName}
           canManageInventory={canManageInventory}
           isCreatePending={isCreatePending}
         />
       </form>
-    </aside>
+    </Container>
   );
 }

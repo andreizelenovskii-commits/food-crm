@@ -12,16 +12,16 @@ export function InventoryAuditHeader({
   differenceCount: number;
 }) {
   return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-      <div className="space-y-2">
-        <h2 className="text-[1.4rem] font-semibold tracking-[-0.02em] text-zinc-950">
+    <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+      <div>
+        <h2 className="text-lg font-semibold tracking-[-0.02em] text-zinc-950">
           Рабочая сверка остатков
         </h2>
-        <p className="max-w-2xl text-sm leading-6 text-zinc-600">
+        <p className="mt-1 max-w-2xl text-xs leading-5 text-zinc-600">
           Внеси фактические остатки по товарам, сохрани сверку и система обновит текущие значения на складе.
         </p>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-2 sm:grid-cols-2">
         <AuditStat label="Заполнено" value={touchedCount} />
         <AuditStat label="Расхождения" value={differenceCount} />
       </div>
@@ -31,9 +31,9 @@ export function InventoryAuditHeader({
 
 function AuditStat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-400">{label}</p>
-      <p className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-zinc-950">{value}</p>
+    <div className="rounded-[16px] border border-red-950/10 bg-white/80 px-3 py-2.5">
+      <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-red-800/50">{label}</p>
+      <p className="mt-1 text-lg font-semibold tracking-[-0.03em] text-zinc-950">{value}</p>
     </div>
   );
 }
@@ -53,15 +53,15 @@ export function InventoryAuditFilters({
 }) {
   return (
     <>
-      <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
-        <label className="space-y-2">
-          <span className="text-sm font-medium text-zinc-700">Поиск по товару</span>
+      <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
+        <label className="space-y-1.5">
+          <span className="text-[11px] font-semibold text-zinc-700">Поиск по товару</span>
           <input
             type="search"
             value={query}
             onChange={(event) => onQueryChange(event.target.value)}
             placeholder="Например: сыр, соус или PRD-00012"
-            className="w-full rounded-2xl border border-zinc-300 px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
+            className="h-10 w-full rounded-[16px] border border-red-950/10 bg-white/85 px-4 text-xs font-medium text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
           />
         </label>
 
@@ -72,21 +72,21 @@ export function InventoryAuditFilters({
               onQueryChange("");
               onCategoryChange("");
             }}
-            className="rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-950"
+            className="h-10 rounded-full border border-red-100 bg-white/90 px-4 text-xs font-semibold text-red-800 shadow-sm shadow-red-950/5 transition hover:border-red-800 hover:bg-red-800 hover:text-white"
           >
             Сбросить фильтр
           </button>
         </div>
       </div>
 
-      <div className="mt-5 flex flex-wrap gap-3">
+      <div className="mt-3 flex flex-wrap gap-2">
         <button
           type="button"
           onClick={() => onCategoryChange("")}
-          className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+          className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
             !selectedCategory
-              ? "bg-zinc-950 text-white shadow-sm shadow-zinc-950/10"
-              : "border border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 hover:text-zinc-950"
+              ? "bg-red-800 text-white shadow-sm shadow-red-950/20"
+              : "border border-red-100 bg-white/85 text-red-800 hover:border-red-200 hover:bg-red-50"
           }`}
         >
           Все категории
@@ -117,7 +117,7 @@ function CategoryButton({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+      className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
         isActive
           ? "bg-red-800 text-white shadow-sm shadow-red-950/20"
           : "border border-red-100 bg-red-50/70 text-red-800 hover:border-red-200 hover:bg-red-100"
@@ -143,7 +143,7 @@ export function InventoryAuditProductRows({
 }) {
   if (products.length === 0) {
     return (
-      <div className="rounded-[14px] border border-dashed border-zinc-300 bg-zinc-50 px-5 py-4 sm:py-5 text-sm text-zinc-500">
+      <div className="rounded-[18px] border border-dashed border-red-200 bg-white/70 px-4 py-3 text-xs text-zinc-500 sm:py-4">
         По этому фильтру товары не найдены.
       </div>
     );
@@ -160,25 +160,25 @@ export function InventoryAuditProductRows({
     return (
       <article
         key={product.id}
-        className="grid gap-4 rounded-[14px] border border-zinc-200 bg-zinc-50/80 p-5 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)] lg:items-center"
+        className="grid gap-3 rounded-[18px] border border-red-950/10 bg-white/74 p-3 shadow-sm shadow-red-950/5 lg:grid-cols-[minmax(0,1fr)_minmax(240px,300px)] lg:items-center"
       >
-        <div className="space-y-3">
-          <div className="space-y-1">
-            <h3 className="text-[1.1rem] font-semibold text-zinc-950">{product.name}</h3>
-            <p className="text-sm text-zinc-500">Категория: {product.category ?? "Без категории"}</p>
+        <div className="space-y-2">
+          <div>
+            <h3 className="text-sm font-semibold text-zinc-950">{product.name}</h3>
+            <p className="mt-0.5 text-xs text-zinc-500">Категория: {product.category ?? "Без категории"}</p>
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-zinc-600 ring-1 ring-zinc-200">
+            <span className="rounded-full bg-white px-3 py-1 text-[11px] font-medium text-zinc-600 ring-1 ring-red-950/10">
               Система: {formatInventoryQuantity(product.stockQuantity)} {product.unit}
             </span>
             {product.sku ? (
-              <span className="rounded-full bg-white px-3 py-1 text-xs font-medium uppercase tracking-[0.12em] text-zinc-400 ring-1 ring-zinc-200">
+              <span className="rounded-full bg-white px-3 py-1 text-[11px] font-medium uppercase tracking-[0.12em] text-zinc-400 ring-1 ring-red-950/10">
                 {product.sku}
               </span>
             ) : null}
             {hasValue ? (
-              <span className={`rounded-full bg-white px-3 py-1 text-xs font-medium ring-1 ring-zinc-200 ${differenceTone}`}>
+              <span className={`rounded-full bg-white px-3 py-1 text-[11px] font-medium ring-1 ring-red-950/10 ${differenceTone}`}>
                 {difference === 0
                   ? "Без расхождения"
                   : difference > 0
@@ -189,8 +189,8 @@ export function InventoryAuditProductRows({
           </div>
         </div>
 
-        <label className="space-y-2">
-          <span className="text-sm font-medium text-zinc-700">Фактический остаток</span>
+        <label className="space-y-1.5">
+          <span className="text-[11px] font-semibold text-zinc-700">Фактический остаток</span>
           <div className="relative">
             <input
               type="text"
@@ -199,9 +199,9 @@ export function InventoryAuditProductRows({
               onChange={(event) => onDraftChange(product.id, event.target.value)}
               placeholder={formatInventoryQuantity(product.stockQuantity)}
               disabled={!canManageInventory || isPending}
-              className="w-full rounded-[12px] border border-zinc-300 bg-white px-4 py-3 pr-16 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-500"
+              className="h-10 w-full rounded-[16px] border border-red-950/10 bg-white px-4 pr-14 text-xs font-medium text-zinc-950 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-800/10 disabled:cursor-not-allowed disabled:bg-red-50 disabled:text-zinc-500"
             />
-            <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm font-medium text-zinc-500">
+            <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-xs font-medium text-zinc-500">
               {product.unit}
             </span>
           </div>
@@ -223,8 +223,8 @@ export function InventoryAuditFooter({
   onClearDraft: () => void;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-[14px] border border-zinc-200 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="text-sm text-zinc-600">
+    <div className="flex flex-col gap-3 rounded-[18px] border border-red-950/10 bg-white/76 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="text-xs text-zinc-600">
         {canManageInventory
           ? "Сохраняются только позиции, в которых ты ввёл фактический остаток."
           : "У твоей роли нет прав на проведение инвентаризации."}
@@ -234,7 +234,7 @@ export function InventoryAuditFooter({
           type="button"
           onClick={onClearDraft}
           disabled={touchedCount === 0 || isPending}
-          className="rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-950 disabled:cursor-not-allowed disabled:opacity-50"
+          className="h-9 rounded-full border border-red-100 bg-white/90 px-4 text-xs font-semibold text-red-800 shadow-sm shadow-red-950/5 transition hover:border-red-800 hover:bg-red-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
         >
           Очистить черновик
         </button>
@@ -242,7 +242,7 @@ export function InventoryAuditFooter({
           <button
             type="submit"
             disabled={touchedCount === 0 || isPending}
-            className="rounded-2xl bg-zinc-950 px-5 py-3 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-400"
+            className="h-9 rounded-full bg-red-800 px-4 text-xs font-semibold text-white shadow-sm shadow-red-950/15 transition hover:bg-red-900 disabled:cursor-not-allowed disabled:bg-red-100 disabled:text-red-300"
           >
             {isPending ? "Сохраняем..." : "Провести инвентаризацию"}
           </button>

@@ -38,7 +38,7 @@ export function InventoryProductSearchDialog({
   productNote?: (product: ProductItem) => string;
 }) {
   return (
-    <div className="fixed inset-0 z-70 overflow-y-auto bg-zinc-950/30 px-4 py-6 backdrop-blur-sm sm:py-8" onClick={onClose} role="presentation">
+    <div className="fixed inset-0 z-90 overflow-y-auto bg-zinc-950/30 px-4 py-6 backdrop-blur-sm sm:py-8" onClick={onClose} role="presentation">
       <div role="dialog" aria-modal="true" aria-label={title} className="relative mx-auto max-h-[calc(100vh-4rem)] w-full max-w-4xl overflow-y-auto rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#fffdfc_0%,#fff3f2_48%,#f7eeee_100%)] p-4 shadow-[0_24px_80px_rgba(127,29,29,0.18)] sm:p-5" onClick={(event) => event.stopPropagation()}>
         <div className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-red-300/20 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 left-1/3 h-64 w-64 rounded-full bg-white/80 blur-3xl" />

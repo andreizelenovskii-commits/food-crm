@@ -16,42 +16,43 @@ export function InventoryAuditActionsPanel({
   onOpenHistory: () => void;
 }) {
   return (
-    <aside className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5 xl:p-5">
-      <div className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">Действия</p>
-        <h2 className="text-[1.45rem] font-semibold tracking-[-0.02em] text-zinc-950">
+    <aside className="rounded-[22px] border border-white/70 bg-white/74 p-3 shadow-[0_18px_60px_rgba(127,29,29,0.08)] backdrop-blur-2xl sm:p-4">
+      <div>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">Действия</p>
+        <h2 className="mt-1 text-lg font-semibold tracking-[-0.02em] text-zinc-950">
           Управление инвентаризацией
         </h2>
-        <p className="text-sm leading-6 text-zinc-600">
+        <p className="mt-1.5 text-xs leading-5 text-zinc-600">
           Создавай новые листы, веди открытые инвентаризации и просматривай уже закрытые сессии.
         </p>
       </div>
 
-      <div className="mt-4 grid gap-4">
+      <div className="mt-3 grid gap-3">
         <AuditActionButton
           eyebrow="Новая сессия"
           title="Создать инвентаризацию"
           description="Выбери товары, назначь ответственного и зафиксируй стартовый лист инвентаризации."
-          tone="dark"
+          icon="plus"
           onClick={onCreate}
         />
         <AuditActionButton
           eyebrow="В работе"
           title="Действующие инвентаризации"
           description="Открывай незакрытые листы и веди фактические остатки с расчётом расхождений."
-          tone="amber"
+          icon="active"
+          count={activeSessionsCount}
           onClick={onOpenActive}
         />
         <AuditActionButton
           eyebrow="Архив"
           title="Закрытые инвентаризации"
           description="Смотри завершённые листы и историю уже закрытых пересчётов."
-          tone="light"
+          icon="history"
           onClick={onOpenHistory}
         />
       </div>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-4">
+      <div className="mt-3 grid gap-2 sm:grid-cols-4">
         <AuditActionStat label="На складе" value={productsCount} />
         <AuditActionStat label="Открыто" value={activeSessionsCount} />
         <AuditActionStat label="Мало остатка" value={lowStockCount} />
@@ -65,39 +66,70 @@ function AuditActionButton({
   eyebrow,
   title,
   description,
-  tone,
+  icon,
+  count,
   onClick,
 }: {
   eyebrow: string;
   title: string;
   description: string;
-  tone: "dark" | "amber" | "light";
+  icon: "plus" | "active" | "history";
+  count?: number;
   onClick: () => void;
 }) {
-  const toneClass = {
-    dark: "border-zinc-950 bg-zinc-950 text-white hover:bg-zinc-800",
-    amber: "border-amber-200 bg-amber-50 text-zinc-950 hover:border-amber-300 hover:bg-amber-100/60",
-    light: "border-zinc-200 bg-zinc-50 text-zinc-950 hover:border-zinc-300 hover:bg-white",
-  }[tone];
-  const eyebrowClass = tone === "dark" ? "text-white/70" : tone === "amber" ? "text-amber-700" : "text-zinc-400";
-  const bodyClass = tone === "dark" ? "text-white/75" : "text-zinc-600";
+  return (
+    <button type="button" onClick={onClick} className="group rounded-[18px] border border-red-950/10 bg-white/78 p-3 text-left shadow-sm shadow-red-950/5 transition hover:-translate-y-0.5 hover:border-red-200 hover:bg-white/90">
+      <div className="flex items-start gap-3">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-red-800 text-white shadow-sm shadow-red-950/15">
+          <AuditActionIcon name={icon} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[10px] font-semibold uppercase tracking-[0.14em] text-red-800/60">{eyebrow}</span>
+          <span className="mt-1 flex items-center gap-2 text-sm font-semibold tracking-[-0.01em] text-zinc-950">
+            {title}
+            {count === undefined ? null : (
+              <span className="rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-800 ring-1 ring-red-100">
+                {count}
+              </span>
+            )}
+          </span>
+          <span className="mt-1 block text-[11px] leading-4 text-zinc-500">{description}</span>
+        </span>
+      </div>
+    </button>
+  );
+}
+
+function AuditActionIcon({ name }: { name: "plus" | "active" | "history" }) {
+  if (name === "plus") {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M12 5v14M5 12h14" />
+      </svg>
+    );
+  }
+
+  if (name === "active") {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M4 7h16M4 12h10M4 17h7" />
+      </svg>
+    );
+  }
 
   return (
-    <button type="button" onClick={onClick} className={`rounded-[14px] border px-5 py-5 text-left transition ${toneClass}`}>
-      <p className={`text-sm font-semibold uppercase tracking-[0.18em] ${eyebrowClass}`}>{eyebrow}</p>
-      <p className={`mt-3 font-semibold tracking-[-0.02em] ${tone === "dark" ? "text-[1.35rem] text-white" : "text-[1.25rem] text-zinc-950"}`}>
-        {title}
-      </p>
-      <p className={`mt-2 text-sm leading-6 ${bodyClass}`}>{description}</p>
-    </button>
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M12 8v5l3 2" />
+      <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+    </svg>
   );
 }
 
 function AuditActionStat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">{label}</p>
-      <p className="mt-2 text-xl font-semibold tracking-[-0.03em] text-zinc-950">{value}</p>
+    <div className="rounded-[16px] border border-red-950/10 bg-white/80 px-3 py-2.5">
+      <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-red-800/50">{label}</p>
+      <p className="mt-1 text-lg font-semibold tracking-[-0.03em] text-zinc-950">{value}</p>
     </div>
   );
 }

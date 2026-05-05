@@ -1,4 +1,5 @@
 import { PaginatedList } from "@/components/ui/paginated-list";
+import { ModuleIcon } from "@/components/ui/module-icon";
 import { InventoryWriteoffActCard } from "@/modules/inventory/components/inventory-writeoff-act-card";
 import {
   formatDateTime,
@@ -33,8 +34,8 @@ export function WriteoffCompletedActsDialog({
   onDelete: (act: WriteoffActSummary) => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-zinc-950/50 px-4 py-8 backdrop-blur-sm" onClick={onClose} role="presentation">
-      <div role="dialog" aria-modal="true" aria-label="Архив завершённых актов списания" className="max-h-[calc(100vh-4rem)] w-full max-w-6xl overflow-y-auto rounded-[14px] border border-zinc-200 bg-[#fffdfc] p-4 sm:p-5 shadow-2xl shadow-zinc-950/20" onClick={(event) => event.stopPropagation()}>
+    <div className="fixed inset-0 z-70 overflow-y-auto bg-zinc-950/30 px-4 py-6 backdrop-blur-sm sm:py-8" onClick={onClose} role="presentation">
+      <div role="dialog" aria-modal="true" aria-label="Архив завершённых актов списания" className="relative mx-auto max-h-[calc(100vh-4rem)] w-full max-w-6xl overflow-y-auto rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#fffdfc_0%,#fff3f2_48%,#f7eeee_100%)] p-4 shadow-[0_24px_80px_rgba(127,29,29,0.18)] sm:p-5" onClick={(event) => event.stopPropagation()}>
         <DialogHeader
           eyebrow="Архив списаний"
           title="Все завершённые акты списания"
@@ -47,13 +48,13 @@ export function WriteoffCompletedActsDialog({
               key={group.reason}
               type="button"
               onClick={() => onReasonChange(group.reason)}
-              className={`rounded-full px-4 py-2 text-sm font-medium transition ${group.reason === visibleReason ? "bg-zinc-950 text-white shadow-sm shadow-zinc-950/10" : "border border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 hover:text-zinc-950"}`}
+              className={`rounded-full border px-3.5 py-2 text-xs font-semibold shadow-sm shadow-red-950/5 transition ${group.reason === visibleReason ? "border-red-800 bg-red-800 text-white" : "border-red-100 bg-white/85 text-red-800 hover:border-red-800 hover:bg-red-800 hover:text-white"}`}
             >
               {group.reason} {group.acts.length}
             </button>
           ))}
         </div>
-        <div className="mt-4 rounded-2xl border border-zinc-200 bg-white px-4 py-3">
+        <div className="mt-4 rounded-[18px] border border-red-950/10 bg-white/70 px-4 py-3 shadow-sm shadow-red-950/5">
           <p className="text-sm font-semibold text-zinc-950">{visibleReason}</p>
           <p className="text-xs text-zinc-500">
             {visibleActs.length} актов в выбранной категории списания
@@ -91,8 +92,8 @@ export function WriteoffDeleteDialog({
   onClose: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-60 flex items-start justify-center bg-zinc-950/55 px-4 py-8 backdrop-blur-sm" onClick={() => (isDeletePending ? null : onClose())} role="presentation">
-      <div role="dialog" aria-modal="true" aria-label="Подтверждение удаления акта списания" className="w-full max-w-xl rounded-[14px] border border-zinc-200 bg-[#fffdfc] p-4 sm:p-5 shadow-2xl shadow-zinc-950/20" onClick={(event) => event.stopPropagation()}>
+    <div className="fixed inset-0 z-80 flex items-start justify-center bg-zinc-950/30 px-4 py-8 backdrop-blur-sm" onClick={() => (isDeletePending ? null : onClose())} role="presentation">
+      <div role="dialog" aria-modal="true" aria-label="Подтверждение удаления акта списания" className="w-full max-w-xl rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#fffdfc_0%,#fff3f2_48%,#f7eeee_100%)] p-4 shadow-[0_24px_80px_rgba(127,29,29,0.18)] sm:p-5" onClick={(event) => event.stopPropagation()}>
         <DialogHeader
           eyebrow="Подтверждение удаления"
           title={`Удалить акт списания #${act.id}?`}
@@ -101,7 +102,7 @@ export function WriteoffDeleteDialog({
           isCloseDisabled={isDeletePending}
           tone="danger"
         />
-        <div className="mt-4 rounded-[12px] border border-red-100 bg-red-50/70 p-4">
+        <div className="mt-4 rounded-[18px] border border-red-100 bg-red-50/70 p-4">
           <p className="text-sm font-medium text-zinc-950">
             {act.responsibleEmployeeName} • {formatDateTime(act.createdAt)}
           </p>
@@ -114,10 +115,10 @@ export function WriteoffDeleteDialog({
         </div>
         <form action={deleteFormAction} className="mt-4 flex flex-wrap justify-end gap-3">
           <input type="hidden" name="actId" value={act.id} />
-          <button type="button" onClick={onClose} disabled={isDeletePending} className="rounded-2xl border border-zinc-300 bg-white px-5 py-3 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-950 disabled:cursor-not-allowed disabled:opacity-50">
+          <button type="button" onClick={onClose} disabled={isDeletePending} className="inline-flex h-10 items-center rounded-full border border-red-100 bg-white/85 px-5 text-sm font-medium tracking-[-0.01em] text-red-800 shadow-sm shadow-red-950/5 transition hover:border-red-800 hover:bg-red-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-50">
             Отмена
           </button>
-          <button type="submit" disabled={isDeletePending} className="rounded-2xl bg-red-800 px-5 py-3 text-sm font-medium text-white transition hover:bg-red-900 disabled:cursor-not-allowed disabled:bg-red-300">
+          <button type="submit" disabled={isDeletePending} className="inline-flex h-10 items-center rounded-full bg-red-800 px-5 text-sm font-medium text-white shadow-sm shadow-red-950/15 transition hover:bg-red-900 disabled:cursor-not-allowed disabled:bg-red-300">
             {isDeletePending ? "Удаляем..." : "Подтвердить удаление"}
           </button>
         </form>
@@ -142,15 +143,18 @@ function DialogHeader({
   tone?: "default" | "danger";
 }) {
   return (
-    <div className="flex items-start justify-between gap-4">
-      <div className="space-y-2">
-        <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${tone === "danger" ? "text-red-700" : "text-zinc-500"}`}>
-          {eyebrow}
-        </p>
-        <h3 className="text-[1.5rem] font-semibold tracking-[-0.02em] text-zinc-950">{title}</h3>
-        <p className="text-sm leading-6 text-zinc-600">{description}</p>
+    <div className="flex flex-wrap items-start justify-between gap-3 rounded-[22px] border border-white/70 bg-white/74 p-4 shadow-[0_18px_60px_rgba(127,29,29,0.10)] backdrop-blur-2xl">
+      <div className="flex items-start gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-red-800 text-white shadow-sm shadow-red-950/15">
+          <ModuleIcon name={tone === "danger" ? "report" : "receipt"} className="h-5 w-5" />
+        </span>
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">{eyebrow}</p>
+          <h3 className="mt-1 text-lg font-semibold text-zinc-950">{title}</h3>
+          <p className="mt-1 text-xs leading-5 text-zinc-500">{description}</p>
+        </div>
       </div>
-      <button type="button" onClick={onClose} disabled={isCloseDisabled} className="rounded-2xl border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-950 disabled:cursor-not-allowed disabled:opacity-50">
+      <button type="button" onClick={onClose} disabled={isCloseDisabled} className="inline-flex h-9 items-center rounded-full border border-red-100 bg-white/90 px-4 text-xs font-semibold text-red-800 shadow-sm shadow-red-950/5 transition hover:border-red-800 hover:bg-red-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-50">
         Закрыть
       </button>
     </div>

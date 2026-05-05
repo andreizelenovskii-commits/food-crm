@@ -37,10 +37,14 @@ export function IncomingActEditForm({
   act,
   products,
   responsibleOptions,
+  onClose,
+  variant = "page",
 }: {
   act: IncomingActSummary;
   products: ProductItem[];
   responsibleOptions: InventoryResponsibleOption[];
+  onClose?: () => void;
+  variant?: "page" | "dialog";
 }) {
   const router = useRouter();
   const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
@@ -48,7 +52,6 @@ export function IncomingActEditForm({
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory | "">("");
   const [supplierName, setSupplierName] = useState(act.supplierName ?? "");
   const [selectedResponsibleId, setSelectedResponsibleId] = useState(String(act.responsibleEmployeeId));
-  const [notes, setNotes] = useState(act.notes ?? "");
   const [selectedProductIds, setSelectedProductIds] = useState<number[]>(
     act.items.map((item) => item.productId),
   );
@@ -70,9 +73,19 @@ export function IncomingActEditForm({
       return;
     }
 
-    router.replace("/dashboard/inventory?tab=incoming", { scroll: false });
-    router.refresh();
-  }, [router, state.successMessage]);
+    const frameId = window.requestAnimationFrame(() => {
+      if (variant === "dialog") {
+        onClose?.();
+        router.refresh();
+        return;
+      }
+
+      router.replace("/dashboard/inventory?tab=incoming", { scroll: false });
+      router.refresh();
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [onClose, router, state.successMessage, variant]);
 
   const filteredProducts = useMemo(
     () => filterInventoryProducts(products, selectedCategory, query),
@@ -148,16 +161,18 @@ export function IncomingActEditForm({
 
   return (
     <>
-      <form action={formAction} className="space-y-5">
+      <form action={formAction} className={variant === "dialog" ? "space-y-3" : "space-y-5"}>
         <input type="hidden" name="actId" value={act.id} />
-        <IncomingActEditHeader
-          actId={act.id}
-          rowsCount={selectedProducts.length}
-          totalCents={draftTotalCents}
-        />
+        {variant === "page" ? (
+          <IncomingActEditHeader
+            actId={act.id}
+            rowsCount={selectedProducts.length}
+            totalCents={draftTotalCents}
+          />
+        ) : null}
         {state.errorMessage ? <IncomingFormMessage>{state.errorMessage}</IncomingFormMessage> : null}
-        <section className="grid gap-4 xl:grid-cols-[0.92fr_1.08fr]">
-          <div className="space-y-5">
+        <section className={variant === "dialog" ? "grid gap-3 xl:grid-cols-[0.9fr_1.1fr]" : "grid gap-4 xl:grid-cols-[0.92fr_1.08fr]"}>
+          <div className={variant === "dialog" ? "space-y-3" : "space-y-5"}>
             <IncomingResponsiblePicker
               options={responsibleOptions}
               selectedResponsibleId={selectedResponsibleId}
@@ -165,9 +180,7 @@ export function IncomingActEditForm({
             />
             <IncomingActEditFields
               supplierName={supplierName}
-              notes={notes}
               onSupplierNameChange={setSupplierName}
-              onNotesChange={setNotes}
             />
           </div>
           <div className="space-y-4">
@@ -189,6 +202,7 @@ export function IncomingActEditForm({
               draftEntriesCount={draftEntries.length}
               selectedResponsibleId={selectedResponsibleId}
               isPending={isPending}
+              onCancel={onClose}
             />
           </div>
         </section>

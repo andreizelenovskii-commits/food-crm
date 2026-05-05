@@ -1,3 +1,4 @@
+import { ModuleIcon } from "@/components/ui/module-icon";
 import type {
   InventoryResponsibleOption,
   WriteoffReason,
@@ -17,7 +18,6 @@ export function InventoryWriteoffCreateForm({
   responsibleOptions,
   selectedResponsibleId,
   reason,
-  notes,
   selectedProducts,
   draftEntries,
   draftTotalCents,
@@ -28,16 +28,15 @@ export function InventoryWriteoffCreateForm({
   createFormAction,
   onResponsibleChange,
   onReasonChange,
-  onNotesChange,
   onOpenSearch,
   onQuantityChange,
   onRemoveProduct,
   onClearDraft,
+  variant = "panel",
 }: {
   responsibleOptions: InventoryResponsibleOption[];
   selectedResponsibleId: string;
   reason: WriteoffReason;
-  notes: string;
   selectedProducts: WriteoffDraftProduct[];
   draftEntries: Array<{ productId: string; quantity: string }>;
   draftTotalCents: number;
@@ -48,45 +47,48 @@ export function InventoryWriteoffCreateForm({
   createFormAction: FormAction;
   onResponsibleChange: (value: string) => void;
   onReasonChange: (value: WriteoffReason) => void;
-  onNotesChange: (value: string) => void;
   onOpenSearch: () => void;
   onQuantityChange: (productId: number, value: string) => void;
   onRemoveProduct: (productId: number) => void;
   onClearDraft: () => void;
+  variant?: "panel" | "dialog";
 }) {
+  const containerClassName =
+    variant === "dialog"
+      ? "rounded-[20px] border border-white/70 bg-white/72 p-3 shadow-[0_18px_60px_rgba(127,29,29,0.10)] backdrop-blur-2xl sm:p-4"
+      : "rounded-[20px] border border-white/70 bg-white/72 p-3 shadow-[0_18px_60px_rgba(127,29,29,0.10)] backdrop-blur-2xl sm:p-4 xl:sticky xl:top-28 xl:self-start";
+  const Container = variant === "dialog" ? "section" : "aside";
+  const shouldShowHeader = variant !== "dialog";
+
   return (
-    <aside className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5 xl:sticky xl:top-28 xl:self-start">
-      <div className="space-y-2">
-        <h2 className="text-xl font-semibold text-zinc-950">Новый акт списания</h2>
-        <p className="text-sm leading-6 text-zinc-600">
-          Укажи ответственного, причину и количество по товарам. Остатки на складе изменятся после завершения акта.
-        </p>
-      </div>
+    <Container className={containerClassName}>
+      {shouldShowHeader ? (
+        <div className="flex items-start gap-2.5">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[12px] bg-red-800 text-white shadow-sm shadow-red-950/15">
+            <ModuleIcon name="receipt" className="h-4 w-4" />
+          </span>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-red-800/70">
+              Новый акт
+            </p>
+            <h2 className="mt-0.5 text-base font-semibold text-zinc-950">Новое списание</h2>
+            <p className="mt-1 text-xs leading-5 text-zinc-500">
+              Остатки изменятся после завершения акта.
+            </p>
+          </div>
+        </div>
+      ) : null}
 
       {errorMessage ? <WriteoffFormMessage>{errorMessage}</WriteoffFormMessage> : null}
       {successMessage ? <WriteoffFormMessage>{successMessage}</WriteoffFormMessage> : null}
 
-      <form action={canManageInventory ? createFormAction : undefined} className="mt-4 space-y-5">
-        <div className="grid gap-4">
-          <WriteoffResponsiblePicker
-            options={responsibleOptions}
-            selectedResponsibleId={selectedResponsibleId}
-            onChange={onResponsibleChange}
-          />
-          <WriteoffReasonPicker reason={reason} onChange={onReasonChange} />
-        </div>
-
-        <label className="space-y-2">
-          <span className="text-sm font-medium text-zinc-700">Комментарий</span>
-          <textarea
-            name="notes"
-            value={notes}
-            onChange={(event) => onNotesChange(event.target.value)}
-            rows={3}
-            placeholder="Например: списание из-за порчи после разморозки"
-            className="w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
-          />
-        </label>
+      <form action={canManageInventory ? createFormAction : undefined} className={shouldShowHeader ? "mt-3 space-y-3" : "space-y-3"}>
+        <WriteoffResponsiblePicker
+          options={responsibleOptions}
+          selectedResponsibleId={selectedResponsibleId}
+          onChange={onResponsibleChange}
+        />
+        <WriteoffReasonPicker reason={reason} onChange={onReasonChange} />
 
         {draftEntries.map((entry) => (
           <div key={entry.productId}>
@@ -110,6 +112,6 @@ export function InventoryWriteoffCreateForm({
           onClearDraft={onClearDraft}
         />
       </form>
-    </aside>
+    </Container>
   );
 }

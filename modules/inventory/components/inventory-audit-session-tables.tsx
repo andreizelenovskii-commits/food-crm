@@ -15,7 +15,7 @@ export function ActiveSessionItemsTable({
   onActualDraftChange: (itemId: number, value: string) => void;
 }) {
   return (
-    <InventoryTable headers={["Товар", "Ед.", "Программный остаток", "Фактический остаток", "Разница", "Разница в рублях"]}>
+    <InventoryTable headers={["Товар", "Ед.", "Система", "Факт", "Разница", "В рублях"]}>
       {items.map((item) => {
         const draftValue = actualDrafts[item.id] ?? "";
         const actualQuantity = draftValue === "" ? item.actualQuantity : parseQuantity(draftValue);
@@ -24,19 +24,19 @@ export function ActiveSessionItemsTable({
         const varianceTone = getVarianceTone(varianceQuantity);
 
         return (
-          <tr key={item.id} className="border-t border-zinc-200 align-top">
-            <td className="px-4 py-4">
+          <tr key={item.id} className="border-t border-red-950/10 align-top">
+            <td className="px-3 py-3">
               <input type="hidden" name="itemId" value={item.id} />
-              <div className="space-y-1">
+              <div>
                 <p className="font-semibold text-zinc-950">{item.productName}</p>
-                <p className="text-zinc-500">{item.productCategory ?? "Без категории"}</p>
+                <p className="mt-0.5 text-xs text-zinc-500">{item.productCategory ?? "Без категории"}</p>
               </div>
             </td>
-            <td className="px-4 py-4 font-medium text-zinc-600">{item.productUnit}</td>
-            <td className="px-4 py-4 font-medium text-zinc-950">
+            <td className="px-3 py-3 font-medium text-zinc-600">{item.productUnit}</td>
+            <td className="px-3 py-3 font-medium text-zinc-950">
               {formatInventoryQuantity(item.currentStockQuantity)}
             </td>
-            <td className="px-4 py-4">
+            <td className="px-3 py-3">
               <input
                 name="actualQuantity"
                 type="text"
@@ -44,13 +44,13 @@ export function ActiveSessionItemsTable({
                 value={draftValue}
                 onChange={(event) => onActualDraftChange(item.id, event.target.value)}
                 placeholder={item.actualQuantity === null ? formatInventoryQuantity(0) : formatInventoryQuantity(item.actualQuantity)}
-                className="w-28 rounded-xl border border-zinc-300 px-3 py-2 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
+                className="h-9 w-24 rounded-[14px] border border-red-950/10 bg-white/85 px-3 text-xs font-medium text-zinc-950 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
               />
             </td>
-            <td className={`px-4 py-4 font-medium ${varianceTone}`}>
+            <td className={`px-3 py-3 font-medium ${varianceTone}`}>
               {formatQuantityVariance(varianceQuantity, item.productUnit)}
             </td>
-            <td className={`px-4 py-4 font-medium ${varianceTone}`}>
+            <td className={`px-3 py-3 font-medium ${varianceTone}`}>
               {formatMoneyVariance(varianceValueCents)}
             </td>
           </tr>
@@ -62,29 +62,29 @@ export function ActiveSessionItemsTable({
 
 export function ClosedSessionItemsTable({ items }: { items: InventorySessionItemSummary[] }) {
   return (
-    <InventoryTable headers={["Товар", "Ед.", "Остаток на старте", "Факт при закрытии", "Разница", "Разница в рублях"]}>
+    <InventoryTable headers={["Товар", "Ед.", "Старт", "Факт", "Разница", "В рублях"]}>
       {items.map((item) => {
         const varianceTone = getVarianceTone(item.varianceQuantity);
 
         return (
-          <tr key={item.id} className="border-t border-zinc-200 align-top">
-            <td className="px-4 py-4">
-              <div className="space-y-1">
+          <tr key={item.id} className="border-t border-red-950/10 align-top">
+            <td className="px-3 py-3">
+              <div>
                 <p className="font-semibold text-zinc-950">{item.productName}</p>
-                <p className="text-zinc-500">{item.productCategory ?? "Без категории"}</p>
+                <p className="mt-0.5 text-xs text-zinc-500">{item.productCategory ?? "Без категории"}</p>
               </div>
             </td>
-            <td className="px-4 py-4 font-medium text-zinc-600">{item.productUnit}</td>
-            <td className="px-4 py-4 font-medium text-zinc-950">
+            <td className="px-3 py-3 font-medium text-zinc-600">{item.productUnit}</td>
+            <td className="px-3 py-3 font-medium text-zinc-950">
               {formatInventoryQuantity(item.stockQuantity)}
             </td>
-            <td className="px-4 py-4 font-medium text-zinc-950">
+            <td className="px-3 py-3 font-medium text-zinc-950">
               {item.actualQuantity === null ? "—" : formatInventoryQuantity(item.actualQuantity)}
             </td>
-            <td className={`px-4 py-4 font-medium ${varianceTone}`}>
+            <td className={`px-3 py-3 font-medium ${varianceTone}`}>
               {formatQuantityVariance(item.varianceQuantity, item.productUnit)}
             </td>
-            <td className={`px-4 py-4 font-medium ${varianceTone}`}>
+            <td className={`px-3 py-3 font-medium ${varianceTone}`}>
               {formatMoneyVariance(item.varianceValueCents)}
             </td>
           </tr>
@@ -102,13 +102,13 @@ function InventoryTable({
   children: React.ReactNode;
 }) {
   return (
-    <div className="overflow-hidden rounded-[14px] border border-zinc-200 bg-white shadow-sm shadow-zinc-950/5">
+    <div className="overflow-hidden rounded-[18px] border border-red-950/10 bg-white/76 shadow-sm shadow-red-950/5">
       <div className="overflow-x-auto">
-        <table className="min-w-full text-sm">
-          <thead className="bg-zinc-50">
-            <tr className="text-left text-zinc-500">
+        <table className="min-w-full text-xs">
+          <thead className="bg-red-50/45">
+            <tr className="text-left text-[10px] font-semibold uppercase tracking-[0.12em] text-red-800/55">
               {headers.map((header) => (
-                <th key={header} className="px-4 py-3 font-medium">{header}</th>
+                <th key={header} className="px-3 py-2.5 font-semibold">{header}</th>
               ))}
             </tr>
           </thead>
