@@ -1,6 +1,6 @@
 import { CATALOG_FIELD_CLASS_NAME } from "@/modules/catalog/components/catalog-item-form.model";
 import {
-  TECH_CARD_CATEGORIES,
+  PRICE_TECH_CARD_CATEGORIES,
   TECH_CARD_PIZZA_SIZES,
   type TechCardPizzaSize,
 } from "@/modules/tech-cards/tech-cards.types";
@@ -55,7 +55,7 @@ export function CatalogTechCardFields({
               required
             >
               <option value="">Выбери категорию</option>
-              {TECH_CARD_CATEGORIES.map((category) => (
+              {PRICE_TECH_CARD_CATEGORIES.map((category) => (
                 <option key={category} value={category}>
                   {category}
                 </option>

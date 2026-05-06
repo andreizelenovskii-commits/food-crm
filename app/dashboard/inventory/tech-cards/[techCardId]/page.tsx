@@ -38,59 +38,65 @@ export default async function TechCardDetailsPage(props: {
       backHref="/dashboard/inventory?tab=recipes"
       action={<SessionUserActions user={user} />}
     >
-      <div className="grid gap-5 xl:grid-cols-[0.92fr_1.08fr]">
-        <section className="space-y-5">
-          <article className="rounded-[14px] border border-zinc-200 bg-[linear-gradient(180deg,#ffffff_0%,#fff1f1_100%)] p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(390px,0.82fr)] xl:items-start">
+        <section className="space-y-4">
+          <article className="rounded-[22px] border border-white/70 bg-white/76 p-4 shadow-[0_18px_60px_rgba(127,29,29,0.08)] backdrop-blur-2xl sm:p-5">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">
                   Технологическая карта
                 </p>
-                <h2 className="mt-2 text-2xl font-semibold text-zinc-950">{techCard.name}</h2>
-                <p className="mt-2 text-sm font-medium text-red-800">{techCard.category}</p>
-                {techCard.pizzaSize ? (
-                  <p className="mt-1 text-sm text-zinc-500">Размер: {techCard.pizzaSize}</p>
-                ) : null}
+                <h2 className="mt-1 text-[1.45rem] font-semibold leading-tight text-zinc-950">{techCard.name}</h2>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-800 ring-1 ring-red-100">
+                    {techCard.category}
+                  </span>
+                  {techCard.pizzaSize ? (
+                    <span className="rounded-full bg-zinc-50 px-3 py-1 text-xs font-semibold text-zinc-500 ring-1 ring-zinc-200">
+                      {techCard.pizzaSize}
+                    </span>
+                  ) : null}
+                </div>
               </div>
-              <span className="rounded-full bg-white px-4 py-2 text-sm font-medium text-zinc-600 ring-1 ring-zinc-200">
+              <span className="rounded-full border border-red-100 bg-white/84 px-4 py-2 text-xs font-semibold text-red-800">
                 Ингредиентов: {techCard.ingredients.length}
               </span>
             </div>
 
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-[12px] border border-white/90 bg-white/90 p-4">
-                <p className="text-sm font-medium text-zinc-500">Выход</p>
-                <p className="mt-3 text-xl font-semibold text-zinc-950">
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-[16px] border border-red-950/10 bg-white/84 p-4 shadow-sm shadow-red-950/5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-red-800/55">Выход</p>
+                <p className="mt-2 text-xl font-semibold text-zinc-950">
                   {techCard.outputQuantity} {techCard.outputUnit}
                 </p>
               </div>
-              <div className="rounded-[12px] border border-white/90 bg-white/90 p-4">
-                <p className="text-sm font-medium text-zinc-500">Создана</p>
-                <p className="mt-3 text-xl font-semibold text-zinc-950">
+              <div className="rounded-[16px] border border-red-950/10 bg-white/84 p-4 shadow-sm shadow-red-950/5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-red-800/55">Создана</p>
+                <p className="mt-2 text-xl font-semibold text-zinc-950">
                   {new Intl.DateTimeFormat("ru-RU").format(new Date(techCard.createdAt))}
                 </p>
               </div>
             </div>
           </article>
 
-          <article className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
-            <h2 className="text-xl font-semibold text-zinc-950">Состав техкарты</h2>
-            <div className="mt-5 space-y-3">
+          <article className="rounded-[22px] border border-white/70 bg-white/72 p-4 shadow-[0_18px_60px_rgba(127,29,29,0.08)] backdrop-blur-2xl sm:p-5">
+            <h2 className="text-base font-semibold text-zinc-950">Состав техкарты</h2>
+            <div className="mt-4 space-y-2">
               {techCard.ingredients.map((ingredient) => (
                 <div
                   key={ingredient.id}
-                  className="rounded-[12px] border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600"
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-[14px] border border-red-950/10 bg-white/84 px-4 py-3 text-sm text-zinc-600 shadow-sm shadow-red-950/5"
                 >
-                  <p className="font-medium text-zinc-950">{ingredient.productName}</p>
-                  <p className="mt-1">
+                  <p className="font-semibold text-zinc-950">{ingredient.productName}</p>
+                  <p className="font-semibold text-red-800">
                     {ingredient.quantity} {ingredient.unit}
                   </p>
                 </div>
               ))}
             </div>
 
-            <div className="mt-5 rounded-[12px] border border-zinc-100 bg-zinc-50 p-4">
-              <p className="text-sm font-medium text-zinc-700">Описание</p>
+            <div className="mt-4 rounded-[16px] border border-red-950/10 bg-red-50/35 p-4">
+              <p className="text-xs font-semibold text-zinc-700">Описание</p>
               <p className="mt-2 text-sm leading-6 text-zinc-600">
                 {techCard.description || "Описание для этой технологической карты пока не заполнено."}
               </p>
@@ -99,7 +105,9 @@ export default async function TechCardDetailsPage(props: {
         </section>
 
         {canManageInventory ? (
-          <TechCardForm products={products} initialTechCard={techCard} />
+          <div className="xl:sticky xl:top-4">
+            <TechCardForm products={products} initialTechCard={techCard} />
+          </div>
         ) : null}
       </div>
     </PageShell>

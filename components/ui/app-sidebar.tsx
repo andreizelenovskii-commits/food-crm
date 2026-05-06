@@ -169,7 +169,7 @@ export function AppSidebar() {
                     </div>
 
                     {showInventorySubnav ? (
-                      <div className="space-y-1 pl-10 pr-1">
+                      <div className="ml-[22px] mt-1.5 space-y-0.5 border-l border-red-800/18 py-1 pl-5 pr-1">
                         {INVENTORY_SUB_ITEMS.map((subItem) => {
                           const isSubActive = activeInventoryTab === subItem.tab;
 
@@ -179,13 +179,20 @@ export function AppSidebar() {
                               href={subItem.href}
                               onClick={() => setIsMobileOpen(false)}
                               className={[
-                                "flex h-8 items-center rounded-[10px] px-3 text-xs font-semibold transition",
+                                "group relative flex h-8 items-center rounded-[9px] px-3 text-[13px] font-semibold transition",
                                 isSubActive
-                                  ? "bg-red-50 text-red-800 shadow-sm shadow-red-950/5 hover:text-red-800"
-                                  : "text-zinc-500 hover:bg-red-50/80 hover:text-red-900",
+                                  ? "bg-red-50/85 text-red-800"
+                                  : "text-zinc-500 hover:bg-red-50/55 hover:text-red-900",
                               ].join(" ")}
                             >
-                              {subItem.label}
+                              <span
+                                className={[
+                                  "absolute -left-[25px] h-1.5 w-1.5 rounded-full border border-[#fffdfc] transition",
+                                  isSubActive ? "bg-red-800" : "bg-red-800/24 group-hover:bg-red-800/50",
+                                ].join(" ")}
+                                aria-hidden="true"
+                              />
+                              <span className="truncate">{subItem.label}</span>
                             </Link>
                           );
                         })}

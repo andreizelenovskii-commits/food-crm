@@ -10,6 +10,7 @@ import {
   type WriteoffActSummary,
 } from "@/modules/inventory/inventory.types";
 import {
+  INGREDIENT_TECH_CARD_CATEGORY,
   TECH_CARD_CATEGORIES,
   type TechCardCategory,
   type TechCardItem,
@@ -32,6 +33,7 @@ export type InventoryPageSearchParams = {
   tab?: string;
   category?: string;
   recipeCategory?: string;
+  recipeKind?: string;
   draft?: string;
 };
 
@@ -84,6 +86,10 @@ function resolveCategory<TCategory extends string>(
     : "";
 }
 
+function resolveRecipeKind(value?: string) {
+  return value === "price" || value === "ingredient" ? value : "";
+}
+
 export function buildInventoryPageViewModel({
   products,
   techCards,
@@ -93,6 +99,7 @@ export function buildInventoryPageViewModel({
   const normalizedQuery = rawQuery.toLowerCase();
   const selectedCategory = resolveCategory(searchParams?.category, PRODUCT_CATEGORIES);
   const selectedRecipeCategory = resolveCategory(searchParams?.recipeCategory, TECH_CARD_CATEGORIES);
+  const selectedRecipeKind = resolveRecipeKind(searchParams?.recipeKind);
   const activeTab = resolveActiveTab(searchParams?.tab);
   const totalStock = products.reduce((sum, product) => sum + product.stockQuantity, 0);
   const totalValueCents = products.reduce(
@@ -125,9 +132,16 @@ export function buildInventoryPageViewModel({
     .sort((left, right) => left.stockQuantity - right.stockQuantity);
   const lowStockCount = lowStockProducts.length;
   const zeroStockCount = products.filter((product) => product.stockQuantity === 0).length;
-  const filteredTechCards = techCards.filter(
-    (card) => !selectedRecipeCategory || card.category === selectedRecipeCategory,
-  );
+  const filteredTechCards = techCards.filter((card) => {
+    const matchesCategory = !selectedRecipeCategory || card.category === selectedRecipeCategory;
+    const matchesKind =
+      !selectedRecipeKind ||
+      (selectedRecipeKind === "ingredient"
+        ? card.category === INGREDIENT_TECH_CARD_CATEGORY
+        : card.category !== INGREDIENT_TECH_CARD_CATEGORY);
+
+    return matchesCategory && matchesKind;
+  });
   const recipeCategorySummaries = buildCategorySummaries<TechCardCategory, TechCardItem>(
     TECH_CARD_CATEGORIES,
     techCards,
@@ -138,6 +152,7 @@ export function buildInventoryPageViewModel({
     rawQuery,
     selectedCategory,
     selectedRecipeCategory,
+    selectedRecipeKind,
     totalStock,
     totalValueCents,
     filteredProducts,

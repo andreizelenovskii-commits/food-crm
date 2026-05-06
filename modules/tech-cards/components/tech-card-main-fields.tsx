@@ -1,6 +1,10 @@
 "use client";
 
+import { useState } from "react";
+import type { TechCardFormKind } from "@/modules/tech-cards/components/tech-card-form";
 import {
+  INGREDIENT_TECH_CARD_CATEGORY,
+  PRICE_TECH_CARD_CATEGORIES,
   TECH_CARD_CATEGORIES,
   type TechCardCategory,
   TECH_CARD_PIZZA_SIZES,
@@ -21,6 +25,7 @@ export function TechCardMainFields({
   onPizzaSizeChange,
   onOutputQuantityChange,
   onOutputUnitChange,
+  cardKind,
 }: {
   name: string;
   category: TechCardCategory | "";
@@ -32,86 +37,70 @@ export function TechCardMainFields({
   onPizzaSizeChange: (value: TechCardPizzaSize | "") => void;
   onOutputQuantityChange: (value: string) => void;
   onOutputUnitChange: (value: OutputUnit) => void;
+  cardKind: TechCardFormKind;
 }) {
+  const categoryOptions = cardKind === "ingredient" ? TECH_CARD_CATEGORIES : PRICE_TECH_CARD_CATEGORIES;
+
   return (
     <>
       <label className="block space-y-2">
-        <span className="text-sm font-medium text-zinc-700">Название техкарты</span>
+        <span className="text-xs font-semibold text-zinc-700">Название техкарты</span>
         <input
           name="name"
           type="text"
           value={name}
           onChange={(event) => onNameChange(event.target.value)}
           placeholder="Например: Пицца Маргарита 30 см"
-          className="w-full rounded-[12px] border border-zinc-300 px-5 py-3.5 text-[15px] text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
+          className="h-11 w-full rounded-[14px] border border-red-950/10 bg-white/90 px-4 text-sm font-medium text-zinc-950 shadow-sm shadow-red-950/5 outline-none transition placeholder:text-zinc-400 focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
           required
         />
       </label>
 
       <label className="block space-y-2">
-        <span className="text-sm font-medium text-zinc-700">Категория техкарты</span>
-        <div className="relative">
-          <select
+        <span className="text-xs font-semibold text-zinc-700">Категория техкарты</span>
+        {cardKind === "ingredient" ? (
+          <div className="flex h-11 items-center justify-between rounded-[14px] border border-red-200 bg-red-50/60 px-4 text-sm font-medium text-zinc-950 shadow-sm shadow-red-950/5">
+            <span>{INGREDIENT_TECH_CARD_CATEGORY}</span>
+            <span className="rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-red-800">
+              ингредиент
+            </span>
+            <input type="hidden" name="category" value={INGREDIENT_TECH_CARD_CATEGORY} />
+          </div>
+        ) : (
+          <TechCardSelect
             name="category"
-            value={category}
-            onChange={(event) => {
-              const nextCategory = event.target.value as TechCardCategory | "";
+            value={category === INGREDIENT_TECH_CARD_CATEGORY ? "" : category}
+            placeholder="Выбери категорию техкарты"
+            options={categoryOptions}
+            onChange={(nextCategory) => {
               onCategoryChange(nextCategory);
 
               if (nextCategory !== "Пиццы") {
                 onPizzaSizeChange("");
               }
             }}
-            className={`w-full appearance-none rounded-[12px] border px-5 py-3.5 pr-12 text-[15px] outline-none transition focus:ring-2 ${
-              category
-                ? "border-red-200 bg-red-50/60 text-zinc-950 focus:border-red-400 focus:ring-red-500/10"
-                : "border-zinc-300 bg-white text-zinc-500 focus:border-zinc-500 focus:ring-zinc-950/5"
-            }`}
-            required
-          >
-            <option value="">Выбери категорию техкарты</option>
-            {TECH_CARD_CATEGORIES.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
-          <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm text-red-800">▾</span>
-        </div>
+          />
+        )}
       </label>
 
       {category === "Пиццы" ? (
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-zinc-700">Размер пиццы</span>
-          <div className="relative">
-            <select
-              name="pizzaSize"
-              value={pizzaSize}
-              onChange={(event) => onPizzaSizeChange(event.target.value as TechCardPizzaSize | "")}
-              className={`w-full appearance-none rounded-[12px] border px-5 py-3.5 pr-12 text-[15px] outline-none transition focus:ring-2 ${
-                pizzaSize
-                  ? "border-red-200 bg-red-50/60 text-zinc-950 focus:border-red-400 focus:ring-red-500/10"
-                  : "border-zinc-300 bg-white text-zinc-500 focus:border-zinc-500 focus:ring-zinc-950/5"
-              }`}
-              required
-            >
-              <option value="">Выбери размер пиццы</option>
-              {TECH_CARD_PIZZA_SIZES.map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-            <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm text-red-800">▾</span>
-          </div>
+          <span className="text-xs font-semibold text-zinc-700">Размер пиццы</span>
+          <TechCardSelect
+            name="pizzaSize"
+            value={pizzaSize}
+            placeholder="Выбери размер пиццы"
+            options={TECH_CARD_PIZZA_SIZES}
+            onChange={onPizzaSizeChange}
+          />
         </label>
       ) : (
         <input type="hidden" name="pizzaSize" value="" />
       )}
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.9fr)]">
+      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(180px,0.72fr)]">
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-zinc-700">Выход</span>
+          <span className="text-xs font-semibold text-zinc-700">Выход</span>
           <input
             name="outputQuantity"
             type="number"
@@ -120,13 +109,13 @@ export function TechCardMainFields({
             value={outputQuantity}
             onChange={(event) => onOutputQuantityChange(event.target.value)}
             placeholder="1"
-            className="w-full rounded-[12px] border border-zinc-300 px-5 py-3.5 text-[15px] text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
+            className="h-11 w-full rounded-[14px] border border-red-950/10 bg-white/90 px-4 text-sm font-medium text-zinc-950 shadow-sm shadow-red-950/5 outline-none transition placeholder:text-zinc-400 focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
             required
           />
         </label>
 
-        <div className="space-y-3">
-          <span className="text-sm font-medium text-zinc-700">Ед. выхода</span>
+        <div className="space-y-2">
+          <span className="text-xs font-semibold text-zinc-700">Ед. выхода</span>
           <div className="grid grid-cols-2 gap-2">
             {OUTPUT_UNITS.map((unit) => {
               const isSelected = outputUnit === unit;
@@ -136,10 +125,10 @@ export function TechCardMainFields({
                   key={unit}
                   type="button"
                   onClick={() => onOutputUnitChange(unit)}
-                  className={`rounded-[12px] border px-4 py-3.5 text-sm font-medium transition ${
+                  className={`h-11 rounded-[14px] border px-4 text-sm font-semibold transition ${
                     isSelected
-                      ? "border-zinc-950 bg-zinc-950 text-white shadow-sm"
-                      : "border-zinc-300 bg-white text-zinc-950 hover:border-zinc-500 hover:bg-zinc-50"
+                      ? "border-red-800 bg-red-800 text-white shadow-sm shadow-red-950/15"
+                      : "border-red-950/10 bg-white/90 text-zinc-700 hover:border-red-200 hover:bg-red-50/60 hover:text-red-900"
                   }`}
                 >
                   {unit}
@@ -151,5 +140,96 @@ export function TechCardMainFields({
         </div>
       </div>
     </>
+  );
+}
+
+function TechCardSelect<TValue extends string>({
+  name,
+  value,
+  placeholder,
+  options,
+  onChange,
+}: {
+  name: string;
+  value: TValue | "";
+  placeholder: string;
+  options: readonly TValue[];
+  onChange: (value: TValue | "") => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div
+      className="relative"
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+          setIsOpen(false);
+        }
+      }}
+    >
+      <input type="hidden" name={name} value={value} />
+      <button
+        type="button"
+        onClick={() => setIsOpen((current) => !current)}
+        className={`flex h-11 w-full items-center justify-between gap-3 rounded-[14px] border px-4 text-left text-sm font-medium shadow-sm shadow-red-950/5 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-800/10 ${
+          value
+            ? "border-red-200 bg-red-50/60 text-zinc-950"
+            : "border-red-950/10 bg-white/90 text-zinc-400"
+        }`}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+      >
+        <span className="truncate">{value || placeholder}</span>
+        <span className={`shrink-0 text-red-800 transition-transform ${isOpen ? "rotate-180" : ""}`} aria-hidden="true">
+          ▾
+        </span>
+      </button>
+
+      {isOpen ? (
+        <div
+          role="listbox"
+          className="absolute left-0 right-0 top-[calc(100%+0.4rem)] z-40 max-h-64 overflow-y-auto rounded-[16px] border border-red-950/10 bg-white/96 p-1.5 shadow-[0_18px_50px_rgba(127,29,29,0.16)] backdrop-blur-2xl"
+        >
+          <button
+            type="button"
+            role="option"
+            aria-selected={!value}
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => {
+              onChange("");
+              setIsOpen(false);
+            }}
+            className={`flex h-9 w-full items-center rounded-[11px] px-3 text-left text-sm font-semibold transition ${
+              !value ? "bg-red-800 text-white" : "text-zinc-500 hover:bg-red-50 hover:text-red-900"
+            }`}
+          >
+            {placeholder}
+          </button>
+          {options.map((option) => {
+            const isSelected = value === option;
+
+            return (
+              <button
+                key={option}
+                type="button"
+                role="option"
+                aria-selected={isSelected}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => {
+                  onChange(option);
+                  setIsOpen(false);
+                }}
+                className={`mt-0.5 flex h-9 w-full items-center justify-between gap-3 rounded-[11px] px-3 text-left text-sm font-semibold transition ${
+                  isSelected ? "bg-red-800 text-white" : "text-zinc-700 hover:bg-red-50 hover:text-red-900"
+                }`}
+              >
+                <span>{option}</span>
+                {isSelected ? <span aria-hidden="true">✓</span> : null}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
   );
 }

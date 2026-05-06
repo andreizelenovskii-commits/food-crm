@@ -13,24 +13,29 @@ import {
   updateTechCardAction,
 } from "@/modules/tech-cards/tech-cards.actions";
 import {
+  INGREDIENT_TECH_CARD_CATEGORY,
   type TechCardItem,
   type TechCardProductOption,
 } from "@/modules/tech-cards/tech-cards.types";
+
+export type TechCardFormKind = "price" | "ingredient";
 
 export function TechCardForm({
   products,
   clearDraft = false,
   initialTechCard,
+  cardKind = initialTechCard?.category === INGREDIENT_TECH_CARD_CATEGORY ? "ingredient" : "price",
 }: {
   products: TechCardProductOption[];
   clearDraft?: boolean;
   initialTechCard?: TechCardItem;
+  cardKind?: TechCardFormKind;
 }) {
   const initialState: TechCardFormState = {
     errorMessage: null,
     values: {
       name: initialTechCard?.name ?? "",
-      category: initialTechCard?.category ?? "",
+      category: initialTechCard?.category ?? (cardKind === "ingredient" ? INGREDIENT_TECH_CARD_CATEGORY : ""),
       pizzaSize: initialTechCard?.pizzaSize ?? "",
       outputQuantity: initialTechCard ? String(initialTechCard.outputQuantity) : "",
       outputUnit: initialTechCard?.outputUnit ?? "шт",
@@ -56,6 +61,7 @@ export function TechCardForm({
       isPending={isPending}
       clearDraft={clearDraft}
       initialTechCard={initialTechCard}
+      cardKind={cardKind}
     />
   );
 }
@@ -67,6 +73,7 @@ function TechCardFormContent({
   isPending,
   clearDraft,
   initialTechCard,
+  cardKind,
 }: {
   products: TechCardProductOption[];
   state: TechCardFormState;
@@ -74,20 +81,22 @@ function TechCardFormContent({
   isPending: boolean;
   clearDraft: boolean;
   initialTechCard?: TechCardItem;
+  cardKind: TechCardFormKind;
 }) {
   const isEditMode = Boolean(initialTechCard);
-  const form = useTechCardFormState({ products, state, clearDraft, isEditMode });
+  const form = useTechCardFormState({ products, state, clearDraft, isEditMode, cardKind });
 
   return (
     <div>
       <form
         action={formAction}
-        className="space-y-5 rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5 xl:p-5"
+        className="space-y-4 rounded-[22px] border border-white/70 bg-white/76 p-4 shadow-[0_18px_60px_rgba(127,29,29,0.08)] backdrop-blur-2xl sm:p-5"
       >
         {initialTechCard ? <input type="hidden" name="techCardId" value={initialTechCard.id} /> : null}
         <TechCardFormHeader
           isEditMode={Boolean(initialTechCard)}
           errorMessage={state.errorMessage}
+          cardKind={cardKind}
         />
 
         <TechCardMainFields
@@ -101,6 +110,7 @@ function TechCardFormContent({
           onPizzaSizeChange={form.setSelectedPizzaSize}
           onOutputQuantityChange={form.setOutputQuantity}
           onOutputUnitChange={form.setSelectedUnit}
+          cardKind={cardKind}
         />
         <TechCardIngredientsSection
           selectedIngredients={form.selectedIngredients}

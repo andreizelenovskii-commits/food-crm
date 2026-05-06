@@ -11,9 +11,11 @@ import {
   readTechCardFormDraft,
   readTechCardIngredientsDraft,
 } from "@/modules/tech-cards/components/tech-card-draft";
+import type { TechCardFormKind } from "@/modules/tech-cards/components/tech-card-form";
 import type { OutputUnit } from "@/modules/tech-cards/components/tech-card-main-fields";
 import type { TechCardFormState } from "@/modules/tech-cards/tech-cards.actions";
 import {
+  INGREDIENT_TECH_CARD_CATEGORY,
   TECH_CARD_CATEGORIES,
   TECH_CARD_PIZZA_SIZES,
   type TechCardCategory,
@@ -26,16 +28,20 @@ export function useTechCardFormState({
   state,
   clearDraft,
   isEditMode,
+  cardKind,
 }: {
   products: TechCardProductOption[];
   state: TechCardFormState;
   clearDraft: boolean;
   isEditMode: boolean;
+  cardKind: TechCardFormKind;
 }) {
   const router = useRouter();
   const [name, setName] = useState(state.values.name);
   const [selectedTechCardCategory, setSelectedTechCardCategory] = useState<TechCardCategory | "">(
-    TECH_CARD_CATEGORIES.includes(state.values.category as TechCardCategory)
+    cardKind === "ingredient"
+      ? INGREDIENT_TECH_CARD_CATEGORY
+      : TECH_CARD_CATEGORIES.includes(state.values.category as TechCardCategory)
       ? (state.values.category as TechCardCategory)
       : "",
   );
@@ -153,7 +159,7 @@ export function useTechCardFormState({
 
     const frameId = window.requestAnimationFrame(() => {
       setName(draft.name);
-      setSelectedTechCardCategory(draft.category);
+      setSelectedTechCardCategory(cardKind === "ingredient" ? INGREDIENT_TECH_CARD_CATEGORY : draft.category);
       setSelectedPizzaSize(draft.pizzaSize);
       setOutputQuantity(draft.outputQuantity);
       setSelectedUnit(draft.outputUnit);
@@ -163,6 +169,7 @@ export function useTechCardFormState({
     return () => window.cancelAnimationFrame(frameId);
   }, [
     clearDraft,
+    cardKind,
     isEditMode,
     state.values.name,
     state.values.category,
@@ -192,14 +199,7 @@ export function useTechCardFormState({
       return;
     }
 
-    const draft: TechCardDraft = {
-      name,
-      category: selectedTechCardCategory,
-      pizzaSize: selectedPizzaSize,
-      outputQuantity,
-      outputUnit: selectedUnit,
-      description,
-    };
+    const draft: TechCardDraft = { name, category: cardKind === "ingredient" ? INGREDIENT_TECH_CARD_CATEGORY : selectedTechCardCategory, pizzaSize: selectedPizzaSize, outputQuantity, outputUnit: selectedUnit, description };
     const hasDraft =
       draft.name ||
       draft.category ||
@@ -214,7 +214,7 @@ export function useTechCardFormState({
     }
 
     window.localStorage.setItem(TECH_CARD_FORM_DRAFT_KEY, JSON.stringify(draft));
-  }, [description, isEditMode, name, outputQuantity, selectedPizzaSize, selectedTechCardCategory, selectedUnit]);
+  }, [cardKind, description, isEditMode, name, outputQuantity, selectedPizzaSize, selectedTechCardCategory, selectedUnit]);
 
   const handleAddIngredient = (productId: string) => {
     setSelectedIngredients((current) => {

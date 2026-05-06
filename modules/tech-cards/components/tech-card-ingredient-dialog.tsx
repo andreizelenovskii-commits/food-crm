@@ -32,27 +32,27 @@ export function TechCardIngredientDialog({
   onClose: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-zinc-950/45 px-4 py-4 sm:py-5" onClick={onClose}>
+    <div className="fixed inset-0 z-90 flex items-center justify-center bg-zinc-950/35 px-4 py-4 backdrop-blur-sm sm:py-5" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Выбор ингредиентов для технологической карты"
-        className="flex max-h-[calc(100vh-3rem)] w-full max-w-4xl flex-col overflow-hidden rounded-[14px] border border-zinc-200 bg-white shadow-2xl shadow-zinc-950/25"
+        className="flex max-h-[calc(100vh-3rem)] w-full max-w-4xl flex-col overflow-hidden rounded-[24px] border border-white/70 bg-[linear-gradient(135deg,#fffdfc_0%,#fff3f2_48%,#f7eeee_100%)] shadow-[0_24px_80px_rgba(127,29,29,0.18)]"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="border-b border-zinc-200 px-4 py-5 sm:px-5">
+        <div className="border-b border-red-950/10 bg-white/68 px-4 py-4 backdrop-blur-2xl sm:px-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">Состав техкарты</p>
-              <h3 className="mt-2 text-[1.45rem] font-semibold tracking-[-0.02em] text-zinc-950">Выбор ингредиентов</h3>
-              <p className="mt-2 max-w-2xl text-[15px] leading-7 text-zinc-600">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">Состав техкарты</p>
+              <h3 className="mt-1 text-lg font-semibold text-zinc-950">Выбор ингредиентов</h3>
+              <p className="mt-1 max-w-2xl text-xs leading-5 text-zinc-600">
                 Отмечай несколько позиций подряд и добавляй их в техкарту одним действием.
               </p>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+              className="inline-flex h-9 items-center rounded-full border border-red-100 bg-white/90 px-4 text-xs font-semibold text-red-800 shadow-sm shadow-red-950/5 transition hover:border-red-800 hover:bg-red-800 hover:text-white"
             >
               Закрыть
             </button>
@@ -63,19 +63,18 @@ export function TechCardIngredientDialog({
             value={ingredientQuery}
             onChange={(event) => onQueryChange(event.target.value)}
             placeholder="Найти ингредиент по названию или единице"
-            className="mt-4 w-full rounded-[22px] border border-zinc-300 px-4 py-3 text-[15px] text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
+            className="mt-4 h-11 w-full rounded-[14px] border border-red-950/10 bg-white/90 px-4 text-sm font-medium text-zinc-950 shadow-sm shadow-red-950/5 outline-none transition placeholder:text-zinc-400 focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
           />
 
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-4 flex gap-2 overflow-x-auto rounded-[16px] border border-red-950/10 bg-white/62 p-1.5">
             <button
               type="button"
               onClick={() => onCategoryChange("")}
-              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+              className={`h-8 shrink-0 rounded-[11px] px-3 text-xs font-semibold transition ${
                 !selectedCategory
-                  ? "bg-zinc-950 text-white"
-                  : "border border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 hover:text-zinc-950"
+                  ? "bg-red-800 text-white shadow-sm shadow-red-950/15"
+                  : "text-zinc-500 hover:bg-red-50 hover:text-red-900"
               }`}
-              style={!selectedCategory ? { color: "#ffffff" } : undefined}
             >
               Все категории
             </button>
@@ -87,12 +86,11 @@ export function TechCardIngredientDialog({
                   key={category}
                   type="button"
                   onClick={() => onCategoryChange(category)}
-                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                  className={`h-8 shrink-0 rounded-[11px] px-3 text-xs font-semibold transition ${
                     isActive
-                      ? "bg-red-800 text-white"
-                      : "border border-red-100 bg-red-50/70 text-red-800 hover:border-red-200 hover:bg-red-100"
+                      ? "bg-red-800 text-white shadow-sm shadow-red-950/15"
+                      : "text-zinc-500 hover:bg-red-50 hover:text-red-900"
                   }`}
-                  style={isActive ? { color: "#ffffff" } : undefined}
                 >
                   {category}
                 </button>
@@ -101,10 +99,10 @@ export function TechCardIngredientDialog({
           </div>
         </div>
 
-        <div className="overflow-y-auto px-4 py-5 sm:px-5">
+        <div className="overflow-y-auto px-4 py-4 sm:px-5">
           <div className="grid gap-3">
             {filteredProducts.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 px-4 py-5 text-sm text-zinc-500">
+              <div className="rounded-[18px] border border-dashed border-red-950/14 bg-white/70 px-4 py-5 text-sm text-zinc-500">
                 Ничего не найдено. Попробуй другой запрос.
               </div>
             ) : (
@@ -128,16 +126,16 @@ export function TechCardIngredientDialog({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-200 px-4 py-4 sm:px-5">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-red-950/10 bg-white/72 px-4 py-4 sm:px-5">
           <p className="text-sm text-zinc-600">
-            Отмечено для добавления: <span className="font-medium text-zinc-950">{pendingIngredientIds.length}</span>
+            Отмечено для добавления: <span className="font-semibold text-zinc-950">{pendingIngredientIds.length}</span>
           </p>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={onResetPending}
               disabled={pendingIngredientIds.length === 0}
-              className="rounded-2xl border border-zinc-300 px-4 py-3 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:text-zinc-400"
+              className="h-10 rounded-full border border-red-100 bg-white px-4 text-xs font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               Сбросить выбор
             </button>
@@ -145,7 +143,7 @@ export function TechCardIngredientDialog({
               type="button"
               onClick={onAddPending}
               disabled={pendingIngredientIds.length === 0}
-              className="rounded-2xl bg-zinc-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-300"
+              className="h-10 rounded-full bg-red-800 px-4 text-xs font-semibold text-white shadow-sm shadow-red-950/15 transition hover:bg-red-900 disabled:cursor-not-allowed disabled:bg-red-300"
             >
               Добавить выбранные
             </button>
@@ -169,8 +167,8 @@ function IngredientPickerRow({
 }) {
   return (
     <div
-      className={`flex flex-wrap items-center justify-between gap-3 rounded-[12px] border p-4 transition ${
-        isPendingSelected ? "border-red-200 bg-red-50/70" : "border-zinc-200 bg-zinc-50"
+      className={`flex flex-wrap items-center justify-between gap-3 rounded-[16px] border p-3 shadow-sm shadow-red-950/5 transition ${
+        isPendingSelected ? "border-red-200 bg-red-50/80" : "border-red-950/10 bg-white/84 hover:border-red-100"
       }`}
     >
       <label className="flex min-w-0 flex-1 items-start gap-3">
@@ -179,25 +177,24 @@ function IngredientPickerRow({
           checked={isSelected || isPendingSelected}
           disabled={isSelected}
           onChange={onToggle}
-          className="mt-1 h-4 w-4 rounded border-zinc-300 text-red-700 focus:ring-red-500 disabled:cursor-not-allowed disabled:opacity-60"
+          className="mt-1 h-4 w-4 rounded border-red-200 text-red-700 focus:ring-red-500 disabled:cursor-not-allowed disabled:opacity-60"
         />
-        <div className="space-y-1">
-          <p className="text-[17px] font-semibold leading-6 tracking-[-0.02em] text-zinc-950">{product.name}</p>
-          <p className="text-[13px] leading-5 text-zinc-500">
+        <div className="space-y-0.5">
+          <p className="text-sm font-semibold leading-5 text-zinc-950">{product.name}</p>
+          <p className="text-xs leading-5 text-zinc-500">
             {product.category ? `Категория склада: ${product.category}` : "Категория склада не указана"}
           </p>
-          <p className="text-[13px] leading-5 text-zinc-400">Единица склада: {product.unit}</p>
+          <p className="text-xs leading-5 text-zinc-400">Единица склада: {product.unit}</p>
         </div>
       </label>
       <span
-        className={`rounded-full px-3 py-1 text-xs font-medium ${
+        className={`rounded-full px-3 py-1 text-xs font-semibold ${
           isSelected
-            ? "bg-zinc-200 text-zinc-600"
+            ? "bg-zinc-100 text-zinc-500 ring-1 ring-zinc-200"
             : isPendingSelected
               ? "bg-red-800 text-white"
-              : "bg-white text-zinc-500 ring-1 ring-zinc-200"
+              : "bg-white text-zinc-500 ring-1 ring-red-950/10"
         }`}
-        style={isPendingSelected ? { color: "#ffffff" } : undefined}
       >
         {isSelected ? "Уже в техкарте" : isPendingSelected ? "Выбрано" : "Можно выбрать"}
       </span>

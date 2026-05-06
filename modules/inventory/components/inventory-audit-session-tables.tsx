@@ -122,7 +122,7 @@ function getVarianceTone(value: number | null) {
     return "text-zinc-400";
   }
   if (value > 0) {
-    return "text-red-800";
+    return "text-emerald-700";
   }
   if (value < 0) {
     return "text-red-700";

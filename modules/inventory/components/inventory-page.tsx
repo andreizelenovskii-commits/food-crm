@@ -38,10 +38,7 @@ export function InventoryPage({
   const {
     activeTab,
     rawQuery,
-    selectedRecipeCategory,
     lowStockProducts,
-    filteredTechCards,
-    recipeCategorySummaries,
     clearRecipeDraft,
   } = buildInventoryPageViewModel({
     products,
@@ -131,12 +128,8 @@ export function InventoryPage({
 
           {activeTab === "recipes" ? (
             <InventoryRecipesTab
-              products={products}
               techCards={techCards}
               techCardProducts={techCardProducts}
-              filteredTechCards={filteredTechCards}
-              recipeCategorySummaries={recipeCategorySummaries}
-              selectedRecipeCategory={selectedRecipeCategory}
               clearRecipeDraft={clearRecipeDraft}
               canManageInventory={canManageInventory}
             />

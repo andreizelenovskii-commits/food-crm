@@ -157,6 +157,7 @@ function InventoryCompositionRow({
   const actualQuantity = draftValue === "" ? item.actualQuantity : parseQuantity(draftValue);
   const varianceQuantity = actualQuantity === null ? null : actualQuantity - item.stockQuantity;
   const varianceValueCents = varianceQuantity === null ? null : varianceQuantity * item.priceCents;
+  const varianceTone = getVarianceTone(varianceQuantity);
 
   return (
     <div className="grid gap-3 rounded-[16px] border border-red-950/10 bg-white/84 px-3 py-2.5 sm:grid-cols-[minmax(0,1fr)_repeat(5,auto)] sm:items-center">
@@ -185,21 +186,44 @@ function InventoryCompositionRow({
       )}
       <CompositionValue
         label="Разница"
+        valueClassName={varianceTone}
         value={varianceQuantity === null ? "—" : `${varianceQuantity > 0 ? "+" : ""}${formatInventoryQuantity(varianceQuantity)} ${item.productUnit}`}
       />
       <CompositionValue
         label="В рублях"
+        valueClassName={varianceTone}
         value={varianceValueCents === null ? "—" : `${varianceValueCents > 0 ? "+" : ""}${formatMoney(varianceValueCents)}`}
       />
     </div>
   );
 }
 
-function CompositionValue({ label, value }: { label: string; value: string }) {
+function CompositionValue({
+  label,
+  value,
+  valueClassName = "text-zinc-950",
+}: {
+  label: string;
+  value: string;
+  valueClassName?: string;
+}) {
   return (
     <div className="min-w-20 rounded-[14px] border border-red-950/10 bg-white/80 px-3 py-2 text-right">
       <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-red-800/50">{label}</p>
-      <p className="mt-0.5 text-xs font-semibold text-zinc-950">{value}</p>
+      <p className={`mt-0.5 text-xs font-semibold ${valueClassName}`}>{value}</p>
     </div>
   );
+}
+
+function getVarianceTone(value: number | null) {
+  if (value === null) {
+    return "text-zinc-400";
+  }
+  if (value > 0) {
+    return "text-emerald-700";
+  }
+  if (value < 0) {
+    return "text-red-700";
+  }
+  return "text-zinc-600";
 }

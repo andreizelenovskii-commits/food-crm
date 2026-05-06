@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BodyScrollLockObserver } from "@/components/ui/body-scroll-lock-observer";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,6 +15,7 @@ export default function RootLayout({
   return (
     <html lang="ru" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
+        <BodyScrollLockObserver />
         {children}
       </body>
     </html>

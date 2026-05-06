@@ -17,29 +17,29 @@ export function TechCardIngredientsSection({
   onRemove: (productId: string) => void;
 }) {
   return (
-    <section className="space-y-5 rounded-[30px] border border-zinc-200 bg-zinc-50/80 p-5">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+    <section className="space-y-3 rounded-[18px] border border-red-950/10 bg-red-50/35 p-3 sm:p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
-          <h3 className="text-[1.45rem] font-semibold tracking-[-0.02em] text-zinc-950">Ингредиенты</h3>
-          <p className="max-w-2xl text-[15px] leading-7 text-zinc-600">
+          <h3 className="text-base font-semibold text-zinc-950">Ингредиенты</h3>
+          <p className="text-xs leading-5 text-zinc-600">
             Добавь состав техкарты и укажи количество списания для каждой позиции.
           </p>
         </div>
         <button
           type="button"
           onClick={onOpenDialog}
-          className="rounded-[22px] bg-zinc-950 px-5 py-3 text-sm font-medium text-white transition hover:bg-zinc-800 lg:shrink-0"
+          className="inline-flex h-9 items-center justify-center rounded-full border border-red-100 bg-white px-4 text-xs font-semibold text-red-800 shadow-sm shadow-red-950/5 transition hover:border-red-800 hover:bg-red-800 hover:text-white sm:shrink-0"
         >
           Выбрать ингредиенты
         </button>
       </div>
 
       {selectedIngredients.length === 0 ? (
-        <div className="rounded-[12px] border border-dashed border-zinc-300 bg-white px-5 py-5 text-[15px] leading-7 text-zinc-500">
+        <div className="rounded-[14px] border border-dashed border-red-950/14 bg-white/75 px-4 py-4 text-sm leading-6 text-zinc-500">
           Пока ингредиенты не выбраны. Открой диалог и добавь позиции со склада.
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-2">
           {selectedIngredients.map((ingredient) => {
             const product = productsById.get(ingredient.productId);
 
@@ -50,28 +50,28 @@ export function TechCardIngredientsSection({
             return (
               <div
                 key={ingredient.productId}
-                className="grid gap-4 rounded-[12px] border border-zinc-200 bg-white p-4 lg:grid-cols-[minmax(180px,0.82fr)_minmax(0,1.18fr)] lg:items-center"
+                className="grid gap-3 rounded-[14px] border border-red-950/10 bg-white/86 p-3 shadow-sm shadow-red-950/5 lg:grid-cols-[minmax(0,1fr)_minmax(180px,0.7fr)] lg:items-center"
               >
-                <div className="space-y-2">
-                  <p className="text-[1.35rem] font-semibold leading-[1.1] tracking-[-0.02em] text-zinc-950">
+                <div className="space-y-1.5">
+                  <p className="text-sm font-semibold leading-5 text-zinc-950">
                     {product.name}
                   </p>
-                  <p className="text-[13px] leading-5 text-zinc-500">
+                  <p className="text-xs leading-5 text-zinc-500">
                     {product.category ? `Категория склада: ${product.category}` : "Категория склада не указана"}
                   </p>
-                  <div className="flex flex-wrap gap-2 text-[13px]">
-                    <span className="rounded-full bg-zinc-100 px-3 py-1 text-zinc-600 ring-1 ring-zinc-200">
+                  <div className="flex flex-wrap gap-2 text-[11px]">
+                    <span className="rounded-full bg-zinc-50 px-2.5 py-1 font-semibold text-zinc-500 ring-1 ring-zinc-200">
                       Склад: {product.unit}
                     </span>
-                    <span className="rounded-full bg-red-50 px-3 py-1 font-medium text-red-800 ring-1 ring-red-200">
+                    <span className="rounded-full bg-red-50 px-2.5 py-1 font-semibold text-red-800 ring-1 ring-red-100">
                       Техкарта: {ingredient.unit}
                     </span>
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <label className="block space-y-3">
-                    <span className="text-[14px] font-semibold text-zinc-800">Количество</span>
+                <div className="space-y-2">
+                  <label className="block space-y-2">
+                    <span className="text-xs font-semibold text-zinc-700">Количество</span>
                     <div className="relative">
                       <input
                         type="number"
@@ -79,10 +79,10 @@ export function TechCardIngredientsSection({
                         step={ingredient.unit === "кг" ? "0.001" : "1"}
                         value={ingredient.quantity}
                         onChange={(event) => onQuantityChange(ingredient.productId, event.target.value)}
-                        className="w-full rounded-[20px] border border-zinc-300 px-5 py-3 pr-16 text-[1rem] font-medium text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
+                        className="h-10 w-full rounded-[14px] border border-red-950/10 bg-white/90 px-3 pr-12 text-sm font-semibold text-zinc-950 shadow-sm shadow-red-950/5 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
                         required
                       />
-                      <span className="pointer-events-none absolute inset-y-0 right-5 flex items-center text-sm font-semibold uppercase tracking-[0.08em] text-zinc-500">
+                      <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-xs font-semibold uppercase tracking-[0.08em] text-zinc-500">
                         {ingredient.unit}
                       </span>
                     </div>
@@ -92,7 +92,7 @@ export function TechCardIngredientsSection({
                     <button
                       type="button"
                       onClick={() => onRemove(ingredient.productId)}
-                      className="w-full rounded-[20px] border border-red-200 px-4 py-2.5 text-sm font-medium text-red-700 transition hover:border-red-200 hover:bg-red-50 sm:max-w-[200px]"
+                      className="h-9 w-full rounded-full border border-red-100 bg-white/90 px-4 text-xs font-semibold text-red-700 transition hover:border-red-800 hover:bg-red-800 hover:text-white sm:max-w-[160px]"
                     >
                       Убрать
                     </button>

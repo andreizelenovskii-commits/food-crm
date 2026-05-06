@@ -99,3 +99,26 @@ export async function updateTechCardAction(
   window.location.assign("/dashboard/inventory?tab=recipes");
   return { errorMessage: null, values: getTechCardFormValues(formData) };
 }
+
+export async function deleteTechCardAction(formData: FormData): Promise<{ errorMessage: string | null }> {
+  const techCardId = Number(String(formData.get("techCardId") ?? "").trim());
+
+  if (!Number.isInteger(techCardId) || techCardId <= 0) {
+    return { errorMessage: "Технологическая карта не найдена" };
+  }
+
+  try {
+    await browserBackendJson(`/api/v1/tech-cards/${techCardId}`, {
+      method: "DELETE",
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      return { errorMessage: error.message };
+    }
+
+    throw error;
+  }
+
+  window.location.assign("/dashboard/inventory?tab=recipes");
+  return { errorMessage: null };
+}
