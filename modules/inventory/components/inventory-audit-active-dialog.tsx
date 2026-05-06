@@ -4,10 +4,8 @@ import {
   AuditDialogHeader,
   AuditEmptyState,
   AuditMessage,
-  AuditStat,
   type InventoryFormAction,
 } from "@/modules/inventory/components/inventory-audit-common";
-import { ActiveSessionItemsTable } from "@/modules/inventory/components/inventory-audit-session-tables";
 import { formatDateTime } from "@/modules/inventory/components/inventory-panel-utils";
 import type { InventorySessionSummary } from "@/modules/inventory/inventory.types";
 
@@ -152,20 +150,14 @@ function ActiveSessionDetail({
       {saveSuccessMessage ? <AuditMessage>{saveSuccessMessage}</AuditMessage> : null}
       {closeErrorMessage ? <AuditMessage>{closeErrorMessage}</AuditMessage> : null}
       {closeSuccessMessage ? <AuditMessage>{closeSuccessMessage}</AuditMessage> : null}
-      <SessionHeader session={session} />
-      <form action={canManageInventory ? saveFormAction : undefined} className="space-y-3">
-        <input type="hidden" name="sessionId" value={session.id} />
-        <ActiveSessionItemsTable
-          items={session.items}
-          actualDrafts={actualDrafts}
-          onActualDraftChange={onActualDraftChange}
-        />
-        <div className="flex flex-wrap justify-end gap-2">
-          <button type="submit" disabled={!canManageInventory || isSavePending || isClosePending} className="inline-flex h-9 items-center rounded-full border border-red-100 bg-white/90 px-4 text-xs font-semibold text-red-800 shadow-sm shadow-red-950/5 transition hover:border-red-800 hover:bg-red-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-50">
-            {isSavePending ? "Сохраняем..." : "Сохранить факт"}
-          </button>
-        </div>
-      </form>
+      <SessionHeader
+        session={session}
+        canManageInventory={canManageInventory}
+        isSavePending={isSavePending}
+        saveFormAction={saveFormAction}
+        actualDrafts={actualDrafts}
+        onActualDraftChange={onActualDraftChange}
+      />
       <form action={canManageInventory ? closeFormAction : undefined} className="flex justify-end">
         <input type="hidden" name="sessionId" value={session.id} />
         {session.items.map((item) => (
@@ -182,25 +174,74 @@ function ActiveSessionDetail({
   );
 }
 
-function SessionHeader({ session }: { session: InventorySessionSummary }) {
+function SessionHeader({
+  session,
+  canManageInventory,
+  isSavePending,
+  saveFormAction,
+  actualDrafts,
+  onActualDraftChange,
+}: {
+  session: InventorySessionSummary;
+  canManageInventory: boolean;
+  isSavePending: boolean;
+  saveFormAction: InventoryFormAction;
+  actualDrafts: Record<number, string>;
+  onActualDraftChange: (itemId: number, value: string) => void;
+}) {
   return (
-    <div className="rounded-[22px] border border-white/70 bg-white/76 p-3 shadow-[0_18px_60px_rgba(127,29,29,0.10)] backdrop-blur-2xl sm:p-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">Инвентаризация #{session.id}</p>
-          <h4 className="mt-1 text-base font-semibold tracking-[-0.02em] text-zinc-950">{session.responsibleEmployeeName}</h4>
-          <p className="mt-1 text-xs text-zinc-500">{session.responsibleEmployeeRole} • {formatDateTime(session.createdAt)}</p>
-          {session.notes ? <p className="mt-1.5 text-xs leading-5 text-zinc-600">{session.notes}</p> : null}
+    <div className="rounded-[24px] border border-white/70 bg-white/76 p-3 shadow-[0_18px_60px_rgba(127,29,29,0.10)] backdrop-blur-2xl sm:p-4">
+      <div className="grid gap-3 2xl:grid-cols-[minmax(0,1fr)_auto] 2xl:items-center">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-red-800/65">Инвентаризация #{session.id}</p>
+            <span className="rounded-full bg-red-50 px-2.5 py-1 text-[10px] font-semibold text-red-800 ring-1 ring-red-100">
+              {session.notes ?? "Инвентаризация"}
+            </span>
+          </div>
+          <h4 className="mt-2 text-xl font-semibold tracking-[-0.03em] text-zinc-950">{session.responsibleEmployeeName}</h4>
+          <p className="mt-1 text-xs leading-5 text-zinc-500">
+            {session.responsibleEmployeeRole} • создана {formatDateTime(session.createdAt)}
+          </p>
         </div>
-        <div className="flex flex-col items-end gap-2">
-          <InventorySessionExportLink sessionId={session.id} variant="secondary" />
+
+        <div className="space-y-2 2xl:min-w-[620px]">
+          <div className="rounded-[18px] border border-red-950/10 bg-white/68 p-2 shadow-sm shadow-red-950/5">
+            <InventorySessionExportLink
+              session={session}
+              canManageInventory={canManageInventory}
+              isSavePending={isSavePending}
+              saveFormAction={saveFormAction}
+              actualDrafts={actualDrafts}
+              onActualDraftChange={onActualDraftChange}
+            />
+          </div>
           <div className="grid gap-2 sm:grid-cols-3">
-            <AuditStat label="Товаров" value={session.itemsCount} />
-            <AuditStat label="Категорий" value={session.categories.length} />
-            <AuditStat label="Статус" value={<span className="text-sm font-semibold text-amber-700">Открыта</span>} />
+            <SessionMetric label="Товаров" value={session.itemsCount} />
+            <SessionMetric label="Категорий" value={session.categories.length} />
+            <SessionMetric label="Статус" value="Открыта" tone="red" />
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function SessionMetric({
+  label,
+  value,
+  tone = "default",
+}: {
+  label: string;
+  value: React.ReactNode;
+  tone?: "default" | "red";
+}) {
+  return (
+    <div className="rounded-[18px] border border-red-950/10 bg-white/78 px-3 py-2.5 shadow-sm shadow-red-950/5">
+      <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-red-800/50">{label}</p>
+      <p className={["mt-1 text-lg font-semibold tracking-[-0.03em]", tone === "red" ? "text-red-800" : "text-zinc-950"].join(" ")}>
+        {value}
+      </p>
     </div>
   );
 }

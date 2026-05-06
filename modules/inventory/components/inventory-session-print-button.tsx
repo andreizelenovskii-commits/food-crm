@@ -5,7 +5,7 @@ export function InventorySessionPrintButton() {
     <button
       type="button"
       onClick={() => window.print()}
-      className="inline-flex items-center gap-2 rounded-2xl bg-zinc-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-zinc-800 print:hidden"
+      className="inline-flex h-10 items-center gap-2 rounded-full bg-red-800 px-5 text-sm font-semibold text-white shadow-sm shadow-red-950/15 transition hover:bg-red-900 print:hidden"
     >
       <svg
         aria-hidden="true"
@@ -22,7 +22,7 @@ export function InventorySessionPrintButton() {
         <path d="M7 12h10v8H7z" />
         <path d="M9.5 16h5" />
       </svg>
-      <span>Распечатать / PDF</span>
+      <span>Распечатать</span>
     </button>
   );
 }

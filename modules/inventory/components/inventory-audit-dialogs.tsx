@@ -29,15 +29,11 @@ export function InventoryAuditDialogs({
   responsibleOptions,
   sessions,
   canManageInventory,
-  lowStockCount,
-  zeroStockCount,
 }: {
   products: ProductItem[];
   responsibleOptions: InventoryResponsibleOption[];
   sessions: InventorySessionSummary[];
   canManageInventory: boolean;
-  lowStockCount: number;
-  zeroStockCount: number;
 }) {
   const router = useRouter();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -45,10 +41,9 @@ export function InventoryAuditDialogs({
   const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
   const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
   const [query, setQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<ProductCategory | "">("");
   const [selectedResponsibleId, setSelectedResponsibleId] = useState("");
   const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
-  const [notes, setNotes] = useState("");
+  const [auditType, setAuditType] = useState("");
   const [actualDrafts, setActualDrafts] = useState<Record<number, string>>({});
   const createInitialState: InventorySessionCreateFormState = {
     errorMessage: null,
@@ -74,8 +69,8 @@ export function InventoryAuditDialogs({
   const activeSessions = useMemo(() => sessions.filter((session) => !session.isClosed), [sessions]);
   const closedSessions = useMemo(() => sessions.filter((session) => session.isClosed), [sessions]);
   const filteredProducts = useMemo(
-    () => filterInventoryProducts(products, selectedCategory, query),
-    [products, query, selectedCategory],
+    () => filterInventoryProducts(products, "", query),
+    [products, query],
   );
   const categorySummaries = useMemo(() => buildCategorySummaries(products), [products]);
   const selectedProducts = useMemo(
@@ -99,9 +94,8 @@ export function InventoryAuditDialogs({
       setIsCreateDialogOpen(false);
       setSelectedResponsibleId("");
       setSelectedProductIds([]);
-      setNotes("");
+      setAuditType("");
       setQuery("");
-      setSelectedCategory("");
       router.refresh();
     });
 
@@ -149,6 +143,14 @@ export function InventoryAuditDialogs({
     );
   }
 
+  function selectProducts(productIds: number[]) {
+    setSelectedProductIds((current) => Array.from(new Set([...current, ...productIds])));
+  }
+
+  function clearProducts() {
+    setSelectedProductIds([]);
+  }
+
   function updateActualDraft(itemId: number, value: string) {
     setActualDrafts((current) => ({ ...current, [itemId]: normalizeDecimalDraft(value) }));
   }
@@ -156,10 +158,7 @@ export function InventoryAuditDialogs({
   return (
     <>
       <InventoryAuditActionsPanel
-        productsCount={products.length}
         activeSessionsCount={activeSessions.length}
-        lowStockCount={lowStockCount}
-        zeroStockCount={zeroStockCount}
         onCreate={() => setIsCreateDialogOpen(true)}
         onOpenActive={() => {
           setSelectedSessionId(activeSessions[0]?.id ?? null);
@@ -180,9 +179,8 @@ export function InventoryAuditDialogs({
           selectedProductIds={selectedProductIds}
           responsibleOptions={responsibleOptions}
           selectedResponsibleId={selectedResponsibleId}
-          selectedCategory={selectedCategory}
           query={query}
-          notes={notes}
+          auditType={auditType}
           canManageInventory={canManageInventory}
           isCreatePending={isCreatePending}
           errorMessage={createState.errorMessage}
@@ -190,10 +188,11 @@ export function InventoryAuditDialogs({
           createFormAction={createFormAction}
           onClose={() => setIsCreateDialogOpen(false)}
           onQueryChange={setQuery}
-          onCategoryChange={setSelectedCategory}
           onResponsibleChange={setSelectedResponsibleId}
-          onNotesChange={setNotes}
+          onAuditTypeChange={setAuditType}
           onToggleProduct={toggleProduct}
+          onSelectProducts={selectProducts}
+          onClearProducts={clearProducts}
         />
       ) : null}
 

@@ -24,19 +24,16 @@ export function ActiveSessionItemsTable({
         const varianceTone = getVarianceTone(varianceQuantity);
 
         return (
-          <tr key={item.id} className="border-t border-red-950/10 align-top">
-            <td className="px-3 py-3">
+          <tr key={item.id} className="border-t border-red-950/10 align-middle transition hover:bg-red-50/25">
+            <td className="px-4 py-3.5">
               <input type="hidden" name="itemId" value={item.id} />
-              <div>
-                <p className="font-semibold text-zinc-950">{item.productName}</p>
-                <p className="mt-0.5 text-xs text-zinc-500">{item.productCategory ?? "Без категории"}</p>
-              </div>
+              <p className="text-sm font-semibold tracking-[-0.01em] text-zinc-950">{item.productName}</p>
             </td>
-            <td className="px-3 py-3 font-medium text-zinc-600">{item.productUnit}</td>
-            <td className="px-3 py-3 font-medium text-zinc-950">
+            <td className="px-4 py-3.5 font-medium text-zinc-600">{item.productUnit}</td>
+            <td className="px-4 py-3.5 font-semibold text-zinc-950">
               {formatInventoryQuantity(item.currentStockQuantity)}
             </td>
-            <td className="px-3 py-3">
+            <td className="px-4 py-3.5">
               <input
                 name="actualQuantity"
                 type="text"
@@ -44,13 +41,13 @@ export function ActiveSessionItemsTable({
                 value={draftValue}
                 onChange={(event) => onActualDraftChange(item.id, event.target.value)}
                 placeholder={item.actualQuantity === null ? formatInventoryQuantity(0) : formatInventoryQuantity(item.actualQuantity)}
-                className="h-9 w-24 rounded-[14px] border border-red-950/10 bg-white/85 px-3 text-xs font-medium text-zinc-950 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
+                className="h-10 w-28 rounded-full border border-red-950/10 bg-white/90 px-4 text-center text-[13px] font-medium text-zinc-950 shadow-sm shadow-red-950/5 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
               />
             </td>
-            <td className={`px-3 py-3 font-medium ${varianceTone}`}>
+            <td className={`px-4 py-3.5 font-semibold ${varianceTone}`}>
               {formatQuantityVariance(varianceQuantity, item.productUnit)}
             </td>
-            <td className={`px-3 py-3 font-medium ${varianceTone}`}>
+            <td className={`px-4 py-3.5 font-semibold ${varianceTone}`}>
               {formatMoneyVariance(varianceValueCents)}
             </td>
           </tr>
@@ -64,28 +61,29 @@ export function ClosedSessionItemsTable({ items }: { items: InventorySessionItem
   return (
     <InventoryTable headers={["Товар", "Ед.", "Старт", "Факт", "Разница", "В рублях"]}>
       {items.map((item) => {
-        const varianceTone = getVarianceTone(item.varianceQuantity);
+        const varianceQuantity =
+          item.actualQuantity === null ? null : item.actualQuantity - item.stockQuantity;
+        const varianceValueCents =
+          varianceQuantity === null ? null : varianceQuantity * item.priceCents;
+        const varianceTone = getVarianceTone(varianceQuantity);
 
         return (
-          <tr key={item.id} className="border-t border-red-950/10 align-top">
-            <td className="px-3 py-3">
-              <div>
-                <p className="font-semibold text-zinc-950">{item.productName}</p>
-                <p className="mt-0.5 text-xs text-zinc-500">{item.productCategory ?? "Без категории"}</p>
-              </div>
+          <tr key={item.id} className="border-t border-red-950/10 align-middle transition hover:bg-red-50/25">
+            <td className="px-4 py-3.5">
+              <p className="text-sm font-semibold tracking-[-0.01em] text-zinc-950">{item.productName}</p>
             </td>
-            <td className="px-3 py-3 font-medium text-zinc-600">{item.productUnit}</td>
-            <td className="px-3 py-3 font-medium text-zinc-950">
+            <td className="px-4 py-3.5 font-medium text-zinc-600">{item.productUnit}</td>
+            <td className="px-4 py-3.5 font-semibold text-zinc-950">
               {formatInventoryQuantity(item.stockQuantity)}
             </td>
-            <td className="px-3 py-3 font-medium text-zinc-950">
+            <td className="px-4 py-3.5 font-semibold text-zinc-950">
               {item.actualQuantity === null ? "—" : formatInventoryQuantity(item.actualQuantity)}
             </td>
-            <td className={`px-3 py-3 font-medium ${varianceTone}`}>
-              {formatQuantityVariance(item.varianceQuantity, item.productUnit)}
+            <td className={`px-4 py-3.5 font-semibold ${varianceTone}`}>
+              {formatQuantityVariance(varianceQuantity, item.productUnit)}
             </td>
-            <td className={`px-3 py-3 font-medium ${varianceTone}`}>
-              {formatMoneyVariance(item.varianceValueCents)}
+            <td className={`px-4 py-3.5 font-semibold ${varianceTone}`}>
+              {formatMoneyVariance(varianceValueCents)}
             </td>
           </tr>
         );
@@ -102,13 +100,13 @@ function InventoryTable({
   children: React.ReactNode;
 }) {
   return (
-    <div className="overflow-hidden rounded-[18px] border border-red-950/10 bg-white/76 shadow-sm shadow-red-950/5">
+    <div className="overflow-hidden rounded-[22px] border border-white/70 bg-white/78 shadow-[0_18px_60px_rgba(127,29,29,0.10)] backdrop-blur-2xl">
       <div className="overflow-x-auto">
         <table className="min-w-full text-xs">
-          <thead className="bg-red-50/45">
+          <thead className="bg-red-50/55">
             <tr className="text-left text-[10px] font-semibold uppercase tracking-[0.12em] text-red-800/55">
               {headers.map((header) => (
-                <th key={header} className="px-3 py-2.5 font-semibold">{header}</th>
+                <th key={header} className="px-4 py-3 font-semibold">{header}</th>
               ))}
             </tr>
           </thead>

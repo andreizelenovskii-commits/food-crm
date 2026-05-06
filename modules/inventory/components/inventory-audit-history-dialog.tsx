@@ -1,3 +1,6 @@
+"use client";
+
+import { useMemo, useState } from "react";
 import { InventorySessionDeleteButton } from "@/modules/inventory/components/inventory-session-delete-button";
 import { InventorySessionExportLink } from "@/modules/inventory/components/inventory-session-export-link";
 import {
@@ -58,9 +61,18 @@ function HistorySessionList({
   selectedSessionId: number | null;
   onSelectSession: (sessionId: number) => void;
 }) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
+  const totalPages = Math.max(1, Math.ceil(sessions.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const visibleSessions = useMemo(
+    () => sessions.slice((safePage - 1) * pageSize, safePage * pageSize),
+    [safePage, sessions],
+  );
+
   return (
     <div className="space-y-2">
-      {sessions.map((session) => {
+      {visibleSessions.map((session) => {
         const isActive = session.id === selectedSessionId;
 
         return (
@@ -75,7 +87,34 @@ function HistorySessionList({
           </button>
         );
       })}
+      {sessions.length > pageSize ? (
+        <div className="rounded-[18px] border border-red-950/10 bg-white/72 p-2 shadow-sm shadow-red-950/5">
+          <div className="flex flex-wrap justify-center gap-2">
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+              <HistoryPageButton key={page} isActive={page === safePage} onClick={() => setCurrentPage(page)}>
+                {page}
+              </HistoryPageButton>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
+  );
+}
+
+function HistoryPageButton({
+  children,
+  isActive,
+  onClick,
+}: {
+  children: React.ReactNode;
+  isActive?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button type="button" onClick={onClick} className={["flex h-8 min-w-8 items-center justify-center rounded-full border px-3 text-xs font-semibold shadow-sm transition hover:border-red-800 hover:bg-red-800 hover:text-white", isActive ? "border-red-800 bg-red-800 text-white shadow-red-950/15" : "border-red-100 bg-white/90 text-red-800 shadow-red-950/5"].join(" ")} aria-current={isActive ? "page" : undefined}>
+      {children}
+    </button>
   );
 }
 
@@ -105,7 +144,7 @@ function HistorySessionDetail({
           </div>
           <ClosedSessionItemsTable items={session.items} />
           <div className="flex flex-wrap justify-end gap-2">
-            <InventorySessionExportLink sessionId={session.id} variant="secondary" />
+            <InventorySessionExportLink session={session} />
             {canManageInventory ? (
               <InventorySessionDeleteButton sessionId={session.id} sessionLabel={`#${session.id}`} />
             ) : null}

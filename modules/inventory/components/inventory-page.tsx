@@ -31,7 +31,6 @@ export function InventoryPage({
   incomingActs,
   inventorySessions,
   writeoffActs,
-  employees,
   techCards,
   techCardProducts,
   searchParams,
@@ -41,8 +40,6 @@ export function InventoryPage({
     rawQuery,
     selectedRecipeCategory,
     lowStockProducts,
-    lowStockCount,
-    zeroStockCount,
     filteredTechCards,
     recipeCategorySummaries,
     clearRecipeDraft,
@@ -128,10 +125,7 @@ export function InventoryPage({
               products={products}
               responsibleOptions={responsibleOptions}
               sessions={inventorySessions}
-              employees={employees}
               canManageInventory={canManageInventory}
-              lowStockCount={lowStockCount}
-              zeroStockCount={zeroStockCount}
             />
           ) : null}
 

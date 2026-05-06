@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requirePermission } from "@/modules/auth/auth.session";
 import { formatInventoryQuantity } from "@/modules/inventory/inventory.format";
+import { InventorySessionAutoPrint } from "@/modules/inventory/components/inventory-session-auto-print";
 import { InventorySessionPrintButton } from "@/modules/inventory/components/inventory-session-print-button";
 import { fetchInventorySessionById } from "@/modules/inventory/inventory.api";
 
@@ -25,10 +26,12 @@ function formatMoney(cents: number) {
 
 export default async function InventorySessionPrintPage(props: {
   params: Promise<{ sessionId: string }>;
+  searchParams?: Promise<{ autoPrint?: string }>;
 }) {
   await requirePermission("view_inventory");
 
   const { sessionId } = await props.params;
+  const searchParams = props.searchParams ? await props.searchParams : {};
   const numericSessionId = Number(sessionId);
   const session = await fetchInventorySessionById(numericSessionId);
 
@@ -43,6 +46,7 @@ export default async function InventorySessionPrintPage(props: {
 
   return (
     <main className="min-h-screen bg-[#f7f3f2] px-4 py-4 sm:py-5 text-zinc-950 print:bg-white print:px-0 print:py-0">
+      <InventorySessionAutoPrint enabled={searchParams.autoPrint === "1"} />
       <style>{`
         @page {
           size: A4 portrait;
@@ -246,20 +250,6 @@ export default async function InventorySessionPrintPage(props: {
                 })}
               </tbody>
             </table>
-          </div>
-        </section>
-
-        <section className="mt-4 grid gap-4 md:grid-cols-2">
-          <div className="print-break-avoid rounded-[12px] border border-zinc-200 bg-zinc-50 p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">Примечания</p>
-            <div className="mt-4 min-h-32 rounded-2xl border border-dashed border-zinc-300 bg-white" />
-          </div>
-          <div className="print-break-avoid rounded-[12px] border border-zinc-200 bg-zinc-50 p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">Подпись ответственного</p>
-            <div className="mt-10 border-b border-zinc-400" />
-            <p className="mt-3 text-sm text-zinc-500">
-              {session.responsibleEmployeeName}
-            </p>
           </div>
         </section>
         </div>
