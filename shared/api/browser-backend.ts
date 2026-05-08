@@ -18,6 +18,14 @@ export function getBrowserBackendApiUrl() {
     return `${protocol}//${hostname}:${DEFAULT_BACKEND_PORT}`;
   }
 
+  if (hostname === "crm.crmandromeda.ru" || hostname === "crmandromeda.ru" || hostname === "www.crmandromeda.ru") {
+    return "https://api.crmandromeda.ru";
+  }
+
+  if (hostname === "dev.crm.crmandromeda.ru") {
+    return "https://dev-api.crmandromeda.ru";
+  }
+
   return "";
 }
 

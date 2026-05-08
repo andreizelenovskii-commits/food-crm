@@ -113,6 +113,10 @@ export async function deleteTechCardAction(formData: FormData): Promise<{ errorM
     });
   } catch (error) {
     if (error instanceof Error) {
+      if (error.message === "Backend request failed: 404") {
+        return { errorMessage: "Не удалось найти API удаления техкарты. Обнови страницу и попробуй ещё раз." };
+      }
+
       return { errorMessage: error.message };
     }
 
