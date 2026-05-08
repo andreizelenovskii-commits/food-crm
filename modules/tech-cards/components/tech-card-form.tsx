@@ -125,10 +125,8 @@ function TechCardFormContent({
           onRemove={form.handleRemoveIngredient}
         />
         <TechCardFormFooter
-          description={form.description}
           isPending={isPending}
           isEditMode={Boolean(initialTechCard)}
-          onDescriptionChange={form.setDescription}
         />
       </form>
 

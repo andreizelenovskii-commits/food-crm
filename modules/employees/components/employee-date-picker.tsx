@@ -1,21 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
-const MONTH_NAMES = [
-  "Январь",
-  "Февраль",
-  "Март",
-  "Апрель",
-  "Май",
-  "Июнь",
-  "Июль",
-  "Август",
-  "Сентябрь",
-  "Октябрь",
-  "Ноябрь",
-  "Декабрь",
-] as const;
+const MONTH_NAMES = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"] as const;
 
 type EmployeeDatePickerProps = {
   name: string;
@@ -51,11 +38,16 @@ export function EmployeeDatePicker({
   onChange,
   placeholder = "Выберите дату",
 }: EmployeeDatePickerProps) {
+  const pickerId = useId();
   const isControlled = controlledValue !== undefined;
   const [internalValue, setInternalValue] = useState(defaultValue);
   const value = isControlled ? controlledValue ?? "" : internalValue;
   const [draftValue, setDraftValue] = useState(value);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const dayColumnRef = useRef<HTMLDivElement | null>(null);
+  const monthColumnRef = useRef<HTMLDivElement | null>(null);
+  const yearColumnRef = useRef<HTMLDivElement | null>(null);
+  const pickerRootRef = useRef<HTMLDivElement | null>(null);
   const raw = pickerOpen ? draftValue || value : value || defaultValue;
   const parsed = raw ? new Date(raw) : new Date();
   const parsedDate = Number.isNaN(parsed.getTime()) ? new Date() : parsed;
@@ -68,6 +60,55 @@ export function EmployeeDatePicker({
 
   const days = Array.from({ length: daysInMonth }, (_, index) => index + 1);
   const years = Array.from({ length: 101 }, (_, index) => currentYear - index);
+
+  useEffect(() => {
+    const handleOpen = (event: Event) => {
+      const customEvent = event as CustomEvent<{ pickerId: string }>;
+      if (customEvent.detail.pickerId !== pickerId) {
+        setPickerOpen(false);
+      }
+    };
+
+    window.addEventListener("employee-date-picker:open", handleOpen as EventListener);
+    return () => window.removeEventListener("employee-date-picker:open", handleOpen as EventListener);
+  }, [pickerId]);
+
+  useEffect(() => {
+    if (!pickerOpen) {
+      return;
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      const columns = [dayColumnRef.current, monthColumnRef.current, yearColumnRef.current];
+
+      columns.forEach((column) => {
+        const selected = column?.querySelector<HTMLElement>('[data-selected="true"]');
+        selected?.scrollIntoView({ block: "center" });
+      });
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [pickerOpen, selectedDay, selectedMonth, selectedYear]);
+
+  useEffect(() => {
+    if (!pickerOpen) {
+      return;
+    }
+
+    const handlePointerDown = (event: MouseEvent) => {
+      const target = event.target as Node | null;
+      if (!target) {
+        return;
+      }
+      if (!pickerRootRef.current?.contains(target)) {
+        setPickerOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, [pickerOpen]);
+
   const setDateValue = (day: number, month: number, year: number) => {
     const nextDay = Math.min(day, new Date(year, month + 1, 0).getDate());
     const next = new Date(year, month, nextDay);
@@ -111,12 +152,17 @@ export function EmployeeDatePicker({
   return (
     <label className="block space-y-1.5">
       <span className="text-[11px] font-semibold text-zinc-700">{label}</span>
-      <div className="relative">
+      <div ref={pickerRootRef} className="relative">
         <button
           type="button"
           onClick={() => {
             const currentValue = isControlled ? controlledValue ?? "" : internalValue;
             setDraftValue(currentValue || formatISODate(new Date()));
+            window.dispatchEvent(
+              new CustomEvent("employee-date-picker:open", {
+                detail: { pickerId },
+              }),
+            );
             setPickerOpen(true);
           }}
           onDoubleClick={clearDate}
@@ -140,12 +186,13 @@ export function EmployeeDatePicker({
             <div className="grid animate-[date-picker-flip_220ms_ease-out] gap-3 p-3 sm:grid-cols-3">
               <div className="rounded-[14px] border border-red-950/10 bg-white/70 p-2.5">
                 <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-red-800/60">День</div>
-                <div className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-300 scrollbar-track-zinc-100">
+                <div ref={dayColumnRef} className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-300 scrollbar-track-zinc-100">
                   {days.map((day) => (
                     <button
                       key={day}
                       type="button"
                       onClick={() => updateDay(day)}
+                      data-selected={day === selectedDay}
                       className={`mb-1.5 flex h-8 w-full items-center justify-center rounded-full px-3 text-xs font-semibold transition ${
                         day === selectedDay
                           ? 'bg-red-800 text-white'
@@ -160,12 +207,13 @@ export function EmployeeDatePicker({
 
               <div className="rounded-[14px] border border-red-950/10 bg-white/70 p-2.5">
                 <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-red-800/60">Месяц</div>
-                <div className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-300 scrollbar-track-zinc-100">
+                <div ref={monthColumnRef} className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-300 scrollbar-track-zinc-100">
                   {MONTH_NAMES.map((month, index) => (
                     <button
                       key={month}
                       type="button"
                       onClick={() => updateMonth(index)}
+                      data-selected={index === selectedMonth}
                       className={`mb-1.5 flex h-8 w-full items-center justify-center rounded-full px-3 text-xs font-semibold transition ${
                         index === selectedMonth
                           ? 'bg-red-800 text-white'
@@ -180,12 +228,13 @@ export function EmployeeDatePicker({
 
               <div className="rounded-[14px] border border-red-950/10 bg-white/70 p-2.5">
                 <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-red-800/60">Год</div>
-                <div className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-300 scrollbar-track-zinc-100">
+                <div ref={yearColumnRef} className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-300 scrollbar-track-zinc-100">
                   {years.map((year) => (
                     <button
                       key={year}
                       type="button"
                       onClick={() => updateYear(year)}
+                      data-selected={year === selectedYear}
                       className={`mb-1.5 flex h-8 w-full items-center justify-center rounded-full px-3 text-xs font-semibold transition ${
                         year === selectedYear
                           ? 'bg-red-800 text-white'

@@ -14,16 +14,17 @@ export function EmployeeAdjustmentForm({ employeeId, defaultType }: { employeeId
   const defaultDate = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   return (
-    <form action={addEmployeeAdjustmentAction} className="space-y-5 rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
+    <form action={addEmployeeAdjustmentAction} className="space-y-5 rounded-[22px] border border-white/70 bg-white/76 p-4 shadow-[0_18px_60px_rgba(127,29,29,0.10)] backdrop-blur-2xl sm:p-5">
       <div className="space-y-2">
-        <h2 className="text-xl font-semibold text-zinc-950">Добавить запись</h2>
-        <p className="text-sm leading-6 text-zinc-600">Занеси аванс, штраф или долг сотруднику.</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">Корректировки</p>
+        <h2 className="text-lg font-semibold tracking-[-0.02em] text-zinc-950">Добавить запись</h2>
+        <p className="text-xs leading-5 text-zinc-600">Занеси аванс, штраф или долг сотруднику.</p>
       </div>
 
       <input type="hidden" name="employeeId" value={employeeId} />
 
       {defaultType ? (
-        <div className="rounded-2xl border border-zinc-300 bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-950">
+        <div className="rounded-[14px] border border-red-950/10 bg-white/84 px-4 py-3 text-sm font-semibold text-zinc-950">
           {EMPLOYEE_ADJUSTMENT_LABELS[defaultType]}
         </div>
       ) : (
@@ -37,8 +38,8 @@ export function EmployeeAdjustmentForm({ employeeId, defaultType }: { employeeId
                 onClick={() => setAdjustmentType(type)}
                 className={`rounded-2xl border px-4 py-3 text-sm font-medium transition ${
                   isSelected
-                    ? "border-zinc-950 bg-zinc-950 text-white shadow-sm"
-                    : "border-zinc-300 bg-white text-zinc-950 hover:border-zinc-500 hover:bg-zinc-50"
+                    ? "border-red-800 bg-red-800 text-white shadow-sm shadow-red-950/15"
+                    : "border-red-950/10 bg-white/90 text-zinc-950 hover:border-red-200 hover:bg-white"
                 }`}
               >
                 {EMPLOYEE_ADJUSTMENT_LABELS[type]}
@@ -59,7 +60,7 @@ export function EmployeeAdjustmentForm({ employeeId, defaultType }: { employeeId
           type="number"
           min="1"
           placeholder="1000"
-          className="w-full rounded-2xl border border-zinc-300 px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
+          className="h-11 w-full rounded-[14px] border border-red-950/10 bg-white/90 px-4 text-zinc-950 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
           required
         />
       </label>
@@ -70,14 +71,11 @@ export function EmployeeAdjustmentForm({ employeeId, defaultType }: { employeeId
           name="comment"
           type="text"
           placeholder="Например: аванс за март"
-          className="w-full rounded-2xl border border-zinc-300 px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
+          className="h-11 w-full rounded-[14px] border border-red-950/10 bg-white/90 px-4 text-zinc-950 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
         />
       </label>
 
-      <button
-        type="submit"
-        className="w-full rounded-2xl bg-zinc-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-zinc-800"
-      >
+      <button type="submit" className="h-11 w-full rounded-[14px] bg-red-800 px-4 text-sm font-semibold text-white shadow-sm shadow-red-950/15 transition hover:bg-red-900">
         Добавить запись
       </button>
     </form>

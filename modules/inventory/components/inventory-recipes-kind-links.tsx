@@ -3,8 +3,14 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { ModuleIcon } from "@/components/ui/module-icon";
-import { InventoryRecipeDeleteButton } from "@/modules/inventory/components/inventory-recipes-edit-button";
-import type { TechCardItem } from "@/modules/tech-cards/tech-cards.types";
+import {
+  InventoryRecipeDeleteButton,
+  InventoryRecipeEditButton,
+} from "@/modules/inventory/components/inventory-recipes-edit-button";
+import type {
+  TechCardItem,
+  TechCardProductOption,
+} from "@/modules/tech-cards/tech-cards.types";
 
 type RecipeKind = "price" | "ingredient";
 
@@ -36,10 +42,12 @@ function getKindMeta(kind: RecipeKind) {
 export function RecipeKindLinks({
   priceTechCards,
   ingredientTechCards,
+  products,
   canManageInventory,
 }: {
   priceTechCards: TechCardItem[];
   ingredientTechCards: TechCardItem[];
+  products: TechCardProductOption[];
   canManageInventory: boolean;
 }) {
   const [openKind, setOpenKind] = useState<RecipeKind | null>(null);
@@ -56,6 +64,7 @@ export function RecipeKindLinks({
             <KindDialog
               kind={openKind}
               cards={openKind === "ingredient" ? ingredientTechCards : priceTechCards}
+              products={products}
               canManageInventory={canManageInventory}
               onClose={() => setOpenKind(null)}
             />,
@@ -108,11 +117,13 @@ function KindButton({
 function KindDialog({
   kind,
   cards,
+  products,
   canManageInventory,
   onClose,
 }: {
   kind: RecipeKind;
   cards: TechCardItem[];
+  products: TechCardProductOption[];
   canManageInventory: boolean;
   onClose: () => void;
 }) {
@@ -142,6 +153,7 @@ function KindDialog({
               <DialogCard
                 key={card.id}
                 card={card}
+                products={products}
                 canManageInventory={canManageInventory}
               />
             ))
@@ -154,9 +166,11 @@ function KindDialog({
 
 function DialogCard({
   card,
+  products,
   canManageInventory,
 }: {
   card: TechCardItem;
+  products: TechCardProductOption[];
   canManageInventory: boolean;
 }) {
   return (
@@ -176,7 +190,12 @@ function DialogCard({
       </div>
       <div className="flex items-center gap-3">
         <span className="text-xs font-semibold text-zinc-400">Ингредиентов: {card.ingredients.length}</span>
-        {canManageInventory ? <InventoryRecipeDeleteButton card={card} /> : null}
+        {canManageInventory ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <InventoryRecipeEditButton card={card} products={products} />
+            <InventoryRecipeDeleteButton card={card} />
+          </div>
+        ) : null}
       </div>
     </article>
   );

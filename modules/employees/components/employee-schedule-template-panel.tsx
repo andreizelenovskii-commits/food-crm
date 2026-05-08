@@ -1,15 +1,11 @@
-import {
-  CALENDAR_WEEKDAYS,
-  MAX_SCHEDULE_HOURS,
-  MIN_SCHEDULE_HOURS,
-  clampScheduleHours,
-} from "@/modules/employees/employees.schedule";
+import { CALENDAR_WEEKDAYS, clampScheduleHours } from "@/modules/employees/employees.schedule";
 
 const WEEKDAY_NUMBERS = [1, 2, 3, 4, 5, 6, 0] as const;
-const HOUR_OPTIONS = Array.from(
-  { length: MAX_SCHEDULE_HOURS - MIN_SCHEDULE_HOURS + 1 },
-  (_, index) => MIN_SCHEDULE_HOURS + index,
-);
+const WEEKDAY_PRESETS = [
+  { label: "Будни", weekdays: [1, 2, 3, 4, 5] },
+  { label: "Выходные", weekdays: [6, 0] },
+  { label: "Все дни", weekdays: [...WEEKDAY_NUMBERS] },
+] as const;
 
 export function EmployeeScheduleTemplatePanel({
   selectedWeekdays,
@@ -30,41 +26,69 @@ export function EmployeeScheduleTemplatePanel({
   onClearSelected: () => void;
   onClearMonth: () => void;
 }) {
+  const hasSelectedDays = selectedWeekdays.length > 0;
+  const selectedWeekdayKey = selectedWeekdays.join(",");
+
   return (
-    <div className="space-y-5 rounded-[12px] border border-zinc-200 bg-white p-4">
-      <div className="space-y-2">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500">Шаблон месяца</p>
-        <label className="block space-y-2">
-          <span className="text-sm font-medium text-zinc-900">Часы для выбранных дней</span>
-          <select
-            value={templateHours}
-            onChange={(event) => onTemplateHoursChange(clampScheduleHours(Number(event.target.value)))}
-            className="w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm font-medium text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
-          >
-            {HOUR_OPTIONS.map((hours) => (
-              <option key={hours} value={hours}>
-                {hours} ч
-              </option>
-            ))}
-          </select>
-        </label>
+    <div className="space-y-3 rounded-[18px] border border-white/70 bg-white/78 p-3 shadow-sm shadow-red-950/5 backdrop-blur-xl sm:p-4">
+      <div>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">Шаблон месяца</p>
+        <h3 className="mt-1 text-base font-semibold text-zinc-950">Массовое заполнение</h3>
       </div>
 
-      <div className="space-y-3">
-        <p className="text-sm font-medium text-zinc-900">Дни недели для массового заполнения</p>
-        <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={() => onSetWeekdays([1, 2, 3, 4, 5])} className="rounded-full border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:border-zinc-500">
-            Будни
+      <div className="rounded-[16px] border border-red-950/10 bg-white/74 p-3">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-red-800/55">Часы смены</p>
+        <div className="mt-3 grid grid-cols-[2.5rem_minmax(0,1fr)_2.5rem] items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onTemplateHoursChange(clampScheduleHours(templateHours - 1))}
+            className="flex h-9 w-10 items-center justify-center rounded-full border border-red-100 bg-white/90 text-base font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white"
+            aria-label="Уменьшить часы шаблона"
+          >
+            −
           </button>
-          <button type="button" onClick={() => onSetWeekdays([6, 0])} className="rounded-full border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:border-zinc-500">
-            Выходные
-          </button>
-          <button type="button" onClick={() => onSetWeekdays([...WEEKDAY_NUMBERS])} className="rounded-full border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:border-zinc-500">
-            Все
+          <div className="flex h-12 items-center justify-center rounded-[16px] border border-red-950/10 bg-white/90 text-xl font-semibold text-zinc-950 shadow-sm shadow-red-950/5">
+            {templateHours} ч
+          </div>
+          <button
+            type="button"
+            onClick={() => onTemplateHoursChange(clampScheduleHours(templateHours + 1))}
+            className="flex h-9 w-10 items-center justify-center rounded-full border border-red-100 bg-white/90 text-base font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white"
+            aria-label="Увеличить часы шаблона"
+          >
+            +
           </button>
         </div>
+      </div>
 
-        <div className="flex flex-wrap gap-2">
+      <div className="rounded-[16px] border border-red-950/10 bg-white/74 p-3">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-red-800/55">Дни недели</p>
+          <span className="text-xs font-semibold text-zinc-400">{selectedWeekdays.length}/7</span>
+        </div>
+        <div className="mt-3 grid gap-1.5">
+          {WEEKDAY_PRESETS.map((preset) => {
+            const isActive = selectedWeekdayKey === preset.weekdays.join(",");
+
+            return (
+              <button
+                key={preset.label}
+                type="button"
+                onClick={() => onSetWeekdays([...preset.weekdays])}
+                className={`flex h-9 items-center justify-between rounded-[12px] border px-3 text-xs font-semibold transition ${
+                  isActive
+                    ? "border-red-800 bg-red-800 text-white shadow-sm shadow-red-950/15"
+                    : "border-red-950/10 bg-white/86 text-zinc-700 hover:border-red-200 hover:bg-red-50 hover:text-red-800"
+                }`}
+              >
+                <span>{preset.label}</span>
+                <span className={isActive ? "text-white/70" : "text-zinc-400"}>{preset.weekdays.length}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mt-3 grid grid-cols-7 gap-1 overflow-hidden rounded-[14px] border border-red-950/10 bg-white/82 p-1.5">
           {CALENDAR_WEEKDAYS.map((label, index) => {
             const weekday = WEEKDAY_NUMBERS[index];
             const isSelected = selectedWeekdays.includes(weekday);
@@ -74,10 +98,10 @@ export function EmployeeScheduleTemplatePanel({
                 key={label}
                 type="button"
                 onClick={() => onToggleWeekday(weekday)}
-                className={`rounded-full px-3 py-2 text-sm font-medium transition ${
+                className={`h-9 rounded-[10px] text-xs font-semibold transition ${
                   isSelected
-                    ? "bg-zinc-950 text-white"
-                    : "border border-zinc-300 bg-white text-zinc-950 hover:bg-zinc-50"
+                    ? "bg-red-800 text-white shadow-sm shadow-red-950/15"
+                    : "text-zinc-500 hover:bg-red-50 hover:text-red-800"
                 }`}
               >
                 {label}
@@ -85,16 +109,18 @@ export function EmployeeScheduleTemplatePanel({
             );
           })}
         </div>
+      </div>
 
-        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
-          <button type="button" onClick={onApplyTemplate} className="min-h-12 rounded-2xl bg-zinc-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-zinc-800">
-            Заполнить месяц
+      <div className="grid gap-2">
+        <button type="button" onClick={onApplyTemplate} disabled={!hasSelectedDays} className="h-11 rounded-[14px] bg-red-800 px-4 text-sm font-semibold text-white shadow-sm shadow-red-950/15 transition hover:bg-red-900 disabled:cursor-not-allowed disabled:bg-red-300">
+          Применить к месяцу
+        </button>
+        <div className="grid grid-cols-2 gap-2">
+          <button type="button" onClick={onClearSelected} disabled={!hasSelectedDays} className="h-10 rounded-[14px] border border-red-100 bg-white/90 px-3 text-xs font-semibold text-red-800 shadow-sm shadow-red-950/5 transition hover:border-red-800 hover:bg-red-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-50">
+            Выходные
           </button>
-          <button type="button" onClick={onClearSelected} className="min-h-12 rounded-2xl border border-zinc-300 px-4 py-3 text-sm font-medium text-zinc-950 transition hover:border-zinc-500">
-            Снять выбранные дни
-          </button>
-          <button type="button" onClick={onClearMonth} className="min-h-12 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800 transition hover:bg-red-100 sm:col-span-2 xl:col-span-1">
-            Очистить месяц
+          <button type="button" onClick={onClearMonth} className="h-10 rounded-[14px] border border-red-100 bg-white/90 px-3 text-xs font-semibold text-red-800 shadow-sm shadow-red-950/5 transition hover:border-red-800 hover:bg-red-800 hover:text-white">
+            Очистить
           </button>
         </div>
       </div>

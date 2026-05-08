@@ -109,10 +109,11 @@ export function EmployeeAccessForm({ employee }: { employee: EmployeeProfile }) 
   };
 
   return (
-    <section className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
+    <section className="rounded-[22px] border border-white/70 bg-white/76 p-4 shadow-[0_18px_60px_rgba(127,29,29,0.10)] backdrop-blur-2xl sm:p-5">
       <div className="space-y-2">
-        <h2 className="text-xl font-semibold text-zinc-950">Доступ в систему</h2>
-        <p className="text-sm leading-6 text-zinc-600">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">Авторизация</p>
+        <h2 className="text-lg font-semibold tracking-[-0.02em] text-zinc-950">Доступ в систему</h2>
+        <p className="text-xs leading-5 text-zinc-600">
           Выдай сотруднику номер телефона и пароль для входа. Роль в аккаунте будет совпадать с его ролью в карточке.
         </p>
       </div>
@@ -151,7 +152,7 @@ export function EmployeeAccessForm({ employee }: { employee: EmployeeProfile }) 
             value={phone}
             onChange={(event) => setPhone(event.target.value)}
             placeholder="+7 900 123-45-67"
-            className="w-full rounded-2xl border border-zinc-300 px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
+            className="h-11 w-full rounded-[14px] border border-red-950/10 bg-white/90 px-4 text-zinc-950 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
             required
           />
           <p className="text-xs text-zinc-500">
@@ -165,7 +166,7 @@ export function EmployeeAccessForm({ employee }: { employee: EmployeeProfile }) 
             <button
               type="button"
               onClick={() => setPassword(generateStrongPassword())}
-              className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-800 transition hover:border-red-200 hover:bg-red-100"
+              className="inline-flex h-8 items-center rounded-full border border-red-100 bg-white/90 px-3 text-xs font-semibold text-red-800 shadow-sm shadow-red-950/5 transition hover:border-red-800 hover:bg-red-800 hover:text-white"
             >
               Сгенерировать пароль
             </button>
@@ -176,7 +177,7 @@ export function EmployeeAccessForm({ employee }: { employee: EmployeeProfile }) 
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             placeholder="Сильный пароль для сотрудника"
-            className="w-full rounded-2xl border border-zinc-300 px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
+            className="h-11 w-full rounded-[14px] border border-red-950/10 bg-white/90 px-4 text-zinc-950 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
             required
           />
           <p className="text-xs text-zinc-500">
@@ -185,19 +186,19 @@ export function EmployeeAccessForm({ employee }: { employee: EmployeeProfile }) 
         </div>
 
         {state.errorMessage ? (
-          <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <p className="rounded-[14px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             {state.errorMessage}
           </p>
         ) : null}
 
         {state.successMessage ? (
-          <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <p className="rounded-[14px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
             {state.successMessage}
           </p>
         ) : null}
 
         {copyMessage ? (
-          <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <p className="rounded-[14px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             {copyMessage}
           </p>
         ) : null}
@@ -206,14 +207,14 @@ export function EmployeeAccessForm({ employee }: { employee: EmployeeProfile }) 
           <button
             type="submit"
             disabled={isPending}
-            className="flex-1 rounded-2xl bg-zinc-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-500"
+            className="flex-1 rounded-[14px] bg-red-800 px-4 py-3 text-sm font-semibold text-white shadow-sm shadow-red-950/15 transition hover:bg-red-900 disabled:cursor-not-allowed disabled:bg-red-300"
           >
             {isPending ? "Сохраняем доступ..." : "Сохранить телефон и пароль"}
           </button>
           <button
             type="button"
             onClick={() => void handleCopyCredentials()}
-            className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800 transition hover:border-red-200 hover:bg-red-100"
+            className="rounded-[14px] border border-red-100 bg-white/90 px-4 py-3 text-sm font-semibold text-red-800 shadow-sm shadow-red-950/5 transition hover:border-red-800 hover:bg-red-800 hover:text-white"
           >
             Копировать данные
           </button>

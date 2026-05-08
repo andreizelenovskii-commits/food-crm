@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageShell } from "@/components/ui/page-shell";
-import { hasPermission } from "@/modules/auth/authz";
 import { requirePermission } from "@/modules/auth/auth.session";
-import { EmployeeAccessForm } from "@/modules/employees/components/employee-access-form";
+import { hasPermission } from "@/modules/auth/authz";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
 import { EmployeeProfileClient } from "@/modules/employees/components/employee-profile-client";
 import { fetchEmployeeById } from "@/modules/employees/employees.api";
@@ -41,7 +40,7 @@ export default async function EmployeeProfilePage(props: {
           />
         }
       >
-        <div className="rounded-[14px] border border-red-200 bg-red-50 p-4 sm:p-5 text-red-800">
+        <div className="rounded-[18px] border border-red-200 bg-red-50 p-4 text-red-800 sm:p-5">
           Сотрудник не найден.
         </div>
         <Link href="/dashboard/employees" className="text-sm text-zinc-700 underline">
@@ -54,8 +53,8 @@ export default async function EmployeeProfilePage(props: {
   return (
     <PageShell
       title={`Профиль: ${employee.name}`}
-      description="Здесь будут ключевые показатели сотрудника за месяц и текущие данные."
       backHref="/dashboard/employees"
+      compact
       action={
         <SessionUserActions
           user={user}
@@ -70,11 +69,15 @@ export default async function EmployeeProfilePage(props: {
         />
       }
     >
-      <div className="space-y-5">
-        {hasPermission(user, "manage_employees") ? (
-          <EmployeeAccessForm employee={employee} />
-        ) : null}
-        <EmployeeProfileClient employee={employee} />
+      <div className="relative overflow-hidden rounded-[22px] border border-red-950/12 bg-[linear-gradient(165deg,#fffdfc_0%,#fde8e6_42%,#f3dedc_100%)] shadow-[0_20px_64px_rgba(127,29,29,0.14)]">
+        <div className="pointer-events-none absolute -right-20 -top-24 h-56 w-56 rounded-full bg-red-400/25 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-28 left-[12%] h-64 w-64 rounded-full bg-white/55 blur-3xl" />
+        <div className="relative">
+          <EmployeeProfileClient
+            employee={employee}
+            canManageEmployees={hasPermission(user, "manage_employees")}
+          />
+        </div>
       </div>
     </PageShell>
   );

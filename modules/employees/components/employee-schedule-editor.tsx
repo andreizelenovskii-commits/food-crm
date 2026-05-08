@@ -143,35 +143,32 @@ export function EmployeeScheduleEditor({ value, onChange }: EmployeeScheduleEdit
   const monthTitle = currentMonth.toLocaleDateString("ru-RU", {
     month: "long",
     year: "numeric",
-  });
+  }).replace(/\s*г\.?$/, "");
 
   return (
-    <div className="space-y-5 rounded-[14px] border border-zinc-200 bg-zinc-50/80 p-4 sm:p-5">
-      <div className="flex flex-col gap-3 rounded-[12px] border border-zinc-200 bg-white p-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="space-y-1">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500">График работы</p>
-          <p className="text-base font-semibold text-zinc-900">Рабочие дни по календарю</p>
-          <p className="text-sm leading-6 text-zinc-600">
-            Нажми на дату, чтобы отметить рабочий день, выбрать часы или оставить выходной.
-          </p>
+    <div className="space-y-3">
+      <div className="flex flex-col gap-3 rounded-[18px] border border-white/70 bg-white/76 p-4 shadow-sm shadow-red-950/5 backdrop-blur-2xl lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">Конструктор графика</p>
+          <p className="mt-1 text-base font-semibold text-zinc-950">Шаблон месяца и точечная настройка дней</p>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-2xl bg-zinc-100 px-4 py-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Всего в графике</p>
-            <p className="mt-1 text-sm font-semibold text-zinc-950">
+        <div className="grid gap-2 sm:grid-cols-2 lg:min-w-[24rem]">
+          <div className="rounded-[16px] border border-red-950/10 bg-white/84 px-4 py-3 shadow-sm shadow-red-950/5">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-red-800/55">Всего в графике</p>
+            <p className="mt-1 text-base font-semibold text-zinc-950">
               {totalStats.totalDays} дн. / {formatHours(totalStats.totalHours)} ч
             </p>
           </div>
-          <div className="rounded-2xl bg-zinc-100 px-4 py-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Текущий месяц</p>
-            <p className="mt-1 text-sm font-semibold text-zinc-950">
+          <div className="rounded-[16px] border border-red-950/10 bg-white/84 px-4 py-3 shadow-sm shadow-red-950/5">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-red-800/55">Текущий месяц</p>
+            <p className="mt-1 text-base font-semibold text-zinc-950">
               {currentMonthStats.days} дн. / {formatHours(currentMonthStats.hours)} ч
             </p>
           </div>
         </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[18rem_minmax(0,1fr)]">
+      <div className="grid gap-3 xl:grid-cols-[19rem_minmax(0,1fr)]">
         <EmployeeScheduleTemplatePanel
           selectedWeekdays={selectedWeekdays}
           templateHours={templateHours}

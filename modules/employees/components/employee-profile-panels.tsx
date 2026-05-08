@@ -23,13 +23,17 @@ export function EmployeeProfileTabs({
   onChange: (tab: EmployeeProfileTab) => void;
 }) {
   return (
-    <div className="flex border-b border-zinc-200">
+    <div className="flex flex-wrap gap-2 rounded-[18px] border border-white/70 bg-white/76 p-2 shadow-sm shadow-red-950/5">
       {tabs.map((tab) => (
         <button
           key={tab.id}
           type="button"
           onClick={() => onChange(tab.id)}
-          className={`px-4 py-2 text-sm font-medium transition ${activeTab === tab.id ? "border-b-2 border-zinc-950 text-zinc-950" : "text-zinc-600 hover:text-zinc-950"}`}
+          className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+            activeTab === tab.id
+              ? "bg-red-800 text-white shadow-sm shadow-red-950/15"
+              : "text-zinc-600 hover:bg-red-50/70 hover:text-red-800"
+          }`}
         >
           {tab.label}
         </button>
@@ -52,7 +56,7 @@ export function EmployeeMetricsPanel({
   ordersCount: number;
 }) {
   return (
-    <section className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
+    <section className="rounded-[22px] border border-white/70 bg-white/76 p-4 shadow-[0_18px_60px_rgba(127,29,29,0.10)] backdrop-blur-2xl sm:p-5">
       <PanelHeader title="Показатели" monthLabel={monthLabel} />
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <MetricTile label="Авансы за месяц" value={formatMoney(adjustmentTotals.ADVANCE)} />
@@ -80,7 +84,7 @@ export function EmployeeWorkResultsPanel({
   scheduleStats: { days: number; hours: number };
 }) {
   return (
-    <section className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
+    <section className="rounded-[22px] border border-white/70 bg-white/76 p-4 shadow-[0_18px_60px_rgba(127,29,29,0.10)] backdrop-blur-2xl sm:p-5">
       <PanelHeader title="Рабочие результаты" monthLabel={monthLabel} />
       <div className={`mt-5 grid gap-4 ${showOrderMetrics ? "sm:grid-cols-3" : "sm:grid-cols-1"}`}>
         {showOrderMetrics ? <MetricTile label="Заказы за месяц" value={ordersCount} /> : null}
@@ -111,15 +115,15 @@ export function EmployeeAdjustmentsPanel({
 
   return (
     <div className="grid gap-4 xl:grid-cols-[1.4fr_0.8fr]">
-      <section className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
-        <h2 className="text-xl font-semibold text-zinc-950">{tabLabel}</h2>
-        <p className="mt-1 text-sm capitalize text-zinc-500">{monthLabel}</p>
+      <section className="rounded-[22px] border border-white/70 bg-white/76 p-4 shadow-[0_18px_60px_rgba(127,29,29,0.10)] backdrop-blur-2xl sm:p-5">
+        <h2 className="text-lg font-semibold tracking-[-0.02em] text-zinc-950">{tabLabel}</h2>
+        <p className="mt-1 text-xs capitalize text-zinc-500">{monthLabel}</p>
         <div className="mt-5 space-y-4">
           {adjustments.length === 0 ? (
             <p className="text-sm text-zinc-600">За выбранный месяц записей пока нет.</p>
           ) : (
             adjustments.map((adjustment) => (
-              <div key={adjustment.id} className="rounded-[14px] border border-zinc-200 bg-zinc-50 p-4">
+              <div key={adjustment.id} className="rounded-[16px] border border-red-950/10 bg-white/84 p-4 shadow-sm shadow-red-950/5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <p className="font-semibold text-zinc-950">{EMPLOYEE_ADJUSTMENT_LABELS[adjustment.type]}</p>
                   <p className="text-sm text-zinc-700">{formatDate(adjustment.createdAt)}</p>
@@ -154,25 +158,25 @@ export function EmployeeScheduleEditorDialog({
   onClose: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-zinc-950/45 px-4 py-4 sm:py-5" onClick={onClose}>
-      <div role="dialog" aria-modal="true" aria-label="Редактирование графика работы" className="flex max-h-[calc(100vh-3rem)] w-full max-w-6xl flex-col overflow-hidden rounded-[14px] border border-zinc-200 bg-white shadow-2xl shadow-zinc-950/25" onClick={(event) => event.stopPropagation()}>
-        <div className="flex items-start justify-between gap-4 border-b border-zinc-200 px-4 sm:px-5 py-5">
+    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-zinc-950/35 px-4 py-4 backdrop-blur-sm sm:py-5" onClick={onClose}>
+      <div role="dialog" aria-modal="true" aria-label="Редактирование графика работы" className="flex max-h-[calc(100vh-3rem)] w-full max-w-[86rem] flex-col overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#fffdfc_0%,#fff3f2_48%,#f7eeee_100%)] shadow-[0_24px_80px_rgba(127,29,29,0.18)]" onClick={(event) => event.stopPropagation()}>
+        <div className="flex items-start justify-between gap-4 border-b border-red-950/10 bg-white/76 px-4 py-4 backdrop-blur-2xl sm:px-5">
           <div className="space-y-1">
             <h2 className="text-xl font-semibold text-zinc-950">График работы</h2>
             <p className="text-sm text-zinc-600">{scheduleSummary}</p>
           </div>
-          <button type="button" onClick={onClose} className="rounded-full border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50">
+          <button type="button" onClick={onClose} className="inline-flex h-9 items-center rounded-full border border-red-100 bg-white/90 px-4 text-xs font-semibold text-red-800 shadow-sm shadow-red-950/5 transition hover:border-red-800 hover:bg-red-800 hover:text-white">
             Закрыть
           </button>
         </div>
-        <div className="overflow-y-auto px-4 sm:px-5 py-5">
+        <div className="overflow-y-auto px-4 py-4 sm:px-5">
           <EmployeeScheduleEditor value={schedule} onChange={onChange} />
         </div>
-        <div className="flex flex-wrap justify-end gap-2 border-t border-zinc-200 px-4 sm:px-5 py-4">
-          <button type="button" onClick={onReset} disabled={!hasUnsavedChanges} className="rounded-2xl border border-zinc-300 px-4 py-3 text-sm font-medium text-zinc-950 transition hover:border-zinc-500 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:text-zinc-400">
+        <div className="flex flex-wrap justify-end gap-2 border-t border-red-950/10 bg-white/76 px-4 py-3 backdrop-blur-2xl sm:px-5">
+          <button type="button" onClick={onReset} disabled={!hasUnsavedChanges} className="rounded-full border border-red-100 bg-white/90 px-5 py-2.5 text-sm font-semibold text-red-800 shadow-sm shadow-red-950/5 transition hover:border-red-800 hover:bg-red-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-50">
             Сбросить
           </button>
-          <button type="button" onClick={onSave} disabled={!hasUnsavedChanges} className="rounded-2xl bg-zinc-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-300">
+          <button type="button" onClick={onSave} disabled={!hasUnsavedChanges} className="rounded-full bg-red-800 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-red-950/15 transition hover:bg-red-900 disabled:cursor-not-allowed disabled:bg-red-300">
             Сохранить график
           </button>
         </div>
@@ -184,17 +188,17 @@ export function EmployeeScheduleEditorDialog({
 function PanelHeader({ title, monthLabel }: { title: string; monthLabel: string }) {
   return (
     <div className="flex items-start justify-between gap-3">
-      <h2 className="text-xl font-semibold text-zinc-950">{title}</h2>
-      <p className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium capitalize text-zinc-700">{monthLabel}</p>
+      <h2 className="text-lg font-semibold tracking-[-0.02em] text-zinc-950">{title}</h2>
+      <p className="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold capitalize text-red-800 ring-1 ring-red-100">{monthLabel}</p>
     </div>
   );
 }
 
 function MetricTile({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
   return (
-    <div className="rounded-[14px] bg-zinc-50 p-4">
-      <p className="text-sm text-zinc-500">{label}</p>
-      <p className="mt-3 text-2xl font-semibold text-zinc-950">{value}</p>
+    <div className="rounded-[16px] border border-red-950/10 bg-white/84 p-4 shadow-sm shadow-red-950/5">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-red-800/50">{label}</p>
+      <p className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-zinc-950">{value}</p>
       {hint ? <p className="mt-1 text-sm text-zinc-500">{hint}</p> : null}
     </div>
   );

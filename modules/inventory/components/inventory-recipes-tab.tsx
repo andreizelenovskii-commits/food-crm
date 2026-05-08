@@ -43,6 +43,7 @@ export function InventoryRecipesTab({
         techCards={techCards}
         priceTechCards={priceTechCards}
         ingredientTechCards={ingredientTechCards}
+        techCardProducts={techCardProducts}
         canManageInventory={canManageInventory}
       />
     </div>
@@ -96,11 +97,13 @@ function RecipesList({
   techCards,
   priceTechCards,
   ingredientTechCards,
+  techCardProducts,
   canManageInventory,
 }: {
   techCards: TechCardItem[];
   priceTechCards: TechCardItem[];
   ingredientTechCards: TechCardItem[];
+  techCardProducts: TechCardProductOption[];
   canManageInventory: boolean;
 }) {
   return (
@@ -119,6 +122,7 @@ function RecipesList({
       <RecipeKindLinks
         priceTechCards={priceTechCards}
         ingredientTechCards={ingredientTechCards}
+        products={techCardProducts}
         canManageInventory={canManageInventory}
       />
       {techCards.length === 0 ? (
