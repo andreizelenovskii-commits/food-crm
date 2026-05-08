@@ -7,7 +7,7 @@ export const EMPLOYEE_ROLES = [
 
 export type EmployeeRole = (typeof EMPLOYEE_ROLES)[number];
 
-export const EMPLOYEE_ADJUSTMENT_TYPES = ["ADVANCE", "FINE", "DEBT"] as const;
+export const EMPLOYEE_ADJUSTMENT_TYPES = ["ADVANCE", "FINE", "DEBT", "SALARY"] as const;
 export const EMPLOYEE_ADJUSTMENT_LABELS: Record<
   EmployeeAdjustmentType,
   string
@@ -15,6 +15,7 @@ export const EMPLOYEE_ADJUSTMENT_LABELS: Record<
   ADVANCE: "Аванс",
   FINE: "Штраф",
   DEBT: "Долг",
+  SALARY: "Зарплата",
 };
 
 export type EmployeeAdjustmentType = (typeof EMPLOYEE_ADJUSTMENT_TYPES)[number];

@@ -18,7 +18,7 @@ export function EmployeeAdjustmentForm({ employeeId, defaultType }: { employeeId
       <div className="space-y-2">
         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">Корректировки</p>
         <h2 className="text-lg font-semibold tracking-[-0.02em] text-zinc-950">Добавить запись</h2>
-        <p className="text-xs leading-5 text-zinc-600">Занеси аванс, штраф или долг сотруднику.</p>
+        <p className="text-xs leading-5 text-zinc-600">Занеси аванс, штраф, долг или зарплату сотруднику.</p>
       </div>
 
       <input type="hidden" name="employeeId" value={employeeId} />

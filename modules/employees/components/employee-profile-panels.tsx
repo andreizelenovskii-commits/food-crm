@@ -11,7 +11,7 @@ import {
   type EmployeeSchedule,
 } from "@/modules/employees/employees.types";
 
-export type EmployeeProfileTab = "general" | "advances" | "fines" | "debts";
+export type EmployeeProfileTab = "general" | "advances" | "fines" | "debts" | "salary";
 
 export function EmployeeProfileTabs({
   tabs,
@@ -50,7 +50,7 @@ export function EmployeeMetricsPanel({
   ordersCount,
 }: {
   monthLabel: string;
-  adjustmentTotals: Record<"ADVANCE" | "FINE" | "DEBT", number>;
+  adjustmentTotals: Record<"ADVANCE" | "FINE" | "DEBT" | "SALARY", number>;
   scheduleStats: { days: number; hours: number };
   showOrderMetrics: boolean;
   ordersCount: number;
@@ -62,6 +62,7 @@ export function EmployeeMetricsPanel({
         <MetricTile label="Авансы за месяц" value={formatMoney(adjustmentTotals.ADVANCE)} />
         <MetricTile label="Штрафы" value={formatMoney(adjustmentTotals.FINE)} />
         <MetricTile label="Долги" value={formatMoney(adjustmentTotals.DEBT)} />
+        <MetricTile label="Зарплата за месяц" value={formatMoney(adjustmentTotals.SALARY)} />
         <MetricTile label="Рабочие часы" value={formatHours(scheduleStats.hours)} />
         <MetricTile label="Рабочие дни" value={scheduleStats.days} />
         {showOrderMetrics ? <MetricTile label="Заказы за месяц" value={ordersCount} /> : null}
@@ -111,7 +112,13 @@ export function EmployeeAdjustmentsPanel({
   monthLabel: string;
   adjustments: EmployeeAdjustment[];
 }) {
-  const defaultType = activeTab === "advances" ? "ADVANCE" : activeTab === "fines" ? "FINE" : "DEBT";
+  const defaultType = activeTab === "advances"
+    ? "ADVANCE"
+    : activeTab === "fines"
+      ? "FINE"
+      : activeTab === "salary"
+        ? "SALARY"
+        : "DEBT";
 
   return (
     <div className="grid gap-4 xl:grid-cols-[1.4fr_0.8fr]">

@@ -1,10 +1,10 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 
 type ConfirmDeleteButtonProps = {
-  action: (formData: FormData) => Promise<{ redirectTo?: string } | void>;
+  action: (formData: FormData) => Promise<{ redirectTo?: string; errorMessage?: string } | void>;
   ariaLabel: string;
   entityLabel: string;
   entityName: string;
@@ -32,36 +32,45 @@ export function ConfirmDeleteButton({
   hiddenFields = [],
   buttonClassName = DEFAULT_BUTTON_CLASS_NAME,
 }: ConfirmDeleteButtonProps) {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const currentUrl = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
 
   const handleConfirmDelete = () => {
+    setSubmitError(null);
     startTransition(async () => {
-      const formData = new FormData();
+      try {
+        const formData = new FormData();
 
-      hiddenFields.forEach((field) => {
-        formData.set(field.name, String(field.value));
-      });
+        hiddenFields.forEach((field) => {
+          formData.set(field.name, String(field.value));
+        });
 
-      if (!formData.get("redirectTo")) {
-        formData.set("redirectTo", currentUrl);
+        if (!formData.get("redirectTo")) {
+          formData.set("redirectTo", currentUrl);
+        }
+
+        const result = await action(formData);
+        if (result?.errorMessage) {
+          setSubmitError(result.errorMessage);
+          return;
+        }
+
+        const redirectTo = result?.redirectTo?.trim() || currentUrl;
+
+        setIsConfirmOpen(false);
+
+        window.location.assign(redirectTo);
+      } catch (error) {
+        const fallbackMessage = "Не удалось удалить запись. Попробуйте снова.";
+        const errorMessage = error instanceof Error && error.message
+          ? error.message
+          : fallbackMessage;
+        setSubmitError(errorMessage);
       }
-
-      const result = await action(formData);
-      const redirectTo = result?.redirectTo?.trim() || currentUrl;
-
-      setIsConfirmOpen(false);
-
-      if (redirectTo === currentUrl) {
-        router.refresh();
-        return;
-      }
-
-      router.replace(redirectTo, { scroll: false });
     });
   };
 
@@ -81,6 +90,7 @@ export function ConfirmDeleteButton({
           disabled={disabled}
           onClick={() => {
             if (!disabled) {
+              setSubmitError(null);
               setIsConfirmOpen(true);
             }
           }}
@@ -124,6 +134,11 @@ export function ConfirmDeleteButton({
               {warningMessage ? (
                 <p className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-700">
                   {warningMessage}
+                </p>
+              ) : null}
+              {submitError ? (
+                <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                  {submitError}
                 </p>
               ) : null}
             </div>

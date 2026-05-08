@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageShell } from "@/components/ui/page-shell";
 import { requirePermission } from "@/modules/auth/auth.session";
-import { hasPermission } from "@/modules/auth/authz";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
 import { EmployeeProfileClient } from "@/modules/employees/components/employee-profile-client";
 import { fetchEmployeeById } from "@/modules/employees/employees.api";
@@ -75,7 +74,6 @@ export default async function EmployeeProfilePage(props: {
         <div className="relative">
           <EmployeeProfileClient
             employee={employee}
-            canManageEmployees={hasPermission(user, "manage_employees")}
           />
         </div>
       </div>

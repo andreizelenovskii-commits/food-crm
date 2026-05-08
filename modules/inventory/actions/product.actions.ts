@@ -93,10 +93,26 @@ export async function deleteProductAction(formData: FormData) {
   const productId = Number(String(formData.get("productId") ?? "").trim());
   const redirectTo = String(formData.get("redirectTo") ?? "/dashboard/inventory").trim();
 
-  if (Number.isInteger(productId) && productId > 0) {
+  if (!Number.isInteger(productId) || productId <= 0) {
+    return {
+      redirectTo: redirectTo || "/dashboard/inventory",
+      errorMessage: "Товар не найден.",
+    };
+  }
+
+  try {
     await browserBackendJson(`/api/v1/inventory/products/${productId}`, {
       method: "DELETE",
     });
+  } catch (error) {
+    const fallbackMessage = "Не удалось удалить товар.";
+    const errorMessage = error instanceof Error && error.message
+      ? error.message
+      : fallbackMessage;
+    return {
+      redirectTo: redirectTo || "/dashboard/inventory",
+      errorMessage,
+    };
   }
 
   return {
