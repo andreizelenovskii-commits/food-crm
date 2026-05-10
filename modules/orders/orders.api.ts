@@ -10,6 +10,10 @@ export async function fetchOrderById(orderId: number): Promise<OrderListItem | n
   return backendGet<OrderListItem | null>(`/api/v1/orders/${orderId}`);
 }
 
+export async function fetchOrdersByClientId(clientId: number): Promise<OrderListItem[]> {
+  return backendGet<OrderListItem[]>(`/api/v1/orders/client/${clientId}`);
+}
+
 export async function fetchOrderCreateOptions(): Promise<OrderCreateOptions> {
   return backendGet<OrderCreateOptions>("/api/v1/orders/options");
 }

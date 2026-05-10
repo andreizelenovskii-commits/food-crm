@@ -4,9 +4,16 @@ import { PageShell } from "@/components/ui/page-shell";
 import { hasPermission } from "@/modules/auth/authz";
 import { requirePermission } from "@/modules/auth/auth.session";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
+import { ClientDeleteButton } from "@/modules/clients/components/client-delete-button";
 import { ClientForm } from "@/modules/clients/components/client-form";
 import { fetchClientById } from "@/modules/clients/clients.api";
 import { LOYALTY_LEVEL_LABELS } from "@/modules/loyalty/loyalty.types";
+import { fetchOrdersByClientId } from "@/modules/orders/orders.api";
+import type { OrderListItem } from "@/modules/orders/orders.types";
+import {
+  ORDER_STATUS_LABELS,
+  ORDER_STATUS_STYLES,
+} from "@/modules/orders/orders.workflow";
 
 function formatMoney(cents: number) {
   return new Intl.NumberFormat("ru-RU", {
@@ -35,6 +42,16 @@ function formatClientAddresses(address: string | null) {
   return addresses.length > 0 ? addresses : ["Не указан"];
 }
 
+function formatOrderDate(value: string) {
+  return new Intl.DateTimeFormat("ru-RU", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
 function ProfileInfoTile({
   label,
   value,
@@ -56,6 +73,58 @@ function ProfileInfoTile({
       >
         {value}
       </p>
+    </div>
+  );
+}
+
+function ClientOrdersPanel({ orders }: { orders: OrderListItem[] }) {
+  return (
+    <div className="mt-3 rounded-[18px] border border-red-950/10 bg-white/72 px-4 py-3 shadow-sm shadow-red-950/5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-red-800/60">
+            Заказы клиента
+          </p>
+          <h3 className="mt-1 text-base font-semibold text-zinc-950">История заказов</h3>
+        </div>
+        <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-800 ring-1 ring-red-100">
+          {orders.length}
+        </span>
+      </div>
+
+      <div className="mt-3 space-y-2">
+        {orders.length === 0 ? (
+          <p className="rounded-[14px] border border-dashed border-zinc-200 bg-white/70 px-3 py-3 text-sm text-zinc-500">
+            Заказов пока нет.
+          </p>
+        ) : (
+          orders.map((order) => (
+            <article
+              key={order.id}
+              className="rounded-[14px] border border-zinc-200 bg-white/82 px-3 py-3"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm font-semibold text-zinc-950">Заказ #{order.id}</p>
+                <span
+                  className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium ${ORDER_STATUS_STYLES[order.status]}`}
+                >
+                  {ORDER_STATUS_LABELS[order.status]}
+                </span>
+              </div>
+              <div className="mt-2 grid gap-1.5 text-xs leading-5 text-zinc-600 sm:grid-cols-2">
+                <p>{formatOrderDate(order.createdAt)}</p>
+                <p className="font-semibold text-zinc-950 sm:text-right">
+                  {formatMoney(order.totalCents)}
+                </p>
+                <p>Исполнитель: {order.employeeName}</p>
+                {order.discountPercent > 0 ? (
+                  <p className="text-red-800 sm:text-right">Скидка {order.discountPercent}%</p>
+                ) : null}
+              </div>
+            </article>
+          ))
+        )}
+      </div>
     </div>
   );
 }
@@ -83,7 +152,9 @@ export default async function ClientProfilePage(props: {
     ? Math.round(client.totalSpentCents / client.ordersCount)
     : 0;
   const canManageClients = hasPermission(user, "manage_clients");
+  const canViewOrders = hasPermission(user, "view_orders");
   const isEditing = canManageClients && searchParams?.mode === "edit";
+  const clientOrders = canViewOrders ? await fetchOrdersByClientId(client.id) : [];
   const profileTitle = client.type === "ORGANIZATION" ? "Профиль организации" : "Профиль клиента";
   const editTitle = client.type === "ORGANIZATION" ? "Редактирование организации" : "Редактирование клиента";
 
@@ -147,6 +218,9 @@ export default async function ClientProfilePage(props: {
                     </Link>
                   )
                 ) : null}
+                {canManageClients && !isEditing ? (
+                  <ClientDeleteButton clientId={client.id} clientName={client.name} />
+                ) : null}
                 <Link
                   href="/dashboard/clients"
                   className="inline-flex h-9 items-center rounded-full border border-red-100 bg-white/90 px-4 text-sm font-medium text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white"
@@ -194,6 +268,8 @@ export default async function ClientProfilePage(props: {
                     {client.notes || "Нет заметок"}
                   </p>
                 </div>
+
+                {canViewOrders ? <ClientOrdersPanel orders={clientOrders} /> : null}
               </>
             )}
           </div>

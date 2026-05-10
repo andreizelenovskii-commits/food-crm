@@ -55,7 +55,6 @@ export function ClientSummaryCard({
               <ClientDeleteButton
                 clientId={client.id}
                 clientName={client.name}
-                disabled={client.ordersCount > 0}
               />
             ) : null}
           </div>

@@ -66,12 +66,16 @@ function OrderCard({
         <div className="grid gap-3 text-sm text-zinc-600">
           <p>
             Клиент:{" "}
-            <Link
-              href={`/dashboard/clients/${order.clientId}`}
-              className="font-medium text-zinc-900 underline-offset-2 hover:underline"
-            >
-              {order.clientName}
-            </Link>
+            {order.clientId ? (
+              <Link
+                href={`/dashboard/clients/${order.clientId}`}
+                className="font-medium text-zinc-900 underline-offset-2 hover:underline"
+              >
+                {order.clientName}
+              </Link>
+            ) : (
+              <span className="font-medium text-zinc-900">{order.clientName}</span>
+            )}
           </p>
           <p>Тип клиента: {order.clientType === "ORGANIZATION" ? "Организация" : "Клиент"}</p>
           <p>Исполнитель: {order.employeeName}</p>
