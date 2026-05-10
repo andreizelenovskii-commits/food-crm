@@ -142,7 +142,7 @@ function DeleteDialog({
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">Удаление</p>
           <h2 className="mt-1 text-lg font-semibold text-zinc-950">Удалить техкарту?</h2>
           <p className="mt-2 text-sm leading-6 text-zinc-600">
-            “{card.name}” будет удалена вместе с составом. Если карта привязана к каталогу, система не даст её удалить.
+            “{card.name}” будет удалена вместе с составом и связанными позициями каталога.
           </p>
         </div>
         {state.errorMessage ? (
