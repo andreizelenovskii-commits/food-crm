@@ -13,11 +13,9 @@ import {
   CATALOG_FIELD_CLASS_NAME,
   type CatalogItemFormProps,
   EMPTY_CATALOG_FORM_VALUES,
-  resolveInitialPizzaSize,
 } from "@/modules/catalog/components/catalog-item-form.model";
 import type { CatalogFormState } from "@/modules/catalog/catalog.form-types";
 import type { CatalogPriceListType } from "@/modules/catalog/catalog.types";
-import type { TechCardPizzaSize } from "@/modules/tech-cards/tech-cards.types";
 
 export function CatalogItemForm({
   mode = "create",
@@ -44,13 +42,6 @@ export function CatalogItemForm({
   const [imageUrl, setImageUrl] = useState(initialState.values.imageUrl);
   const [imageUploadError, setImageUploadError] = useState<string | null>(null);
   const [isImageUploading, setIsImageUploading] = useState(false);
-
-  const selectedTechCard =
-    techCardOptions.find((option) => String(option.id) === selectedTechCardId) ?? null;
-  const [selectedPizzaSize, setSelectedPizzaSize] = useState<TechCardPizzaSize | "">(
-    resolveInitialPizzaSize(selectedTechCard?.pizzaSize),
-  );
-
   const sortedTechCardOptions = useMemo(
     () =>
       [...techCardOptions].sort(
@@ -61,18 +52,8 @@ export function CatalogItemForm({
     [techCardOptions],
   );
   const filteredTechCardOptions = useMemo(() => {
-    return sortedTechCardOptions.filter((option) => {
-      if (selectedCategory && option.category !== selectedCategory) {
-        return false;
-      }
-
-      if (selectedCategory === "Пиццы" && selectedPizzaSize) {
-        return option.pizzaSize === selectedPizzaSize;
-      }
-
-      return true;
-    });
-  }, [selectedCategory, selectedPizzaSize, sortedTechCardOptions]);
+    return sortedTechCardOptions;
+  }, [sortedTechCardOptions]);
   const uploadImage = async (file: File | undefined) => {
     if (!file) {
       return;
@@ -96,11 +77,12 @@ export function CatalogItemForm({
   return (
     <form
       action={formAction}
-      className="space-y-5 rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5"
+      className="foodlike-panel space-y-5 p-4 sm:p-5"
     >
       {initialItem ? <input type="hidden" name="catalogItemId" value={initialItem.id} /> : null}
       <div className="space-y-3">
-        <h2 className="text-xl font-semibold text-zinc-950">
+        <p className="foodlike-kicker">Каталог</p>
+        <h2 className="foodlike-title-sm">
           {mode === "edit" ? "Редактировать позицию каталога" : "Новая позиция каталога"}
         </h2>
         <p className="text-sm leading-6 text-zinc-600">
@@ -140,12 +122,9 @@ export function CatalogItemForm({
       <CatalogTechCardFields
         priceDefaultValue={state.values.price}
         selectedCategory={selectedCategory}
-        selectedPizzaSize={selectedPizzaSize}
         selectedTechCardId={selectedTechCardId}
-        techCardOptions={techCardOptions}
         filteredTechCardOptions={filteredTechCardOptions}
         onCategoryChange={setSelectedCategory}
-        onPizzaSizeChange={setSelectedPizzaSize}
         onTechCardIdChange={setSelectedTechCardId}
       />
 
@@ -156,12 +135,12 @@ export function CatalogItemForm({
           rows={4}
           defaultValue={state.values.description}
           placeholder="Короткое описание позиции для сайта"
-          className={`${CATALOG_FIELD_CLASS_NAME} min-h-[9rem] resize-y`}
+          className={`${CATALOG_FIELD_CLASS_NAME} foodlike-textarea resize-y`}
         />
       </label>
 
       {state.errorMessage ? (
-        <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <p className="rounded-[18px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {state.errorMessage}
         </p>
       ) : null}
@@ -169,7 +148,7 @@ export function CatalogItemForm({
       <button
         type="submit"
         disabled={isPending || isImageUploading}
-        className="w-full rounded-2xl bg-zinc-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-500"
+        className="foodlike-button-primary w-full"
       >
         {isImageUploading
           ? "Загружаем фото..."

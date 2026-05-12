@@ -92,7 +92,7 @@ export function AppSidebar() {
           <div className="min-w-0">
             <p className="text-base font-semibold leading-5 text-zinc-950">FoodLike</p>
             <p className="mt-0.5 text-[11px] font-medium uppercase tracking-[0.14em] text-red-800/60">
-              CRM System
+              CRM
             </p>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { PageShell } from "@/components/ui/page-shell";
 import { hasPermission } from "@/modules/auth/authz";
 import { requirePermission } from "@/modules/auth/auth.session";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
+import { GlassPanel, KpiTile } from "@/modules/dashboard/components/dashboard-widgets";
 import { formatInventoryQuantity } from "@/modules/inventory/inventory.format";
 import { ProductDeleteButton } from "@/modules/inventory/components/product-delete-button";
 import { ProductForm } from "@/modules/inventory/components/product-form";
@@ -48,61 +49,45 @@ export default async function ProductDetailsPage(props: {
       backHref="/dashboard/inventory"
       action={<SessionUserActions user={user} />}
     >
-      <div className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
+      <div className="foodlike-frame grid gap-5 p-4 sm:p-5 xl:grid-cols-[0.95fr_1.05fr]">
         <section className="space-y-5">
-          <article className="rounded-[14px] border border-zinc-200 bg-[linear-gradient(180deg,#ffffff_0%,#fff4f2_100%)] p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
+          <GlassPanel className="p-4 sm:p-5">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">
+                <p className="foodlike-kicker">
                   Карточка товара
                 </p>
                 <h2 className="mt-2 text-2xl font-semibold text-zinc-950">{product.name}</h2>
               </div>
               {product.category ? (
-                <span className="rounded-full bg-red-800 px-4 py-2 text-sm font-medium text-white">
+                <span className="foodlike-pill">
                   {product.category}
                 </span>
               ) : null}
             </div>
 
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl border border-white/80 bg-white/90 p-4">
-                <p className="text-sm font-medium text-zinc-500">Код товара</p>
-                <p className="mt-3 text-xl font-semibold text-zinc-950">{product.sku ?? "Не присвоен"}</p>
-              </div>
-              <div className="rounded-2xl border border-white/80 bg-white/90 p-4">
-                <p className="text-sm font-medium text-zinc-500">Остаток</p>
-                <p className={`mt-3 text-xl font-semibold ${stockTone}`}>
-                  {formatInventoryQuantity(product.stockQuantity)} {product.unit}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-white/80 bg-white/90 p-4">
-                <p className="text-sm font-medium text-zinc-500">Средняя закупочная цена</p>
-                <p className="mt-3 text-xl font-semibold text-zinc-950">{formatMoney(product.priceCents)}</p>
-              </div>
-              <div className="rounded-2xl border border-white/80 bg-white/90 p-4">
-                <p className="text-sm font-medium text-zinc-500">Стоимость остатка по закупке</p>
-                <p className="mt-3 text-xl font-semibold text-zinc-950">
-                  {formatMoney(product.stockQuantity * product.priceCents)}
-                </p>
-              </div>
+              <KpiTile label="Код товара" value={product.sku ?? "Не присвоен"} hint="SKU" />
+              <KpiTile label="Остаток" value={`${formatInventoryQuantity(product.stockQuantity)} ${product.unit}`} hint={stockTone === "text-red-700" ? "Требует внимания" : "В норме"} />
+              <KpiTile label="Средняя закупочная цена" value={formatMoney(product.priceCents)} hint="За единицу" />
+              <KpiTile label="Стоимость остатка по закупке" value={formatMoney(product.stockQuantity * product.priceCents)} hint="По текущему остатку" />
             </div>
-          </article>
+          </GlassPanel>
 
-          <article className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
-            <h2 className="text-xl font-semibold text-zinc-950">Подробности</h2>
+          <GlassPanel className="p-4 sm:p-5">
+            <h2 className="foodlike-title-sm">Подробности</h2>
             <div className="mt-4 grid gap-3 text-sm text-zinc-600 sm:grid-cols-2">
               <p>Категория: <span className="font-medium text-zinc-900">{product.category ?? "Не указана"}</span></p>
               <p>Ед. измерения: <span className="font-medium text-zinc-900">{product.unit}</span></p>
               <p>Использований в заказах: <span className="font-medium text-zinc-900">{product.orderItemsCount}</span></p>
             </div>
-            <div className="mt-5 rounded-2xl border border-zinc-100 bg-zinc-50 p-4">
+            <div className="foodlike-card mt-5 p-4">
               <p className="text-sm font-medium text-zinc-700">Описание</p>
               <p className="mt-2 text-sm leading-6 text-zinc-600">
                 {product.description || "Описание для этого товара пока не заполнено."}
               </p>
             </div>
-          </article>
+          </GlassPanel>
 
           {canManageInventory ? (
             <div className="flex justify-end">

@@ -110,3 +110,144 @@ textarea {
 .foodlike-float-slow {
   animation: foodlike-float-slow 9s ease-in-out infinite;
 }
+
+@layer components {
+  .foodlike-frame {
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 28px;
+    background: linear-gradient(135deg, #fffdfc 0%, #fff3f2 48%, #f7eeee 100%);
+    box-shadow: 0 24px 80px rgba(127, 29, 29, 0.12);
+  }
+
+  .foodlike-panel {
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.74);
+    box-shadow: 0 18px 60px rgba(127, 29, 29, 0.1);
+    backdrop-filter: blur(24px);
+  }
+
+  .foodlike-card {
+    border: 1px solid rgba(69, 10, 10, 0.1);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.78);
+    box-shadow: 0 1px 2px rgba(69, 10, 10, 0.05);
+  }
+
+  .foodlike-kicker {
+    color: rgba(153, 27, 27, 0.72);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+
+  .foodlike-title-sm {
+    color: #09090b;
+    font-size: 18px;
+    font-weight: 650;
+    line-height: 1.25;
+  }
+
+  .foodlike-field {
+    width: 100%;
+    min-height: 40px;
+    border: 1px solid rgba(69, 10, 10, 0.1);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.86);
+    padding: 0 16px;
+    color: #09090b;
+    font-size: 14px;
+    font-weight: 500;
+    outline: none;
+    transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  }
+
+  .foodlike-field::placeholder {
+    color: #a1a1aa;
+  }
+
+  .foodlike-field:focus {
+    border-color: rgba(252, 165, 165, 0.9);
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 0 0 2px rgba(153, 27, 27, 0.1);
+  }
+
+  .foodlike-textarea {
+    min-height: 120px;
+    border-radius: 18px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  .foodlike-button-primary,
+  .foodlike-button-secondary {
+    display: inline-flex;
+    min-height: 40px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 0 18px;
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1;
+    transition:
+      color 160ms ease,
+      background 160ms ease,
+      border-color 160ms ease,
+      box-shadow 160ms ease,
+      transform 160ms ease;
+  }
+
+  .foodlike-button-primary {
+    border: 1px solid #991b1b;
+    background: #991b1b;
+    color: #fff;
+    box-shadow: 0 1px 2px rgba(69, 10, 10, 0.16);
+  }
+
+  .foodlike-button-primary:hover {
+    background: #7f1d1d;
+  }
+
+  .foodlike-button-secondary {
+    border: 1px solid #fee2e2;
+    background: rgba(255, 255, 255, 0.88);
+    color: #991b1b;
+    box-shadow: 0 1px 2px rgba(69, 10, 10, 0.05);
+  }
+
+  .foodlike-button-secondary:hover {
+    border-color: #991b1b;
+    background: #991b1b;
+    color: #fff;
+  }
+
+  .foodlike-button-primary:disabled,
+  .foodlike-button-secondary:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .foodlike-pill {
+    display: inline-flex;
+    min-height: 32px;
+    align-items: center;
+    border-radius: 999px;
+    background: #fef2f2;
+    padding: 0 12px;
+    color: #991b1b;
+    font-size: 12px;
+    font-weight: 650;
+  }
+
+  .foodlike-empty {
+    border: 1px dashed rgba(69, 10, 10, 0.12);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.58);
+    color: #71717a;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+}

@@ -10,10 +10,10 @@ export function EmployeeForm() {
   const [selectedRole, setSelectedRole] = useState<EmployeeRole>(EMPLOYEE_ROLES[0]);
 
   return (
-    <form action={addEmployeeAction} className="space-y-5 rounded-[22px] border border-white/70 bg-white/76 p-4 shadow-[0_18px_60px_rgba(127,29,29,0.10)] backdrop-blur-2xl sm:p-5">
+    <form action={addEmployeeAction} className="foodlike-panel space-y-5 p-4 sm:p-5">
       <div className="space-y-2">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">Новый сотрудник</p>
-        <h2 className="text-lg font-semibold tracking-[-0.02em] text-zinc-950">Добавить сотрудника</h2>
+        <p className="foodlike-kicker">Новый сотрудник</p>
+        <h2 className="foodlike-title-sm">Добавить сотрудника</h2>
         <p className="text-xs leading-5 text-zinc-600">Заполни данные и выбери роль.</p>
       </div>
 
@@ -23,7 +23,7 @@ export function EmployeeForm() {
           name="name"
           type="text"
           placeholder="Иван Иванов"
-          className="h-11 w-full rounded-[14px] border border-red-950/10 bg-white/90 px-4 text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
+          className="foodlike-field"
           required
         />
       </label>
@@ -34,7 +34,7 @@ export function EmployeeForm() {
           name="messenger"
           type="url"
           placeholder="https://t.me/ivan или https://wa.me/79991234567"
-          className="h-11 w-full rounded-[14px] border border-red-950/10 bg-white/90 px-4 text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
+          className="foodlike-field"
         />
         <p className="text-xs text-zinc-500">Необязательно. Укажи любую ссылку на мессенджер.</p>
       </label>
@@ -49,7 +49,7 @@ export function EmployeeForm() {
                 key={role}
                 type="button"
                 onClick={() => setSelectedRole(role)}
-                className={`rounded-2xl border px-4 py-3 text-sm font-medium transition ${
+                className={`rounded-full border px-4 py-2.5 text-sm font-semibold transition ${
                   isSelected
                     ? "border-red-800 bg-red-800 text-white shadow-sm shadow-red-950/15"
                     : "border-red-950/10 bg-white/90 text-zinc-950 hover:border-red-200 hover:bg-white"
@@ -83,7 +83,7 @@ export function EmployeeForm() {
         placeholder="Укажи дату рождения"
       />
 
-      <button type="submit" className="h-11 w-full rounded-[14px] bg-red-800 px-4 text-sm font-semibold text-white shadow-sm shadow-red-950/15 transition hover:bg-red-900">
+      <button type="submit" className="foodlike-button-primary w-full">
         Добавить сотрудника
       </button>
     </form>

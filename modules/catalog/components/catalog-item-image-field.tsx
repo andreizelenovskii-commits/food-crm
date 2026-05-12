@@ -21,7 +21,7 @@ export function CatalogItemImageField({
           type="file"
           accept="image/jpeg,image/png,image/webp,image/gif"
           onChange={(event) => onUploadImage(event.target.files?.[0])}
-          className="w-full rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 px-4 py-3 text-sm text-zinc-700 file:mr-4 file:rounded-xl file:border-0 file:bg-zinc-950 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:bg-zinc-100"
+          className="w-full rounded-[18px] border border-dashed border-red-950/14 bg-white/62 px-4 py-3 text-sm text-zinc-700 file:mr-4 file:rounded-full file:border-0 file:bg-red-800 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:bg-white/80"
           required={!imageUrl}
         />
         <input
@@ -38,7 +38,7 @@ export function CatalogItemImageField({
           <p className="text-xs leading-5 text-zinc-500">Загружаем фото...</p>
         ) : null}
         {imageUploadError ? (
-          <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <p className="rounded-[18px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             {imageUploadError}
           </p>
         ) : null}
@@ -47,7 +47,7 @@ export function CatalogItemImageField({
         </p>
       </label>
 
-      <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-100">
+      <div className="overflow-hidden rounded-[18px] border border-red-950/10 bg-white/62">
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img

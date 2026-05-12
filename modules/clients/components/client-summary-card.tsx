@@ -93,8 +93,8 @@ export function ClientSummaryCard({
               Адреса
             </p>
             <div className="mt-2 space-y-1 text-xs leading-5 text-zinc-700">
-              {addresses.map((address) => (
-                <p key={address}>{address}</p>
+              {addresses.map((address, index) => (
+                <p key={`${address}-${index}`}>{address}</p>
               ))}
             </div>
           </div>

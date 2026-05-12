@@ -2,6 +2,7 @@ import { PageShell } from "@/components/ui/page-shell";
 import { PUBLIC_SITE_URL } from "@/shared/deploy-public-urls";
 import { requirePermission } from "@/modules/auth/auth.session";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
+import { GlassPanel, KpiTile } from "@/modules/dashboard/components/dashboard-widgets";
 
 const WEBSITE_BLOCKS = [
   {
@@ -31,10 +32,10 @@ export default async function WebsitePage() {
       backHref="/dashboard"
       action={<SessionUserActions user={user} />}
     >
-      <div className="grid gap-4 xl:grid-cols-[1.12fr_0.88fr]">
+      <div className="foodlike-frame grid gap-4 p-4 sm:p-5 xl:grid-cols-[1.12fr_0.88fr]">
         <section className="space-y-5">
-          <article className="rounded-[14px] border border-red-100 bg-[linear-gradient(180deg,#ffffff_0%,#fff1f1_100%)] p-4 sm:p-5 shadow-sm shadow-red-950/5">
-            <p className="text-sm font-medium uppercase tracking-[0.18em] text-red-800/80">
+          <GlassPanel className="p-4 sm:p-5">
+            <p className="foodlike-kicker">
               Витрина бизнеса
             </p>
             <h2 className="mt-2 text-2xl font-semibold text-zinc-950">
@@ -46,43 +47,34 @@ export default async function WebsitePage() {
             </p>
 
             <div className="mt-4 grid gap-4 md:grid-cols-3">
-              <div className="rounded-2xl border border-white/80 bg-white/90 p-4">
-                <p className="text-sm font-medium text-zinc-500">Статус сайта</p>
-                <p className="mt-3 text-2xl font-semibold text-zinc-950">Online</p>
-              </div>
-              <div className="rounded-2xl border border-white/80 bg-white/90 p-4">
-                <p className="text-sm font-medium text-zinc-500">Каталог</p>
-                <p className="mt-3 text-2xl font-semibold text-zinc-950">Меню</p>
-              </div>
-              <div className="rounded-2xl border border-white/80 bg-white/90 p-4">
-                <p className="text-sm font-medium text-zinc-500">Переход</p>
-                <p className="mt-3 text-2xl font-semibold text-zinc-950">Готов</p>
-              </div>
+              <KpiTile label="Статус сайта" value="Online" hint="Публичная витрина" />
+              <KpiTile label="Каталог" value="Меню" hint="Клиентский прайс" />
+              <KpiTile label="Переход" value="Готов" hint="Быстрый доступ" />
             </div>
-          </article>
+          </GlassPanel>
 
           <div className="grid gap-4">
             {WEBSITE_BLOCKS.map((block) => (
-              <article
+              <GlassPanel
                 key={block.title}
-                className="rounded-[14px] border border-red-100 bg-white/90 p-4 sm:p-5 shadow-sm shadow-red-950/5"
+                className="p-4 sm:p-5"
               >
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <h3 className="text-xl font-semibold text-zinc-950">{block.title}</h3>
+                    <h3 className="foodlike-title-sm">{block.title}</h3>
                     <p className="mt-2 text-sm leading-6 text-zinc-600">{block.description}</p>
                   </div>
-                  <span className="rounded-full bg-red-800 px-3 py-1 text-xs font-medium text-white">
+                  <span className="foodlike-pill">
                     {block.status}
                   </span>
                 </div>
-              </article>
+              </GlassPanel>
             ))}
           </div>
         </section>
 
-        <aside className="rounded-[14px] border border-red-100 bg-white/90 p-4 sm:p-5 shadow-sm shadow-red-950/5">
-          <h2 className="text-xl font-semibold text-zinc-950">Что появится дальше</h2>
+        <GlassPanel className="p-4 sm:p-5">
+          <h2 className="foodlike-title-sm">Что появится дальше</h2>
           <div className="mt-4 space-y-3 text-sm leading-6 text-zinc-600">
             <p>Публичное оформление заказа без звонка.</p>
             <p>Управление публикацией позиций прямо из CRM.</p>
@@ -90,7 +82,7 @@ export default async function WebsitePage() {
             <p>Контроль публикации и подготовка к будущим онлайн-заказам.</p>
           </div>
 
-          <div className="mt-4 rounded-2xl border border-red-100 bg-red-50/70 p-4">
+          <div className="mt-4 rounded-[18px] border border-red-100 bg-red-50/70 p-4">
             <p className="text-sm font-medium text-red-800">
               Основной адрес
             </p>
@@ -103,13 +95,13 @@ export default async function WebsitePage() {
                 href={PUBLIC_SITE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex rounded-full border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-800 transition hover:border-red-200 hover:bg-red-100/60"
+                className="foodlike-button-secondary"
               >
                 Публичный сайт
               </a>
             </div>
           </div>
-        </aside>
+        </GlassPanel>
       </div>
     </PageShell>
   );

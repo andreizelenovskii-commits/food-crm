@@ -57,7 +57,7 @@ export function PhoneInput({
         }}
         className={
           className ??
-          "w-full rounded-2xl border border-zinc-300 px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
+          "foodlike-field"
         }
       />
     </>

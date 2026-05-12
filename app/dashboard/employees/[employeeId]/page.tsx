@@ -31,7 +31,7 @@ export default async function EmployeeProfilePage(props: {
             extraAction={
               <Link
                 href="/dashboard/employees"
-                className="rounded-2xl border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-950"
+                className="foodlike-button-secondary min-h-9 px-4"
               >
                 Назад к списку
               </Link>
@@ -60,7 +60,7 @@ export default async function EmployeeProfilePage(props: {
           extraAction={
             <Link
               href="/dashboard/employees"
-              className="rounded-2xl border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-950"
+              className="foodlike-button-secondary min-h-9 px-4"
             >
               Назад к списку
             </Link>

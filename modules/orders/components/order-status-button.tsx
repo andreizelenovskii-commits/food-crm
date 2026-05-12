@@ -31,7 +31,7 @@ export function OrderStatusButton({
       }}
       className={
         className ??
-        "rounded-2xl border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
+        "inline-flex h-10 items-center rounded-full bg-red-800 px-4 text-sm font-medium text-white shadow-sm shadow-red-950/20 transition hover:bg-red-900 disabled:cursor-not-allowed disabled:opacity-50"
       }
     >
       {isPending ? "Сохраняем..." : label}

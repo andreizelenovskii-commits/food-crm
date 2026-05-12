@@ -1,6 +1,7 @@
 import { PageShell } from "@/components/ui/page-shell";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
 import type { SessionUser } from "@/modules/auth/auth.types";
+import { GlassPanel, KpiTile } from "@/modules/dashboard/components/dashboard-widgets";
 import {
   buildSalesAnalyticsViewModel,
   type SalesAnalyticsInput,
@@ -19,15 +20,7 @@ function MetricCard({
   value: string;
   hint: string;
 }) {
-  return (
-    <article className="rounded-[14px] border border-red-950/10 bg-white/90 p-3.5 shadow-sm shadow-red-950/5">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">
-        {label}
-      </p>
-      <p className="mt-1.5 text-xl font-semibold text-zinc-950">{value}</p>
-      <p className="mt-1 text-xs leading-5 text-zinc-500">{hint}</p>
-    </article>
-  );
+  return <KpiTile label={label} value={value} hint={hint} />;
 }
 
 function InsightList({
@@ -38,8 +31,8 @@ function InsightList({
   items: Array<{ label: string; value: string; hint: string }>;
 }) {
   return (
-    <section className="rounded-[16px] border border-red-950/10 bg-white/90 p-4 shadow-sm shadow-red-950/5">
-      <h2 className="text-base font-semibold text-zinc-950">{title}</h2>
+    <GlassPanel className="p-4">
+      <h2 className="foodlike-title-sm">{title}</h2>
       <div className="mt-3 divide-y divide-red-950/10">
         {items.length ? (
           items.map((item) => (
@@ -52,10 +45,10 @@ function InsightList({
             </div>
           ))
         ) : (
-          <p className="py-3 text-sm text-zinc-500">Данных пока нет.</p>
+          <p className="foodlike-empty mt-3 px-4 py-4">Данных пока нет.</p>
         )}
       </div>
-    </section>
+    </GlassPanel>
   );
 }
 
@@ -78,9 +71,10 @@ export function SalesPage({
   return (
     <PageShell
       title="Продажи"
+      description="Аналитика выручки, заказов, прайсов и складского движения."
       action={<SessionUserActions user={user} />}
     >
-      <div className="space-y-4">
+      <div className="foodlike-frame space-y-4 p-4 sm:p-5">
         <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {analytics.kpis.map((item) => (
             <MetricCard key={item.label} {...item} />
@@ -88,13 +82,13 @@ export function SalesPage({
         </section>
 
         <section className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
-          <article className="rounded-[16px] border border-red-950/10 bg-white/90 p-4 shadow-sm shadow-red-950/5">
+          <GlassPanel className="p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="text-xs font-medium uppercase tracking-[0.14em] text-red-800/75">
+                <p className="foodlike-kicker">
                   Воронка
                 </p>
-                <h2 className="mt-1 text-lg font-semibold text-zinc-950">
+                <h2 className="mt-1 foodlike-title-sm">
                   Заказы и деньги
                 </h2>
               </div>
@@ -104,7 +98,7 @@ export function SalesPage({
                 <MetricCard key={item.label} {...item} />
               ))}
             </div>
-          </article>
+          </GlassPanel>
 
           <InsightList title="Движение денег" items={analytics.moneyFlow} />
         </section>
@@ -127,8 +121,8 @@ export function SalesPage({
           <InsightList title="Списания по категориям" items={analytics.writeoffCategories} />
         </section>
 
-        <section className="rounded-[16px] border border-red-950/10 bg-[#fffafa] p-4 shadow-sm shadow-red-950/5">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-red-800/75">
+        <GlassPanel className="p-4">
+          <p className="foodlike-kicker">
             Следующий уровень точности
           </p>
           <p className="mt-2 text-sm leading-6 text-zinc-600">
@@ -138,7 +132,7 @@ export function SalesPage({
             считает аналитику по доступным заказам, складу, прайсам, закупкам и
             списаниям.
           </p>
-        </section>
+        </GlassPanel>
       </div>
     </PageShell>
   );

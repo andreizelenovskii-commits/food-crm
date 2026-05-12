@@ -1,6 +1,7 @@
 import { PageShell } from "@/components/ui/page-shell";
 import { requirePermission } from "@/modules/auth/auth.session";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
+import { GlassPanel, KpiTile } from "@/modules/dashboard/components/dashboard-widgets";
 
 export default async function ReviewsPage() {
   const user = await requirePermission("view_dashboard");
@@ -12,9 +13,9 @@ export default async function ReviewsPage() {
       backHref="/dashboard"
       action={<SessionUserActions user={user} />}
     >
-      <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <section className="rounded-[14px] border border-zinc-200 bg-[linear-gradient(180deg,#ffffff_0%,#fff4f2_100%)] p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
-          <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">
+      <div className="foodlike-frame grid gap-4 p-4 sm:p-5 xl:grid-cols-[1.1fr_0.9fr]">
+        <GlassPanel className="p-4 sm:p-5">
+          <p className="foodlike-kicker">
             Обратная связь
           </p>
           <h2 className="mt-2 text-2xl font-semibold text-zinc-950">
@@ -25,29 +26,20 @@ export default async function ReviewsPage() {
           </p>
 
           <div className="mt-4 grid gap-4 md:grid-cols-3">
-            <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
-              <p className="text-sm font-medium text-zinc-500">Отзывов</p>
-              <p className="mt-3 text-2xl font-semibold text-zinc-950">0</p>
-            </div>
-            <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
-              <p className="text-sm font-medium text-zinc-500">Средняя оценка</p>
-              <p className="mt-3 text-2xl font-semibold text-zinc-950">-</p>
-            </div>
-            <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
-              <p className="text-sm font-medium text-zinc-500">Новых сегодня</p>
-              <p className="mt-3 text-2xl font-semibold text-zinc-950">0</p>
-            </div>
+            <KpiTile label="Отзывов" value={0} hint="Всего в системе" />
+            <KpiTile label="Средняя оценка" value="-" hint="После подключения отзывов" />
+            <KpiTile label="Новых сегодня" value={0} hint="За текущий день" />
           </div>
-        </section>
+        </GlassPanel>
 
-        <aside className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
-          <h2 className="text-xl font-semibold text-zinc-950">Что будет здесь</h2>
+        <GlassPanel className="p-4 sm:p-5">
+          <h2 className="foodlike-title-sm">Что будет здесь</h2>
           <div className="mt-4 space-y-3 text-sm leading-6 text-zinc-600">
             <p>Лента отзывов по заказам и клиентам.</p>
             <p>Фильтр по оценке, дате и статусу обработки.</p>
             <p>Отдельная отметка для жалоб и нерешённых кейсов.</p>
           </div>
-        </aside>
+        </GlassPanel>
       </div>
     </PageShell>
   );

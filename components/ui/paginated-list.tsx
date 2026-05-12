@@ -41,7 +41,7 @@ export function PaginatedList({
       <div className={className}>{visibleItems}</div>
 
       {totalItems > pageSize ? (
-        <div className="flex flex-col gap-3 rounded-[14px] border border-zinc-200 bg-white/80 px-3 py-3 text-sm text-zinc-600 sm:flex-row sm:items-center sm:justify-between">
+        <div className="foodlike-card flex flex-col gap-3 px-3 py-3 text-sm text-zinc-600 sm:flex-row sm:items-center sm:justify-between">
           <p>
             Показано {visibleStart}-{visibleEnd} из {totalItems} {itemLabel}
           </p>
@@ -91,11 +91,11 @@ function PaginationButton({
       disabled={disabled}
       onClick={onClick}
       className={[
-        "min-w-10 rounded-xl border px-3 py-2 text-sm font-medium transition",
+        "min-h-9 min-w-9 rounded-full border px-3 text-sm font-semibold transition",
         isActive
           ? "border-red-800 bg-red-800 text-white"
-          : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 hover:text-zinc-950",
-        disabled ? "cursor-not-allowed opacity-45 hover:border-zinc-200 hover:text-zinc-700" : "",
+          : "border-red-100 bg-white text-red-800 hover:border-red-800 hover:bg-red-800 hover:text-white",
+        disabled ? "cursor-not-allowed opacity-45 hover:border-red-100 hover:bg-white hover:text-red-800" : "",
       ].join(" ")}
       aria-current={isActive ? "page" : undefined}
     >

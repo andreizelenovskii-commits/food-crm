@@ -110,14 +110,15 @@ function PickerDialog({
   onClose: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-zinc-950/40 px-4 py-4 sm:py-5 backdrop-blur-sm" onClick={onClose}>
-      <div role="dialog" aria-modal="true" aria-label={title} className="w-full max-w-2xl rounded-[30px] border border-zinc-200 bg-white p-5 shadow-2xl shadow-zinc-950/20" onClick={(event) => event.stopPropagation()}>
+    <div className="fixed inset-0 z-70 flex items-center justify-center bg-zinc-950/40 px-4 py-4 backdrop-blur-sm sm:py-5" onClick={onClose}>
+      <div role="dialog" aria-modal="true" aria-label={title} className="foodlike-frame w-full max-w-2xl p-4 sm:p-5" onClick={(event) => event.stopPropagation()}>
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1">
-            <h3 className="text-lg font-semibold text-zinc-950">{title}</h3>
+            <p className="foodlike-kicker">Выбор</p>
+            <h3 className="foodlike-title-sm">{title}</h3>
             <p className="text-sm text-zinc-600">{description}</p>
           </div>
-          <button type="button" onClick={onClose} className="rounded-full border border-zinc-200 bg-white p-2 text-zinc-500 transition hover:border-zinc-300 hover:text-zinc-900" aria-label={closeLabel}>
+          <button type="button" onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full border border-red-100 bg-white/90 text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white" aria-label={closeLabel}>
             <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5" aria-hidden="true">
               <path d="M6 6L14 14M14 6L6 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
             </svg>
@@ -130,7 +131,7 @@ function PickerDialog({
             value={query}
             onChange={(event) => onQueryChange(event.target.value)}
             placeholder={placeholder}
-            className="w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
+            className="foodlike-field"
           />
 
           <div className="max-h-96 space-y-2 overflow-y-auto pr-1">{children}</div>
@@ -142,7 +143,7 @@ function PickerDialog({
 
 function EmptyPickerState({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 px-4 py-4 text-sm text-zinc-500">
+    <div className="foodlike-empty px-4 py-4">
       {children}
     </div>
   );
@@ -163,15 +164,15 @@ function PickerOption({
     <button
       type="button"
       onClick={onClick}
-      className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
+      className={`w-full rounded-[18px] border px-4 py-3 text-left shadow-sm transition ${
         isSelected
-          ? "border-zinc-950 bg-zinc-950 text-white shadow-sm"
-          : "border-zinc-200 bg-zinc-50 text-zinc-900 hover:border-zinc-300 hover:bg-white"
+          ? "border-red-800 bg-red-800 text-white shadow-red-950/15"
+          : "border-red-950/10 bg-white/78 text-zinc-900 shadow-red-950/5 hover:border-red-200 hover:bg-white"
       }`}
       aria-pressed={isSelected}
     >
       <span className="block text-sm font-medium">{title}</span>
-      <span className={`mt-1 block text-xs ${isSelected ? "text-zinc-300" : "text-zinc-500"}`}>
+      <span className={`mt-1 block text-xs ${isSelected ? "text-red-50/75" : "text-zinc-500"}`}>
         {subtitle}
       </span>
     </button>

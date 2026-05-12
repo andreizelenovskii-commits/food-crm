@@ -1,6 +1,7 @@
 import { PageShell } from "@/components/ui/page-shell";
 import { requirePermission } from "@/modules/auth/auth.session";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
+import { GlassPanel, KpiTile } from "@/modules/dashboard/components/dashboard-widgets";
 
 const SETTINGS_BLOCKS = [
   {
@@ -35,10 +36,10 @@ export default async function SettingsPage() {
       backHref="/dashboard"
       action={<SessionUserActions user={user} />}
     >
-      <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+      <div className="foodlike-frame grid gap-4 p-4 sm:p-5 xl:grid-cols-[1.15fr_0.85fr]">
         <section className="space-y-5">
-          <article className="rounded-[14px] border border-zinc-200 bg-[linear-gradient(180deg,#ffffff_0%,#fff1f1_100%)] p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
-            <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">
+          <GlassPanel className="p-4 sm:p-5">
+            <p className="foodlike-kicker">
               Системный контур
             </p>
             <h2 className="mt-2 text-2xl font-semibold text-zinc-950">
@@ -49,50 +50,41 @@ export default async function SettingsPage() {
             </p>
 
             <div className="mt-4 grid gap-4 md:grid-cols-3">
-              <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
-                <p className="text-sm font-medium text-zinc-500">Интеграций</p>
-                <p className="mt-3 text-2xl font-semibold text-zinc-950">4</p>
-              </div>
-              <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
-                <p className="text-sm font-medium text-zinc-500">Активных касс</p>
-                <p className="mt-3 text-2xl font-semibold text-zinc-950">0</p>
-              </div>
-              <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
-                <p className="text-sm font-medium text-zinc-500">ОФД</p>
-                <p className="mt-3 text-2xl font-semibold text-zinc-950">-</p>
-              </div>
+              <KpiTile label="Интеграций" value={4} hint="Запланировано" />
+              <KpiTile label="Активных касс" value={0} hint="Пока не подключены" />
+              <KpiTile label="ОФД" value="-" hint="Ожидает настройки" />
             </div>
-          </article>
+          </GlassPanel>
 
           <div className="grid gap-4">
             {SETTINGS_BLOCKS.map((block) => (
-              <article
+              <GlassPanel
                 key={block.title}
-                className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5"
+                className="p-4 sm:p-5"
               >
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <h3 className="text-xl font-semibold text-zinc-950">{block.title}</h3>
+                    <h3 className="foodlike-title-sm">{block.title}</h3>
                     <p className="mt-2 text-sm leading-6 text-zinc-600">{block.description}</p>
                   </div>
-                  <span className="rounded-full bg-zinc-950 px-3 py-1 text-xs font-medium text-white">
+                  <span className="foodlike-pill">
                     {block.status}
                   </span>
                 </div>
-              </article>
+              </GlassPanel>
             ))}
           </div>
         </section>
 
-        <aside className="rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
-          <h2 className="text-xl font-semibold text-zinc-950">Что можно будет настраивать</h2>
+        <GlassPanel className="p-4 sm:p-5">
+          <h2 className="foodlike-title-sm">Что можно будет настраивать</h2>
           <div className="mt-4 space-y-3 text-sm leading-6 text-zinc-600">
             <p>Реквизиты компании и параметры фискализации.</p>
             <p>Подключение онлайн-касс и распределение по точкам.</p>
             <p>Платёжные терминалы, способы оплаты и тестовые подключения.</p>
             <p>Внешние интеграции, webhooks, ОФД и служебные уведомления.</p>
           </div>
-        </aside>
+        </GlassPanel>
       </div>
     </PageShell>
   );

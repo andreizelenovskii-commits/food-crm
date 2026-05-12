@@ -1,6 +1,7 @@
 import { PageShell } from "@/components/ui/page-shell";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
 import type { SessionUser } from "@/modules/auth/auth.types";
+import { GlassPanel, KpiTile } from "@/modules/dashboard/components/dashboard-widgets";
 import { EMPLOYEE_ADJUSTMENT_LABELS } from "@/modules/employees/employees.types";
 import type { EmployeeProfile } from "@/modules/employees/employees.types";
 import { ChangePasswordCard } from "@/modules/profile/components/change-password-card";
@@ -23,13 +24,7 @@ function InfoCard({
   hint: string;
 }) {
   return (
-    <article className="rounded-[14px] border border-red-950/10 bg-white/90 p-3.5 shadow-sm shadow-red-950/5">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">
-        {label}
-      </p>
-      <p className="mt-1.5 text-lg font-semibold text-zinc-950">{value}</p>
-      <p className="mt-1 text-xs leading-5 text-zinc-500">{hint}</p>
-    </article>
+    <KpiTile label={label} value={value} hint={hint} />
   );
 }
 
@@ -37,15 +32,19 @@ export function EmployeeSelfProfilePage({ user, employee, month }: ProfilePagePr
   const profile = buildProfileViewModel(employee, month);
 
   return (
-    <PageShell title="Мой профиль" action={<SessionUserActions user={user} />}>
-      <div className="space-y-4">
-        <section className="rounded-[16px] border border-red-950/10 bg-white/90 p-4 shadow-sm shadow-red-950/5">
+    <PageShell
+      title="Мой профиль"
+      description="Личные данные, зарплата, результаты месяца и доступ к CRM."
+      action={<SessionUserActions user={user} />}
+    >
+      <div className="foodlike-frame space-y-4 p-4 sm:p-5">
+        <GlassPanel className="p-4">
           <div className="grid gap-4 xl:grid-cols-[minmax(260px,0.65fr)_1fr] xl:items-end">
             <div>
-              <p className="text-xs font-medium uppercase tracking-[0.14em] text-red-800/75">
-                Employee profile
+              <p className="foodlike-kicker">
+                Профиль сотрудника
               </p>
-              <h2 className="mt-1 text-xl font-semibold text-zinc-950">
+              <h2 className="mt-1 foodlike-title-sm">
                 {employee.name}
               </h2>
               <p className="mt-1 text-sm text-zinc-500">
@@ -59,33 +58,33 @@ export function EmployeeSelfProfilePage({ user, employee, month }: ProfilePagePr
                   type="month"
                   name="month"
                   defaultValue={profile.selectedMonth}
-                  className="mt-1 h-10 rounded-[12px] border border-red-950/10 bg-white px-3 text-sm font-medium text-zinc-950 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
+                  className="foodlike-field mt-1"
                 />
               </label>
               <button
                 type="submit"
-                className="h-10 rounded-[12px] bg-red-800 px-4 text-sm font-medium text-white transition hover:bg-red-900"
+                className="foodlike-button-primary"
               >
                 Показать
               </button>
             </form>
           </div>
-        </section>
+        </GlassPanel>
 
         <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
-          <section className="rounded-[16px] border border-red-950/10 bg-[#fffafa] p-4 shadow-sm shadow-red-950/5">
-            <p className="text-xs font-medium uppercase tracking-[0.14em] text-red-800/75">
+          <GlassPanel className="p-4">
+            <p className="foodlike-kicker">
               Вход в CRM
             </p>
-            <h2 className="mt-2 text-lg font-semibold text-zinc-950">Телефон для входа</h2>
+            <h2 className="mt-2 foodlike-title-sm">Телефон для входа</h2>
             <p className="mt-2 text-sm leading-6 text-zinc-600">
               Номер, который ты вводишь на странице входа. Изменить его может только руководитель с правом
               управления сотрудниками — в карточке сотрудника в разделе «Сотрудники».
             </p>
-            <p className="mt-3 rounded-[12px] border border-red-950/10 bg-white/90 px-4 py-3 text-base font-semibold text-zinc-950">
+            <p className="foodlike-card mt-3 px-4 py-3 text-sm font-semibold text-zinc-950">
               {formatRuMobileLoginDigits(user.phone)}
             </p>
-          </section>
+          </GlassPanel>
 
           <ChangePasswordCard />
         </div>
@@ -97,17 +96,17 @@ export function EmployeeSelfProfilePage({ user, employee, month }: ProfilePagePr
         </section>
 
         <section className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-          <article className="rounded-[16px] border border-red-950/10 bg-white/90 p-4 shadow-sm shadow-red-950/5">
+          <GlassPanel className="p-4">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
-                <p className="text-xs font-medium uppercase tracking-[0.14em] text-red-800/75">
-                  Payroll
+                <p className="foodlike-kicker">
+                  Начисления
                 </p>
-                <h2 className="mt-1 text-lg font-semibold text-zinc-950">
+                <h2 className="mt-1 foodlike-title-sm">
                   Зарплата и удержания
                 </h2>
               </div>
-              <p className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium capitalize text-red-800">
+              <p className="foodlike-pill capitalize">
                 {profile.monthLabel}
               </p>
             </div>
@@ -116,13 +115,13 @@ export function EmployeeSelfProfilePage({ user, employee, month }: ProfilePagePr
                 <InfoCard key={item.label} {...item} />
               ))}
             </div>
-          </article>
+          </GlassPanel>
 
-          <article className="rounded-[16px] border border-red-950/10 bg-white/90 p-4 shadow-sm shadow-red-950/5">
-            <p className="text-xs font-medium uppercase tracking-[0.14em] text-red-800/75">
-              Performance
+          <GlassPanel className="p-4">
+            <p className="foodlike-kicker">
+              Результаты
             </p>
-            <h2 className="mt-1 text-lg font-semibold text-zinc-950">
+            <h2 className="mt-1 foodlike-title-sm">
               Результаты месяца
             </h2>
             <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
@@ -130,20 +129,20 @@ export function EmployeeSelfProfilePage({ user, employee, month }: ProfilePagePr
                 <InfoCard key={item.label} {...item} />
               ))}
             </div>
-          </article>
+          </GlassPanel>
         </section>
 
-        <section className="rounded-[16px] border border-red-950/10 bg-white/90 p-4 shadow-sm shadow-red-950/5">
+        <GlassPanel className="p-4">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="text-xs font-medium uppercase tracking-[0.14em] text-red-800/75">
+              <p className="foodlike-kicker">
                 История начислений
               </p>
-              <h2 className="mt-1 text-lg font-semibold text-zinc-950">
+              <h2 className="mt-1 foodlike-title-sm">
                 Авансы, штрафы и долги за месяц
               </h2>
             </div>
-            <p className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium capitalize text-red-800">
+            <p className="foodlike-pill capitalize">
               {profile.monthLabel}
             </p>
           </div>
@@ -169,12 +168,12 @@ export function EmployeeSelfProfilePage({ user, employee, month }: ProfilePagePr
                 </div>
               ))
             ) : (
-              <p className="py-3 text-sm text-zinc-500">
+              <p className="foodlike-empty mt-3 px-4 py-4">
                 За выбранный месяц записей нет.
               </p>
             )}
           </div>
-        </section>
+        </GlassPanel>
       </div>
     </PageShell>
   );

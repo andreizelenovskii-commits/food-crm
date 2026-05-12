@@ -19,7 +19,7 @@ type ConfirmDeleteButtonProps = {
 };
 
 const DEFAULT_BUTTON_CLASS_NAME =
-  "relative z-10 rounded-2xl border border-red-200 px-4 py-2 text-sm font-medium text-red-700 transition hover:border-red-200 hover:bg-red-50 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:text-zinc-400";
+  "foodlike-button-secondary relative z-10 min-h-9 px-4 text-red-800 disabled:cursor-not-allowed disabled:opacity-50";
 
 export function ConfirmDeleteButton({
   action,
@@ -102,21 +102,21 @@ export function ConfirmDeleteButton({
 
       {isConfirmOpen ? (
         <div
-          className="fixed inset-0 z-40 flex items-center justify-center bg-zinc-950/45 px-4 py-4 sm:py-5 backdrop-blur-sm"
+          className="fixed inset-0 z-40 flex items-center justify-center bg-zinc-950/40 px-4 py-4 backdrop-blur-sm sm:py-5"
           onClick={() => setIsConfirmOpen(false)}
         >
           <div
             role="dialog"
             aria-modal="true"
             aria-label={ariaLabel}
-            className="w-full max-w-md rounded-[14px] border border-zinc-200 bg-[linear-gradient(180deg,#ffffff_0%,#fff8f8_100%)] p-4 sm:p-5 shadow-2xl shadow-zinc-950/25"
+            className="foodlike-frame w-full max-w-md p-4 sm:p-5"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="space-y-2">
-              <div className="inline-flex rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-red-800">
+              <div className="foodlike-pill uppercase tracking-[0.14em]">
                 Подтверждение удаления
               </div>
-              <h2 className="text-xl font-semibold text-zinc-950">
+              <h2 className="foodlike-title-sm">
                 Удалить {entityLabel.toLowerCase()}?
               </h2>
               <p className="text-sm leading-6 text-zinc-600">
@@ -127,17 +127,17 @@ export function ConfirmDeleteButton({
                 будет удален(а) без возможности восстановления.
               </p>
               {disabledMessage ? (
-                <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                <p className="rounded-[18px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
                   {disabledMessage}
                 </p>
               ) : null}
               {warningMessage ? (
-                <p className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-700">
+                <p className="rounded-[18px] border border-red-950/10 bg-white/70 px-4 py-3 text-sm text-zinc-700">
                   {warningMessage}
                 </p>
               ) : null}
               {submitError ? (
-                <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                <p className="rounded-[18px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
                   {submitError}
                 </p>
               ) : null}
@@ -147,7 +147,7 @@ export function ConfirmDeleteButton({
               <button
                 type="button"
                 onClick={() => setIsConfirmOpen(false)}
-                className="rounded-2xl border border-zinc-300 px-4 py-3 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+                className="foodlike-button-secondary"
               >
                 Отмена
               </button>
@@ -155,7 +155,7 @@ export function ConfirmDeleteButton({
                 type="button"
                 disabled={disabled}
                 onClick={handleConfirmDelete}
-                className="rounded-2xl bg-red-800 px-4 py-3 text-sm font-medium text-white transition hover:bg-red-900 disabled:cursor-not-allowed disabled:bg-zinc-300"
+                className="foodlike-button-primary disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isPending ? "Удаляем..." : "Да, удалить"}
               </button>

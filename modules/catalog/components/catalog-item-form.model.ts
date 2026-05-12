@@ -13,7 +13,7 @@ export const EMPTY_CATALOG_FORM_VALUES: CatalogFormValues = {
 };
 
 export const CATALOG_FIELD_CLASS_NAME =
-  "w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5";
+  "foodlike-field";
 
 export type CatalogTechCardOption = {
   id: number;

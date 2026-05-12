@@ -10,6 +10,7 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { ClientAddressFieldsWithDefaults } from "@/modules/clients/components/client-address-fields";
 import type { Client, ClientType } from "@/modules/clients/clients.types";
 import { EmployeeDatePicker } from "@/modules/employees/components/employee-date-picker";
+import { LOYALTY_LEVEL_LABELS, LOYALTY_LEVELS } from "@/modules/loyalty/loyalty.types";
 
 export function ClientForm({
   type,
@@ -35,6 +36,7 @@ export function ClientForm({
       addressApartment: "",
       addressesJson: "",
       notes: initialClient?.notes ?? "",
+      loyaltyLevelOverride: initialClient?.loyaltyLevelOverride ?? "AUTO",
     },
   };
   const [state, formAction, isPending] = useActionState(action, initialState);
@@ -117,6 +119,24 @@ export function ClientForm({
             defaultValue={values.email}
             className="h-9 w-full rounded-full border border-red-950/10 bg-white/85 px-4 text-xs font-medium text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
           />
+        </label>
+      ) : null}
+
+      {!isOrganization && isEditing ? (
+        <label className="block space-y-1.5">
+          <span className="text-[11px] font-semibold text-zinc-700">Уровень лояльности</span>
+          <select
+            name="loyaltyLevelOverride"
+            defaultValue={values.loyaltyLevelOverride || "AUTO"}
+            className="h-9 w-full rounded-full border border-red-950/10 bg-white/85 px-4 text-xs font-medium text-zinc-950 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
+          >
+            <option value="AUTO">Автоматически по обороту</option>
+            {LOYALTY_LEVELS.map((level) => (
+              <option key={level} value={level}>
+                {LOYALTY_LEVEL_LABELS[level]}
+              </option>
+            ))}
+          </select>
         </label>
       ) : null}
 

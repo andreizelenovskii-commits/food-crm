@@ -9,9 +9,10 @@ export function EmployeeEditForm({ employee }: { employee: Employee }) {
   const [selectedRole, setSelectedRole] = useState<EmployeeRole>(employee.role);
 
   return (
-    <form action={(formData: FormData) => updateEmployeeAction(employee.id, formData)} className="space-y-5 rounded-[14px] border border-zinc-200 bg-white/90 p-4 sm:p-5 shadow-sm shadow-zinc-950/5">
+    <form action={(formData: FormData) => updateEmployeeAction(employee.id, formData)} className="foodlike-panel space-y-5 p-4 sm:p-5">
       <div className="space-y-2">
-        <h2 className="text-xl font-semibold text-zinc-950">Редактировать сотрудника</h2>
+        <p className="foodlike-kicker">Сотрудник</p>
+        <h2 className="foodlike-title-sm">Редактировать сотрудника</h2>
         <p className="text-sm leading-6 text-zinc-600">Обнови данные сотрудника.</p>
       </div>
 
@@ -21,7 +22,7 @@ export function EmployeeEditForm({ employee }: { employee: Employee }) {
           name="name"
           type="text"
           defaultValue={employee.name}
-          className="w-full rounded-2xl border border-zinc-300 px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
+          className="foodlike-field"
         />
       </label>
 
@@ -32,7 +33,7 @@ export function EmployeeEditForm({ employee }: { employee: Employee }) {
           type="url"
           defaultValue={employee.messenger || ""}
           placeholder="https://t.me/ivan или https://wa.me/79991234567"
-          className="w-full rounded-2xl border border-zinc-300 px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
+          className="foodlike-field"
         />
         <p className="text-xs text-zinc-500">Необязательно. Укажи любую ссылку на мессенджер.</p>
       </label>
@@ -47,10 +48,10 @@ export function EmployeeEditForm({ employee }: { employee: Employee }) {
                 key={role}
                 type="button"
                 onClick={() => setSelectedRole(role)}
-                className={`rounded-2xl border px-4 py-3 text-sm font-medium transition ${
+                className={`rounded-full border px-4 py-2.5 text-sm font-semibold transition ${
                   isSelected
-                    ? "border-zinc-950 bg-zinc-950 text-white shadow-sm"
-                    : "border-zinc-300 bg-white text-zinc-950 hover:border-zinc-500 hover:bg-zinc-50"
+                    ? "border-red-800 bg-red-800 text-white shadow-sm shadow-red-950/15"
+                    : "border-red-100 bg-white/85 text-red-800 hover:border-red-800 hover:bg-red-800 hover:text-white"
                 }`}
                 aria-pressed={isSelected}
               >
@@ -76,7 +77,7 @@ export function EmployeeEditForm({ employee }: { employee: Employee }) {
           name="schedule"
           defaultValue={employee.schedule ? JSON.stringify(employee.schedule, null, 2) : ""}
           placeholder='{"monday": 8, "tuesday": 8, "wednesday": 8, "thursday": 8, "friday": 8}'
-          className="w-full rounded-2xl border border-zinc-300 px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
+          className="foodlike-field foodlike-textarea"
           rows={3}
         />
         <p className="text-xs text-zinc-500">Необязательно. Укажи график в формате JSON, например дни недели и часы.</p>
@@ -90,14 +91,14 @@ export function EmployeeEditForm({ employee }: { employee: Employee }) {
           step="0.01"
           defaultValue={employee.monthlyHours || ""}
           placeholder="160"
-          className="w-full rounded-2xl border border-zinc-300 px-4 py-3 text-zinc-950 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-950/5"
+          className="foodlike-field"
         />
         <p className="text-xs text-zinc-500">Необязательно. Оставь пустым для автоматического расчета по графику.</p>
       </label>
 
       <button
         type="submit"
-        className="w-full rounded-2xl bg-zinc-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-zinc-800"
+        className="foodlike-button-primary w-full"
       >
         Сохранить изменения
       </button>

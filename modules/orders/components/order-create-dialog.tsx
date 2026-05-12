@@ -9,6 +9,7 @@ export function OrderCreateFab({ onOpen }: { onOpen: () => void }) {
   return (
     <button
       type="button"
+      data-order-create-fab
       onClick={onOpen}
       className="fixed bottom-6 right-6 z-30 inline-flex items-center gap-3 rounded-full bg-red-800 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-red-950/25 transition hover:bg-red-900"
       aria-label="Создать заказ"

@@ -107,18 +107,17 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
     useState<(typeof ACCESS_VIEWS)[number]["id"]>("admin");
   const [showPassword, setShowPassword] = useState(false);
 
-  const inputClassName =
-    "w-full rounded-[8px] border border-red-950/15 bg-white/90 px-4 py-3 text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-red-400 focus:ring-2 focus:ring-red-800/10";
+  const inputClassName = "foodlike-field";
 
   return (
-    <SurfaceCard className="mx-auto max-w-xl overflow-hidden border-red-950/10 bg-white/95 p-0 shadow-xl shadow-red-950/10">
+    <SurfaceCard className="mx-auto max-w-xl overflow-hidden bg-white/95 p-0 shadow-xl shadow-red-950/10">
       <div className="border-b border-red-950/10 bg-[linear-gradient(135deg,#ffffff_0%,#fff3f3_100%)] px-5 py-5">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-3">
-            <span className="inline-flex items-center rounded-[8px] border border-red-200 bg-red-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-red-800">
+            <span className="foodlike-pill uppercase tracking-[0.14em]">
               FoodLike Access
             </span>
-            <h2 className="text-2xl font-semibold text-zinc-950 sm:text-2xl">
+            <h2 className="text-2xl font-semibold text-zinc-950">
               Вход в CRM
             </h2>
           </div>
@@ -211,7 +210,7 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
         </label>
 
         {state.errorMessage ? (
-          <p className="rounded-[8px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <p className="rounded-[18px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             {state.errorMessage}
           </p>
         ) : null}
@@ -219,7 +218,7 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full rounded-[14px] bg-red-800 px-5 py-3 text-sm font-medium text-white transition hover:bg-red-900 disabled:cursor-not-allowed disabled:bg-zinc-500"
+          className="foodlike-button-primary w-full"
         >
           {isPending ? "Входим..." : "Перейти в систему"}
         </button>

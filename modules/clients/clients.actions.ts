@@ -21,6 +21,7 @@ export type ClientFormValues = {
   addressApartment: string;
   addressesJson: string;
   notes: string;
+  loyaltyLevelOverride: string;
 };
 
 export type ClientFormState = {
@@ -45,6 +46,7 @@ function getClientFormValues(formData: FormData): ClientFormValues {
     addressApartment: read("addressApartment"),
     addressesJson: read("addressesJson"),
     notes: read("notes"),
+    loyaltyLevelOverride: read("loyaltyLevelOverride"),
   };
 }
 

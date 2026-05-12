@@ -1,9 +1,5 @@
 import { CATALOG_FIELD_CLASS_NAME } from "@/modules/catalog/components/catalog-item-form.model";
-import {
-  PRICE_TECH_CARD_CATEGORIES,
-  TECH_CARD_PIZZA_SIZES,
-  type TechCardPizzaSize,
-} from "@/modules/tech-cards/tech-cards.types";
+import { CATALOG_SITE_CATEGORIES } from "@/modules/catalog/catalog.types";
 
 type TechCardOption = {
   id: number;
@@ -15,29 +11,23 @@ type TechCardOption = {
 export function CatalogTechCardFields({
   priceDefaultValue,
   selectedCategory,
-  selectedPizzaSize,
   selectedTechCardId,
-  techCardOptions,
   filteredTechCardOptions,
   onCategoryChange,
-  onPizzaSizeChange,
   onTechCardIdChange,
 }: {
   priceDefaultValue: string;
   selectedCategory: string;
-  selectedPizzaSize: TechCardPizzaSize | "";
   selectedTechCardId: string;
-  techCardOptions: TechCardOption[];
   filteredTechCardOptions: TechCardOption[];
   onCategoryChange: (value: string) => void;
-  onPizzaSizeChange: (value: TechCardPizzaSize | "") => void;
   onTechCardIdChange: (value: string) => void;
 }) {
   return (
     <>
       <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_12rem]">
         <label className="block space-y-2.5">
-          <span className="text-sm font-medium text-zinc-700">Категория</span>
+          <span className="text-sm font-medium text-zinc-700">Категория на сайте</span>
           <div className="relative">
             <select
               name="category"
@@ -46,16 +36,12 @@ export function CatalogTechCardFields({
                 const nextCategory = event.target.value;
                 onCategoryChange(nextCategory);
                 onTechCardIdChange("");
-
-                if (nextCategory !== "Пиццы") {
-                  onPizzaSizeChange("");
-                }
               }}
               className={`${CATALOG_FIELD_CLASS_NAME} appearance-none pr-12`}
               required
             >
-              <option value="">Выбери категорию</option>
-              {PRICE_TECH_CARD_CATEGORIES.map((category) => (
+              <option value="">Выбери категорию сайта</option>
+              {CATALOG_SITE_CATEGORIES.map((category) => (
                 <option key={category} value={category}>
                   {category}
                 </option>
@@ -85,45 +71,9 @@ export function CatalogTechCardFields({
         </label>
       </div>
 
-      {selectedCategory === "Пиццы" ? (
-        <div className="space-y-2.5">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-sm font-medium text-zinc-700">Размер пиццы</span>
-            <span className="text-xs text-zinc-500">Обязательный выбор</span>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-3">
-            {TECH_CARD_PIZZA_SIZES.map((size) => {
-              const isSelected = selectedPizzaSize === size;
-
-              return (
-                <button
-                  key={size}
-                  type="button"
-                  onClick={() => {
-                    onPizzaSizeChange(size);
-                    onTechCardIdChange("");
-                  }}
-                  className={`rounded-2xl border px-4 py-3 text-sm font-medium transition ${
-                    isSelected
-                      ? "border-zinc-950 bg-zinc-950 text-white shadow-sm"
-                      : "border-zinc-300 bg-white text-zinc-700 hover:border-zinc-500 hover:text-zinc-950"
-                  }`}
-                  aria-pressed={isSelected}
-                >
-                  {size}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      ) : null}
-
       <TechCardSelect
-        selectedCategory={selectedCategory}
         selectedTechCardId={selectedTechCardId}
-        techCardOptions={techCardOptions}
         filteredTechCardOptions={filteredTechCardOptions}
-        onPizzaSizeChange={onPizzaSizeChange}
         onTechCardIdChange={onTechCardIdChange}
       />
     </>
@@ -141,18 +91,12 @@ function SelectChevron() {
 }
 
 function TechCardSelect({
-  selectedCategory,
   selectedTechCardId,
-  techCardOptions,
   filteredTechCardOptions,
-  onPizzaSizeChange,
   onTechCardIdChange,
 }: {
-  selectedCategory: string;
   selectedTechCardId: string;
-  techCardOptions: TechCardOption[];
   filteredTechCardOptions: TechCardOption[];
-  onPizzaSizeChange: (value: TechCardPizzaSize | "") => void;
   onTechCardIdChange: (value: string) => void;
 }) {
   return (
@@ -164,18 +108,7 @@ function TechCardSelect({
             name="technologicalCardId"
             value={selectedTechCardId}
             onChange={(event) => {
-              const nextId = event.target.value;
-              const nextTechCard = techCardOptions.find((option) => String(option.id) === nextId);
-              onTechCardIdChange(nextId);
-
-              if (selectedCategory === "Пиццы") {
-                onPizzaSizeChange(
-                  nextTechCard?.pizzaSize &&
-                    TECH_CARD_PIZZA_SIZES.includes(nextTechCard.pizzaSize as TechCardPizzaSize)
-                    ? (nextTechCard.pizzaSize as TechCardPizzaSize)
-                    : "",
-                );
-              }
+              onTechCardIdChange(event.target.value);
             }}
             className={`${CATALOG_FIELD_CLASS_NAME} appearance-none pr-12`}
             required
@@ -191,8 +124,7 @@ function TechCardSelect({
           <SelectChevron />
         </div>
         <p className="text-xs leading-5 text-zinc-500">
-          Привязка к техкарте обязательна, чтобы прайс не расходился с производственной логикой.
-          {selectedCategory === "Пиццы" ? " Для пиццы выбирается техкарта с конкретным размером." : ""}
+          Привязка к техкарте обязательна, а категория выше отвечает за размещение позиции на сайте.
         </p>
       </label>
     </div>

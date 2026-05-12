@@ -254,8 +254,8 @@ export default async function ClientProfilePage(props: {
                     Адреса
                   </p>
                   <div className="mt-2 space-y-1 text-sm leading-6 text-zinc-800">
-                    {formatClientAddresses(client.address).map((address) => (
-                      <p key={address}>{address}</p>
+                    {formatClientAddresses(client.address).map((address, index) => (
+                      <p key={`${address}-${index}`}>{address}</p>
                     ))}
                   </div>
                 </div>
