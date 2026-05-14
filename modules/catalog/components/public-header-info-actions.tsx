@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { SessionUser } from "@/modules/auth/auth.types";
-import type { Client } from "@/modules/clients/clients.types";
+import type { PublicClientProfile } from "@/modules/clients/clients.types";
 import type { AuthMode } from "@/modules/catalog/components/public-auth-modal";
 import { LOYALTY_LEVEL_LABELS } from "@/modules/loyalty/loyalty.types";
 import { LOYALTY_LEVEL_CONFIG } from "@/modules/loyalty/loyalty.rules";
@@ -76,7 +75,7 @@ function formatMoney(cents: number) {
   }).format(cents / 100);
 }
 
-function getLoyaltyProgress(client: Client) {
+function getLoyaltyProgress(client: PublicClientProfile) {
   if (!client.loyaltyLevel || !client.loyaltyNextLevel) {
     return 100;
   }
@@ -95,11 +94,9 @@ function getLoyaltyProgress(client: Client) {
 
 export function PublicHeaderInfoActions({
   currentClient,
-  user,
   onAuthOpen,
 }: {
-  currentClient: Client | null;
-  user: SessionUser | null;
+  currentClient: PublicClientProfile | null;
   onAuthOpen: (mode: AuthMode) => void;
 }) {
   const [activeInfo, setActiveInfo] = useState<InfoType | null>(null);
@@ -135,7 +132,7 @@ export function PublicHeaderInfoActions({
         badge={
           currentClient?.loyaltyLevel
             ? LOYALTY_LEVEL_LABELS[currentClient.loyaltyLevel]
-            : user
+            : currentClient
               ? "Клиент"
               : null
         }
@@ -154,19 +151,19 @@ export function PublicHeaderInfoActions({
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d50014]">
             {content.title}
           </p>
-          {user && activeInfo === "loyalty" ? (
+          {currentClient && activeInfo === "loyalty" ? (
             <LoyaltyPanel client={currentClient} />
           ) : (
             <>
               <h3 className="mt-3 text-xl font-semibold text-[#241316]">
-                {user ? content.signedInTitle : content.guestTitle}
+                {currentClient ? content.signedInTitle : content.guestTitle}
               </h3>
               <p className="mt-2 text-sm leading-6 text-[#6b5960]">
-                {user ? content.signedInText : content.guestText}
+                {currentClient ? content.signedInText : content.guestText}
               </p>
             </>
           )}
-          {!user ? (
+          {!currentClient ? (
             <div className="mt-4 grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -190,7 +187,7 @@ export function PublicHeaderInfoActions({
   );
 }
 
-function LoyaltyPanel({ client }: { client: Client | null }) {
+function LoyaltyPanel({ client }: { client: PublicClientProfile | null }) {
   if (!client?.loyaltyLevel) {
     return (
       <>

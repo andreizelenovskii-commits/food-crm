@@ -1,14 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { FormEvent, useActionState, useEffect, useId, useState } from "react";
-import { loginAction } from "@/modules/auth/auth.actions";
+import { useEffect, useId } from "react";
+import {
+  type AuthMode,
+  PublicAuthSmsForm,
+} from "@/modules/catalog/components/public-auth-sms-form";
 
-export type AuthMode = "login" | "register";
-
-const initialLoginFormState = {
-  errorMessage: null,
-};
+export type { AuthMode } from "@/modules/catalog/components/public-auth-sms-form";
 
 function CloseIcon({ className }: { className?: string }) {
   return (
@@ -38,12 +37,6 @@ export function PublicAuthModal({
   onModeChange: (mode: AuthMode) => void;
 }) {
   const titleId = useId();
-  const [loginState, loginFormAction, isLoginPending] = useActionState(
-    loginAction,
-    initialLoginFormState,
-  );
-  const [registerMessage, setRegisterMessage] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -53,13 +46,6 @@ export function PublicAuthModal({
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
-
-  function submitRegistration(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setRegisterMessage(
-      "Форма готова. Когда подключим клиентскую регистрацию в API, она начнет создавать аккаунты.",
-    );
-  }
 
   return (
     <div
@@ -123,126 +109,7 @@ export function PublicAuthModal({
               </h2>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 rounded-[8px] bg-[#fff1f2] p-1">
-              {(["login", "register"] as const).map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => onModeChange(item)}
-                  className={`min-h-11 rounded-[7px] text-sm font-semibold transition ${
-                    mode === item
-                      ? "bg-white text-[#b00012] shadow-sm"
-                      : "text-[#7b5e64] hover:text-[#b00012]"
-                  }`}
-                >
-                  {item === "login" ? "Вход" : "Регистрация"}
-                </button>
-              ))}
-            </div>
-
-            {mode === "login" ? (
-              <form action={loginFormAction} className="mt-6 space-y-4" noValidate>
-                <input type="hidden" name="returnTo" value="/dashboard/profile" />
-                <label className="block space-y-2">
-                  <span className="text-sm font-semibold text-[#3a292d]">Телефон</span>
-                  <input
-                    name="phone"
-                    type="tel"
-                    inputMode="tel"
-                    placeholder="+7 999 123-45-67"
-                    className="foodlike-field min-h-12 rounded-[8px]"
-                    autoComplete="username"
-                    required
-                  />
-                </label>
-                <label className="block space-y-2">
-                  <span className="text-sm font-semibold text-[#3a292d]">Пароль</span>
-                  <div className="relative">
-                    <input
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Введите пароль"
-                      className="foodlike-field min-h-12 rounded-[8px] pr-28"
-                      autoComplete="current-password"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((current) => !current)}
-                      className="absolute right-2 top-1/2 min-h-9 -translate-y-1/2 rounded-[7px] px-3 text-xs font-semibold text-[#b00012] transition hover:bg-[#fff1f2]"
-                    >
-                      {showPassword ? "Скрыть" : "Показать"}
-                    </button>
-                  </div>
-                </label>
-                {loginState.errorMessage ? (
-                  <p className="rounded-[8px] border border-[#ffc9cf] bg-[#fff4f5] px-4 py-3 text-sm text-[#a00010]">
-                    {loginState.errorMessage}
-                  </p>
-                ) : null}
-                <button
-                  type="submit"
-                  disabled={isLoginPending}
-                  className="min-h-12 w-full rounded-[8px] bg-[#d50014] px-5 text-sm font-semibold text-white shadow-sm shadow-[#d50014]/22 transition hover:bg-[#b90012] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isLoginPending ? "Входим..." : "Войти"}
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={submitRegistration} className="mt-6 space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="block space-y-2">
-                    <span className="text-sm font-semibold text-[#3a292d]">Имя</span>
-                    <input
-                      name="name"
-                      type="text"
-                      placeholder="Анна"
-                      className="foodlike-field min-h-12 rounded-[8px]"
-                      autoComplete="given-name"
-                      required
-                    />
-                  </label>
-                  <label className="block space-y-2">
-                    <span className="text-sm font-semibold text-[#3a292d]">Телефон</span>
-                    <input
-                      name="phone"
-                      type="tel"
-                      inputMode="tel"
-                      placeholder="+7 999 123-45-67"
-                      className="foodlike-field min-h-12 rounded-[8px]"
-                      autoComplete="tel"
-                      required
-                    />
-                  </label>
-                </div>
-                <label className="block space-y-2">
-                  <span className="text-sm font-semibold text-[#3a292d]">Пароль</span>
-                  <input
-                    name="password"
-                    type="password"
-                    placeholder="Минимум 8 символов"
-                    className="foodlike-field min-h-12 rounded-[8px]"
-                    autoComplete="new-password"
-                    required
-                  />
-                </label>
-                <label className="flex items-start gap-3 rounded-[8px] bg-[#fff5f6] p-3 text-sm leading-5 text-[#6b5960]">
-                  <input type="checkbox" className="mt-1 size-4 accent-[#d50014]" required />
-                  <span>Согласен получать уведомления о заказах и бонусах FoodLike.</span>
-                </label>
-                {registerMessage ? (
-                  <p className="rounded-[8px] border border-[#ffc9cf] bg-[#fff4f5] px-4 py-3 text-sm text-[#a00010]">
-                    {registerMessage}
-                  </p>
-                ) : null}
-                <button
-                  type="submit"
-                  className="min-h-12 w-full rounded-[8px] bg-[#d50014] px-5 text-sm font-semibold text-white shadow-sm shadow-[#d50014]/22 transition hover:bg-[#b90012]"
-                >
-                  Зарегистрироваться
-                </button>
-              </form>
-            )}
+            <PublicAuthSmsForm key={mode} mode={mode} onModeChange={onModeChange} />
           </div>
         </div>
       </div>

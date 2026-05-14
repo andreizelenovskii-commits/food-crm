@@ -3,8 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, useEffect, useRef, useState } from "react";
-import type { SessionUser } from "@/modules/auth/auth.types";
-import type { Client } from "@/modules/clients/clients.types";
+import type { PublicClientProfile } from "@/modules/clients/clients.types";
 import { PublicHeaderInfoActions } from "@/modules/catalog/components/public-header-info-actions";
 import {
   type AuthMode,
@@ -87,11 +86,9 @@ function ChevronIcon({ className }: { className?: string }) {
 export function PublicSiteHeader({
   categories,
   currentClient,
-  user,
 }: {
   categories: readonly string[];
-  currentClient: Client | null;
-  user: SessionUser | null;
+  currentClient: PublicClientProfile | null;
 }) {
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -171,7 +168,6 @@ export function PublicSiteHeader({
 
           <PublicHeaderInfoActions
             currentClient={currentClient}
-            user={user}
             onAuthOpen={openAuth}
           />
 
@@ -226,14 +222,14 @@ export function PublicSiteHeader({
             ) : null}
           </div>
 
-          {user ? (
+          {currentClient ? (
             <Link
-              href="/dashboard/profile"
+              href="#"
               className="flex min-h-10 shrink-0 items-center gap-2 rounded-full bg-[#fff1f2] px-3 text-sm font-semibold text-[#b00012] transition hover:bg-[#ffe3e6]"
             >
               <UserIcon className="size-5" />
               <span className="hidden max-w-[150px] truncate sm:inline">
-                {user.displayName || "Профиль"}
+                {currentClient.name || "Профиль"}
               </span>
             </Link>
           ) : (

@@ -21,3 +21,15 @@ export type Client = {
   loyaltyAmountToNextLevelCents: number;
   createdAt: string;
 };
+
+export type PublicClientProfile = Pick<
+  Client,
+  | "id"
+  | "name"
+  | "phone"
+  | "birthDate"
+  | "totalSpentCents"
+  | "loyaltyLevel"
+  | "loyaltyNextLevel"
+  | "loyaltyAmountToNextLevelCents"
+>;

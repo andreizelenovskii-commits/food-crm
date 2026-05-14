@@ -1,6 +1,5 @@
 import Image from "next/image";
 import type { Metadata } from "next";
-import { getSessionUser } from "@/modules/auth/auth.session";
 import { fetchCurrentClient } from "@/modules/clients/clients.api";
 import { PublicSiteHeader } from "@/modules/catalog/components/public-site-header";
 import type { CatalogItem } from "@/modules/catalog/catalog.types";
@@ -95,9 +94,8 @@ async function getPublicMenuItems(): Promise<PublicMenuItem[]> {
 }
 
 export default async function Home() {
-  const [menuItems, user, currentClient] = await Promise.all([
+  const [menuItems, currentClient] = await Promise.all([
     getPublicMenuItems(),
-    getSessionUser(),
     fetchCurrentClient(),
   ]);
   const categories = Array.from(new Set(menuItems.map((item) => item.category)));
@@ -107,7 +105,6 @@ export default async function Home() {
       <PublicSiteHeader
         categories={CATALOG_SITE_CATEGORIES}
         currentClient={currentClient}
-        user={user}
       />
       <main className="min-h-screen bg-white text-[#211316]">
       <section className="relative min-h-[92vh] overflow-hidden bg-[#d50014] text-white">
