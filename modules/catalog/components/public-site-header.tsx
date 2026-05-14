@@ -9,6 +9,7 @@ import {
   type AuthMode,
   PublicAuthModal,
 } from "@/modules/catalog/components/public-auth-modal";
+import { PublicProfileModal } from "@/modules/catalog/components/public-profile-modal";
 
 function SearchIcon({ className }: { className?: string }) {
   return (
@@ -93,6 +94,7 @@ export function PublicSiteHeader({
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const categoriesRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -223,15 +225,16 @@ export function PublicSiteHeader({
           </div>
 
           {currentClient ? (
-            <Link
-              href="#"
+            <button
+              type="button"
+              onClick={() => setIsProfileOpen(true)}
               className="flex min-h-10 shrink-0 items-center gap-2 rounded-full bg-[#fff1f2] px-3 text-sm font-semibold text-[#b00012] transition hover:bg-[#ffe3e6]"
             >
               <UserIcon className="size-5" />
               <span className="hidden max-w-[150px] truncate sm:inline">
                 {currentClient.name || "Профиль"}
               </span>
-            </Link>
+            </button>
           ) : (
             <button
               type="button"
@@ -250,6 +253,13 @@ export function PublicSiteHeader({
           mode={authMode}
           onClose={() => setIsAuthOpen(false)}
           onModeChange={setAuthMode}
+        />
+      ) : null}
+
+      {isProfileOpen && currentClient ? (
+        <PublicProfileModal
+          client={currentClient}
+          onClose={() => setIsProfileOpen(false)}
         />
       ) : null}
     </>
