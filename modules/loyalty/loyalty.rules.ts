@@ -9,7 +9,7 @@ import {
 export const LOYALTY_LEVEL_CONFIG: LoyaltyLevelConfig[] = [
   {
     level: "BRONZE",
-    minSpentCents: 5_000_00,
+    minSpentCents: 0,
     discountPercent: 3,
     perks: ["Базовая скидка на повторные заказы", "Участие в персональных акциях"],
   },

@@ -1,6 +1,8 @@
 import Image from "next/image";
-import Link from "next/link";
 import type { Metadata } from "next";
+import { getSessionUser } from "@/modules/auth/auth.session";
+import { fetchCurrentClient } from "@/modules/clients/clients.api";
+import { PublicSiteHeader } from "@/modules/catalog/components/public-site-header";
 import type { CatalogItem } from "@/modules/catalog/catalog.types";
 import { CATALOG_SITE_CATEGORIES } from "@/modules/catalog/catalog.types";
 import { backendGetOptional } from "@/shared/api/backend";
@@ -93,11 +95,21 @@ async function getPublicMenuItems(): Promise<PublicMenuItem[]> {
 }
 
 export default async function Home() {
-  const menuItems = await getPublicMenuItems();
+  const [menuItems, user, currentClient] = await Promise.all([
+    getPublicMenuItems(),
+    getSessionUser(),
+    fetchCurrentClient(),
+  ]);
   const categories = Array.from(new Set(menuItems.map((item) => item.category)));
 
   return (
-    <main className="min-h-screen bg-white text-[#211316]">
+    <>
+      <PublicSiteHeader
+        categories={CATALOG_SITE_CATEGORIES}
+        currentClient={currentClient}
+        user={user}
+      />
+      <main className="min-h-screen bg-white text-[#211316]">
       <section className="relative min-h-[92vh] overflow-hidden bg-[#d50014] text-white">
         <Image
           src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=2200&q=82"
@@ -109,37 +121,7 @@ export default async function Home() {
         />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(170,0,18,0.98)_0%,rgba(213,0,20,0.78)_48%,rgba(213,0,20,0.22)_100%)]" />
 
-        <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8">
-          <Link
-            href="/"
-            className="flex min-h-12 items-center gap-3 text-xl font-semibold uppercase leading-none"
-            aria-label="FoodLike"
-          >
-            <span className="relative inline-flex size-12 shrink-0 translate-y-[-1px] overflow-hidden rounded-[13px] shadow-sm shadow-black/20">
-              <Image
-                src="/foodlike-app-icon-v3.png"
-                alt=""
-                fill
-                unoptimized
-                sizes="48px"
-                className="scale-[1.14] object-cover"
-                style={{ objectPosition: "50% 50%" }}
-              />
-            </span>
-            <span className="text-[1.18rem] font-bold tracking-[0.2em] text-white drop-shadow-sm">
-              FoodLike
-            </span>
-          </Link>
-          <nav className="hidden max-w-[760px] flex-wrap items-center justify-end gap-x-5 gap-y-2 text-sm font-semibold text-white/88 md:flex">
-            {CATALOG_SITE_CATEGORIES.map((category) => (
-              <a key={category} href="#menu" className="whitespace-nowrap transition hover:text-white">
-                {category}
-              </a>
-            ))}
-          </nav>
-        </header>
-
-        <div className="relative z-10 mx-auto flex min-h-[calc(92vh-88px)] max-w-7xl items-end px-5 pb-14 pt-12 sm:px-8 lg:pb-20">
+        <div className="relative z-10 mx-auto flex min-h-[92vh] max-w-7xl items-end px-5 pb-14 pt-28 sm:px-8 lg:pb-20">
           <div className="max-w-3xl">
             <p className="text-sm font-semibold uppercase tracking-[0.32em] text-white/86">
               Доставка еды
@@ -274,5 +256,6 @@ export default async function Home() {
         </div>
       </section>
     </main>
+    </>
   );
 }
