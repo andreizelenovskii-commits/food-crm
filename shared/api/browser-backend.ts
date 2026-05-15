@@ -38,8 +38,8 @@ function getBackendUnavailableMessage(path: string) {
       : `/${path}`;
 
   return [
-    `Backend API is unavailable at ${target}.`,
-    "Start it locally with `cd backend && npm run start`.",
+    `API недоступен: ${target}.`,
+    "Проверьте соединение, доступность backend и CORS-настройки домена.",
   ].join(" ");
 }
 
