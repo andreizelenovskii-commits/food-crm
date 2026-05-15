@@ -99,7 +99,7 @@ jobs:
           pm2 delete food-crm-frontend-staging || true
           pm2 start ecosystem.staging.config.cjs --only food-crm-frontend-staging --update-env
           sleep 5
-          curl -fsS http://127.0.0.1:3100 >/dev/null
+          curl -fsS http://127.0.0.1:3100/api/health >/dev/null
           curl -fsS http://127.0.0.1:3100/login >/dev/null
           pm2 save
           find "$APP_DIR/releases" -mindepth 1 -maxdepth 1 -type d \
