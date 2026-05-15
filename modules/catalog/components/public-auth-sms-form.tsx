@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { PublicBirthDatePicker } from "@/modules/catalog/components/public-birth-date-picker";
 import { browserBackendJson } from "@/shared/api/browser-backend";
 
 export type AuthMode = "login" | "register";
@@ -170,7 +171,7 @@ function RegisterForm({
         <TextField name="lastName" label="Фамилия" placeholder="Иванова" autoComplete="family-name" />
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
-        <TextField name="birthDate" label="Дата рождения" type="date" autoComplete="bday" />
+        <PublicBirthDatePicker />
         <PhoneField autoComplete="tel" />
       </div>
       <CodeField step={step} />
