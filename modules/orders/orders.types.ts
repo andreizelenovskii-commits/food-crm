@@ -13,6 +13,14 @@ export const ORDER_STATUSES = [
   "CANCELLED",
 ] as const;
 
+export type OrderSource = "SITE" | "PHONE" | "ADMIN";
+
+export const ORDER_SOURCE_LABELS: Record<OrderSource, string> = {
+  SITE: "Сайт",
+  PHONE: "Телефон",
+  ADMIN: "Админ",
+};
+
 export type OrderDraftItem = {
   catalogItemId: number;
   quantity: number;
@@ -21,12 +29,16 @@ export type OrderDraftItem = {
 export type OrderListItem = {
   id: number;
   status: OrderStatus;
+  source: OrderSource;
   isInternal: boolean;
   clientId: number | null;
   clientName: string;
   clientType: "CLIENT" | "ORGANIZATION";
   employeeId: number;
   employeeName: string;
+  customerPhoneSnapshot: string | null;
+  deliveryAddressSnapshot: string | null;
+  customerComment: string | null;
   subtotalCents: number;
   discountPercent: number;
   totalCents: number;

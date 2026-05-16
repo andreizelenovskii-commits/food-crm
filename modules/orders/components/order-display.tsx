@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { SessionUser } from "@/modules/auth/auth.types";
 import { OrderStatusButton } from "@/modules/orders/components/order-status-button";
-import type { OrderListItem } from "@/modules/orders/orders.types";
+import { ORDER_SOURCE_LABELS, type OrderListItem } from "@/modules/orders/orders.types";
 import {
   canCancelOrder,
   getOrderAdvanceAction,
@@ -78,6 +78,9 @@ export function OrderCard({
                   Внутренний
                 </span>
               ) : null}
+              <span className="inline-flex h-7 items-center rounded-full bg-white px-3 text-xs font-semibold text-red-800 ring-1 ring-red-100">
+                {ORDER_SOURCE_LABELS[order.source]}
+              </span>
             </div>
             <p className="mt-1 text-xs leading-5 text-zinc-500">{formatOrderDate(order.createdAt)}</p>
           </div>
@@ -98,6 +101,8 @@ export function OrderCard({
             )}
           </p>
           <p>Исполнитель: {order.employeeName}</p>
+          {order.customerPhoneSnapshot ? <p>Телефон: {order.customerPhoneSnapshot}</p> : null}
+          {order.deliveryAddressSnapshot ? <p>Адрес: {order.deliveryAddressSnapshot}</p> : null}
           <p>Тип: {order.clientType === "ORGANIZATION" ? "Организация" : "Клиент"}</p>
           <p>
             Этап:{" "}

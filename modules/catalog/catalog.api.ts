@@ -5,6 +5,10 @@ export async function fetchCatalogItems(): Promise<CatalogItem[]> {
   return backendGet<CatalogItem[]>("/api/v1/catalog");
 }
 
+export async function fetchPublicCatalogItems(): Promise<CatalogItem[]> {
+  return backendGet<CatalogItem[]>("/api/v1/public/catalog");
+}
+
 export async function fetchCatalogItemById(id: number): Promise<CatalogItem | null> {
   return backendGet<CatalogItem | null>(`/api/v1/catalog/${id}`);
 }

@@ -2,10 +2,11 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { fetchCurrentClient } from "@/modules/clients/clients.api";
 import { PublicAccountSection } from "@/modules/catalog/components/public-account-section";
+import { PublicMenuSection } from "@/modules/catalog/components/public-menu-section";
 import { PublicSiteHeader } from "@/modules/catalog/components/public-site-header";
-import type { CatalogItem } from "@/modules/catalog/catalog.types";
+import { fetchPublicCatalogItems } from "@/modules/catalog/catalog.api";
 import { CATALOG_SITE_CATEGORIES } from "@/modules/catalog/catalog.types";
-import { backendGetOptional } from "@/shared/api/backend";
+import { PUBLIC_SITE_CONTACTS } from "@/shared/config/public-site";
 
 export const metadata: Metadata = {
   title: "FoodLike | Доставка еды",
@@ -13,93 +14,17 @@ export const metadata: Metadata = {
     "FoodLike: доставка пиццы, роллов и горячих блюд. Меню, условия доставки и контакты.",
 };
 
-type PublicMenuItem = {
-  id: string;
-  name: string;
-  category: string;
-  description: string;
-  priceCents: number;
-  imageUrl: string;
-};
-
-const FALLBACK_MENU_ITEMS: PublicMenuItem[] = [
-  {
-    id: "signature-pizza",
-    name: "Маргарита с базиликом",
-    category: "Пицца",
-    description: "Тонкое тесто, томаты, моцарелла и свежий базилик.",
-    priceCents: 59000,
-    imageUrl:
-      "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=900&q=80",
-  },
-  {
-    id: "salmon-roll",
-    name: "Ролл с лососем",
-    category: "Роллы",
-    description: "Лосось, сливочный сыр, рис и хрустящий огурец.",
-    priceCents: 52000,
-    imageUrl:
-      "https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&w=900&q=80",
-  },
-  {
-    id: "warm-bowl",
-    name: "Боул с курицей",
-    category: "Горячее",
-    description: "Курица, овощи, рис, соус и зелень для плотного обеда.",
-    priceCents: 64000,
-    imageUrl:
-      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=900&q=80",
-  },
-];
-
-const FALLBACK_MENU_IMAGES = [
-  "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=900&q=80",
-  "https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&w=900&q=80",
-  "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=900&q=80",
-  "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=900&q=80",
-  "https://images.unsplash.com/photo-1543353071-10c8ba85a904?auto=format&fit=crop&w=900&q=80",
-  "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=900&q=80",
-];
-
 const DELIVERY_STEPS = [
   ["01", "Выбираете блюда", "Собираете заказ из меню или звоните нам."],
   ["02", "Готовим свежим", "Кухня получает заказ в CRM и готовит по техкартам."],
   ["03", "Привозим горячим", "Курьер доставляет аккуратно и вовремя."],
 ] as const;
 
-function formatMoney(cents: number) {
-  return new Intl.NumberFormat("ru-RU", {
-    style: "currency",
-    currency: "RUB",
-    maximumFractionDigits: 0,
-  }).format(cents / 100);
-}
-
-async function getPublicMenuItems(): Promise<PublicMenuItem[]> {
-  const catalogItems = await backendGetOptional<CatalogItem[]>("/api/v1/catalog");
-  const publicItems = catalogItems
-    ?.filter((item) => item.priceListType === "CLIENT")
-    .slice(0, 6)
-    .map((item, index) => ({
-      id: String(item.id),
-      name: item.name,
-      category: item.category ?? "Меню",
-      description:
-        item.description ??
-        `Позиция из клиентского прайса${item.pizzaSize ? `, размер ${item.pizzaSize}` : ""}.`,
-      priceCents: item.priceCents,
-      imageUrl: item.imageUrl ?? FALLBACK_MENU_IMAGES[index % FALLBACK_MENU_IMAGES.length],
-    }));
-
-  return publicItems?.length ? publicItems : FALLBACK_MENU_ITEMS;
-}
-
 export default async function Home() {
   const [menuItems, currentClient] = await Promise.all([
-    getPublicMenuItems(),
+    fetchPublicCatalogItems().catch(() => []),
     fetchCurrentClient(),
   ]);
-  const categories = Array.from(new Set(menuItems.map((item) => item.category)));
 
   return (
     <>
@@ -138,12 +63,14 @@ export default async function Home() {
               >
                 Смотреть меню
               </a>
-              <a
-                href="tel:+79990000000"
-                className="inline-flex justify-center rounded-full border border-white/42 px-6 py-3 text-sm font-semibold text-white transition hover:border-white hover:bg-white hover:text-[#c90013]"
-              >
-                Позвонить
-              </a>
+              {PUBLIC_SITE_CONTACTS.phoneHref && PUBLIC_SITE_CONTACTS.phoneLabel ? (
+                <a
+                  href={PUBLIC_SITE_CONTACTS.phoneHref}
+                  className="inline-flex justify-center rounded-full border border-white/42 px-6 py-3 text-sm font-semibold text-white transition hover:border-white hover:bg-white hover:text-[#c90013]"
+                >
+                  Позвонить
+                </a>
+              ) : null}
             </div>
           </div>
         </div>
@@ -151,65 +78,7 @@ export default async function Home() {
 
       <PublicAccountSection currentClient={currentClient} />
 
-      <section id="menu" className="bg-white py-16 sm:py-20">
-        <div className="mx-auto max-w-7xl px-5 sm:px-8">
-          <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#d50014]">
-                Меню FoodLike
-              </p>
-              <h2 className="mt-3 text-3xl font-semibold text-[#241316] sm:text-5xl">
-                Популярное сегодня
-              </h2>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {categories.map((category) => (
-                <span
-                  key={category}
-                  className="rounded-full border border-[#ffd7dc] bg-[#fff5f6] px-4 py-2 text-sm font-semibold text-[#b00012]"
-                >
-                  {category}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {menuItems.map((item) => (
-              <article
-                key={item.id}
-                className="overflow-hidden rounded-[8px] border border-[#ffe0e3] bg-white shadow-sm shadow-[#d50014]/8"
-              >
-                <div className="aspect-[4/3] overflow-hidden bg-[#fff1f2]">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={item.imageUrl}
-                    alt={item.name}
-                    className="h-full w-full object-cover transition duration-500 hover:scale-105"
-                    loading="lazy"
-                  />
-                </div>
-                <div className="p-5">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#d50014]">
-                        {item.category}
-                      </p>
-                      <h3 className="mt-2 text-xl font-semibold text-[#241316]">
-                        {item.name}
-                      </h3>
-                    </div>
-                    <p className="shrink-0 text-lg font-semibold text-[#c90013]">
-                      {formatMoney(item.priceCents)}
-                    </p>
-                  </div>
-                  <p className="mt-3 text-sm leading-6 text-[#6b5960]">{item.description}</p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
+      <PublicMenuSection currentClient={currentClient} items={menuItems} />
 
       <section id="delivery" className="bg-[#fff5f6] py-16 sm:py-20">
         <div className="mx-auto grid max-w-7xl gap-8 px-5 sm:px-8 lg:grid-cols-[0.9fr_1.1fr]">
@@ -241,17 +110,36 @@ export default async function Home() {
             </p>
             <h2 className="mt-3 text-3xl font-semibold">FoodLike на связи</h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-white/72">
-              Здесь поставим реальные телефон, адрес и мессенджеры, когда
-              финализируем клиентскую витрину и онлайн-заказы.
+              Заказы с сайта попадают в CRM, а по телефону и мессенджерам можно
+              уточнить доставку или состав заказа.
+              {PUBLIC_SITE_CONTACTS.address ? ` Адрес: ${PUBLIC_SITE_CONTACTS.address}.` : ""}
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
-            <a
-              href="tel:+79990000000"
-              className="rounded-full bg-white px-6 py-3 text-center text-sm font-semibold text-[#c90013] transition hover:bg-[#ffe8ea]"
-            >
-              +7 999 000-00-00
-            </a>
+            {PUBLIC_SITE_CONTACTS.phoneHref && PUBLIC_SITE_CONTACTS.phoneLabel ? (
+              <a
+                href={PUBLIC_SITE_CONTACTS.phoneHref}
+                className="rounded-full bg-white px-6 py-3 text-center text-sm font-semibold text-[#c90013] transition hover:bg-[#ffe8ea]"
+              >
+                {PUBLIC_SITE_CONTACTS.phoneLabel}
+              </a>
+            ) : null}
+            {PUBLIC_SITE_CONTACTS.telegramUrl ? (
+              <a
+                href={PUBLIC_SITE_CONTACTS.telegramUrl}
+                className="rounded-full border border-white/38 px-6 py-3 text-center text-sm font-semibold text-white transition hover:bg-white hover:text-[#c90013]"
+              >
+                Telegram
+              </a>
+            ) : null}
+            {PUBLIC_SITE_CONTACTS.whatsappUrl ? (
+              <a
+                href={PUBLIC_SITE_CONTACTS.whatsappUrl}
+                className="rounded-full border border-white/38 px-6 py-3 text-center text-sm font-semibold text-white transition hover:bg-white hover:text-[#c90013]"
+              >
+                WhatsApp
+              </a>
+            ) : null}
           </div>
         </div>
       </section>
