@@ -1,49 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import type { PublicClientProfile } from "@/modules/clients/clients.types";
 import type { AuthMode } from "@/modules/catalog/components/public-auth-modal";
+import { SparkleIcon, TicketIcon } from "@/modules/catalog/components/public-icons";
 import { LOYALTY_LEVEL_LABELS } from "@/modules/loyalty/loyalty.types";
 import { LOYALTY_LEVEL_CONFIG } from "@/modules/loyalty/loyalty.rules";
-
-function SparkleIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M12 3 9.8 8.8 4 11l5.8 2.2L12 19l2.2-5.8L20 11l-5.8-2.2L12 3Z" />
-      <path d="M19 3v4" />
-      <path d="M21 5h-4" />
-    </svg>
-  );
-}
-
-function TicketIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M3 9a3 3 0 0 0 0 6v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a3 3 0 0 0 0-6V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v3Z" />
-      <path d="M13 5v2" />
-      <path d="M13 17v2" />
-      <path d="M13 11v2" />
-    </svg>
-  );
-}
 
 type InfoType = "loyalty" | "giveaways";
 
@@ -240,7 +202,7 @@ function InfoButton({
   onClick,
 }: {
   badge?: string | null;
-  icon: React.ReactNode;
+  icon: ReactNode;
   isActive: boolean;
   label: string;
   onClick: () => void;
