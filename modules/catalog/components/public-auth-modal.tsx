@@ -26,7 +26,7 @@ export function PublicAuthModal({
 
   return (
     <PublicModalOverlay labelledBy={titleId} onClose={onClose}>
-      <div className="w-full max-w-[920px] overflow-hidden rounded-[8px] bg-white shadow-2xl shadow-black/24">
+      <div className="w-full max-w-[920px] rounded-[8px] bg-white shadow-2xl shadow-black/24">
         <div className="grid md:grid-cols-[0.86fr_1.14fr]">
           <div className="relative hidden min-h-[580px] overflow-hidden bg-[#d50014] text-white md:block">
             <Image
