@@ -6,6 +6,7 @@
     "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
+    "test": "npm --prefix backend test",
     "lint": "eslint",
     "check:lines": "node scripts/check-file-lines.mjs",
     "mirror:check": "node scripts/check-dev-mirror.mjs",
