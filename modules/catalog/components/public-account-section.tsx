@@ -6,20 +6,27 @@ import {
   type AuthMode,
   PublicAuthModal,
 } from "@/modules/catalog/components/public-auth-modal";
+import {
+  PublicBenefitModal,
+  type PublicBenefitKind,
+} from "@/modules/catalog/components/public-benefit-modal";
 import { PublicProfileModal } from "@/modules/catalog/components/public-profile-modal";
 import { LOYALTY_LEVEL_CONFIG } from "@/modules/loyalty/loyalty.rules";
 import { LOYALTY_LEVEL_LABELS } from "@/modules/loyalty/loyalty.types";
 
 const ACCOUNT_FEATURES = [
   {
+    kind: "loyalty",
     title: "Бонусы",
     text: "Уровень лояльности подтягивается по номеру телефона из клиентской базы.",
   },
   {
+    kind: "profile",
     title: "Профиль",
     text: "На публичном сайте видны только клиентские данные: телефон, дата рождения и бонусный прогресс.",
   },
   {
+    kind: "giveaways",
     title: "Розыгрыши",
     text: "Раздел готов для акций: вошедшие клиенты смогут видеть условия и участие.",
   },
@@ -54,11 +61,25 @@ export function PublicAccountSection({
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [benefitKind, setBenefitKind] = useState<PublicBenefitKind | null>(null);
   const progress = getProgress(currentClient);
 
   function openAuth(mode: AuthMode) {
     setAuthMode(mode);
     setIsAuthOpen(true);
+  }
+
+  function openFeature(kind: (typeof ACCOUNT_FEATURES)[number]["kind"]) {
+    if (kind === "profile") {
+      if (currentClient) {
+        setIsProfileOpen(true);
+      } else {
+        openAuth("login");
+      }
+      return;
+    }
+
+    setBenefitKind(kind);
   }
 
   return (
@@ -143,13 +164,15 @@ export function PublicAccountSection({
 
             <div className="grid gap-4 sm:grid-cols-3">
               {ACCOUNT_FEATURES.map((item) => (
-                <article
+                <button
                   key={item.title}
-                  className="rounded-[8px] border border-[#ffe0e3] bg-white p-5 shadow-sm shadow-[#d50014]/8"
+                  type="button"
+                  onClick={() => openFeature(item.kind)}
+                  className="rounded-[8px] border border-[#ffe0e3] bg-white p-5 text-left shadow-sm shadow-[#d50014]/8 transition hover:-translate-y-0.5 hover:border-[#d50014] hover:shadow-md hover:shadow-[#d50014]/10"
                 >
                   <h3 className="text-lg font-semibold text-[#241316]">{item.title}</h3>
                   <p className="mt-2 text-sm leading-6 text-[#6b5960]">{item.text}</p>
-                </article>
+                </button>
               ))}
             </div>
           </div>
@@ -168,6 +191,18 @@ export function PublicAccountSection({
         <PublicProfileModal
           client={currentClient}
           onClose={() => setIsProfileOpen(false)}
+        />
+      ) : null}
+
+      {benefitKind ? (
+        <PublicBenefitModal
+          client={currentClient}
+          kind={benefitKind}
+          onAuth={() => {
+            setBenefitKind(null);
+            openAuth("login");
+          }}
+          onClose={() => setBenefitKind(null)}
         />
       ) : null}
     </>
