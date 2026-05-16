@@ -24,7 +24,6 @@ export type Client = {
 
 export type PublicClientProfile = Pick<
   Client,
-  | "id"
   | "name"
   | "phone"
   | "birthDate"
