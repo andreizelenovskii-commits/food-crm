@@ -15,9 +15,19 @@ function buildUrl(path: string) {
 }
 
 function getBackendUnavailableMessage(path: string) {
+  const apiUrl = getBackendApiUrl();
+  const isLocalBackend = apiUrl.includes("localhost") || apiUrl.includes("127.0.0.1");
+
+  if (isLocalBackend) {
+    return [
+      `Backend API is unavailable at ${buildUrl(path)}.`,
+      "Start it locally with `cd backend && npm run start` or set BACKEND_API_URL/NEXT_PUBLIC_BACKEND_API_URL.",
+    ].join(" ");
+  }
+
   return [
-    `Backend API is unavailable at ${buildUrl(path)}.`,
-    "Start it locally with `cd backend && npm run start` or set BACKEND_API_URL/NEXT_PUBLIC_BACKEND_API_URL.",
+    `Backend API недоступен: ${buildUrl(path)}.`,
+    "Проверьте, что backend запущен на сервере, домен API открыт и переменные окружения указывают на правильный адрес.",
   ].join(" ");
 }
 
