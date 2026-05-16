@@ -1,6 +1,7 @@
 # Deployment Guide
 Короткая инструкция по деплою CRM Andromeda. Большой operational runbook лежит в
 [PRODUCTION_RUNBOOK.md](PRODUCTION_RUNBOOK.md).
+SMS-вход публичного сайта описан в [SMS_AERO.md](SMS_AERO.md).
 
 ## Production Layout
 ```text
