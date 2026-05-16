@@ -72,3 +72,43 @@ When staging is approved, merge `dev` into `main` and push `main` to deploy prod
 3. Другие варианты: неверный **`DEPLOY_SSH_KEY_B64`** в Secrets репозитория, падение **`npm run typecheck`** на раннем шаге (тогда красный будет **Typecheck**), ошибка **`npm run db:deploy`** или health-check после PM2 — смотри тот шаг, который красный в UI.
 
 Предупреждения GitHub про Node 20 в `actions/checkout` — это **warning**, не причина падения, пока job не помечен как failed из‑за них.
+
+## После сброса пароля VPS
+
+Если staging заблокировался на доступе к PostgreSQL или `sudo`, сначала зайди на
+сервер и проверь базовые сервисы:
+
+```bash
+ssh deploy@163.5.29.68
+pm2 status
+systemctl is-active caddy postgresql
+curl -fsS http://127.0.0.1:4100/api/v1/health
+curl -I -sS http://127.0.0.1:3100 | head -n 1
+```
+
+Затем проверь, что staging база существует и принадлежит `food_crm_user`:
+
+```bash
+sudo -u postgres psql -d postgres -c "\l food_crm_staging"
+sudo -u postgres psql -d food_crm_staging -c "\dn+ public"
+```
+
+Если базы нет или у схемы неверный owner:
+
+```bash
+sudo -u postgres psql -d postgres
+```
+
+```sql
+CREATE DATABASE food_crm_staging OWNER food_crm_user;
+\c food_crm_staging
+ALTER SCHEMA public OWNER TO food_crm_user;
+GRANT ALL ON SCHEMA public TO food_crm_user;
+```
+
+После этого повторно запусти GitHub Actions:
+
+```text
+Deploy backend staging
+Deploy frontend staging
+```
