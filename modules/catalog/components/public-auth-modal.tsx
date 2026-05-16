@@ -1,31 +1,17 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useId } from "react";
+import { useId } from "react";
 import {
   type AuthMode,
   PublicAuthSmsForm,
 } from "@/modules/catalog/components/public-auth-sms-form";
+import {
+  PublicModalCloseButton,
+  PublicModalOverlay,
+} from "@/modules/catalog/components/public-modal-shell";
 
 export type { AuthMode } from "@/modules/catalog/components/public-auth-sms-form";
-
-function CloseIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M18 6 6 18" />
-      <path d="m6 6 12 12" />
-    </svg>
-  );
-}
 
 export function PublicAuthModal({
   mode,
@@ -38,25 +24,8 @@ export function PublicAuthModal({
 }) {
   const titleId = useId();
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[#211316]/58 px-4 py-6 backdrop-blur-sm"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={titleId}
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
+    <PublicModalOverlay labelledBy={titleId} onClose={onClose}>
       <div className="w-full max-w-[920px] overflow-hidden rounded-[8px] bg-white shadow-2xl shadow-black/24">
         <div className="grid md:grid-cols-[0.86fr_1.14fr]">
           <div className="relative hidden min-h-[580px] overflow-hidden bg-[#d50014] text-white md:block">
@@ -91,14 +60,7 @@ export function PublicAuthModal({
           </div>
 
           <div className="relative px-5 py-5 sm:px-7 sm:py-6">
-            <button
-              type="button"
-              onClick={onClose}
-              className="absolute right-4 top-4 flex size-10 items-center justify-center rounded-full border border-[#f1d6d9] bg-white text-[#6b5960] transition hover:border-[#d50014] hover:text-[#d50014]"
-              aria-label="Закрыть окно"
-            >
-              <CloseIcon className="size-5" />
-            </button>
+            <PublicModalCloseButton className="absolute right-4 top-4" onClose={onClose} />
 
             <div className="pr-12">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#d50014]">
@@ -113,6 +75,6 @@ export function PublicAuthModal({
           </div>
         </div>
       </div>
-    </div>
+    </PublicModalOverlay>
   );
 }

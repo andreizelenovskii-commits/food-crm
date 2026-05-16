@@ -1,20 +1,15 @@
 "use client";
 
-import { useEffect, useId } from "react";
+import { useId } from "react";
 import type { PublicClientProfile } from "@/modules/clients/clients.types";
+import {
+  PublicModalCloseButton,
+  PublicModalOverlay,
+} from "@/modules/catalog/components/public-modal-shell";
 import { LOYALTY_LEVEL_CONFIG } from "@/modules/loyalty/loyalty.rules";
 import { LOYALTY_LEVEL_LABELS } from "@/modules/loyalty/loyalty.types";
 
 export type PublicBenefitKind = "loyalty" | "giveaways";
-
-function CloseIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className} aria-hidden="true">
-      <path d="M18 6 6 18" />
-      <path d="m6 6 12 12" />
-    </svg>
-  );
-}
 
 function formatMoney(cents: number) {
   return new Intl.NumberFormat("ru-RU", {
@@ -38,25 +33,8 @@ export function PublicBenefitModal({
   const titleId = useId();
   const isLoyalty = kind === "loyalty";
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[#211316]/58 px-4 py-6 backdrop-blur-sm"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={titleId}
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
+    <PublicModalOverlay labelledBy={titleId} onClose={onClose}>
       <div className="w-full max-w-[680px] overflow-hidden rounded-[8px] border border-[#f3dadd] bg-white shadow-2xl shadow-black/20">
         <div className="flex items-start justify-between gap-4 border-b border-[#f6e2e5] bg-[#fff7f8] p-5 sm:p-6">
           <div>
@@ -67,14 +45,7 @@ export function PublicBenefitModal({
               {isLoyalty ? "Уровни лояльности" : "Розыгрыши и подарки"}
             </h2>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex size-10 items-center justify-center rounded-full border border-[#f1d6d9] bg-white text-[#6b5960] transition hover:border-[#d50014] hover:text-[#d50014]"
-            aria-label="Закрыть окно"
-          >
-            <CloseIcon className="size-5" />
-          </button>
+          <PublicModalCloseButton onClose={onClose} />
         </div>
 
         <div className="p-5 sm:p-6">
@@ -85,7 +56,7 @@ export function PublicBenefitModal({
           )}
         </div>
       </div>
-    </div>
+    </PublicModalOverlay>
   );
 }
 
