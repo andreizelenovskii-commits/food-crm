@@ -1,6 +1,7 @@
 import Image from "next/image";
 import type { Metadata } from "next";
 import { fetchCurrentClient } from "@/modules/clients/clients.api";
+import { PublicAccountSection } from "@/modules/catalog/components/public-account-section";
 import { PublicSiteHeader } from "@/modules/catalog/components/public-site-header";
 import type { CatalogItem } from "@/modules/catalog/catalog.types";
 import { CATALOG_SITE_CATEGORIES } from "@/modules/catalog/catalog.types";
@@ -147,6 +148,8 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      <PublicAccountSection currentClient={currentClient} />
 
       <section id="menu" className="bg-white py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-5 sm:px-8">
