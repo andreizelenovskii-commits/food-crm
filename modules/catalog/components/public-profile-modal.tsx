@@ -54,6 +54,7 @@ export function PublicProfileModal({
 }) {
   const titleId = useId();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const progress = getProgress(client);
 
   useEffect(() => {
@@ -67,8 +68,15 @@ export function PublicProfileModal({
 
   async function logout() {
     setIsLoggingOut(true);
-    await browserBackendJson("/api/v1/public-auth/logout");
-    window.location.reload();
+
+    try {
+      setErrorMessage(null);
+      await browserBackendJson("/api/v1/public-auth/logout");
+      window.location.reload();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Не удалось выйти из профиля");
+      setIsLoggingOut(false);
+    }
   }
 
   return (
@@ -81,8 +89,8 @@ export function PublicProfileModal({
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-[520px] rounded-[24px] border border-[#f3dadd] bg-white p-5 shadow-2xl shadow-black/20">
-        <div className="flex items-start justify-between gap-4">
+      <div className="w-full max-w-[560px] overflow-hidden rounded-[8px] border border-[#f3dadd] bg-white shadow-2xl shadow-black/20">
+        <div className="flex items-start justify-between gap-4 border-b border-[#f6e2e5] bg-[#fff7f8] p-5 sm:p-6">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#d50014]">
               Профиль FoodLike
@@ -94,50 +102,58 @@ export function PublicProfileModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex size-10 items-center justify-center rounded-full border border-[#f1d6d9] text-[#6b5960] transition hover:border-[#d50014] hover:text-[#d50014]"
+            className="flex size-10 items-center justify-center rounded-full border border-[#f1d6d9] bg-white text-[#6b5960] transition hover:border-[#d50014] hover:text-[#d50014]"
             aria-label="Закрыть профиль"
           >
             <CloseIcon className="size-5" />
           </button>
         </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <ProfileTile label="Телефон" value={client.phone} />
-          <ProfileTile label="Дата рождения" value={formatBirthDate(client.birthDate)} />
-        </div>
+        <div className="p-5 sm:p-6">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <ProfileTile label="Телефон" value={client.phone} />
+            <ProfileTile label="Дата рождения" value={formatBirthDate(client.birthDate)} />
+          </div>
 
-        <div className="mt-4 rounded-[18px] border border-[#f3dadd] bg-[#fffafa] p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#d50014]">
-                Лояльность
-              </p>
-              <h3 className="mt-1 text-xl font-semibold text-[#241316]">
-                {client.loyaltyLevel ? LOYALTY_LEVEL_LABELS[client.loyaltyLevel] : "Клиент"}
-              </h3>
+          <div className="mt-4 rounded-[8px] border border-[#f3dadd] bg-[#fffafa] p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#d50014]">
+                  Лояльность
+                </p>
+                <h3 className="mt-1 text-xl font-semibold text-[#241316]">
+                  {client.loyaltyLevel ? LOYALTY_LEVEL_LABELS[client.loyaltyLevel] : "Клиент"}
+                </h3>
+              </div>
+              <span className="rounded-full bg-[#fff1f2] px-3 py-1 text-sm font-semibold text-[#b00012]">
+                {formatMoney(client.totalSpentCents)}
+              </span>
             </div>
-            <span className="rounded-full bg-[#fff1f2] px-3 py-1 text-sm font-semibold text-[#b00012]">
-              {formatMoney(client.totalSpentCents)}
-            </span>
+            <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#f6e2e5]">
+              <div className="h-full rounded-full bg-[#d50014]" style={{ width: `${progress}%` }} />
+            </div>
+            <p className="mt-3 text-sm leading-6 text-[#6b5960]">
+              {client.loyaltyNextLevel
+                ? `До уровня ${LOYALTY_LEVEL_LABELS[client.loyaltyNextLevel]} осталось ${formatMoney(client.loyaltyAmountToNextLevelCents)}.`
+                : "У вас максимальный уровень лояльности."}
+            </p>
           </div>
-          <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#f6e2e5]">
-            <div className="h-full rounded-full bg-[#d50014]" style={{ width: `${progress}%` }} />
-          </div>
-          <p className="mt-3 text-sm leading-6 text-[#6b5960]">
-            {client.loyaltyNextLevel
-              ? `До уровня ${LOYALTY_LEVEL_LABELS[client.loyaltyNextLevel]} осталось ${formatMoney(client.loyaltyAmountToNextLevelCents)}.`
-              : "У вас максимальный уровень лояльности."}
-          </p>
-        </div>
 
-        <button
-          type="button"
-          onClick={logout}
-          disabled={isLoggingOut}
-          className="mt-5 min-h-11 w-full rounded-full border border-[#f0d9dc] bg-white px-4 text-sm font-semibold text-[#b00012] transition hover:bg-[#fff1f2] disabled:opacity-60"
-        >
-          {isLoggingOut ? "Выходим..." : "Выйти из профиля"}
-        </button>
+          {errorMessage ? (
+            <p className="mt-4 rounded-[8px] border border-[#ffc9cf] bg-[#fff4f5] px-4 py-3 text-sm text-[#a00010]">
+              {errorMessage}
+            </p>
+          ) : null}
+
+          <button
+            type="button"
+            onClick={logout}
+            disabled={isLoggingOut}
+            className="mt-5 min-h-11 w-full rounded-full border border-[#f0d9dc] bg-white px-4 text-sm font-semibold text-[#b00012] transition hover:bg-[#fff1f2] disabled:opacity-60"
+          >
+            {isLoggingOut ? "Выходим..." : "Выйти из профиля"}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -145,7 +161,7 @@ export function PublicProfileModal({
 
 function ProfileTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[16px] bg-[#fff5f6] px-4 py-3">
+    <div className="rounded-[8px] bg-[#fff5f6] px-4 py-3">
       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#b00012]">
         {label}
       </p>
