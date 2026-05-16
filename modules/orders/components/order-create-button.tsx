@@ -41,6 +41,7 @@ export function OrderCreateButton({
       clientId: "",
       employeeId: "",
       status: INITIAL_ORDER_STATUS,
+      source: "PHONE",
       deliveryFeeCents: String(DEFAULT_DELIVERY_FEE_CENTS),
       isInternal: false,
       items: "[]",
@@ -106,7 +107,6 @@ export function OrderCreateButton({
         if (!matchesCategory) {
           return false;
         }
-
         const query = normalizeSearchValue(catalogQuery);
 
         if (!query) {

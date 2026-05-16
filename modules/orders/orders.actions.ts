@@ -22,6 +22,7 @@ export type OrderFormState = {
 const EMPTY_VALUES: OrderFormValues = {
   clientId: "",
   employeeId: "",
+  source: "PHONE",
   status: INITIAL_ORDER_STATUS,
   deliveryFeeCents: String(DEFAULT_DELIVERY_FEE_CENTS),
   isInternal: false,

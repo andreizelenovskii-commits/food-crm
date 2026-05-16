@@ -3,6 +3,7 @@ import type { Employee } from "@/modules/employees/employees.types";
 import { LOYALTY_LEVEL_LABELS } from "@/modules/loyalty/loyalty.types";
 import type { SelectedOrderItem } from "@/modules/orders/components/order-create.types";
 import { formatMoney } from "@/modules/orders/components/order-create-utils";
+import { OrderSourceField } from "@/modules/orders/components/order-source-field";
 import {
   DEFAULT_DELIVERY_FEE_CENTS,
   INITIAL_ORDER_STATUS,
@@ -87,6 +88,8 @@ export function OrderCreateParamsPanel({
         }
         onClick={onOpenEmployeePicker}
       />
+
+      <OrderSourceField />
 
       <label className="space-y-2">
         <span className="text-sm font-medium text-zinc-700">Стартовый этап</span>
