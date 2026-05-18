@@ -12,10 +12,97 @@ import {
 import {
   ChevronIcon,
   GridIcon,
+  PhoneIcon,
   SearchIcon,
   UserIcon,
 } from "@/modules/catalog/components/public-icons";
 import { PublicProfileModal } from "@/modules/catalog/components/public-profile-modal";
+import { PUBLIC_SITE_CONTACTS } from "@/shared/config/public-site";
+
+function TelegramIcon({ className }: { className?: string }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className={className}>
+      <path
+        fill="currentColor"
+        d="M21.82 4.14a1.35 1.35 0 0 0-1.38-.22L3.12 10.6c-.62.24-1.02.65-1.08 1.14-.07.56.34 1.05 1.05 1.27l4.43 1.38 1.7 5.12c.18.55.54.9 1 .95.43.05.85-.19 1.17-.67l2.3-3.47 4.58 3.37c.49.36.98.48 1.39.32.42-.16.72-.57.84-1.17l2.39-13.23c.1-.59-.02-1.09-.36-1.38a1.2 1.2 0 0 0-.71-.09ZM18.7 7.44l-8.14 7.18-.32 3.12-1.07-3.22 7.8-6.22-9.47 5.13-3.33-1.04 14.53-4.95Z"
+      />
+    </svg>
+  );
+}
+
+function WhatsAppIcon({ className }: { className?: string }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className={className}>
+      <path
+        fill="currentColor"
+        d="M12.04 3.25a8.48 8.48 0 0 0-7.2 12.95l-1.1 4.04 4.13-1.08a8.48 8.48 0 1 0 4.17-15.91Zm0 1.52a6.96 6.96 0 1 1-3.56 12.94l-.25-.15-2.45.64.65-2.39-.16-.25a6.96 6.96 0 0 1 5.77-10.79Zm-2.28 3.7c-.16-.36-.33-.37-.49-.38h-.42c-.15 0-.38.06-.58.28-.2.22-.76.74-.76 1.82 0 1.07.78 2.1.89 2.25.1.15 1.52 2.44 3.76 3.32 1.86.73 2.24.59 2.64.55.4-.04 1.3-.53 1.48-1.04.18-.51.18-.95.13-1.04-.05-.09-.2-.15-.4-.26-.22-.1-1.3-.64-1.5-.71-.2-.08-.35-.11-.5.1-.14.22-.57.72-.7.87-.13.15-.26.17-.48.06-.21-.1-.9-.33-1.72-1.06-.64-.57-1.06-1.27-1.19-1.48-.12-.22-.01-.34.1-.44.1-.1.22-.26.33-.38.1-.13.14-.22.21-.37.07-.15.04-.28-.02-.39l-.68-1.7Z"
+      />
+    </svg>
+  );
+}
+
+const contactButtonClass =
+  "inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-[#f0d9dc] bg-white text-[#5c464b] transition hover:border-[#ffc3ca] hover:bg-[#fff1f2] hover:text-[#d50014] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d50014]/25";
+
+function ContactIconLinks({ className }: { className: string }) {
+  return (
+    <div className={className}>
+      {PUBLIC_SITE_CONTACTS.phoneHref ? (
+        <a
+          href={PUBLIC_SITE_CONTACTS.phoneHref}
+          aria-label="Позвонить"
+          title={PUBLIC_SITE_CONTACTS.phoneLabel}
+          className={contactButtonClass}
+        >
+          <PhoneIcon className="size-4.5" />
+        </a>
+      ) : null}
+      {PUBLIC_SITE_CONTACTS.telegramUrl ? (
+        <a
+          href={PUBLIC_SITE_CONTACTS.telegramUrl}
+          aria-label="Telegram"
+          title="Telegram"
+          target="_blank"
+          rel="noreferrer"
+          className={contactButtonClass}
+        >
+          <TelegramIcon className="size-5" />
+        </a>
+      ) : null}
+      {PUBLIC_SITE_CONTACTS.maxUrl ? (
+        <a
+          href={PUBLIC_SITE_CONTACTS.maxUrl}
+          aria-label="MAX"
+          title="MAX"
+          target="_blank"
+          rel="noreferrer"
+          className={contactButtonClass}
+        >
+          <Image
+            src="/max-logo.png"
+            alt=""
+            width={20}
+            height={20}
+            unoptimized
+            className="size-5 object-contain"
+          />
+        </a>
+      ) : null}
+      {PUBLIC_SITE_CONTACTS.whatsappUrl ? (
+        <a
+          href={PUBLIC_SITE_CONTACTS.whatsappUrl}
+          aria-label="WhatsApp"
+          title="WhatsApp"
+          target="_blank"
+          rel="noreferrer"
+          className={contactButtonClass}
+        >
+          <WhatsAppIcon className="size-5" />
+        </a>
+      ) : null}
+    </div>
+  );
+}
 
 export function PublicSiteHeader({
   categories,
@@ -106,6 +193,8 @@ export function PublicSiteHeader({
             onAuthOpen={openAuth}
           />
 
+          <ContactIconLinks className="hidden shrink-0 items-center gap-1.5 sm:flex" />
+
           <div ref={categoriesRef} className="relative hidden shrink-0 md:block">
             <button
               type="button"
@@ -179,6 +268,7 @@ export function PublicSiteHeader({
             </button>
           )}
         </div>
+        <ContactIconLinks className="mx-auto mt-2 flex w-fit items-center gap-1.5 rounded-full border border-white/80 bg-white/90 p-1.5 shadow-[0_10px_32px_rgba(143,0,16,0.12)] backdrop-blur-2xl sm:hidden" />
       </header>
 
       {isAuthOpen ? (
