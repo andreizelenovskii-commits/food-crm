@@ -6,6 +6,7 @@
 npm ci
 cp .env.local.example .env.local
 npm run lint
+npm test
 npm run build
 npm run dev
 ```
@@ -32,6 +33,8 @@ elsewhere.
 | **Прод** | [crm.crmandromeda.ru](https://crm.crmandromeda.ru) | `main` + обычный деплой |
 
 Короткая пошаговая схема: **[docs/mirror-workflow.md](docs/mirror-workflow.md)**. Инфраструктура и DNS: **[docs/STAGING.md](docs/STAGING.md)**.
+
+Модель веток и чеклист перед `main`: **[docs/RELEASE_WORKFLOW.md](docs/RELEASE_WORKFLOW.md)**.
 
 ---
 

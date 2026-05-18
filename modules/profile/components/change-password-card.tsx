@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useId, useState } from "react";
 import {
   changePasswordAction,
   type ChangePasswordFormState,
@@ -16,6 +16,9 @@ export function ChangePasswordCard() {
     changePasswordAction,
     initialState,
   );
+  const currentPasswordId = useId();
+  const newPasswordId = useId();
+  const confirmNewPasswordId = useId();
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
 
@@ -32,9 +35,11 @@ export function ChangePasswordCard() {
       </p>
 
       <form action={formAction} className="mt-4 space-y-4">
-        <label className="block space-y-2">
+        <div className="block space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-sm font-medium text-zinc-700">Текущий пароль</span>
+            <label htmlFor={currentPasswordId} className="text-sm font-medium text-zinc-700">
+              Текущий пароль
+            </label>
             <button
               type="button"
               onClick={() => setShowCurrent((v) => !v)}
@@ -44,17 +49,20 @@ export function ChangePasswordCard() {
             </button>
           </div>
           <input
+            id={currentPasswordId}
             name="currentPassword"
             type={showCurrent ? "text" : "password"}
             autoComplete="current-password"
             className={inputClassName}
             required
           />
-        </label>
+        </div>
 
-        <label className="block space-y-2">
+        <div className="block space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-sm font-medium text-zinc-700">Новый пароль</span>
+            <label htmlFor={newPasswordId} className="text-sm font-medium text-zinc-700">
+              Новый пароль
+            </label>
             <button
               type="button"
               onClick={() => setShowNew((v) => !v)}
@@ -64,24 +72,28 @@ export function ChangePasswordCard() {
             </button>
           </div>
           <input
+            id={newPasswordId}
             name="newPassword"
             type={showNew ? "text" : "password"}
             autoComplete="new-password"
             className={inputClassName}
             required
           />
-        </label>
+        </div>
 
-        <label className="block space-y-2">
-          <span className="text-sm font-medium text-zinc-700">Повтори новый пароль</span>
+        <div className="block space-y-2">
+          <label htmlFor={confirmNewPasswordId} className="text-sm font-medium text-zinc-700">
+            Повтори новый пароль
+          </label>
           <input
+            id={confirmNewPasswordId}
             name="confirmNewPassword"
             type={showNew ? "text" : "password"}
             autoComplete="new-password"
             className={inputClassName}
             required
           />
-        </label>
+        </div>
 
         {state.errorMessage ? (
           <p className="rounded-[18px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">

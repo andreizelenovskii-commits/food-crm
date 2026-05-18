@@ -1,7 +1,7 @@
 # Deployment Guide
-Короткая инструкция по деплою CRM Andromeda. Большой operational runbook лежит в
-[PRODUCTION_RUNBOOK.md](PRODUCTION_RUNBOOK.md).
+Короткая инструкция по деплою CRM Andromeda. Большой operational runbook: [PRODUCTION_RUNBOOK.md](PRODUCTION_RUNBOOK.md).
 SMS-вход публичного сайта описан в [SMS_AERO.md](SMS_AERO.md).
+Модель веток и checklist перед merge в `main`: [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md).
 
 ## Production Layout
 ```text
@@ -93,14 +93,15 @@ Workflow:
 
 1. `npm ci`
 2. `npm run lint`
-3. `npm run build`
-4. загружает release в `/home/deploy/apps/food-crm/releases/<commit-sha>`
-5. подключает `/home/deploy/apps/food-crm/shared/.env`
-6. собирает проект на сервере
-7. переключает symlink `current`
-8. перезапускает PM2 процесс `food-crm-frontend`
-9. сохраняет PM2 process list
-10. оставляет последние 5 releases
+3. `npm test`
+4. `npm run build`
+5. загружает release в `/home/deploy/apps/food-crm/releases/<commit-sha>`
+6. подключает `/home/deploy/apps/food-crm/shared/.env`
+7. собирает проект на сервере
+8. переключает symlink `current`
+9. перезапускает PM2 процесс `food-crm-frontend`
+10. сохраняет PM2 process list
+11. оставляет последние 5 releases
 
 Ручная проверка после frontend deploy:
 
@@ -128,13 +129,14 @@ Workflow:
 
 1. `npm ci`
 2. `npm run typecheck`
-3. загружает release в `/home/deploy/apps/food-crm-backend/releases/<commit-sha>`
-4. подключает `/home/deploy/apps/food-crm-backend/shared/.env`
-5. выполняет `npm run db:deploy`
-6. переключает symlink `current`
-7. перезапускает PM2 процесс `food-crm-backend`
-8. сохраняет PM2 process list
-9. оставляет последние 5 releases
+3. `npm test`
+4. загружает release в `/home/deploy/apps/food-crm-backend/releases/<commit-sha>`
+5. подключает `/home/deploy/apps/food-crm-backend/shared/.env`
+6. выполняет `npm run db:deploy`
+7. переключает symlink `current`
+8. перезапускает PM2 процесс `food-crm-backend`
+9. сохраняет PM2 process list
+10. оставляет последние 5 releases
 
 Ручная проверка после backend deploy:
 

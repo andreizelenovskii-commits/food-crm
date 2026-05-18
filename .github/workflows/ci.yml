@@ -1,0 +1,41 @@
+name: Frontend CI
+
+on:
+  pull_request:
+  push:
+    branches: ["dev"]
+
+concurrency:
+  group: frontend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    env:
+      BACKEND_API_URL: http://127.0.0.1:4000
+      NEXT_PUBLIC_BACKEND_API_URL: http://127.0.0.1:4000
+      SESSION_SECRET: build-time-placeholder
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build

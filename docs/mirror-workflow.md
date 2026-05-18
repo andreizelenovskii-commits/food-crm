@@ -3,6 +3,7 @@
 Идея: **не трогаешь прод**, пока не проверил копию на тех же сервисах, но на **отдельных URL и отдельной БД**. Потом один раз вливаешь в `main` — и только тогда обновляется **crm.crmandromeda.ru** и **api.…**.
 
 Подробности инфраструктуры: [STAGING.md](STAGING.md).
+Полная модель веток и checklist перед `main`: [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md).
 
 ---
 
@@ -38,7 +39,7 @@
 
 ## Как работать каждый день
 
-1. **Ветка** — черновые правки в **`dev`** (или фича-ветка → PR в `dev`). Прод крутится с **`main`**.
+1. **Ветка** — фича-ветка → PR в **`dev`**. Прод крутится с **`main`**. Модель: `feature branch -> dev -> staging -> main -> production`.
 
 2. **Бэкенд** — репозиторий `food-crm-backend`: push в **`dev`** → в GitHub Actions запусти workflow **Deploy backend staging** (или настрой автозапуск на push в `dev`, если уже включён).
 
