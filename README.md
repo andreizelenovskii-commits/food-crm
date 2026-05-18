@@ -1,5 +1,27 @@
 # Food CRM
 
+## Run
+
+```bash
+npm ci
+cp .env.local.example .env.local
+npm run lint
+npm run build
+npm run dev
+```
+
+Check:
+
+```bash
+http://localhost:3000
+http://localhost:3000/login
+```
+
+The frontend requires `SESSION_SECRET` in `.env.local`. By default it sends API
+requests to `http://127.0.0.1:4000`; override that with
+`NEXT_PUBLIC_BACKEND_API_URL` and/or `BACKEND_API_URL` when the backend runs
+elsewhere.
+
 ## Зеркало перед доменом (рекомендуется)
 
 Редактируешь и проверяешь на **staging**, на продовый домен выкатываешь **после**:
