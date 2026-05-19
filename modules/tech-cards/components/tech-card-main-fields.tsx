@@ -93,6 +93,11 @@ export function TechCardMainFields({
             options={TECH_CARD_PIZZA_SIZES}
             onChange={onPizzaSizeChange}
           />
+          {pizzaSize === "30 см" ? (
+            <span className="block text-xs leading-5 text-zinc-500">
+              Для 26 см и 24 см техкарты создадутся автоматически: ингредиенты уменьшаются на 15% от предыдущего размера.
+            </span>
+          ) : null}
         </label>
       ) : (
         <input type="hidden" name="pizzaSize" value="" />
