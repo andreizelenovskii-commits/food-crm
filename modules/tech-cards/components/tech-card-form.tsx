@@ -125,32 +125,33 @@ function TechCardFormContent({
           }}
           onQuantityChange={form.handleIngredientQuantityChange}
           onRemove={form.handleRemoveIngredient}
+          picker={
+            form.isIngredientDialogOpen ? (
+              <TechCardIngredientDialog
+                ingredientQuery={form.ingredientQuery}
+                selectedCategory={form.selectedCategory}
+                availableCategories={form.availableCategories}
+                filteredProducts={form.filteredProducts}
+                selectedIngredients={form.selectedIngredients}
+                pendingIngredientIds={form.pendingIngredientIds}
+                onQueryChange={form.setIngredientQuery}
+                onCategoryChange={form.setSelectedCategory}
+                onTogglePending={form.handleTogglePendingIngredient}
+                onResetPending={() => form.setPendingIngredientIds([])}
+                onAddPending={form.handleAddPendingIngredients}
+                onClose={() => {
+                  form.setPendingIngredientIds([]);
+                  form.setIsIngredientDialogOpen(false);
+                }}
+              />
+            ) : null
+          }
         />
         <TechCardFormFooter
           isPending={isPending}
           isEditMode={Boolean(initialTechCard)}
         />
       </form>
-
-      {form.isIngredientDialogOpen ? (
-        <TechCardIngredientDialog
-          ingredientQuery={form.ingredientQuery}
-          selectedCategory={form.selectedCategory}
-          availableCategories={form.availableCategories}
-          filteredProducts={form.filteredProducts}
-          selectedIngredients={form.selectedIngredients}
-          pendingIngredientIds={form.pendingIngredientIds}
-          onQueryChange={form.setIngredientQuery}
-          onCategoryChange={form.setSelectedCategory}
-          onTogglePending={form.handleTogglePendingIngredient}
-          onResetPending={() => form.setPendingIngredientIds([])}
-          onAddPending={form.handleAddPendingIngredients}
-          onClose={() => {
-            form.setPendingIngredientIds([]);
-            form.setIsIngredientDialogOpen(false);
-          }}
-        />
-      ) : null}
     </div>
   );
 }

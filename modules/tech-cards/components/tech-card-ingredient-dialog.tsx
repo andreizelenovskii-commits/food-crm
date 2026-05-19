@@ -32,100 +32,94 @@ export function TechCardIngredientDialog({
   onClose: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-90 flex items-start justify-center overflow-y-auto bg-zinc-950/35 px-4 py-3 backdrop-blur-sm sm:py-4" onClick={onClose}>
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Выбор ингредиентов для технологической карты"
-        className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-4xl flex-col overflow-hidden rounded-[22px] border border-white/70 bg-[linear-gradient(135deg,#fffdfc_0%,#fff3f2_48%,#f7eeee_100%)] shadow-[0_24px_80px_rgba(127,29,29,0.18)] sm:max-h-[min(720px,calc(100dvh-2rem))]"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="shrink-0 border-b border-red-950/10 bg-white/68 px-4 py-3 backdrop-blur-2xl sm:px-5">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">Состав техкарты</p>
-              <h3 className="mt-1 text-lg font-semibold text-zinc-950">Выбор ингредиентов</h3>
-              <p className="mt-1 hidden max-w-2xl text-xs leading-5 text-zinc-600 sm:block">
-                Отмечай несколько позиций подряд и добавляй их в техкарту одним действием.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="inline-flex h-8 items-center rounded-full border border-red-100 bg-white/90 px-4 text-xs font-semibold text-red-800 shadow-sm shadow-red-950/5 transition hover:border-red-800 hover:bg-red-800 hover:text-white"
-            >
-              Закрыть
-            </button>
+    <div
+      role="region"
+      aria-label="Выбор ингредиентов для технологической карты"
+      className="overflow-hidden rounded-[18px] border border-red-950/10 bg-white/82 shadow-sm shadow-red-950/5"
+    >
+      <div className="border-b border-red-950/10 bg-white px-3 py-3 sm:px-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold text-zinc-950">Каталог ингредиентов</p>
+            <p className="mt-0.5 text-xs text-zinc-500">Отметь позиции и добавь их в состав техкарты.</p>
           </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-8 items-center rounded-full border border-red-100 bg-white px-4 text-xs font-semibold text-red-800 shadow-sm shadow-red-950/5 transition hover:border-red-800 hover:bg-red-800 hover:text-white"
+          >
+            Свернуть
+          </button>
+        </div>
 
-          <input
-            type="search"
-            value={ingredientQuery}
-            onChange={(event) => onQueryChange(event.target.value)}
-            placeholder="Найти ингредиент по названию или единице"
-            className="mt-2.5 h-9 w-full rounded-[13px] border border-red-950/10 bg-white/90 px-4 text-sm font-medium text-zinc-950 shadow-sm shadow-red-950/5 outline-none transition placeholder:text-zinc-400 focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
-          />
+        <input
+          type="search"
+          value={ingredientQuery}
+          onChange={(event) => onQueryChange(event.target.value)}
+          placeholder="Найти ингредиент по названию или единице"
+          className="mt-3 h-10 w-full rounded-[13px] border border-red-950/10 bg-white/90 px-4 text-sm font-medium text-zinc-950 shadow-sm shadow-red-950/5 outline-none transition placeholder:text-zinc-400 focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
+        />
 
-          <div className="mt-2.5 flex gap-2 overflow-x-auto rounded-[14px] border border-red-950/10 bg-white/62 p-1">
-            <button
-              type="button"
-              onClick={() => onCategoryChange("")}
-              className={`h-7 shrink-0 rounded-[10px] px-3 text-xs font-semibold transition ${
-                !selectedCategory
-                  ? "bg-red-800 text-white shadow-sm shadow-red-950/15"
-                  : "text-zinc-500 hover:bg-red-50 hover:text-red-900"
-              }`}
-            >
-              Все категории
-            </button>
-            {availableCategories.map((category) => {
-              const isActive = selectedCategory === category;
+        <div className="mt-3 flex gap-2 overflow-x-auto rounded-[14px] border border-red-950/10 bg-red-50/40 p-1">
+          <button
+            type="button"
+            onClick={() => onCategoryChange("")}
+            className={`h-8 shrink-0 rounded-[10px] px-3 text-xs font-semibold transition ${
+              !selectedCategory
+                ? "bg-red-800 text-white shadow-sm shadow-red-950/15"
+                : "text-zinc-500 hover:bg-red-50 hover:text-red-900"
+            }`}
+          >
+            Все категории
+          </button>
+          {availableCategories.map((category) => {
+            const isActive = selectedCategory === category;
+
+            return (
+              <button
+                key={category}
+                type="button"
+                onClick={() => onCategoryChange(category)}
+                className={`h-8 shrink-0 rounded-[10px] px-3 text-xs font-semibold transition ${
+                  isActive
+                    ? "bg-red-800 text-white shadow-sm shadow-red-950/15"
+                    : "text-zinc-500 hover:bg-red-50 hover:text-red-900"
+                }`}
+              >
+                {category}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="px-3 py-3 sm:px-4">
+        {filteredProducts.length === 0 ? (
+          <div className="rounded-[14px] border border-dashed border-red-950/14 bg-white/70 px-4 py-5 text-sm text-zinc-500">
+            Ничего не найдено. Попробуй другой запрос.
+          </div>
+        ) : (
+          <PaginatedList itemLabel="товаров" className="grid gap-2" pageSize={6}>
+            {filteredProducts.map((product) => {
+              const isSelected = selectedIngredients.some((ingredient) => ingredient.productId === String(product.id));
+              const isPendingSelected = pendingIngredientIds.includes(String(product.id));
 
               return (
-                <button
-                  key={category}
-                  type="button"
-                  onClick={() => onCategoryChange(category)}
-                  className={`h-7 shrink-0 rounded-[10px] px-3 text-xs font-semibold transition ${
-                    isActive
-                      ? "bg-red-800 text-white shadow-sm shadow-red-950/15"
-                      : "text-zinc-500 hover:bg-red-50 hover:text-red-900"
-                  }`}
-                >
-                  {category}
-                </button>
+                <IngredientPickerRow
+                  key={product.id}
+                  product={product}
+                  isSelected={isSelected}
+                  isPendingSelected={isPendingSelected}
+                  onToggle={() => onTogglePending(String(product.id))}
+                />
               );
             })}
-          </div>
-        </div>
+          </PaginatedList>
+        )}
+      </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-2.5 sm:px-5">
-          {filteredProducts.length === 0 ? (
-            <div className="rounded-[18px] border border-dashed border-red-950/14 bg-white/70 px-4 py-5 text-sm text-zinc-500">
-              Ничего не найдено. Попробуй другой запрос.
-            </div>
-          ) : (
-            <PaginatedList itemLabel="товаров" className="grid gap-2" pageSize={5}>
-              {filteredProducts.map((product) => {
-                const isSelected = selectedIngredients.some((ingredient) => ingredient.productId === String(product.id));
-                const isPendingSelected = pendingIngredientIds.includes(String(product.id));
-
-                return (
-                  <IngredientPickerRow
-                    key={product.id}
-                    product={product}
-                    isSelected={isSelected}
-                    isPendingSelected={isPendingSelected}
-                    onToggle={() => onTogglePending(String(product.id))}
-                  />
-                );
-              })}
-            </PaginatedList>
-          )}
-        </div>
-
-        <div className="shrink-0 border-t border-red-950/10 bg-white/72 px-4 py-2.5 sm:px-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="border-t border-red-950/10 bg-white px-3 py-3 sm:px-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-zinc-600">
             Отмечено для добавления: <span className="font-semibold text-zinc-950">{pendingIngredientIds.length}</span>
           </p>
@@ -146,7 +140,6 @@ export function TechCardIngredientDialog({
             >
               Добавить выбранные
             </button>
-          </div>
           </div>
         </div>
       </div>
