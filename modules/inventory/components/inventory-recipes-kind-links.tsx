@@ -129,10 +129,13 @@ function KindDialog({
   onClose: () => void;
 }) {
   const meta = getKindMeta(kind);
-  const entries = kind === "price" ? buildPriceDialogEntries(cards) : cards.map((card) => ({
+  const [query, setQuery] = useState("");
+  const filteredCards = filterTechCards(cards, query);
+  const entries = kind === "price" ? buildPriceDialogEntries(filteredCards) : filteredCards.map((card) => ({
     kind: "single" as const,
     card,
   }));
+  const normalizedQuery = query.trim();
 
   return (
     <div className="fixed inset-0 z-70 overflow-y-auto bg-zinc-950/30 px-4 py-6 backdrop-blur-sm sm:py-8">
@@ -148,10 +151,20 @@ function KindDialog({
             Закрыть
           </button>
         </div>
+        <label className="mt-3 block rounded-[18px] border border-white/70 bg-white/78 px-4 py-3 shadow-[0_18px_60px_rgba(127,29,29,0.08)] backdrop-blur-2xl">
+          <span className="text-xs font-semibold text-zinc-700">Поиск техкарты</span>
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={kind === "ingredient" ? "Название заготовки или ингредиент" : "Название, категория, размер или ингредиент"}
+            className="mt-2 h-11 w-full rounded-[14px] border border-red-950/10 bg-white/90 px-4 text-sm font-medium text-zinc-950 shadow-sm shadow-red-950/5 outline-none transition placeholder:text-zinc-400 focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
+          />
+        </label>
         <div className="mt-3 space-y-2.5">
           {entries.length === 0 ? (
             <div className="rounded-[18px] border border-dashed border-red-950/14 bg-white/70 p-5 text-sm leading-6 text-zinc-500">
-              В этом разделе пока нет технологических карт.
+              {normalizedQuery ? "По этому запросу техкарты не найдены." : "В этом разделе пока нет технологических карт."}
             </div>
           ) : (
             entries.map((entry) =>
@@ -176,4 +189,27 @@ function KindDialog({
       </section>
     </div>
   );
+}
+
+function filterTechCards(cards: TechCardItem[], query: string) {
+  const normalizedQuery = query.trim().toLowerCase();
+
+  if (!normalizedQuery) {
+    return cards;
+  }
+
+  return cards.filter((card) => {
+    const searchableValue = [
+      card.name,
+      card.category,
+      card.pizzaSize ?? "",
+      card.outputUnit,
+      card.description ?? "",
+      ...card.ingredients.map((ingredient) => ingredient.productName),
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    return searchableValue.includes(normalizedQuery);
+  });
 }
