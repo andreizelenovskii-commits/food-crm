@@ -41,23 +41,8 @@ function WhatsAppIcon({ className }: { className?: string }) {
   );
 }
 
-function MaxIcon({ className }: { className?: string }) {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className={className}>
-      <path
-        fill="currentColor"
-        d="M7.1 5.3h9.8c2.1 0 3.8 1.7 3.8 3.8v4.2c0 2.1-1.7 3.8-3.8 3.8h-4.1l-3.7 2.3c-.55.34-1.25-.05-1.25-.7v-1.6H7.1a3.8 3.8 0 0 1-3.8-3.8V9.1c0-2.1 1.7-3.8 3.8-3.8Zm0 1.7A2.1 2.1 0 0 0 5 9.1v4.2c0 1.16.94 2.1 2.1 2.1h1.6c.47 0 .85.38.85.85v.92l2.57-1.61c.14-.1.3-.15.47-.15h4.31a2.1 2.1 0 0 0 2.1-2.1V9.1A2.1 2.1 0 0 0 16.9 7H7.1Z"
-      />
-      <path
-        fill="currentColor"
-        d="M7.35 9.05c.35 0 .63.14.85.42l1.36 1.75 1.36-1.75c.22-.28.5-.42.85-.42.58 0 1.03.45 1.03 1.02v4.05h-1.55v-2.63l-1.04 1.33a.78.78 0 0 1-1.3 0l-1.04-1.33v2.63H6.32v-4.05c0-.57.45-1.02 1.03-1.02Zm8.47 0c.42 0 .78.22.96.58l2.22 4.49h-1.72l-.37-.81h-2.18l-.37.81h-1.67l2.18-4.49c.18-.36.54-.58.95-.58Zm.01 1.78-.58 1.24h1.14l-.56-1.24Z"
-      />
-    </svg>
-  );
-}
-
 const contactButtonClass =
-  "inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-[#f0d9dc] bg-white text-[#5c464b] transition hover:border-[#ffc3ca] hover:bg-[#fff1f2] hover:text-[#d50014] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d50014]/25";
+  "group inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-[#f0d9dc] bg-white text-[#5c464b] transition hover:border-[#ffc3ca] hover:bg-[#fff1f2] hover:text-[#d50014] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d50014]/25";
 
 function ContactIconLinks({ className }: { className: string }) {
   return (
@@ -93,7 +78,14 @@ function ContactIconLinks({ className }: { className: string }) {
           rel="noreferrer"
           className={contactButtonClass}
         >
-          <MaxIcon className="size-5" />
+          <Image
+            src="/max-logo.png"
+            alt=""
+            width={22}
+            height={22}
+            unoptimized
+            className="size-[22px] rounded-[7px] object-contain opacity-80 grayscale contrast-125 saturate-0 transition group-hover:opacity-100"
+          />
         </a>
       ) : null}
       {PUBLIC_SITE_CONTACTS.whatsappUrl ? (
