@@ -1,6 +1,7 @@
 "use client";
 
 import { ValidationError } from "@/shared/errors/app-error";
+import { clearTechCardDraft } from "@/modules/tech-cards/components/tech-card-draft";
 import { parseTechCardInput } from "@/modules/tech-cards/tech-cards.validation";
 import { browserBackendJson } from "@/shared/api/browser-backend";
 
@@ -19,6 +20,16 @@ export type TechCardFormState = {
     }>;
     description: string;
   };
+};
+
+const EMPTY_TECH_CARD_FORM_VALUES: TechCardFormState["values"] = {
+  name: "",
+  category: "",
+  pizzaSize: "",
+  outputQuantity: "",
+  outputUnit: "шт",
+  ingredients: [],
+  description: "",
 };
 
 function getTechCardFormValues(formData: FormData) {
@@ -62,8 +73,9 @@ export async function addTechCardAction(
     throw error;
   }
 
+  clearTechCardDraft();
   window.location.assign("/dashboard/inventory?tab=recipes&draft=cleared");
-  return { errorMessage: null, values: getTechCardFormValues(formData) };
+  return { errorMessage: null, values: EMPTY_TECH_CARD_FORM_VALUES };
 }
 
 export async function updateTechCardAction(

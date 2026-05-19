@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PRODUCT_CATEGORIES } from "@/modules/inventory/inventory.types";
 import {
+  clearTechCardDraft,
   TECH_CARD_FORM_DRAFT_KEY,
   TECH_CARD_INGREDIENTS_DRAFT_KEY,
   type SelectedIngredient,
@@ -69,19 +70,10 @@ export function useTechCardFormState({
       })),
     [state.values.ingredients],
   );
-  const [selectedIngredients, setSelectedIngredients] = useState<SelectedIngredient[]>(
-    normalizedStateIngredients,
-  );
-  const productsById = useMemo(
-    () => new Map(products.map((product) => [String(product.id), product])),
-    [products],
-  );
+  const [selectedIngredients, setSelectedIngredients] = useState<SelectedIngredient[]>(normalizedStateIngredients);
+  const productsById = useMemo(() => new Map(products.map((product) => [String(product.id), product])), [products]);
   const availableCategories = useMemo(() => {
-    const categorySet = new Set(
-      products
-        .map((product) => product.category)
-        .filter((category): category is string => Boolean(category)),
-    );
+    const categorySet = new Set(products.map((product) => product.category).filter((category): category is string => Boolean(category)));
 
     return PRODUCT_CATEGORIES.filter((category) => categorySet.has(category));
   }, [products]);
@@ -97,24 +89,33 @@ export function useTechCardFormState({
       return true;
     }
 
-    return (
-      product.name.toLowerCase().includes(query) ||
-      product.unit.toLowerCase().includes(query) ||
-      product.category?.toLowerCase().includes(query)
-    );
+    return product.name.toLowerCase().includes(query) || product.unit.toLowerCase().includes(query) || product.category?.toLowerCase().includes(query);
   });
 
   useEffect(() => {
-    if (isEditMode) {
+    if (isEditMode || !clearDraft) {
       return;
     }
 
-    if (clearDraft) {
-      window.localStorage.removeItem(TECH_CARD_INGREDIENTS_DRAFT_KEY);
-      window.localStorage.removeItem(TECH_CARD_FORM_DRAFT_KEY);
-      router.replace("/dashboard/inventory?tab=recipes", { scroll: false });
-    }
-  }, [clearDraft, isEditMode, router]);
+    clearTechCardDraft();
+    didRestoreIngredientDraft.current = true;
+    const frameId = window.requestAnimationFrame(() => {
+      setName("");
+      setSelectedTechCardCategory(cardKind === "ingredient" ? INGREDIENT_TECH_CARD_CATEGORY : "");
+      setSelectedPizzaSize("");
+      setSelectedUnit("шт");
+      setOutputQuantity("");
+      setDescription("");
+      setSelectedIngredients([]);
+      setPendingIngredientIds([]);
+      setIngredientQuery("");
+      setSelectedCategory("");
+      setIsIngredientDialogOpen(false);
+    });
+    router.replace("/dashboard/inventory?tab=recipes", { scroll: false });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [cardKind, clearDraft, isEditMode, router]);
 
   useEffect(() => {
     if (
@@ -128,14 +129,10 @@ export function useTechCardFormState({
     }
 
     didRestoreIngredientDraft.current = true;
-    const draftIngredients = readTechCardIngredientsDraft().filter((ingredient) =>
-      productsById.has(ingredient.productId),
-    );
+    const draftIngredients = readTechCardIngredientsDraft().filter((ingredient) => productsById.has(ingredient.productId));
 
     if (draftIngredients.length > 0) {
-      const frameId = window.requestAnimationFrame(() => {
-        setSelectedIngredients(draftIngredients);
-      });
+      const frameId = window.requestAnimationFrame(() => setSelectedIngredients(draftIngredients));
 
       return () => window.cancelAnimationFrame(frameId);
     }
@@ -182,7 +179,7 @@ export function useTechCardFormState({
   ]);
 
   useEffect(() => {
-    if (isEditMode) {
+    if (isEditMode || clearDraft) {
       return;
     }
 
@@ -191,14 +188,11 @@ export function useTechCardFormState({
       return;
     }
 
-    window.localStorage.setItem(
-      TECH_CARD_INGREDIENTS_DRAFT_KEY,
-      JSON.stringify(selectedIngredients),
-    );
-  }, [isEditMode, selectedIngredients]);
+    window.localStorage.setItem(TECH_CARD_INGREDIENTS_DRAFT_KEY, JSON.stringify(selectedIngredients));
+  }, [clearDraft, isEditMode, selectedIngredients]);
 
   useEffect(() => {
-    if (isEditMode) {
+    if (isEditMode || clearDraft) {
       return;
     }
 
@@ -217,7 +211,7 @@ export function useTechCardFormState({
     }
 
     window.localStorage.setItem(TECH_CARD_FORM_DRAFT_KEY, JSON.stringify(draft));
-  }, [cardKind, description, isEditMode, name, outputQuantity, selectedPizzaSize, selectedTechCardCategory, selectedUnit]);
+  }, [cardKind, clearDraft, description, isEditMode, name, outputQuantity, selectedPizzaSize, selectedTechCardCategory, selectedUnit]);
 
   const handleAddIngredient = (productId: string) => {
     setSelectedIngredients((current) => {

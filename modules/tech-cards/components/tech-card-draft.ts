@@ -24,6 +24,15 @@ export type TechCardDraft = {
   description: string;
 };
 
+export function clearTechCardDraft() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.removeItem(TECH_CARD_INGREDIENTS_DRAFT_KEY);
+  window.localStorage.removeItem(TECH_CARD_FORM_DRAFT_KEY);
+}
+
 export function readTechCardIngredientsDraft() {
   if (typeof window === "undefined") {
     return [] as SelectedIngredient[];
