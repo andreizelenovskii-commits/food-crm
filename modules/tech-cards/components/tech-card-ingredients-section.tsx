@@ -6,16 +6,22 @@ import type { TechCardProductOption } from "@/modules/tech-cards/tech-cards.type
 export function TechCardIngredientsSection({
   selectedIngredients,
   productsById,
+  outputQuantity,
+  outputUnit,
   onOpenDialog,
   onQuantityChange,
   onRemove,
 }: {
   selectedIngredients: SelectedIngredient[];
   productsById: Map<string, TechCardProductOption>;
+  outputQuantity: string;
+  outputUnit: "кг" | "шт";
   onOpenDialog: () => void;
   onQuantityChange: (productId: string, quantity: string) => void;
   onRemove: (productId: string) => void;
 }) {
+  const parsedOutputQuantity = parseDecimal(outputQuantity);
+
   return (
     <section className="space-y-3 rounded-[18px] border border-red-950/10 bg-red-50/35 p-3 sm:p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -42,6 +48,10 @@ export function TechCardIngredientsSection({
         <div className="space-y-2">
           {selectedIngredients.map((ingredient) => {
             const product = productsById.get(ingredient.productId);
+            const normalizedQuantity = getNormalizedIngredientQuantity(
+              ingredient.quantity,
+              parsedOutputQuantity,
+            );
 
             if (!product) {
               return null;
@@ -66,6 +76,11 @@ export function TechCardIngredientsSection({
                     <span className="rounded-full bg-red-50 px-2.5 py-1 font-semibold text-red-800 ring-1 ring-red-100">
                       Техкарта: {ingredient.unit}
                     </span>
+                    {normalizedQuantity !== null ? (
+                      <span className="rounded-full bg-white px-2.5 py-1 font-semibold text-zinc-700 ring-1 ring-red-100">
+                        На 1 {outputUnit}: {formatQuantity(normalizedQuantity)} {ingredient.unit}
+                      </span>
+                    ) : null}
                   </div>
                 </div>
 
@@ -74,9 +89,8 @@ export function TechCardIngredientsSection({
                     <span className="text-xs font-semibold text-zinc-700">Количество</span>
                     <div className="relative">
                       <input
-                        type="number"
-                        min={ingredient.unit === "кг" ? "0.001" : "1"}
-                        step={ingredient.unit === "кг" ? "0.001" : "1"}
+                        type="text"
+                        inputMode="decimal"
                         value={ingredient.quantity}
                         onChange={(event) => onQuantityChange(ingredient.productId, event.target.value)}
                         className="h-10 w-full rounded-[14px] border border-red-950/10 bg-white/90 px-3 pr-12 text-sm font-semibold text-zinc-950 shadow-sm shadow-red-950/5 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
@@ -109,4 +123,28 @@ export function TechCardIngredientsSection({
       )}
     </section>
   );
+}
+
+function parseDecimal(value: string) {
+  const parsed = Number(value.trim().replace(",", "."));
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function getNormalizedIngredientQuantity(quantity: string, outputQuantity: number | null) {
+  if (!outputQuantity) {
+    return null;
+  }
+
+  const parsedQuantity = parseDecimal(quantity);
+  if (!parsedQuantity) {
+    return null;
+  }
+
+  return parsedQuantity / outputQuantity;
+}
+
+function formatQuantity(value: number) {
+  return new Intl.NumberFormat("ru-RU", {
+    maximumFractionDigits: 4,
+  }).format(value);
 }

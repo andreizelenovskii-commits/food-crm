@@ -103,9 +103,8 @@ export function TechCardMainFields({
           <span className="text-xs font-semibold text-zinc-700">Выход</span>
           <input
             name="outputQuantity"
-            type="number"
-            min="1"
-            step="1"
+            type="text"
+            inputMode="decimal"
             value={outputQuantity}
             onChange={(event) => onOutputQuantityChange(event.target.value)}
             placeholder="1"

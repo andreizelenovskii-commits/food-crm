@@ -115,6 +115,8 @@ function TechCardFormContent({
         <TechCardIngredientsSection
           selectedIngredients={form.selectedIngredients}
           productsById={form.productsById}
+          outputQuantity={form.outputQuantity}
+          outputUnit={form.selectedUnit}
           onOpenDialog={() => {
             form.setIngredientQuery("");
             form.setSelectedCategory("");

@@ -9,6 +9,12 @@ import {
   fetchTechCardProductOptions,
 } from "@/modules/tech-cards/tech-cards.api";
 
+function formatQuantity(value: number) {
+  return new Intl.NumberFormat("ru-RU", {
+    maximumFractionDigits: 4,
+  }).format(value);
+}
+
 export default async function TechCardDetailsPage(props: {
   params?: Promise<{ techCardId: string }>;
 }) {
@@ -67,7 +73,7 @@ export default async function TechCardDetailsPage(props: {
               <div className="rounded-[16px] border border-red-950/10 bg-white/84 p-4 shadow-sm shadow-red-950/5">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-red-800/55">Выход</p>
                 <p className="mt-2 text-xl font-semibold text-zinc-950">
-                  {techCard.outputQuantity} {techCard.outputUnit}
+                  {formatQuantity(techCard.outputQuantity)} {techCard.outputUnit}
                 </p>
               </div>
               <div className="rounded-[16px] border border-red-950/10 bg-white/84 p-4 shadow-sm shadow-red-950/5">
@@ -88,9 +94,15 @@ export default async function TechCardDetailsPage(props: {
                   className="flex flex-wrap items-center justify-between gap-3 rounded-[14px] border border-red-950/10 bg-white/84 px-4 py-3 text-sm text-zinc-600 shadow-sm shadow-red-950/5"
                 >
                   <p className="font-semibold text-zinc-950">{ingredient.productName}</p>
-                  <p className="font-semibold text-red-800">
-                    {ingredient.quantity} {ingredient.unit}
-                  </p>
+                  <div className="text-right">
+                    <p className="font-semibold text-red-800">
+                      {formatQuantity(ingredient.quantity)} {ingredient.unit}
+                    </p>
+                    <p className="mt-0.5 text-xs font-semibold text-zinc-500">
+                      На 1 {techCard.outputUnit}:{" "}
+                      {formatQuantity(ingredient.quantity / techCard.outputQuantity)} {ingredient.unit}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
