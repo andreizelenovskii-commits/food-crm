@@ -50,55 +50,64 @@ export function PizzaGroupCard({
   canManageInventory: boolean;
 }) {
   const [selectedCardId, setSelectedCardId] = useState(cards[0]?.id ?? 0);
+  const [isExpanded, setIsExpanded] = useState(false);
   const selectedCard = cards.find((card) => card.id === selectedCardId) ?? cards[0];
 
   return (
-    <article className="rounded-[16px] border border-red-950/10 bg-white/84 px-4 py-3 shadow-sm shadow-red-950/5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <article className="rounded-[14px] border border-red-950/10 bg-white/84 px-3 py-2.5 shadow-sm shadow-red-950/5">
+      <div className="grid gap-3 xl:grid-cols-[minmax(220px,1fr)_minmax(260px,0.95fr)_auto] xl:items-center">
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-red-50 px-2.5 py-0.5 text-[11px] font-semibold text-red-800 ring-1 ring-red-100">
-              Пиццы
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="shrink-0 rounded-full bg-red-50 px-2.5 py-0.5 text-[11px] font-semibold text-red-800 ring-1 ring-red-100">
+              Пицца
             </span>
-            <span className="rounded-full bg-zinc-50 px-2.5 py-0.5 text-[11px] font-semibold text-zinc-500 ring-1 ring-zinc-200">
-              Размеров: {cards.length}
-            </span>
+            <h3 className="truncate text-[15px] font-semibold leading-5 text-zinc-950">{selectedCard.name}</h3>
           </div>
-          <h3 className="mt-1.5 truncate text-[15px] font-semibold leading-5 text-zinc-950">{selectedCard.name}</h3>
+          <p className="mt-1 text-xs font-semibold text-zinc-400">
+            {cards.length} размера · выбран {selectedCard.pizzaSize} · {selectedCard.ingredients.length} инг.
+          </p>
         </div>
-        {canManageInventory ? (
-          <div className="flex flex-wrap items-center gap-2">
-            <InventoryRecipeEditButton card={selectedCard} products={products} />
-            <InventoryRecipeDeleteButton card={selectedCard} />
-          </div>
-        ) : null}
+
+        <div className="grid grid-cols-3 gap-1.5">
+          {cards.map((card) => {
+            const isSelected = card.id === selectedCard.id;
+
+            return (
+              <button
+                key={card.id}
+                type="button"
+                onClick={() => setSelectedCardId(card.id)}
+                className={`h-10 rounded-full border px-2 text-xs font-bold transition ${
+                  isSelected
+                    ? "border-red-800 bg-red-800 text-white shadow-sm shadow-red-950/15"
+                    : "border-red-950/10 bg-white/82 text-zinc-600 hover:border-red-200 hover:bg-red-50/70"
+                }`}
+              >
+                {card.pizzaSize ?? "Размер"}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex flex-wrap items-center justify-start gap-2 xl:justify-end">
+          <button
+            type="button"
+            onClick={() => setIsExpanded((current) => !current)}
+            className="h-9 rounded-full border border-red-100 bg-white/90 px-4 text-xs font-semibold text-red-800 shadow-sm shadow-red-950/5 transition hover:border-red-800 hover:bg-red-800 hover:text-white"
+            aria-expanded={isExpanded}
+          >
+            {isExpanded ? "Скрыть состав" : "Состав"}
+          </button>
+          {canManageInventory ? (
+            <>
+              <InventoryRecipeEditButton card={selectedCard} products={products} />
+              <InventoryRecipeDeleteButton card={selectedCard} />
+            </>
+          ) : null}
+        </div>
       </div>
 
-      <div className="mt-3 grid gap-2 sm:grid-cols-3">
-        {cards.map((card) => {
-          const isSelected = card.id === selectedCard.id;
-
-          return (
-            <button
-              key={card.id}
-              type="button"
-              onClick={() => setSelectedCardId(card.id)}
-              className={`rounded-[14px] border px-3 py-2 text-left transition ${
-                isSelected
-                  ? "border-red-800 bg-red-800 text-white shadow-sm shadow-red-950/15"
-                  : "border-red-950/10 bg-white/82 text-zinc-700 hover:border-red-200 hover:bg-red-50/70"
-              }`}
-            >
-              <span className="block text-sm font-bold">{card.pizzaSize ?? "Размер"}</span>
-              <span className={`mt-1 block text-[11px] font-semibold ${isSelected ? "text-white/75" : "text-zinc-400"}`}>
-                {card.ingredients.length} инг. · выход {formatQuantity(card.outputQuantity)} {card.outputUnit}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      <IngredientsPreview card={selectedCard} />
+      {isExpanded ? <IngredientsPreview card={selectedCard} compact /> : null}
     </article>
   );
 }
@@ -147,13 +156,19 @@ export function DialogCard({
   );
 }
 
-function IngredientsPreview({ card }: { card: TechCardItem }) {
+function IngredientsPreview({
+  card,
+  compact = false,
+}: {
+  card: TechCardItem;
+  compact?: boolean;
+}) {
   return card.ingredients.length > 0 ? (
-    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+    <div className={`mt-3 grid gap-2 ${compact ? "md:grid-cols-3" : "sm:grid-cols-2"}`}>
       {card.ingredients.map((ingredient) => (
         <div
           key={ingredient.id}
-          className="rounded-[12px] border border-red-950/10 bg-white/82 px-3 py-2 text-xs shadow-sm shadow-red-950/5"
+          className={`rounded-[12px] border border-red-950/10 bg-white/82 px-3 text-xs shadow-sm shadow-red-950/5 ${compact ? "py-1.5" : "py-2"}`}
         >
           <div className="flex items-start justify-between gap-2">
             <span className="font-semibold leading-5 text-zinc-800">{ingredient.productName}</span>
