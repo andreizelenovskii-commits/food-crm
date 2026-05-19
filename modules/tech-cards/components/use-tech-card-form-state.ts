@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PRODUCT_CATEGORIES } from "@/modules/inventory/inventory.types";
 import {
@@ -59,6 +59,7 @@ export function useTechCardFormState({
   const [ingredientQuery, setIngredientQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [pendingIngredientIds, setPendingIngredientIds] = useState<string[]>([]);
+  const didRestoreIngredientDraft = useRef(false);
   const normalizedStateIngredients = useMemo<SelectedIngredient[]>(
     () =>
       state.values.ingredients.map((ingredient) => ({
@@ -119,12 +120,14 @@ export function useTechCardFormState({
     if (
       isEditMode ||
       clearDraft ||
+      didRestoreIngredientDraft.current ||
       normalizedStateIngredients.length > 0 ||
       selectedIngredients.length > 0
     ) {
       return;
     }
 
+    didRestoreIngredientDraft.current = true;
     const draftIngredients = readTechCardIngredientsDraft().filter((ingredient) =>
       productsById.has(ingredient.productId),
     );
