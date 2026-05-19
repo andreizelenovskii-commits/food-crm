@@ -4,9 +4,10 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { ModuleIcon } from "@/components/ui/module-icon";
 import {
-  InventoryRecipeDeleteButton,
-  InventoryRecipeEditButton,
-} from "@/modules/inventory/components/inventory-recipes-edit-button";
+  buildPriceDialogEntries,
+  DialogCard,
+  PizzaGroupCard,
+} from "@/modules/inventory/components/inventory-recipes-dialog-cards";
 import type {
   TechCardItem,
   TechCardProductOption,
@@ -128,6 +129,10 @@ function KindDialog({
   onClose: () => void;
 }) {
   const meta = getKindMeta(kind);
+  const entries = kind === "price" ? buildPriceDialogEntries(cards) : cards.map((card) => ({
+    kind: "single" as const,
+    card,
+  }));
 
   return (
     <div className="fixed inset-0 z-70 overflow-y-auto bg-zinc-950/30 px-4 py-6 backdrop-blur-sm sm:py-8">
@@ -144,95 +149,31 @@ function KindDialog({
           </button>
         </div>
         <div className="mt-3 space-y-2.5">
-          {cards.length === 0 ? (
+          {entries.length === 0 ? (
             <div className="rounded-[18px] border border-dashed border-red-950/14 bg-white/70 p-5 text-sm leading-6 text-zinc-500">
               В этом разделе пока нет технологических карт.
             </div>
           ) : (
-            cards.map((card) => (
-              <DialogCard
-                key={card.id}
-                card={card}
-                products={products}
-                canManageInventory={canManageInventory}
-              />
-            ))
+            entries.map((entry) =>
+              entry.kind === "pizzaGroup" ? (
+                <PizzaGroupCard
+                  key={entry.key}
+                  cards={entry.cards}
+                  products={products}
+                  canManageInventory={canManageInventory}
+                />
+              ) : (
+                <DialogCard
+                  key={entry.card.id}
+                  card={entry.card}
+                  products={products}
+                  canManageInventory={canManageInventory}
+                />
+              ),
+            )
           )}
         </div>
       </section>
     </div>
   );
-}
-
-function DialogCard({
-  card,
-  products,
-  canManageInventory,
-}: {
-  card: TechCardItem;
-  products: TechCardProductOption[];
-  canManageInventory: boolean;
-}) {
-  return (
-    <article className="rounded-[16px] border border-red-950/10 bg-white/84 px-4 py-3 shadow-sm shadow-red-950/5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-red-50 px-2.5 py-0.5 text-[11px] font-semibold text-red-800 ring-1 ring-red-100">
-              {card.category}
-            </span>
-            {card.pizzaSize ? (
-              <span className="rounded-full bg-red-800 px-3 py-0.5 text-[12px] font-bold text-white shadow-sm shadow-red-950/15">
-                {card.pizzaSize}
-              </span>
-            ) : null}
-            <span className="rounded-full bg-zinc-50 px-2.5 py-0.5 text-[11px] font-semibold text-zinc-500 ring-1 ring-zinc-200">
-              Выход: {formatQuantity(card.outputQuantity)} {card.outputUnit}
-            </span>
-          </div>
-          <h3 className="mt-1.5 truncate text-[15px] font-semibold leading-5 text-zinc-950">{card.name}</h3>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-semibold text-zinc-400">Ингредиентов: {card.ingredients.length}</span>
-          {canManageInventory ? (
-            <div className="flex flex-wrap items-center gap-2">
-              <InventoryRecipeEditButton card={card} products={products} />
-              <InventoryRecipeDeleteButton card={card} />
-            </div>
-          ) : null}
-        </div>
-      </div>
-
-      {card.ingredients.length > 0 ? (
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          {card.ingredients.map((ingredient) => (
-            <div
-              key={ingredient.id}
-              className="rounded-[12px] border border-red-950/10 bg-white/82 px-3 py-2 text-xs shadow-sm shadow-red-950/5"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <span className="font-semibold leading-5 text-zinc-800">{ingredient.productName}</span>
-                <span className="shrink-0 font-semibold text-red-800">
-                  {formatQuantity(ingredient.quantity)} {ingredient.unit}
-                </span>
-              </div>
-              <p className="mt-1 font-semibold text-zinc-400">
-                На 1 {card.outputUnit}: {formatQuantity(ingredient.quantity / card.outputQuantity)} {ingredient.unit}
-              </p>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="mt-3 rounded-[12px] border border-dashed border-red-950/14 bg-white/64 px-3 py-2 text-xs font-medium text-zinc-500">
-          Состав не заполнен. Открой редактирование и добавь ингредиенты.
-        </div>
-      )}
-    </article>
-  );
-}
-
-function formatQuantity(value: number) {
-  return new Intl.NumberFormat("ru-RU", {
-    maximumFractionDigits: 4,
-  }).format(value);
 }
