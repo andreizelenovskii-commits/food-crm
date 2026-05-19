@@ -37,6 +37,7 @@ export function TechCardForm({
       name: initialTechCard?.name ?? "",
       category: initialTechCard?.category ?? (cardKind === "ingredient" ? INGREDIENT_TECH_CARD_CATEGORY : ""),
       pizzaSize: initialTechCard?.pizzaSize ?? "",
+      autoCreatePizzaVariants: "true",
       outputQuantity: initialTechCard ? String(initialTechCard.outputQuantity) : "",
       outputUnit: initialTechCard?.outputUnit ?? "шт",
       ingredients:
@@ -103,14 +104,17 @@ function TechCardFormContent({
           name={form.name}
           category={form.selectedTechCardCategory}
           pizzaSize={form.selectedPizzaSize}
+          autoCreatePizzaVariants={form.autoCreatePizzaVariants}
           outputQuantity={form.outputQuantity}
           outputUnit={form.selectedUnit}
           onNameChange={form.setName}
           onCategoryChange={form.setSelectedTechCardCategory}
           onPizzaSizeChange={form.setSelectedPizzaSize}
+          onAutoCreatePizzaVariantsChange={form.setAutoCreatePizzaVariants}
           onOutputQuantityChange={form.setOutputQuantity}
           onOutputUnitChange={form.setSelectedUnit}
           cardKind={cardKind}
+          isEditMode={isEditMode}
         />
         <TechCardIngredientsSection
           selectedIngredients={form.selectedIngredients}

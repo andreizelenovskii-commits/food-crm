@@ -18,26 +18,32 @@ export function TechCardMainFields({
   name,
   category,
   pizzaSize,
+  autoCreatePizzaVariants,
   outputQuantity,
   outputUnit,
   onNameChange,
   onCategoryChange,
   onPizzaSizeChange,
+  onAutoCreatePizzaVariantsChange,
   onOutputQuantityChange,
   onOutputUnitChange,
   cardKind,
+  isEditMode,
 }: {
   name: string;
   category: TechCardCategory | "";
   pizzaSize: TechCardPizzaSize | "";
+  autoCreatePizzaVariants: boolean;
   outputQuantity: string;
   outputUnit: OutputUnit;
   onNameChange: (value: string) => void;
   onCategoryChange: (value: TechCardCategory | "") => void;
   onPizzaSizeChange: (value: TechCardPizzaSize | "") => void;
+  onAutoCreatePizzaVariantsChange: (value: boolean) => void;
   onOutputQuantityChange: (value: string) => void;
   onOutputUnitChange: (value: OutputUnit) => void;
   cardKind: TechCardFormKind;
+  isEditMode: boolean;
 }) {
   const categoryOptions = cardKind === "ingredient" ? TECH_CARD_CATEGORIES : PRICE_TECH_CARD_CATEGORIES;
 
@@ -94,9 +100,36 @@ export function TechCardMainFields({
             onChange={onPizzaSizeChange}
           />
           {pizzaSize === "30 см" ? (
-            <span className="block text-xs leading-5 text-zinc-500">
-              Для 26 см и 24 см техкарты создадутся автоматически: ингредиенты уменьшаются на 15% от предыдущего размера.
-            </span>
+            isEditMode ? (
+              <span className="block text-xs leading-5 text-zinc-500">
+                Варианты 26 см и 24 см создаются только при добавлении новой техкарты 30 см.
+              </span>
+            ) : (
+              <label className="flex items-center justify-between gap-3 rounded-[16px] border border-red-950/10 bg-white/76 px-3 py-3 shadow-sm shadow-red-950/5">
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-zinc-950">Создать 26 см и 24 см</span>
+                  <span className="mt-0.5 block text-xs leading-5 text-zinc-500">
+                    Ингредиенты уменьшатся на 15% от предыдущего размера.
+                  </span>
+                </span>
+                <input type="hidden" name="autoCreatePizzaVariants" value={autoCreatePizzaVariants ? "true" : "false"} />
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={autoCreatePizzaVariants}
+                  onClick={() => onAutoCreatePizzaVariantsChange(!autoCreatePizzaVariants)}
+                  className={`relative h-7 w-12 shrink-0 rounded-full transition ${
+                    autoCreatePizzaVariants ? "bg-red-800" : "bg-zinc-300"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition ${
+                      autoCreatePizzaVariants ? "left-6" : "left-1"
+                    }`}
+                  />
+                </button>
+              </label>
+            )
           ) : null}
         </label>
       ) : (

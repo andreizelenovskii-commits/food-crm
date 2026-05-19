@@ -55,6 +55,7 @@ export function useTechCardFormState({
     state.values.outputUnit === "кг" ? "кг" : "шт",
   );
   const [outputQuantity, setOutputQuantity] = useState(state.values.outputQuantity);
+  const [autoCreatePizzaVariants, setAutoCreatePizzaVariants] = useState(state.values.autoCreatePizzaVariants !== "false");
   const [description, setDescription] = useState(state.values.description);
   const [isIngredientDialogOpen, setIsIngredientDialogOpen] = useState(false);
   const [ingredientQuery, setIngredientQuery] = useState("");
@@ -103,6 +104,7 @@ export function useTechCardFormState({
       setName("");
       setSelectedTechCardCategory(cardKind === "ingredient" ? INGREDIENT_TECH_CARD_CATEGORY : "");
       setSelectedPizzaSize("");
+      setAutoCreatePizzaVariants(true);
       setSelectedUnit("шт");
       setOutputQuantity("");
       setDescription("");
@@ -161,6 +163,7 @@ export function useTechCardFormState({
       setName(draft.name);
       setSelectedTechCardCategory(cardKind === "ingredient" ? INGREDIENT_TECH_CARD_CATEGORY : draft.category);
       setSelectedPizzaSize(draft.pizzaSize);
+      setAutoCreatePizzaVariants(draft.autoCreatePizzaVariants);
       setOutputQuantity(draft.outputQuantity);
       setSelectedUnit(draft.outputUnit);
       setDescription(draft.description);
@@ -196,13 +199,14 @@ export function useTechCardFormState({
       return;
     }
 
-    const draft: TechCardDraft = { name, category: cardKind === "ingredient" ? INGREDIENT_TECH_CARD_CATEGORY : selectedTechCardCategory, pizzaSize: selectedPizzaSize, outputQuantity, outputUnit: selectedUnit, description };
+    const draft: TechCardDraft = { name, category: cardKind === "ingredient" ? INGREDIENT_TECH_CARD_CATEGORY : selectedTechCardCategory, pizzaSize: selectedPizzaSize, autoCreatePizzaVariants, outputQuantity, outputUnit: selectedUnit, description };
     const hasDraft =
       draft.name ||
       draft.category ||
       draft.pizzaSize ||
       draft.outputQuantity ||
       draft.description ||
+      !draft.autoCreatePizzaVariants ||
       draft.outputUnit !== "шт";
 
     if (!hasDraft) {
@@ -211,7 +215,7 @@ export function useTechCardFormState({
     }
 
     window.localStorage.setItem(TECH_CARD_FORM_DRAFT_KEY, JSON.stringify(draft));
-  }, [cardKind, clearDraft, description, isEditMode, name, outputQuantity, selectedPizzaSize, selectedTechCardCategory, selectedUnit]);
+  }, [autoCreatePizzaVariants, cardKind, clearDraft, description, isEditMode, name, outputQuantity, selectedPizzaSize, selectedTechCardCategory, selectedUnit]);
 
   const handleAddIngredient = (productId: string) => {
     setSelectedIngredients((current) => {
@@ -245,6 +249,7 @@ export function useTechCardFormState({
     name,
     selectedTechCardCategory,
     selectedPizzaSize,
+    autoCreatePizzaVariants,
     selectedUnit,
     outputQuantity,
     description,
@@ -259,6 +264,7 @@ export function useTechCardFormState({
     setName,
     setSelectedTechCardCategory,
     setSelectedPizzaSize,
+    setAutoCreatePizzaVariants,
     setSelectedUnit,
     setOutputQuantity,
     setDescription,

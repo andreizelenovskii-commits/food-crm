@@ -22,6 +22,7 @@ export type TechCardDraft = {
   name: string;
   category: TechCardCategory | "";
   pizzaSize: TechCardPizzaSize | "";
+  autoCreatePizzaVariants: boolean;
   outputQuantity: string;
   outputUnit: OutputUnit;
   description: string;
@@ -101,6 +102,7 @@ export function readTechCardFormDraft(): TechCardDraft | null {
       pizzaSize: TECH_CARD_PIZZA_SIZES.includes(parsedValue.pizzaSize as TechCardPizzaSize)
         ? (parsedValue.pizzaSize as TechCardPizzaSize)
         : "",
+      autoCreatePizzaVariants: parsedValue.autoCreatePizzaVariants !== false,
       outputQuantity:
         typeof parsedValue.outputQuantity === "string" ? parsedValue.outputQuantity : "",
       outputUnit: parsedValue.outputUnit === "кг" ? "кг" : "шт",
