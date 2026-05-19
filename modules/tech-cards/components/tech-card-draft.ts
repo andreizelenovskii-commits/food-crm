@@ -6,8 +6,11 @@ import {
 } from "@/modules/tech-cards/tech-cards.types";
 import type { OutputUnit } from "@/modules/tech-cards/components/tech-card-main-fields";
 
-export const TECH_CARD_INGREDIENTS_DRAFT_KEY = "food-crm:tech-card-form:ingredients";
-export const TECH_CARD_FORM_DRAFT_KEY = "food-crm:tech-card-form:draft";
+const LEGACY_TECH_CARD_INGREDIENTS_DRAFT_KEY = "food-crm:tech-card-form:ingredients";
+const LEGACY_TECH_CARD_FORM_DRAFT_KEY = "food-crm:tech-card-form:draft";
+
+export const TECH_CARD_INGREDIENTS_DRAFT_KEY = "food-crm:tech-card-form:v2:ingredients";
+export const TECH_CARD_FORM_DRAFT_KEY = "food-crm:tech-card-form:v2:draft";
 
 export type SelectedIngredient = {
   productId: string;
@@ -31,6 +34,8 @@ export function clearTechCardDraft() {
 
   window.localStorage.removeItem(TECH_CARD_INGREDIENTS_DRAFT_KEY);
   window.localStorage.removeItem(TECH_CARD_FORM_DRAFT_KEY);
+  window.localStorage.removeItem(LEGACY_TECH_CARD_INGREDIENTS_DRAFT_KEY);
+  window.localStorage.removeItem(LEGACY_TECH_CARD_FORM_DRAFT_KEY);
 }
 
 export function readTechCardIngredientsDraft() {
