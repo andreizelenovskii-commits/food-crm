@@ -1,6 +1,5 @@
 "use client";
 
-import type { ReactNode } from "react";
 import type { SelectedIngredient } from "@/modules/tech-cards/components/tech-card-draft";
 import type { TechCardProductOption } from "@/modules/tech-cards/tech-cards.types";
 
@@ -12,7 +11,6 @@ export function TechCardIngredientsSection({
   onOpenDialog,
   onQuantityChange,
   onRemove,
-  picker,
 }: {
   selectedIngredients: SelectedIngredient[];
   productsById: Map<string, TechCardProductOption>;
@@ -21,7 +19,6 @@ export function TechCardIngredientsSection({
   onOpenDialog: () => void;
   onQuantityChange: (productId: string, quantity: string) => void;
   onRemove: (productId: string) => void;
-  picker?: ReactNode;
 }) {
   const parsedOutputQuantity = parseDecimal(outputQuantity);
 
@@ -42,8 +39,6 @@ export function TechCardIngredientsSection({
           Выбрать ингредиенты
         </button>
       </div>
-
-      {picker}
 
       {selectedIngredients.length === 0 ? (
         <div className="rounded-[14px] border border-dashed border-red-950/14 bg-white/75 px-4 py-4 text-sm leading-6 text-zinc-500">

@@ -285,9 +285,12 @@ export function useTechCardFormState({
       );
     },
     handleRemoveIngredient: (productId: string) => {
+      const normalizedProductId = String(productId);
+
       setSelectedIngredients((current) =>
-        current.filter((ingredient) => ingredient.productId !== productId),
+        current.filter((ingredient) => String(ingredient.productId) !== normalizedProductId),
       );
+      setPendingIngredientIds((current) => current.filter((id) => String(id) !== normalizedProductId));
     },
   };
 }
