@@ -121,6 +121,8 @@ export function DialogCard({
   products: TechCardProductOption[];
   canManageInventory: boolean;
 }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   return (
     <article className="rounded-[16px] border border-red-950/10 bg-white/84 px-4 py-3 shadow-sm shadow-red-950/5">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -140,8 +142,16 @@ export function DialogCard({
           </div>
           <h3 className="mt-1.5 truncate text-[15px] font-semibold leading-5 text-zinc-950">{card.name}</h3>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center justify-start gap-2 sm:justify-end">
           <span className="text-xs font-semibold text-zinc-400">Ингредиентов: {card.ingredients.length}</span>
+          <button
+            type="button"
+            onClick={() => setIsExpanded((current) => !current)}
+            className="h-9 rounded-full border border-red-100 bg-white/90 px-4 text-xs font-semibold text-red-800 shadow-sm shadow-red-950/5 transition hover:border-red-800 hover:bg-red-800 hover:text-white"
+            aria-expanded={isExpanded}
+          >
+            {isExpanded ? "Скрыть состав" : "Состав"}
+          </button>
           {canManageInventory ? (
             <div className="flex flex-wrap items-center gap-2">
               <InventoryRecipeEditButton card={card} products={products} />
@@ -151,7 +161,7 @@ export function DialogCard({
         </div>
       </div>
 
-      <IngredientsPreview card={card} />
+      {isExpanded ? <IngredientsPreview card={card} /> : null}
     </article>
   );
 }
