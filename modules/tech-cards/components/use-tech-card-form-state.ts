@@ -1,16 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PRODUCT_CATEGORIES } from "@/modules/inventory/inventory.types";
 import {
   clearTechCardDraft,
-  TECH_CARD_FORM_DRAFT_KEY,
-  TECH_CARD_INGREDIENTS_DRAFT_KEY,
   type SelectedIngredient,
-  type TechCardDraft,
-  readTechCardFormDraft,
-  readTechCardIngredientsDraft,
 } from "@/modules/tech-cards/components/tech-card-draft";
 import type { TechCardFormKind } from "@/modules/tech-cards/components/tech-card-form";
 import type { OutputUnit } from "@/modules/tech-cards/components/tech-card-main-fields";
@@ -61,7 +56,6 @@ export function useTechCardFormState({
   const [ingredientQuery, setIngredientQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [pendingIngredientIds, setPendingIngredientIds] = useState<string[]>([]);
-  const didRestoreIngredientDraft = useRef(false);
   const normalizedStateIngredients = useMemo<SelectedIngredient[]>(
     () =>
       state.values.ingredients.map((ingredient) => ({
@@ -94,128 +88,16 @@ export function useTechCardFormState({
   });
 
   useEffect(() => {
-    if (isEditMode || !clearDraft) {
+    if (isEditMode) {
       return;
     }
 
     clearTechCardDraft();
-    didRestoreIngredientDraft.current = true;
-    const frameId = window.requestAnimationFrame(() => {
-      setName("");
-      setSelectedTechCardCategory(cardKind === "ingredient" ? INGREDIENT_TECH_CARD_CATEGORY : "");
-      setSelectedPizzaSize("");
-      setAutoCreatePizzaVariants(true);
-      setSelectedUnit("шт");
-      setOutputQuantity("");
-      setDescription("");
-      setSelectedIngredients([]);
-      setPendingIngredientIds([]);
-      setIngredientQuery("");
-      setSelectedCategory("");
-      setIsIngredientDialogOpen(false);
-    });
-    router.replace("/dashboard/inventory?tab=recipes", { scroll: false });
 
-    return () => window.cancelAnimationFrame(frameId);
-  }, [cardKind, clearDraft, isEditMode, router]);
-
-  useEffect(() => {
-    if (
-      isEditMode ||
-      clearDraft ||
-      didRestoreIngredientDraft.current ||
-      normalizedStateIngredients.length > 0 ||
-      selectedIngredients.length > 0
-    ) {
-      return;
+    if (clearDraft) {
+      router.replace("/dashboard/inventory?tab=recipes", { scroll: false });
     }
-
-    didRestoreIngredientDraft.current = true;
-    const draftIngredients = readTechCardIngredientsDraft().filter((ingredient) => productsById.has(ingredient.productId));
-
-    if (draftIngredients.length > 0) {
-      const frameId = window.requestAnimationFrame(() => setSelectedIngredients(draftIngredients));
-
-      return () => window.cancelAnimationFrame(frameId);
-    }
-  }, [clearDraft, isEditMode, normalizedStateIngredients.length, productsById, selectedIngredients.length]);
-
-  useEffect(() => {
-    if (
-      isEditMode ||
-      clearDraft ||
-      state.values.name ||
-      state.values.category ||
-      state.values.pizzaSize ||
-      state.values.outputQuantity ||
-      state.values.description
-    ) {
-      return;
-    }
-
-    const draft = readTechCardFormDraft();
-
-    if (!draft) {
-      return;
-    }
-
-    const frameId = window.requestAnimationFrame(() => {
-      setName(draft.name);
-      setSelectedTechCardCategory(cardKind === "ingredient" ? INGREDIENT_TECH_CARD_CATEGORY : draft.category);
-      setSelectedPizzaSize(draft.pizzaSize);
-      setAutoCreatePizzaVariants(draft.autoCreatePizzaVariants);
-      setOutputQuantity(draft.outputQuantity);
-      setSelectedUnit(draft.outputUnit);
-      setDescription(draft.description);
-    });
-
-    return () => window.cancelAnimationFrame(frameId);
-  }, [
-    clearDraft,
-    cardKind,
-    isEditMode,
-    state.values.name,
-    state.values.category,
-    state.values.pizzaSize,
-    state.values.outputQuantity,
-    state.values.description,
-  ]);
-
-  useEffect(() => {
-    if (isEditMode || clearDraft) {
-      return;
-    }
-
-    if (selectedIngredients.length === 0) {
-      window.localStorage.removeItem(TECH_CARD_INGREDIENTS_DRAFT_KEY);
-      return;
-    }
-
-    window.localStorage.setItem(TECH_CARD_INGREDIENTS_DRAFT_KEY, JSON.stringify(selectedIngredients));
-  }, [clearDraft, isEditMode, selectedIngredients]);
-
-  useEffect(() => {
-    if (isEditMode || clearDraft) {
-      return;
-    }
-
-    const draft: TechCardDraft = { name, category: cardKind === "ingredient" ? INGREDIENT_TECH_CARD_CATEGORY : selectedTechCardCategory, pizzaSize: selectedPizzaSize, autoCreatePizzaVariants, outputQuantity, outputUnit: selectedUnit, description };
-    const hasDraft =
-      draft.name ||
-      draft.category ||
-      draft.pizzaSize ||
-      draft.outputQuantity ||
-      draft.description ||
-      !draft.autoCreatePizzaVariants ||
-      draft.outputUnit !== "шт";
-
-    if (!hasDraft) {
-      window.localStorage.removeItem(TECH_CARD_FORM_DRAFT_KEY);
-      return;
-    }
-
-    window.localStorage.setItem(TECH_CARD_FORM_DRAFT_KEY, JSON.stringify(draft));
-  }, [autoCreatePizzaVariants, cardKind, clearDraft, description, isEditMode, name, outputQuantity, selectedPizzaSize, selectedTechCardCategory, selectedUnit]);
+  }, [clearDraft, isEditMode, router]);
 
   const handleAddIngredient = (productId: string) => {
     setSelectedIngredients((current) => {
