@@ -5,6 +5,16 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "FoodLike",
   description: "Минималистичная CRM для доставки еды",
+  icons: {
+    icon: [
+      {
+        url: "/foodlike-app-icon-v3.png",
+        sizes: "512x512",
+        type: "image/png",
+      },
+    ],
+    apple: "/foodlike-app-icon-v3.png",
+  },
 };
 
 export default function RootLayout({
