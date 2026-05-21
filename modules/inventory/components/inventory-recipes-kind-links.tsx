@@ -132,8 +132,8 @@ function KindDialog({
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const productCategoriesById = new Map(products.map((product) => [product.id, product.category]));
-  const categoryOptions = getSearchCategoryOptions(cards, productCategoriesById);
-  const filteredCards = filterTechCards(cards, query, selectedCategory, productCategoriesById);
+  const categoryOptions = getSearchCategoryOptions(kind, cards, productCategoriesById);
+  const filteredCards = filterTechCards(kind, cards, query, selectedCategory, productCategoriesById);
   const entries = kind === "price" ? buildPriceDialogEntries(filteredCards) : filteredCards.map((card) => ({
     kind: "single" as const,
     card,
@@ -228,11 +228,18 @@ function KindDialog({
   );
 }
 
-function getSearchCategoryOptions(cards: TechCardItem[], productCategoriesById: Map<number, string | null>) {
+function getSearchCategoryOptions(
+  kind: RecipeKind,
+  cards: TechCardItem[],
+  productCategoriesById: Map<number, string | null>,
+) {
   const categories = new Set<string>();
 
   for (const card of cards) {
-    categories.add(card.category);
+    if (kind === "price") {
+      categories.add(card.category);
+      continue;
+    }
 
     for (const ingredient of card.ingredients) {
       const productCategory = productCategoriesById.get(ingredient.productId);
@@ -247,6 +254,7 @@ function getSearchCategoryOptions(cards: TechCardItem[], productCategoriesById: 
 }
 
 function filterTechCards(
+  kind: RecipeKind,
   cards: TechCardItem[],
   query: string,
   selectedCategory: string,
@@ -262,7 +270,9 @@ function filterTechCards(
     const ingredientCategories = card.ingredients
       .map((ingredient) => productCategoriesById.get(ingredient.productId))
       .filter((category): category is string => Boolean(category));
-    const matchesCategory = !selectedCategory || card.category === selectedCategory || ingredientCategories.includes(selectedCategory);
+    const matchesCategory =
+      !selectedCategory ||
+      (kind === "price" ? card.category === selectedCategory : ingredientCategories.includes(selectedCategory));
 
     if (!matchesCategory) {
       return false;
