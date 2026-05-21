@@ -25,8 +25,8 @@ function getKindMeta(kind: TechCardFormKind) {
     : kind === "composite"
       ? {
           eyebrow: "Комбинированная карта",
-          title: "Комбо или сет",
-          description: "Собери комбо или сет из уже готовых технологических карт.",
+          title: "Комбинированные",
+          description: "Комбо, сеты и другие наборы из уже готовых технологических карт.",
         }
       : {
         eyebrow: "Прайсовая карта",
