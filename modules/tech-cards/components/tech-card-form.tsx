@@ -39,6 +39,7 @@ export function TechCardForm({
       pizzaSize: initialTechCard?.pizzaSize ?? "",
       rollSize: initialTechCard?.rollSize ?? "",
       autoCreatePizzaVariants: "true",
+      autoCreateRollVariants: "true",
       outputQuantity: initialTechCard ? String(initialTechCard.outputQuantity) : "",
       outputUnit: initialTechCard?.outputUnit ?? "шт",
       ingredients:
@@ -107,6 +108,7 @@ function TechCardFormContent({
           pizzaSize={form.selectedPizzaSize}
           rollSize={form.selectedRollSize}
           autoCreatePizzaVariants={form.autoCreatePizzaVariants}
+          autoCreateRollVariants={form.autoCreateRollVariants}
           outputQuantity={form.outputQuantity}
           outputUnit={form.selectedUnit}
           onNameChange={form.setName}
@@ -114,6 +116,7 @@ function TechCardFormContent({
           onPizzaSizeChange={form.setSelectedPizzaSize}
           onRollSizeChange={form.setSelectedRollSize}
           onAutoCreatePizzaVariantsChange={form.setAutoCreatePizzaVariants}
+          onAutoCreateRollVariantsChange={form.setAutoCreateRollVariants}
           onOutputQuantityChange={form.setOutputQuantity}
           onOutputUnitChange={form.setSelectedUnit}
           cardKind={cardKind}

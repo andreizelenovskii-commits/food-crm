@@ -58,6 +58,7 @@ export function useTechCardFormState({
   );
   const [outputQuantity, setOutputQuantity] = useState(state.values.outputQuantity);
   const [autoCreatePizzaVariants, setAutoCreatePizzaVariants] = useState(state.values.autoCreatePizzaVariants !== "false");
+  const [autoCreateRollVariants, setAutoCreateRollVariants] = useState(state.values.autoCreateRollVariants !== "false");
   const [description, setDescription] = useState(state.values.description);
   const [isIngredientDialogOpen, setIsIngredientDialogOpen] = useState(false);
   const [ingredientQuery, setIngredientQuery] = useState("");
@@ -140,6 +141,7 @@ export function useTechCardFormState({
     selectedPizzaSize,
     selectedRollSize,
     autoCreatePizzaVariants,
+    autoCreateRollVariants,
     selectedUnit,
     outputQuantity,
     description,
@@ -156,6 +158,7 @@ export function useTechCardFormState({
     setSelectedPizzaSize,
     setSelectedRollSize,
     setAutoCreatePizzaVariants,
+    setAutoCreateRollVariants,
     setSelectedUnit,
     setOutputQuantity,
     setDescription,

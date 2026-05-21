@@ -13,6 +13,7 @@ export type TechCardFormState = {
     pizzaSize: string;
     rollSize: string;
     autoCreatePizzaVariants: string;
+    autoCreateRollVariants: string;
     outputQuantity: string;
     outputUnit: string;
     ingredients: Array<{
@@ -30,6 +31,7 @@ const EMPTY_TECH_CARD_FORM_VALUES: TechCardFormState["values"] = {
   pizzaSize: "",
   rollSize: "",
   autoCreatePizzaVariants: "true",
+  autoCreateRollVariants: "true",
   outputQuantity: "",
   outputUnit: "шт",
   ingredients: [],
@@ -48,6 +50,7 @@ function getTechCardFormValues(formData: FormData) {
     pizzaSize: read("pizzaSize"),
     rollSize: read("rollSize"),
     autoCreatePizzaVariants: read("autoCreatePizzaVariants") === "false" ? "false" : "true",
+    autoCreateRollVariants: read("autoCreateRollVariants") === "false" ? "false" : "true",
     outputQuantity: read("outputQuantity"),
     outputUnit: read("outputUnit"),
     ingredients: ingredientProductIds.map((productId, index) => ({

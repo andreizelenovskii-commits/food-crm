@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { TechCardFormKind } from "@/modules/tech-cards/components/tech-card-form";
+import { TechCardVariantToggle } from "@/modules/tech-cards/components/tech-card-variant-toggle";
 import {
   INGREDIENT_TECH_CARD_CATEGORY,
   PRICE_TECH_CARD_CATEGORIES,
@@ -22,6 +23,7 @@ export function TechCardMainFields({
   pizzaSize,
   rollSize,
   autoCreatePizzaVariants,
+  autoCreateRollVariants,
   outputQuantity,
   outputUnit,
   onNameChange,
@@ -29,6 +31,7 @@ export function TechCardMainFields({
   onPizzaSizeChange,
   onRollSizeChange,
   onAutoCreatePizzaVariantsChange,
+  onAutoCreateRollVariantsChange,
   onOutputQuantityChange,
   onOutputUnitChange,
   cardKind,
@@ -39,6 +42,7 @@ export function TechCardMainFields({
   pizzaSize: TechCardPizzaSize | "";
   rollSize: TechCardRollSize | "";
   autoCreatePizzaVariants: boolean;
+  autoCreateRollVariants: boolean;
   outputQuantity: string;
   outputUnit: OutputUnit;
   onNameChange: (value: string) => void;
@@ -46,6 +50,7 @@ export function TechCardMainFields({
   onPizzaSizeChange: (value: TechCardPizzaSize | "") => void;
   onRollSizeChange: (value: TechCardRollSize | "") => void;
   onAutoCreatePizzaVariantsChange: (value: boolean) => void;
+  onAutoCreateRollVariantsChange: (value: boolean) => void;
   onOutputQuantityChange: (value: string) => void;
   onOutputUnitChange: (value: OutputUnit) => void;
   cardKind: TechCardFormKind;
@@ -115,30 +120,13 @@ export function TechCardMainFields({
                 Варианты 26 см и 24 см создаются только при добавлении новой техкарты 30 см.
               </span>
             ) : (
-              <label className="flex items-center justify-between gap-3 rounded-[16px] border border-red-950/10 bg-white/76 px-3 py-3 shadow-sm shadow-red-950/5">
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-zinc-950">Создать 26 см и 24 см</span>
-                  <span className="mt-0.5 block text-xs leading-5 text-zinc-500">
-                    Ингредиенты уменьшатся на 15% от предыдущего размера.
-                  </span>
-                </span>
-                <input type="hidden" name="autoCreatePizzaVariants" value={autoCreatePizzaVariants ? "true" : "false"} />
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={autoCreatePizzaVariants}
-                  onClick={() => onAutoCreatePizzaVariantsChange(!autoCreatePizzaVariants)}
-                  className={`relative h-7 w-12 shrink-0 rounded-full transition ${
-                    autoCreatePizzaVariants ? "bg-red-800" : "bg-zinc-300"
-                  }`}
-                >
-                  <span
-                    className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition ${
-                      autoCreatePizzaVariants ? "left-6" : "left-1"
-                    }`}
-                  />
-                </button>
-              </label>
+              <TechCardVariantToggle
+                name="autoCreatePizzaVariants"
+                checked={autoCreatePizzaVariants}
+                title="Создать 26 см и 24 см"
+                description="Ингредиенты уменьшатся на 15% от предыдущего размера."
+                onChange={onAutoCreatePizzaVariantsChange}
+              />
             )
           ) : null}
         </label>
@@ -157,9 +145,19 @@ export function TechCardMainFields({
             onChange={onRollSizeChange}
           />
           {rollSize === "8 шт" ? (
-            <span className="block text-xs leading-5 text-zinc-500">
-              Для 4 шт техкарта создастся автоматически: ингредиенты уменьшатся на 50%.
-            </span>
+            isEditMode ? (
+              <span className="block text-xs leading-5 text-zinc-500">
+                Вариант 4 шт создаётся только при добавлении новой техкарты 8 шт.
+              </span>
+            ) : (
+              <TechCardVariantToggle
+                name="autoCreateRollVariants"
+                checked={autoCreateRollVariants}
+                title="Создать 4 шт"
+                description="Ингредиенты уменьшатся на 50% от ролла 8 шт."
+                onChange={onAutoCreateRollVariantsChange}
+              />
+            )
           ) : null}
         </label>
       ) : (
