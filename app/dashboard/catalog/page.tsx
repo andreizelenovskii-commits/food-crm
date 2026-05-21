@@ -186,6 +186,11 @@ export default async function CatalogPage(props: {
                                     {item.pizzaSize}
                                   </span>
                                 ) : null}
+                                {item.rollSize ? (
+                                  <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-zinc-500 ring-1 ring-zinc-200">
+                                    {item.rollSize}
+                                  </span>
+                                ) : null}
                               </div>
 
                               <div className="grid gap-3 text-sm text-zinc-600 sm:grid-cols-2">

@@ -29,7 +29,8 @@ function formatMoney(cents: number) {
 }
 
 function itemDescription(item: CatalogItem) {
-  return item.description ?? `Позиция из меню${item.pizzaSize ? `, размер ${item.pizzaSize}` : ""}.`;
+  const variant = item.pizzaSize ?? item.rollSize;
+  return item.description ?? `Позиция из меню${variant ? `, вариант ${variant}` : ""}.`;
 }
 
 export function PublicMenuSection({

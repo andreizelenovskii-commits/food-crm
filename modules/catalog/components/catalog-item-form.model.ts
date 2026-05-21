@@ -20,6 +20,7 @@ export type CatalogTechCardOption = {
   name: string;
   category: string;
   pizzaSize: string | null;
+  rollSize: string | null;
 };
 
 export type CatalogItemFormProps = {

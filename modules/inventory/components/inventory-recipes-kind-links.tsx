@@ -7,6 +7,7 @@ import {
   buildPriceDialogEntries,
   DialogCard,
   PizzaGroupCard,
+  RollGroupCard,
 } from "@/modules/inventory/components/inventory-recipes-dialog-cards";
 import type {
   TechCardItem,
@@ -212,6 +213,13 @@ function KindDialog({
                   products={products}
                   canManageInventory={canManageInventory}
                 />
+              ) : entry.kind === "rollGroup" ? (
+                <RollGroupCard
+                  key={entry.key}
+                  cards={entry.cards}
+                  products={products}
+                  canManageInventory={canManageInventory}
+                />
               ) : (
                 <DialogCard
                   key={entry.card.id}
@@ -282,6 +290,7 @@ function filterTechCards(
       card.name,
       card.category,
       card.pizzaSize ?? "",
+      card.rollSize ?? "",
       card.outputUnit,
       card.description ?? "",
       ...ingredientCategories,

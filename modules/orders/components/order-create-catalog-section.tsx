@@ -174,6 +174,7 @@ function CatalogOrderItemRow({
             <h4 className="text-sm font-semibold text-zinc-950">{item.name}</h4>
             {item.category ? <CatalogBadge>{item.category}</CatalogBadge> : null}
             {item.pizzaSize ? <CatalogBadge>{item.pizzaSize}</CatalogBadge> : null}
+            {item.rollSize ? <CatalogBadge>{item.rollSize}</CatalogBadge> : null}
           </div>
           {item.description ? <p className="text-xs leading-5 text-zinc-500">{item.description}</p> : null}
           <p className="text-sm font-medium text-zinc-900">{formatMoney(item.priceCents)}</p>

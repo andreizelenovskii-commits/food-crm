@@ -14,8 +14,10 @@ import {
   INGREDIENT_TECH_CARD_CATEGORY,
   TECH_CARD_CATEGORIES,
   TECH_CARD_PIZZA_SIZES,
+  TECH_CARD_ROLL_SIZES,
   type TechCardCategory,
   type TechCardPizzaSize,
+  type TechCardRollSize,
   type TechCardProductOption,
 } from "@/modules/tech-cards/tech-cards.types";
 
@@ -44,6 +46,11 @@ export function useTechCardFormState({
   const [selectedPizzaSize, setSelectedPizzaSize] = useState<TechCardPizzaSize | "">(
     TECH_CARD_PIZZA_SIZES.includes(state.values.pizzaSize as TechCardPizzaSize)
       ? (state.values.pizzaSize as TechCardPizzaSize)
+      : "",
+  );
+  const [selectedRollSize, setSelectedRollSize] = useState<TechCardRollSize | "">(
+    TECH_CARD_ROLL_SIZES.includes(state.values.rollSize as TechCardRollSize)
+      ? (state.values.rollSize as TechCardRollSize)
       : "",
   );
   const [selectedUnit, setSelectedUnit] = useState<OutputUnit>(
@@ -131,6 +138,7 @@ export function useTechCardFormState({
     name,
     selectedTechCardCategory,
     selectedPizzaSize,
+    selectedRollSize,
     autoCreatePizzaVariants,
     selectedUnit,
     outputQuantity,
@@ -146,6 +154,7 @@ export function useTechCardFormState({
     setName,
     setSelectedTechCardCategory,
     setSelectedPizzaSize,
+    setSelectedRollSize,
     setAutoCreatePizzaVariants,
     setSelectedUnit,
     setOutputQuantity,

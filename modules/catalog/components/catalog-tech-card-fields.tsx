@@ -6,6 +6,7 @@ type TechCardOption = {
   name: string;
   category: string;
   pizzaSize: string | null;
+  rollSize: string | null;
 };
 
 export function CatalogTechCardFields({
@@ -118,6 +119,7 @@ function TechCardSelect({
               <option key={option.id} value={option.id}>
                 {option.name} - {option.category}
                 {option.pizzaSize ? ` - ${option.pizzaSize}` : ""}
+                {option.rollSize ? ` - ${option.rollSize}` : ""}
               </option>
             ))}
           </select>

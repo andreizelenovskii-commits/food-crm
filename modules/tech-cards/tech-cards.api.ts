@@ -13,8 +13,8 @@ export async function fetchTechCardProductOptions(): Promise<TechCardProductOpti
   return backendGet<TechCardProductOption[]>("/api/v1/tech-cards/product-options");
 }
 
-export async function fetchTechCardOptions(): Promise<Array<{ id: number; name: string; category: string; pizzaSize: string | null }>> {
-  return backendGet<Array<{ id: number; name: string; category: string; pizzaSize: string | null }>>(
+export async function fetchTechCardOptions(): Promise<Array<{ id: number; name: string; category: string; pizzaSize: string | null; rollSize: string | null }>> {
+  return backendGet<Array<{ id: number; name: string; category: string; pizzaSize: string | null; rollSize: string | null }>>(
     "/api/v1/tech-cards/options",
   );
 }

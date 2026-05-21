@@ -114,7 +114,7 @@ export function OrderCreateButton({
         }
 
         const haystack = normalizeSearchValue(
-          [item.name, item.category, item.description, item.pizzaSize]
+          [item.name, item.category, item.description, item.pizzaSize, item.rollSize]
             .filter(Boolean)
             .join(" "),
         );

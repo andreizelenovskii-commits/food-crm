@@ -9,6 +9,8 @@ import {
   type TechCardCategory,
   TECH_CARD_PIZZA_SIZES,
   type TechCardPizzaSize,
+  TECH_CARD_ROLL_SIZES,
+  type TechCardRollSize,
 } from "@/modules/tech-cards/tech-cards.types";
 
 const OUTPUT_UNITS = ["шт", "кг"] as const;
@@ -18,12 +20,14 @@ export function TechCardMainFields({
   name,
   category,
   pizzaSize,
+  rollSize,
   autoCreatePizzaVariants,
   outputQuantity,
   outputUnit,
   onNameChange,
   onCategoryChange,
   onPizzaSizeChange,
+  onRollSizeChange,
   onAutoCreatePizzaVariantsChange,
   onOutputQuantityChange,
   onOutputUnitChange,
@@ -33,12 +37,14 @@ export function TechCardMainFields({
   name: string;
   category: TechCardCategory | "";
   pizzaSize: TechCardPizzaSize | "";
+  rollSize: TechCardRollSize | "";
   autoCreatePizzaVariants: boolean;
   outputQuantity: string;
   outputUnit: OutputUnit;
   onNameChange: (value: string) => void;
   onCategoryChange: (value: TechCardCategory | "") => void;
   onPizzaSizeChange: (value: TechCardPizzaSize | "") => void;
+  onRollSizeChange: (value: TechCardRollSize | "") => void;
   onAutoCreatePizzaVariantsChange: (value: boolean) => void;
   onOutputQuantityChange: (value: string) => void;
   onOutputUnitChange: (value: OutputUnit) => void;
@@ -83,6 +89,10 @@ export function TechCardMainFields({
 
               if (nextCategory !== "Пиццы") {
                 onPizzaSizeChange("");
+              }
+
+              if (nextCategory !== "Роллы") {
+                onRollSizeChange("");
               }
             }}
           />
@@ -134,6 +144,26 @@ export function TechCardMainFields({
         </label>
       ) : (
         <input type="hidden" name="pizzaSize" value="" />
+      )}
+
+      {category === "Роллы" ? (
+        <label className="block space-y-2">
+          <span className="text-xs font-semibold text-zinc-700">Количество роллов</span>
+          <TechCardSelect
+            name="rollSize"
+            value={rollSize}
+            placeholder="Выбери количество"
+            options={TECH_CARD_ROLL_SIZES}
+            onChange={onRollSizeChange}
+          />
+          {rollSize === "8 шт" ? (
+            <span className="block text-xs leading-5 text-zinc-500">
+              Для 4 шт техкарта создастся автоматически: ингредиенты уменьшатся на 50%.
+            </span>
+          ) : null}
+        </label>
+      ) : (
+        <input type="hidden" name="rollSize" value="" />
       )}
 
       <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(180px,0.72fr)]">

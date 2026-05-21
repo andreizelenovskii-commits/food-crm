@@ -62,6 +62,11 @@ export default async function TechCardDetailsPage(props: {
                       {techCard.pizzaSize}
                     </span>
                   ) : null}
+                  {techCard.rollSize ? (
+                    <span className="rounded-full bg-zinc-50 px-3 py-1 text-xs font-semibold text-zinc-500 ring-1 ring-zinc-200">
+                      {techCard.rollSize}
+                    </span>
+                  ) : null}
                 </div>
               </div>
               <span className="rounded-full border border-red-100 bg-white/84 px-4 py-2 text-xs font-semibold text-red-800">

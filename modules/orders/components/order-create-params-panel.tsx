@@ -259,6 +259,7 @@ function OrderTotals({
                 <p className="truncate font-medium text-zinc-900">
                   {entry.item.name}
                   {entry.item.pizzaSize ? ` · ${entry.item.pizzaSize}` : ""}
+                  {entry.item.rollSize ? ` · ${entry.item.rollSize}` : ""}
                 </p>
                 <p className="text-zinc-500">{entry.quantity} × {formatMoney(entry.item.priceCents)}</p>
               </div>
