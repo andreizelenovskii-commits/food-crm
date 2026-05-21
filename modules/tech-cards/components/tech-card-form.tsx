@@ -5,6 +5,7 @@ import { TechCardFormFooter } from "@/modules/tech-cards/components/tech-card-fo
 import { TechCardFormHeader } from "@/modules/tech-cards/components/tech-card-form-header";
 import { TechCardComponentDialog } from "@/modules/tech-cards/components/tech-card-component-dialog";
 import { TechCardComponentsSection } from "@/modules/tech-cards/components/tech-card-components-section";
+import { TechCardChoiceSlotsSection } from "@/modules/tech-cards/components/tech-card-choice-slots-section";
 import { TechCardIngredientDialog } from "@/modules/tech-cards/components/tech-card-ingredient-dialog";
 import { TechCardIngredientsSection } from "@/modules/tech-cards/components/tech-card-ingredients-section";
 import { TechCardMainFields } from "@/modules/tech-cards/components/tech-card-main-fields";
@@ -57,6 +58,13 @@ export function TechCardForm({
         initialTechCard?.components.map((component) => ({
           techCardId: String(component.techCardId),
           quantity: String(component.quantity),
+        })) ?? [],
+      choiceSlots:
+        initialTechCard?.choiceSlots.map((slot) => ({
+          name: slot.name,
+          category: slot.category,
+          allowedPizzaSizes: slot.allowedPizzaSizes.join(","),
+          quantity: String(slot.quantity),
         })) ?? [],
       description: initialTechCard?.description ?? "",
     },
@@ -164,6 +172,13 @@ function TechCardFormContent({
           }}
           onQuantityChange={form.handleComponentQuantityChange}
           onRemove={form.handleRemoveComponent}
+        />
+        <TechCardChoiceSlotsSection
+          selectedChoiceSlots={form.selectedChoiceSlots}
+          isVisible={cardKind === "composite"}
+          onAdd={form.handleAddChoiceSlot}
+          onChange={form.handleChoiceSlotChange}
+          onRemove={form.handleRemoveChoiceSlot}
         />
         <TechCardFormFooter
           isPending={isPending}

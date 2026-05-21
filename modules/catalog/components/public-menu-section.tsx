@@ -12,6 +12,7 @@ import type { OrderStatus } from "@/modules/orders/orders.types";
 import { browserBackendJson } from "@/shared/api/browser-backend";
 
 type Cart = Record<number, number>;
+type CartChoices = Record<number, Record<number, number>>;
 
 type PublicOrderStatus = {
   id: number;
@@ -43,6 +44,7 @@ export function PublicMenuSection({
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [cart, setCart] = useState<Cart>({});
+  const [cartChoices, setCartChoices] = useState<CartChoices>({});
   const [isPending, setIsPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [createdOrder, setCreatedOrder] = useState<PublicOrderStatus | null>(null);
@@ -50,9 +52,9 @@ export function PublicMenuSection({
   const cartItems = useMemo(
     () =>
       items
-        .map((item) => ({ item, quantity: cart[item.id] ?? 0 }))
+        .map((item) => ({ item, quantity: cart[item.id] ?? 0, choices: cartChoices[item.id] ?? {} }))
         .filter((entry) => entry.quantity > 0),
-    [cart, items],
+    [cart, cartChoices, items],
   );
   const totalCents = cartItems.reduce(
     (sum, entry) => sum + entry.item.priceCents * entry.quantity,
@@ -70,11 +72,26 @@ export function PublicMenuSection({
       const next = { ...current };
       if (nextQuantity === 0) {
         delete next[itemId];
+        setCartChoices((currentChoices) => {
+          const nextChoices = { ...currentChoices };
+          delete nextChoices[itemId];
+          return nextChoices;
+        });
       } else {
         next[itemId] = nextQuantity;
       }
       return next;
     });
+  }
+
+  function changeChoice(itemId: number, choiceSlotId: number, selectedCatalogItemId: number) {
+    setCartChoices((current) => ({
+      ...current,
+      [itemId]: {
+        ...(current[itemId] ?? {}),
+        [choiceSlotId]: selectedCatalogItemId,
+      },
+    }));
   }
 
   async function submitOrder(event: FormEvent<HTMLFormElement>) {
@@ -103,10 +120,15 @@ export function PublicMenuSection({
           items: cartItems.map((entry) => ({
             catalogItemId: entry.item.id,
             quantity: entry.quantity,
+            choices: entry.item.choiceSlots.map((slot) => ({
+              choiceSlotId: slot.id,
+              selectedCatalogItemId: entry.choices[slot.id],
+            })),
           })),
         },
       });
       setCart({});
+      setCartChoices({});
       setCreatedOrder(order);
       setMessage(`Заказ #${order.id} принят. Статус: ${ORDER_STATUS_LABELS[order.status]}.`);
     } catch (error) {
@@ -205,9 +227,33 @@ export function PublicMenuSection({
                 {cartItems.length ? (
                   cartItems.map((entry) => (
                     <div key={entry.item.id} className="flex items-center justify-between gap-3 rounded-[8px] bg-white p-3">
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <p className="font-semibold text-[#241316]">{entry.item.name}</p>
                         <p className="text-sm text-[#6b5960]">{formatMoney(entry.item.priceCents)}</p>
+                        {entry.item.choiceSlots.length > 0 ? (
+                          <div className="mt-2 space-y-2">
+                            {entry.item.choiceSlots.map((slot) => (
+                              <label key={slot.id} className="block space-y-1">
+                                <span className="text-xs font-semibold text-[#3a292d]">{slot.name}</span>
+                                <select
+                                  value={entry.choices[slot.id] ?? ""}
+                                  onChange={(event) => changeChoice(entry.item.id, slot.id, Number(event.target.value))}
+                                  className="foodlike-field min-h-10 rounded-[8px] text-sm"
+                                  required
+                                >
+                                  <option value="">Выбрать</option>
+                                  {slot.options.map((option) => (
+                                    <option key={option.catalogItemId} value={option.catalogItemId}>
+                                      {option.name}
+                                      {option.pizzaSize ? ` · ${option.pizzaSize}` : ""}
+                                      {option.rollSize ? ` · ${option.rollSize}` : ""}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                            ))}
+                          </div>
+                        ) : null}
                       </div>
                       <div className="flex items-center gap-2">
                         <CartButton onClick={() => changeQuantity(entry.item.id, -1)} label="-" />

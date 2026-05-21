@@ -25,6 +25,12 @@ export type TechCardFormState = {
       techCardId: string;
       quantity: string;
     }>;
+    choiceSlots: Array<{
+      name: string;
+      category: string;
+      allowedPizzaSizes: string;
+      quantity: string;
+    }>;
     description: string;
   };
 };
@@ -40,6 +46,7 @@ const EMPTY_TECH_CARD_FORM_VALUES: TechCardFormState["values"] = {
   outputUnit: "шт",
   ingredients: [],
   components: [],
+  choiceSlots: [],
   description: "",
 };
 
@@ -50,6 +57,10 @@ function getTechCardFormValues(formData: FormData) {
   const ingredientUnits = formData.getAll("ingredientUnit");
   const componentTechCardIds = formData.getAll("componentTechCardId");
   const componentQuantities = formData.getAll("componentQuantity");
+  const choiceSlotNames = formData.getAll("choiceSlotName");
+  const choiceSlotCategories = formData.getAll("choiceSlotCategory");
+  const choiceSlotAllowedPizzaSizes = formData.getAll("choiceSlotAllowedPizzaSizes");
+  const choiceSlotQuantities = formData.getAll("choiceSlotQuantity");
 
   return {
     name: read("name"),
@@ -68,6 +79,12 @@ function getTechCardFormValues(formData: FormData) {
     components: componentTechCardIds.map((techCardId, index) => ({
       techCardId: String(techCardId ?? "").trim(),
       quantity: String(componentQuantities[index] ?? "").trim(),
+    })),
+    choiceSlots: choiceSlotNames.map((slotName, index) => ({
+      name: String(slotName ?? "").trim(),
+      category: String(choiceSlotCategories[index] ?? "").trim(),
+      allowedPizzaSizes: String(choiceSlotAllowedPizzaSizes[index] ?? "").trim(),
+      quantity: String(choiceSlotQuantities[index] ?? "").trim(),
     })),
     description: read("description"),
   };

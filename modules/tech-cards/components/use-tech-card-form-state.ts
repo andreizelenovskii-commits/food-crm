@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { PRODUCT_CATEGORIES } from "@/modules/inventory/inventory.types";
 import {
   clearTechCardDraft,
+  type SelectedChoiceSlot,
   type SelectedComponent,
   type SelectedIngredient,
 } from "@/modules/tech-cards/components/tech-card-draft";
@@ -91,6 +92,23 @@ export function useTechCardFormState({
     [state.values.components],
   );
   const [selectedComponents, setSelectedComponents] = useState<SelectedComponent[]>(normalizedStateComponents);
+  const normalizedStateChoiceSlots = useMemo<SelectedChoiceSlot[]>(
+    () =>
+      state.values.choiceSlots.map((slot, index) => ({
+        id: `${index}-${slot.name}`,
+        name: slot.name,
+        category: TECH_CARD_CATEGORIES.includes(slot.category as TechCardCategory)
+          ? slot.category
+          : "Пиццы",
+        allowedPizzaSizes: slot.allowedPizzaSizes
+          .split(",")
+          .map((size) => size.trim())
+          .filter((size) => TECH_CARD_PIZZA_SIZES.includes(size as TechCardPizzaSize)),
+        quantity: slot.quantity,
+      })),
+    [state.values.choiceSlots],
+  );
+  const [selectedChoiceSlots, setSelectedChoiceSlots] = useState<SelectedChoiceSlot[]>(normalizedStateChoiceSlots);
   const productsById = useMemo(() => new Map(products.map((product) => [String(product.id), product])), [products]);
   const componentsById = useMemo(
     () => new Map(componentOptions.map((component) => [String(component.id), component])),
@@ -228,6 +246,7 @@ export function useTechCardFormState({
     pendingComponentIds,
     selectedIngredients,
     selectedComponents,
+    selectedChoiceSlots,
     productsById,
     componentsById,
     availableCategories,
@@ -253,6 +272,26 @@ export function useTechCardFormState({
     setIsComponentDialogOpen,
     handleAddPendingIngredients,
     handleAddPendingComponents,
+    handleAddChoiceSlot: () => {
+      setSelectedChoiceSlots((current) => [
+        ...current,
+        {
+          id: `${Date.now()}-${current.length}`,
+          name: "Пицца на выбор",
+          category: "Пиццы",
+          allowedPizzaSizes: ["26 см", "30 см"],
+          quantity: "1",
+        },
+      ]);
+    },
+    handleChoiceSlotChange: (slotId: string, nextSlot: Partial<SelectedChoiceSlot>) => {
+      setSelectedChoiceSlots((current) =>
+        current.map((slot) => (slot.id === slotId ? { ...slot, ...nextSlot } : slot)),
+      );
+    },
+    handleRemoveChoiceSlot: (slotId: string) => {
+      setSelectedChoiceSlots((current) => current.filter((slot) => slot.id !== slotId));
+    },
     handleTogglePendingIngredient: (productId: string) => {
       setPendingIngredientIds((current) =>
         current.includes(productId)

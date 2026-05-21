@@ -17,6 +17,14 @@ export type SelectedComponent = {
   quantity: string;
 };
 
+export type SelectedChoiceSlot = {
+  id: string;
+  name: string;
+  category: string;
+  allowedPizzaSizes: string[];
+  quantity: string;
+};
+
 export function clearTechCardDraft() {
   if (typeof window === "undefined") {
     return;

@@ -4,4 +4,5 @@ export type SelectedOrderItem = {
   item: CatalogItem;
   quantity: number;
   totalCents: number;
+  choices: Record<number, number>;
 };

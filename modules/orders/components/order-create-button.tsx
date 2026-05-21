@@ -60,6 +60,7 @@ export function OrderCreateButton({
   );
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedItems, setSelectedItems] = useState<Record<number, number>>({});
+  const [selectedChoices, setSelectedChoices] = useState<Record<number, Record<number, number>>>({});
   const [state, formAction, isPending] = useActionState(createOrderAction, initialState);
   const canEditDeliveryFee = canAdjustDeliveryFee(user.role);
 
@@ -77,6 +78,7 @@ export function OrderCreateButton({
         setDeliveryFeeRubles(String(DEFAULT_DELIVERY_FEE_CENTS / 100));
         setSelectedCategory("");
         setSelectedItems({});
+        setSelectedChoices({});
       }, 0);
 
       return () => window.clearTimeout(timeoutId);
@@ -138,10 +140,11 @@ export function OrderCreateButton({
             item,
             quantity,
             totalCents: item.priceCents * quantity,
+            choices: selectedChoices[item.id] ?? {},
           };
         })
         .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry)),
-    [catalogItems, selectedItems],
+    [catalogItems, selectedChoices, selectedItems],
   );
 
   const totalCents = selectedOrderItems.reduce((sum, entry) => sum + entry.totalCents, 0);
@@ -163,6 +166,10 @@ export function OrderCreateButton({
     selectedOrderItems.map((entry) => ({
       catalogItemId: entry.item.id,
       quantity: entry.quantity,
+      choices: entry.item.choiceSlots.map((slot) => ({
+        choiceSlotId: slot.id,
+        selectedCatalogItemId: entry.choices[slot.id],
+      })),
     })),
   );
 
@@ -180,6 +187,16 @@ export function OrderCreateButton({
     });
   };
 
+  const setChoice = (catalogItemId: number, choiceSlotId: number, selectedCatalogItemId: number) => {
+    setSelectedChoices((current) => ({
+      ...current,
+      [catalogItemId]: {
+        ...(current[catalogItemId] ?? {}),
+        [choiceSlotId]: selectedCatalogItemId,
+      },
+    }));
+  };
+
   const switchOrderType = (value: boolean) => {
     setIsInternal(value);
     setSelectedCategory("");
@@ -192,6 +209,7 @@ export function OrderCreateButton({
 
       return Object.fromEntries(nextEntries);
     });
+    setSelectedChoices({});
   };
 
   const filteredClients = useMemo(() => {
@@ -241,6 +259,7 @@ export function OrderCreateButton({
           availableCategories={availableCategories}
           filteredCatalogItems={filteredCatalogItems}
           selectedItems={selectedItems}
+          selectedChoices={selectedChoices}
           selectedClient={selectedClient}
           selectedEmployee={selectedEmployee}
           canEditDeliveryFee={canEditDeliveryFee}
@@ -259,6 +278,7 @@ export function OrderCreateButton({
           onCatalogQueryChange={setCatalogQuery}
           onCategoryChange={setSelectedCategory}
           onQuantityChange={setQuantity}
+          onChoiceChange={setChoice}
           onOpenClientPicker={() => setActivePicker("client")}
           onOpenEmployeePicker={() => setActivePicker("employee")}
           onDeliveryFeeChange={setDeliveryFeeRubles}

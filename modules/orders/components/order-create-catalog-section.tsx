@@ -8,10 +8,12 @@ export function OrderCreateCatalogSection({
   availableCategories,
   filteredCatalogItems,
   selectedItems,
+  selectedChoices,
   onSwitchOrderType,
   onCatalogQueryChange,
   onCategoryChange,
   onQuantityChange,
+  onChoiceChange,
 }: {
   isInternal: boolean;
   catalogQuery: string;
@@ -19,10 +21,12 @@ export function OrderCreateCatalogSection({
   availableCategories: string[];
   filteredCatalogItems: CatalogItem[];
   selectedItems: Record<number, number>;
+  selectedChoices: Record<number, Record<number, number>>;
   onSwitchOrderType: (value: boolean) => void;
   onCatalogQueryChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
   onQuantityChange: (catalogItemId: number, quantity: number) => void;
+  onChoiceChange: (catalogItemId: number, choiceSlotId: number, selectedCatalogItemId: number) => void;
 }) {
   return (
     <div className="space-y-5">
@@ -63,7 +67,9 @@ export function OrderCreateCatalogSection({
                 key={item.id}
                 item={item}
                 quantity={selectedItems[item.id] ?? 0}
+                selectedChoices={selectedChoices[item.id] ?? {}}
                 onQuantityChange={onQuantityChange}
+                onChoiceChange={onChoiceChange}
               />
             ))
           )}
@@ -160,11 +166,15 @@ function CategoryChips({
 function CatalogOrderItemRow({
   item,
   quantity,
+  selectedChoices,
   onQuantityChange,
+  onChoiceChange,
 }: {
   item: CatalogItem;
   quantity: number;
+  selectedChoices: Record<number, number>;
   onQuantityChange: (catalogItemId: number, quantity: number) => void;
+  onChoiceChange: (catalogItemId: number, choiceSlotId: number, selectedCatalogItemId: number) => void;
 }) {
   return (
     <div className="rounded-[18px] border border-red-100 bg-white/85 p-4 shadow-sm shadow-red-950/5">
@@ -188,6 +198,30 @@ function CatalogOrderItemRow({
           <QuantityButton onClick={() => onQuantityChange(item.id, quantity + 1)} label="+" />
         </div>
       </div>
+      {quantity > 0 && item.choiceSlots.length > 0 ? (
+        <div className="mt-3 grid gap-2 rounded-[14px] border border-red-950/10 bg-red-50/40 p-3">
+          {item.choiceSlots.map((slot) => (
+            <label key={slot.id} className="block space-y-1.5">
+              <span className="text-xs font-semibold text-zinc-700">{slot.name}</span>
+              <select
+                value={selectedChoices[slot.id] ?? ""}
+                onChange={(event) => onChoiceChange(item.id, slot.id, Number(event.target.value))}
+                className="h-10 w-full rounded-[14px] border border-red-100 bg-white px-3 text-sm font-semibold text-zinc-950 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
+                required
+              >
+                <option value="">Выбери вариант</option>
+                {slot.options.map((option) => (
+                  <option key={option.catalogItemId} value={option.catalogItemId}>
+                    {option.name}
+                    {option.pizzaSize ? ` · ${option.pizzaSize}` : ""}
+                    {option.rollSize ? ` · ${option.rollSize}` : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
