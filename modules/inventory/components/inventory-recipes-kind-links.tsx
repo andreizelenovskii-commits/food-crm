@@ -130,12 +130,16 @@ function KindDialog({
 }) {
   const meta = getKindMeta(kind);
   const [query, setQuery] = useState("");
-  const filteredCards = filterTechCards(cards, query);
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const productCategoriesById = new Map(products.map((product) => [product.id, product.category]));
+  const categoryOptions = getSearchCategoryOptions(cards, productCategoriesById);
+  const filteredCards = filterTechCards(cards, query, selectedCategory, productCategoriesById);
   const entries = kind === "price" ? buildPriceDialogEntries(filteredCards) : filteredCards.map((card) => ({
     kind: "single" as const,
     card,
   }));
   const normalizedQuery = query.trim();
+  const hasFilters = Boolean(normalizedQuery || selectedCategory);
 
   return (
     <div className="fixed inset-0 z-70 overflow-y-auto bg-zinc-950/30 px-4 py-6 backdrop-blur-sm sm:py-8">
@@ -160,11 +164,44 @@ function KindDialog({
             placeholder={kind === "ingredient" ? "Название заготовки или ингредиент" : "Название, категория, размер или ингредиент"}
             className="mt-2 h-11 w-full rounded-[14px] border border-red-950/10 bg-white/90 px-4 text-sm font-medium text-zinc-950 shadow-sm shadow-red-950/5 outline-none transition placeholder:text-zinc-400 focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
           />
+          {categoryOptions.length > 0 ? (
+            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+              <button
+                type="button"
+                onClick={() => setSelectedCategory("")}
+                className={`h-8 shrink-0 rounded-full border px-3 text-xs font-semibold transition ${
+                  selectedCategory
+                    ? "border-red-100 bg-white/90 text-zinc-600 hover:border-red-200 hover:bg-red-50"
+                    : "border-red-800 bg-red-800 text-white shadow-sm shadow-red-950/15"
+                }`}
+              >
+                Все категории
+              </button>
+              {categoryOptions.map((category) => {
+                const isSelected = selectedCategory === category;
+
+                return (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => setSelectedCategory(category)}
+                    className={`h-8 shrink-0 rounded-full border px-3 text-xs font-semibold transition ${
+                      isSelected
+                        ? "border-red-800 bg-red-800 text-white shadow-sm shadow-red-950/15"
+                        : "border-red-100 bg-white/90 text-zinc-600 hover:border-red-200 hover:bg-red-50"
+                    }`}
+                  >
+                    {category}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
         </label>
         <div className="mt-3 space-y-2.5">
           {entries.length === 0 ? (
             <div className="rounded-[18px] border border-dashed border-red-950/14 bg-white/70 p-5 text-sm leading-6 text-zinc-500">
-              {normalizedQuery ? "По этому запросу техкарты не найдены." : "В этом разделе пока нет технологических карт."}
+              {hasFilters ? "По этому запросу техкарты не найдены." : "В этом разделе пока нет технологических карт."}
             </div>
           ) : (
             entries.map((entry) =>
@@ -191,20 +228,53 @@ function KindDialog({
   );
 }
 
-function filterTechCards(cards: TechCardItem[], query: string) {
+function getSearchCategoryOptions(cards: TechCardItem[], productCategoriesById: Map<number, string | null>) {
+  const categories = new Set<string>();
+
+  for (const card of cards) {
+    categories.add(card.category);
+
+    for (const ingredient of card.ingredients) {
+      const productCategory = productCategoriesById.get(ingredient.productId);
+
+      if (productCategory) {
+        categories.add(productCategory);
+      }
+    }
+  }
+
+  return Array.from(categories).sort((left, right) => left.localeCompare(right, "ru"));
+}
+
+function filterTechCards(
+  cards: TechCardItem[],
+  query: string,
+  selectedCategory: string,
+  productCategoriesById: Map<number, string | null>,
+) {
   const normalizedQuery = query.trim().toLowerCase();
 
-  if (!normalizedQuery) {
+  if (!normalizedQuery && !selectedCategory) {
     return cards;
   }
 
   return cards.filter((card) => {
+    const ingredientCategories = card.ingredients
+      .map((ingredient) => productCategoriesById.get(ingredient.productId))
+      .filter((category): category is string => Boolean(category));
+    const matchesCategory = !selectedCategory || card.category === selectedCategory || ingredientCategories.includes(selectedCategory);
+
+    if (!matchesCategory) {
+      return false;
+    }
+
     const searchableValue = [
       card.name,
       card.category,
       card.pizzaSize ?? "",
       card.outputUnit,
       card.description ?? "",
+      ...ingredientCategories,
       ...card.ingredients.map((ingredient) => ingredient.productName),
     ]
       .join(" ")
