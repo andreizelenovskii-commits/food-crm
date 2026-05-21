@@ -57,10 +57,12 @@ export function buildPriceDialogEntries(cards: TechCardItem[]): RecipeDialogEntr
 export function PizzaGroupCard({
   cards,
   products,
+  componentOptions = [],
   canManageInventory,
 }: {
   cards: TechCardItem[];
   products: TechCardProductOption[];
+  componentOptions?: TechCardItem[];
   canManageInventory: boolean;
 }) {
   const [selectedCardId, setSelectedCardId] = useState(cards[0]?.id ?? 0);
@@ -114,7 +116,7 @@ export function PizzaGroupCard({
           </button>
           {canManageInventory ? (
             <>
-              <InventoryRecipeEditButton card={selectedCard} products={products} />
+              <InventoryRecipeEditButton card={selectedCard} products={products} componentOptions={componentOptions} />
               <InventoryRecipeDeleteButton card={selectedCard} />
             </>
           ) : null}
@@ -129,10 +131,12 @@ export function PizzaGroupCard({
 export function RollGroupCard({
   cards,
   products,
+  componentOptions = [],
   canManageInventory,
 }: {
   cards: TechCardItem[];
   products: TechCardProductOption[];
+  componentOptions?: TechCardItem[];
   canManageInventory: boolean;
 }) {
   const [selectedCardId, setSelectedCardId] = useState(cards[0]?.id ?? 0);
@@ -186,7 +190,7 @@ export function RollGroupCard({
           </button>
           {canManageInventory ? (
             <>
-              <InventoryRecipeEditButton card={selectedCard} products={products} />
+              <InventoryRecipeEditButton card={selectedCard} products={products} componentOptions={componentOptions} />
               <InventoryRecipeDeleteButton card={selectedCard} />
             </>
           ) : null}
@@ -201,10 +205,12 @@ export function RollGroupCard({
 export function DialogCard({
   card,
   products,
+  componentOptions = [],
   canManageInventory,
 }: {
   card: TechCardItem;
   products: TechCardProductOption[];
+  componentOptions?: TechCardItem[];
   canManageInventory: boolean;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -234,7 +240,9 @@ export function DialogCard({
           <h3 className="mt-1.5 truncate text-[15px] font-semibold leading-5 text-zinc-950">{card.name}</h3>
         </div>
         <div className="flex flex-wrap items-center justify-start gap-2 sm:justify-end">
-          <span className="text-xs font-semibold text-zinc-400">Ингредиентов: {card.ingredients.length}</span>
+          <span className="text-xs font-semibold text-zinc-400">
+            Состав: {card.ingredients.length + card.components.length}
+          </span>
           <button
             type="button"
             onClick={() => setIsExpanded((current) => !current)}
@@ -245,7 +253,7 @@ export function DialogCard({
           </button>
           {canManageInventory ? (
             <div className="flex flex-wrap items-center gap-2">
-              <InventoryRecipeEditButton card={card} products={products} />
+              <InventoryRecipeEditButton card={card} products={products} componentOptions={componentOptions} />
               <InventoryRecipeDeleteButton card={card} />
             </div>
           ) : null}
@@ -264,8 +272,26 @@ function IngredientsPreview({
   card: TechCardItem;
   compact?: boolean;
 }) {
-  return card.ingredients.length > 0 ? (
+  return card.ingredients.length > 0 || card.components.length > 0 ? (
     <div className={`mt-3 grid gap-2 ${compact ? "md:grid-cols-3" : "sm:grid-cols-2"}`}>
+      {card.components.map((component) => (
+        <div
+          key={`component-${component.id}`}
+          className={`rounded-[12px] border border-red-950/10 bg-white/82 px-3 text-xs shadow-sm shadow-red-950/5 ${compact ? "py-1.5" : "py-2"}`}
+        >
+          <div className="flex items-start justify-between gap-2">
+            <span className="font-semibold leading-5 text-zinc-800">{component.techCardName}</span>
+            <span className="shrink-0 font-semibold text-red-800">
+              {formatQuantity(component.quantity)} {component.outputUnit}
+            </span>
+          </div>
+          <p className="mt-1 font-semibold text-zinc-400">
+            {component.techCardCategory}
+            {component.pizzaSize ? ` · ${component.pizzaSize}` : ""}
+            {component.rollSize ? ` · ${component.rollSize}` : ""}
+          </p>
+        </div>
+      ))}
       {card.ingredients.map((ingredient) => (
         <div
           key={ingredient.id}

@@ -3,6 +3,8 @@
 import { useActionState } from "react";
 import { TechCardFormFooter } from "@/modules/tech-cards/components/tech-card-form-footer";
 import { TechCardFormHeader } from "@/modules/tech-cards/components/tech-card-form-header";
+import { TechCardComponentDialog } from "@/modules/tech-cards/components/tech-card-component-dialog";
+import { TechCardComponentsSection } from "@/modules/tech-cards/components/tech-card-components-section";
 import { TechCardIngredientDialog } from "@/modules/tech-cards/components/tech-card-ingredient-dialog";
 import { TechCardIngredientsSection } from "@/modules/tech-cards/components/tech-card-ingredients-section";
 import { TechCardMainFields } from "@/modules/tech-cards/components/tech-card-main-fields";
@@ -14,19 +16,22 @@ import {
 } from "@/modules/tech-cards/tech-cards.actions";
 import {
   INGREDIENT_TECH_CARD_CATEGORY,
+  COMPOSITE_TECH_CARD_CATEGORIES,
   type TechCardItem,
   type TechCardProductOption,
 } from "@/modules/tech-cards/tech-cards.types";
 
-export type TechCardFormKind = "price" | "ingredient";
+export type TechCardFormKind = "price" | "ingredient" | "composite";
 
 export function TechCardForm({
   products,
+  componentOptions = [],
   clearDraft = false,
   initialTechCard,
-  cardKind = initialTechCard?.category === INGREDIENT_TECH_CARD_CATEGORY ? "ingredient" : "price",
+  cardKind = resolveTechCardFormKind(initialTechCard),
 }: {
   products: TechCardProductOption[];
+  componentOptions?: TechCardItem[];
   clearDraft?: boolean;
   initialTechCard?: TechCardItem;
   cardKind?: TechCardFormKind;
@@ -48,6 +53,11 @@ export function TechCardForm({
           quantity: String(ingredient.quantity),
           unit: ingredient.unit,
         })) ?? [],
+      components:
+        initialTechCard?.components.map((component) => ({
+          techCardId: String(component.techCardId),
+          quantity: String(component.quantity),
+        })) ?? [],
       description: initialTechCard?.description ?? "",
     },
   };
@@ -59,6 +69,7 @@ export function TechCardForm({
     <TechCardFormContent
       key={formStateKey}
       products={products}
+      componentOptions={componentOptions}
       state={state}
       formAction={formAction}
       isPending={isPending}
@@ -71,6 +82,7 @@ export function TechCardForm({
 
 function TechCardFormContent({
   products,
+  componentOptions,
   state,
   formAction,
   isPending,
@@ -79,6 +91,7 @@ function TechCardFormContent({
   cardKind,
 }: {
   products: TechCardProductOption[];
+  componentOptions: TechCardItem[];
   state: TechCardFormState;
   formAction: (formData: FormData) => void;
   isPending: boolean;
@@ -87,7 +100,7 @@ function TechCardFormContent({
   cardKind: TechCardFormKind;
 }) {
   const isEditMode = Boolean(initialTechCard);
-  const form = useTechCardFormState({ products, state, clearDraft, isEditMode, cardKind });
+  const form = useTechCardFormState({ products, componentOptions, state, clearDraft, isEditMode, cardKind });
 
   return (
     <div>
@@ -127,6 +140,7 @@ function TechCardFormContent({
           productsById={form.productsById}
           outputQuantity={form.outputQuantity}
           outputUnit={form.selectedUnit}
+          isVisible={cardKind !== "composite"}
           onOpenDialog={() => {
             form.setIngredientQuery("");
             form.setSelectedCategory("");
@@ -135,6 +149,21 @@ function TechCardFormContent({
           }}
           onQuantityChange={form.handleIngredientQuantityChange}
           onRemove={form.handleRemoveIngredient}
+        />
+        <TechCardComponentsSection
+          selectedComponents={form.selectedComponents}
+          componentsById={form.componentsById}
+          outputQuantity={form.outputQuantity}
+          outputUnit={form.selectedUnit}
+          isVisible={cardKind === "composite"}
+          onOpenDialog={() => {
+            form.setComponentQuery("");
+            form.setSelectedComponentCategory("");
+            form.setPendingComponentIds([]);
+            form.setIsComponentDialogOpen(true);
+          }}
+          onQuantityChange={form.handleComponentQuantityChange}
+          onRemove={form.handleRemoveComponent}
         />
         <TechCardFormFooter
           isPending={isPending}
@@ -162,6 +191,41 @@ function TechCardFormContent({
           }}
         />
       ) : null}
+      {form.isComponentDialogOpen ? (
+        <TechCardComponentDialog
+          componentQuery={form.componentQuery}
+          selectedCategory={form.selectedComponentCategory}
+          availableCategories={form.availableComponentCategories}
+          filteredComponents={form.filteredComponents}
+          selectedComponents={form.selectedComponents}
+          pendingComponentIds={form.pendingComponentIds}
+          onQueryChange={form.setComponentQuery}
+          onCategoryChange={form.setSelectedComponentCategory}
+          onTogglePending={form.handleTogglePendingComponent}
+          onRemoveSelected={form.handleRemoveComponent}
+          onResetPending={() => form.setPendingComponentIds([])}
+          onAddPending={form.handleAddPendingComponents}
+          onClose={() => {
+            form.setPendingComponentIds([]);
+            form.setIsComponentDialogOpen(false);
+          }}
+        />
+      ) : null}
     </div>
   );
+}
+
+function resolveTechCardFormKind(initialTechCard?: TechCardItem): TechCardFormKind {
+  if (initialTechCard?.category === INGREDIENT_TECH_CARD_CATEGORY) {
+    return "ingredient";
+  }
+
+  if (
+    initialTechCard?.category &&
+    COMPOSITE_TECH_CARD_CATEGORIES.includes(initialTechCard.category as never)
+  ) {
+    return "composite";
+  }
+
+  return "price";
 }

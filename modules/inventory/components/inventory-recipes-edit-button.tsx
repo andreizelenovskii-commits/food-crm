@@ -13,9 +13,11 @@ import type {
 export function InventoryRecipeEditButton({
   card,
   products,
+  componentOptions = [],
 }: {
   card: TechCardItem;
   products: TechCardProductOption[];
+  componentOptions?: TechCardItem[];
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -35,6 +37,7 @@ export function InventoryRecipeEditButton({
             <EditDialog
               card={card}
               products={products}
+              componentOptions={componentOptions}
               onDelete={() => setIsDeleteOpen(true)}
               onClose={() => setIsOpen(false)}
             />,
@@ -77,11 +80,13 @@ export function InventoryRecipeDeleteButton({ card }: { card: TechCardItem }) {
 function EditDialog({
   card,
   products,
+  componentOptions,
   onDelete,
   onClose,
 }: {
   card: TechCardItem;
   products: TechCardProductOption[];
+  componentOptions: TechCardItem[];
   onDelete: () => void;
   onClose: () => void;
 }) {
@@ -114,7 +119,7 @@ function EditDialog({
               </button>
             </div>
           </div>
-          <TechCardForm products={products} initialTechCard={card} />
+          <TechCardForm products={products} componentOptions={componentOptions} initialTechCard={card} />
         </div>
       </section>
     </div>

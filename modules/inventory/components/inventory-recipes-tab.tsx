@@ -4,7 +4,10 @@ import type {
   TechCardItem,
   TechCardProductOption,
 } from "@/modules/tech-cards/tech-cards.types";
-import { INGREDIENT_TECH_CARD_CATEGORY } from "@/modules/tech-cards/tech-cards.types";
+import {
+  COMPOSITE_TECH_CARD_CATEGORIES,
+  INGREDIENT_TECH_CARD_CATEGORY,
+} from "@/modules/tech-cards/tech-cards.types";
 
 export function InventoryRecipesTab({
   techCards,
@@ -17,8 +20,16 @@ export function InventoryRecipesTab({
   clearRecipeDraft: boolean;
   canManageInventory: boolean;
 }) {
-  const priceTechCards = techCards.filter((card) => card.category !== INGREDIENT_TECH_CARD_CATEGORY);
+  const compositeTechCards = techCards.filter((card) =>
+    COMPOSITE_TECH_CARD_CATEGORIES.includes(card.category as never),
+  );
+  const priceTechCards = techCards.filter(
+    (card) =>
+      card.category !== INGREDIENT_TECH_CARD_CATEGORY &&
+      !COMPOSITE_TECH_CARD_CATEGORIES.includes(card.category as never),
+  );
   const ingredientTechCards = techCards.filter((card) => card.category === INGREDIENT_TECH_CARD_CATEGORY);
+  const componentOptions = [...priceTechCards, ...ingredientTechCards];
 
   return (
     <div className="space-y-4">
@@ -26,9 +37,14 @@ export function InventoryRecipesTab({
         techCardsCount={techCards.length}
         priceTechCardsCount={priceTechCards.length}
         ingredientTechCardsCount={ingredientTechCards.length}
+        compositeTechCardsCount={compositeTechCards.length}
       />
       {canManageInventory ? (
-        <InventoryRecipesActions products={techCardProducts} clearDraft={clearRecipeDraft} />
+        <InventoryRecipesActions
+          products={techCardProducts}
+          componentOptions={componentOptions}
+          clearDraft={clearRecipeDraft}
+        />
       ) : (
         <aside className="rounded-[22px] border border-white/70 bg-white/72 p-4 shadow-[0_18px_60px_rgba(127,29,29,0.08)] backdrop-blur-2xl sm:p-5">
           <div className="space-y-2">
@@ -43,6 +59,7 @@ export function InventoryRecipesTab({
         techCards={techCards}
         priceTechCards={priceTechCards}
         ingredientTechCards={ingredientTechCards}
+        compositeTechCards={compositeTechCards}
         techCardProducts={techCardProducts}
         canManageInventory={canManageInventory}
       />
@@ -54,10 +71,12 @@ function RecipesHero({
   techCardsCount,
   priceTechCardsCount,
   ingredientTechCardsCount,
+  compositeTechCardsCount,
 }: {
   techCardsCount: number;
   priceTechCardsCount: number;
   ingredientTechCardsCount: number;
+  compositeTechCardsCount: number;
 }) {
   return (
     <section className="overflow-hidden rounded-[22px] border border-white/70 bg-white/78 shadow-[0_18px_60px_rgba(127,29,29,0.08)] backdrop-blur-2xl">
@@ -74,10 +93,11 @@ function RecipesHero({
           </p>
         </div>
 
-        <div className="grid grid-cols-3 overflow-hidden rounded-[18px] border border-red-950/10 bg-white/82 shadow-sm shadow-red-950/5">
+        <div className="grid grid-cols-4 overflow-hidden rounded-[18px] border border-red-950/10 bg-white/82 shadow-sm shadow-red-950/5">
           <RecipesHeroStat label="Техкарт" value={techCardsCount} />
           <RecipesHeroStat label="Прайсовых" value={priceTechCardsCount} />
           <RecipesHeroStat label="Ингредиентных" value={ingredientTechCardsCount} />
+          <RecipesHeroStat label="Комбинир." value={compositeTechCardsCount} />
         </div>
       </div>
     </section>
@@ -97,12 +117,14 @@ function RecipesList({
   techCards,
   priceTechCards,
   ingredientTechCards,
+  compositeTechCards,
   techCardProducts,
   canManageInventory,
 }: {
   techCards: TechCardItem[];
   priceTechCards: TechCardItem[];
   ingredientTechCards: TechCardItem[];
+  compositeTechCards: TechCardItem[];
   techCardProducts: TechCardProductOption[];
   canManageInventory: boolean;
 }) {
@@ -122,6 +144,7 @@ function RecipesList({
       <RecipeKindLinks
         priceTechCards={priceTechCards}
         ingredientTechCards={ingredientTechCards}
+        compositeTechCards={compositeTechCards}
         products={techCardProducts}
         canManageInventory={canManageInventory}
       />

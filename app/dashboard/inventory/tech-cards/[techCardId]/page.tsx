@@ -6,6 +6,7 @@ import { SessionUserActions } from "@/modules/auth/components/session-user-actio
 import { TechCardForm } from "@/modules/tech-cards/components/tech-card-form";
 import {
   fetchTechCardById,
+  fetchTechCards,
   fetchTechCardProductOptions,
 } from "@/modules/tech-cards/tech-cards.api";
 
@@ -26,9 +27,10 @@ export default async function TechCardDetailsPage(props: {
     notFound();
   }
 
-  const [techCard, products] = await Promise.all([
+  const [techCard, products, allTechCards] = await Promise.all([
     fetchTechCardById(techCardId),
     fetchTechCardProductOptions(),
+    fetchTechCards(),
   ]);
 
   if (!techCard) {
@@ -93,6 +95,24 @@ export default async function TechCardDetailsPage(props: {
           <article className="rounded-[22px] border border-white/70 bg-white/72 p-4 shadow-[0_18px_60px_rgba(127,29,29,0.08)] backdrop-blur-2xl sm:p-5">
             <h2 className="text-base font-semibold text-zinc-950">Состав техкарты</h2>
             <div className="mt-4 space-y-2">
+              {techCard.components.map((component) => (
+                <div
+                  key={`component-${component.id}`}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-[14px] border border-red-950/10 bg-white/84 px-4 py-3 text-sm text-zinc-600 shadow-sm shadow-red-950/5"
+                >
+                  <div>
+                    <p className="font-semibold text-zinc-950">{component.techCardName}</p>
+                    <p className="mt-0.5 text-xs font-semibold text-zinc-500">
+                      {component.techCardCategory}
+                      {component.pizzaSize ? ` · ${component.pizzaSize}` : ""}
+                      {component.rollSize ? ` · ${component.rollSize}` : ""}
+                    </p>
+                  </div>
+                  <p className="font-semibold text-red-800">
+                    {formatQuantity(component.quantity)} {component.outputUnit}
+                  </p>
+                </div>
+              ))}
               {techCard.ingredients.map((ingredient) => (
                 <div
                   key={ingredient.id}
@@ -123,7 +143,11 @@ export default async function TechCardDetailsPage(props: {
 
         {canManageInventory ? (
           <div className="xl:sticky xl:top-4">
-            <TechCardForm products={products} initialTechCard={techCard} />
+            <TechCardForm
+              products={products}
+              componentOptions={allTechCards.filter((card) => card.id !== techCard.id)}
+              initialTechCard={techCard}
+            />
           </div>
         ) : null}
       </div>

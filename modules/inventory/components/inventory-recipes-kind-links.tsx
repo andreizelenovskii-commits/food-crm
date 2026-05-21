@@ -14,7 +14,7 @@ import type {
   TechCardProductOption,
 } from "@/modules/tech-cards/tech-cards.types";
 
-type RecipeKind = "price" | "ingredient";
+type RecipeKind = "price" | "ingredient" | "composite";
 
 function ArrowIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
@@ -26,47 +26,69 @@ function ArrowIcon({ className = "h-4 w-4" }: { className?: string }) {
 }
 
 function getKindMeta(kind: RecipeKind) {
-  return kind === "ingredient"
-    ? {
+  if (kind === "ingredient") {
+    return {
         eyebrow: "Заготовки",
         icon: "box" as const,
         title: "Технологические карты ингредиентов",
         description: "Заготовки, соусы и полуфабрикаты, которые используются внутри других карт.",
-      }
-    : {
-        eyebrow: "Прайс",
-        icon: "book" as const,
-        title: "Прайсовые технологические карты",
-        description: "Позиции меню и прайса: пиццы, роллы, комбо, напитки и десерты.",
-      };
+    };
+  }
+
+  if (kind === "composite") {
+    return {
+      eyebrow: "Комбо",
+      icon: "book" as const,
+      title: "Комбинированные технологические карты",
+      description: "Комбо и сеты, собранные из уже готовых технологических карт.",
+    };
+  }
+
+  return {
+    eyebrow: "Прайс",
+    icon: "book" as const,
+    title: "Прайсовые технологические карты",
+    description: "Позиции меню и прайса: пиццы, роллы, блюда, напитки и десерты.",
+  };
 }
 
 export function RecipeKindLinks({
   priceTechCards,
   ingredientTechCards,
+  compositeTechCards,
   products,
   canManageInventory,
 }: {
   priceTechCards: TechCardItem[];
   ingredientTechCards: TechCardItem[];
+  compositeTechCards: TechCardItem[];
   products: TechCardProductOption[];
   canManageInventory: boolean;
 }) {
   const [openKind, setOpenKind] = useState<RecipeKind | null>(null);
+  const componentOptions = [...priceTechCards, ...ingredientTechCards];
 
   return (
     <>
-      <div className="mt-4 grid gap-4 md:grid-cols-2">
+      <div className="mt-4 grid gap-4 lg:grid-cols-3">
         <KindButton kind="price" count={priceTechCards.length} onClick={() => setOpenKind("price")} />
         <KindButton kind="ingredient" count={ingredientTechCards.length} onClick={() => setOpenKind("ingredient")} />
+        <KindButton kind="composite" count={compositeTechCards.length} onClick={() => setOpenKind("composite")} />
       </div>
 
       {openKind && typeof document !== "undefined"
         ? createPortal(
             <KindDialog
               kind={openKind}
-              cards={openKind === "ingredient" ? ingredientTechCards : priceTechCards}
+              cards={
+                openKind === "ingredient"
+                  ? ingredientTechCards
+                  : openKind === "composite"
+                    ? compositeTechCards
+                    : priceTechCards
+              }
               products={products}
+              componentOptions={componentOptions}
               canManageInventory={canManageInventory}
               onClose={() => setOpenKind(null)}
             />,
@@ -120,12 +142,14 @@ function KindDialog({
   kind,
   cards,
   products,
+  componentOptions,
   canManageInventory,
   onClose,
 }: {
   kind: RecipeKind;
   cards: TechCardItem[];
   products: TechCardProductOption[];
+  componentOptions: TechCardItem[];
   canManageInventory: boolean;
   onClose: () => void;
 }) {
@@ -162,7 +186,13 @@ function KindDialog({
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder={kind === "ingredient" ? "Название заготовки или ингредиент" : "Название, категория, размер или ингредиент"}
+            placeholder={
+              kind === "ingredient"
+                ? "Название заготовки или ингредиент"
+                : kind === "composite"
+                  ? "Название, категория или вложенная техкарта"
+                  : "Название, категория, размер или ингредиент"
+            }
             className="mt-2 h-11 w-full rounded-[14px] border border-red-950/10 bg-white/90 px-4 text-sm font-medium text-zinc-950 shadow-sm shadow-red-950/5 outline-none transition placeholder:text-zinc-400 focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
           />
           {categoryOptions.length > 0 ? (
@@ -211,6 +241,7 @@ function KindDialog({
                   key={entry.key}
                   cards={entry.cards}
                   products={products}
+                  componentOptions={componentOptions}
                   canManageInventory={canManageInventory}
                 />
               ) : entry.kind === "rollGroup" ? (
@@ -218,6 +249,7 @@ function KindDialog({
                   key={entry.key}
                   cards={entry.cards}
                   products={products}
+                  componentOptions={componentOptions}
                   canManageInventory={canManageInventory}
                 />
               ) : (
@@ -225,6 +257,7 @@ function KindDialog({
                   key={entry.card.id}
                   card={entry.card}
                   products={products}
+                  componentOptions={componentOptions}
                   canManageInventory={canManageInventory}
                 />
               ),
@@ -244,7 +277,7 @@ function getSearchCategoryOptions(
   const categories = new Set<string>();
 
   for (const card of cards) {
-    if (kind === "price") {
+    if (kind === "price" || kind === "composite") {
       categories.add(card.category);
       continue;
     }
@@ -278,9 +311,12 @@ function filterTechCards(
     const ingredientCategories = card.ingredients
       .map((ingredient) => productCategoriesById.get(ingredient.productId))
       .filter((category): category is string => Boolean(category));
+    const componentCategories = card.components.map((component) => component.techCardCategory);
     const matchesCategory =
       !selectedCategory ||
-      (kind === "price" ? card.category === selectedCategory : ingredientCategories.includes(selectedCategory));
+      (kind === "ingredient"
+        ? ingredientCategories.includes(selectedCategory)
+        : card.category === selectedCategory || componentCategories.includes(selectedCategory));
 
     if (!matchesCategory) {
       return false;
@@ -293,6 +329,8 @@ function filterTechCards(
       card.rollSize ?? "",
       card.outputUnit,
       card.description ?? "",
+      ...componentCategories,
+      ...card.components.map((component) => component.techCardName),
       ...ingredientCategories,
       ...card.ingredients.map((ingredient) => ingredient.productName),
     ]

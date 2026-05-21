@@ -21,6 +21,10 @@ export type TechCardFormState = {
       quantity: string;
       unit: string;
     }>;
+    components: Array<{
+      techCardId: string;
+      quantity: string;
+    }>;
     description: string;
   };
 };
@@ -35,6 +39,7 @@ const EMPTY_TECH_CARD_FORM_VALUES: TechCardFormState["values"] = {
   outputQuantity: "",
   outputUnit: "шт",
   ingredients: [],
+  components: [],
   description: "",
 };
 
@@ -43,6 +48,8 @@ function getTechCardFormValues(formData: FormData) {
   const ingredientProductIds = formData.getAll("ingredientProductId");
   const ingredientQuantities = formData.getAll("ingredientQuantity");
   const ingredientUnits = formData.getAll("ingredientUnit");
+  const componentTechCardIds = formData.getAll("componentTechCardId");
+  const componentQuantities = formData.getAll("componentQuantity");
 
   return {
     name: read("name"),
@@ -57,6 +64,10 @@ function getTechCardFormValues(formData: FormData) {
       productId: String(productId ?? "").trim(),
       quantity: String(ingredientQuantities[index] ?? "").trim(),
       unit: String(ingredientUnits[index] ?? "").trim(),
+    })),
+    components: componentTechCardIds.map((techCardId, index) => ({
+      techCardId: String(techCardId ?? "").trim(),
+      quantity: String(componentQuantities[index] ?? "").trim(),
     })),
     description: read("description"),
   };

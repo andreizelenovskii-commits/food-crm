@@ -9,7 +9,8 @@ export function TechCardFormHeader({
   errorMessage: string | null;
   cardKind: TechCardFormKind;
 }) {
-  const kindLabel = cardKind === "ingredient" ? "ингредиентная" : "прайсовая";
+  const kindLabel =
+    cardKind === "ingredient" ? "ингредиентная" : cardKind === "composite" ? "комбинированная" : "прайсовая";
 
   return (
     <>
@@ -25,6 +26,8 @@ export function TechCardFormHeader({
             ? "Обнови категорию, состав и нормы расхода по каждому ингредиенту."
             : cardKind === "ingredient"
               ? "Создай заготовку или соус, который потом можно использовать как складской ингредиент."
+              : cardKind === "composite"
+                ? "Собери комбо или сет из уже готовых технологических карт."
               : "Создай карту для позиции прайса: блюда, комбо, ролла или пиццы."}
         </p>
       </div>

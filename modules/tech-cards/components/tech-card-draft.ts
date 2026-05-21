@@ -12,6 +12,11 @@ export type SelectedIngredient = {
   unit: OutputUnit;
 };
 
+export type SelectedComponent = {
+  techCardId: string;
+  quantity: string;
+};
+
 export function clearTechCardDraft() {
   if (typeof window === "undefined") {
     return;

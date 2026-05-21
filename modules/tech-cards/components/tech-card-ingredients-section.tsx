@@ -8,6 +8,7 @@ export function TechCardIngredientsSection({
   productsById,
   outputQuantity,
   outputUnit,
+  isVisible = true,
   onOpenDialog,
   onQuantityChange,
   onRemove,
@@ -16,11 +17,16 @@ export function TechCardIngredientsSection({
   productsById: Map<string, TechCardProductOption>;
   outputQuantity: string;
   outputUnit: "кг" | "шт";
+  isVisible?: boolean;
   onOpenDialog: () => void;
   onQuantityChange: (productId: string, quantity: string) => void;
   onRemove: (productId: string) => void;
 }) {
   const parsedOutputQuantity = parseDecimal(outputQuantity);
+
+  if (!isVisible) {
+    return null;
+  }
 
   return (
     <section className="space-y-3 rounded-[18px] border border-red-950/10 bg-red-50/35 p-3 sm:p-4">

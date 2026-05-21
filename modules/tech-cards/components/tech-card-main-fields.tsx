@@ -5,7 +5,8 @@ import type { TechCardFormKind } from "@/modules/tech-cards/components/tech-card
 import { TechCardVariantToggle } from "@/modules/tech-cards/components/tech-card-variant-toggle";
 import {
   INGREDIENT_TECH_CARD_CATEGORY,
-  PRICE_TECH_CARD_CATEGORIES,
+  COMPOSITE_TECH_CARD_CATEGORIES,
+  SIMPLE_PRICE_TECH_CARD_CATEGORIES,
   TECH_CARD_CATEGORIES,
   type TechCardCategory,
   TECH_CARD_PIZZA_SIZES,
@@ -56,7 +57,12 @@ export function TechCardMainFields({
   cardKind: TechCardFormKind;
   isEditMode: boolean;
 }) {
-  const categoryOptions = cardKind === "ingredient" ? TECH_CARD_CATEGORIES : PRICE_TECH_CARD_CATEGORIES;
+  const categoryOptions =
+    cardKind === "ingredient"
+      ? TECH_CARD_CATEGORIES
+      : cardKind === "composite"
+        ? COMPOSITE_TECH_CARD_CATEGORIES
+        : SIMPLE_PRICE_TECH_CARD_CATEGORIES;
 
   return (
     <>

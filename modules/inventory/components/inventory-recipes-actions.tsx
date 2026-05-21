@@ -4,7 +4,7 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { ModuleIcon } from "@/components/ui/module-icon";
 import { TechCardForm, type TechCardFormKind } from "@/modules/tech-cards/components/tech-card-form";
-import type { TechCardProductOption } from "@/modules/tech-cards/tech-cards.types";
+import type { TechCardItem, TechCardProductOption } from "@/modules/tech-cards/tech-cards.types";
 
 function ArrowIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
@@ -22,7 +22,13 @@ function getKindMeta(kind: TechCardFormKind) {
         title: "Техкарта ингредиента",
         description: "Соусы, заготовки и полуфабрикаты: например, соус барбекю и его состав.",
       }
-    : {
+    : kind === "composite"
+      ? {
+          eyebrow: "Комбинированная карта",
+          title: "Комбо или сет",
+          description: "Собери комбо или сет из уже готовых технологических карт.",
+        }
+      : {
         eyebrow: "Прайсовая карта",
         title: "Прайсовая техкарта",
         description: "Блюда из каталога: например, пицца Маргарита, ролл или комбо из прайса.",
@@ -31,9 +37,11 @@ function getKindMeta(kind: TechCardFormKind) {
 
 export function InventoryRecipesActions({
   products,
+  componentOptions,
   clearDraft,
 }: {
   products: TechCardProductOption[];
+  componentOptions: TechCardItem[];
   clearDraft: boolean;
 }) {
   const [createKind, setCreateKind] = useState<TechCardFormKind | null>(null);
@@ -47,6 +55,7 @@ export function InventoryRecipesActions({
             <TechCardCreateDialog
               kind={createKind}
               products={products}
+              componentOptions={componentOptions}
               clearDraft={clearDraft}
               onKindChange={setCreateKind}
               onClose={() => setCreateKind(null)}
@@ -90,18 +99,20 @@ function RecipeActionCard({
 function TechCardCreateDialog({
   kind,
   products,
+  componentOptions,
   clearDraft,
   onKindChange,
   onClose,
 }: {
   kind: TechCardFormKind;
   products: TechCardProductOption[];
+  componentOptions: TechCardItem[];
   clearDraft: boolean;
   onKindChange: (kind: TechCardFormKind) => void;
   onClose: () => void;
 }) {
   const meta = getKindMeta(kind);
-  const kinds: TechCardFormKind[] = ["price", "ingredient"];
+  const kinds: TechCardFormKind[] = ["price", "ingredient", "composite"];
 
   return (
     <div className="fixed inset-0 z-70 overflow-y-auto bg-zinc-950/30 px-4 py-6 backdrop-blur-sm sm:py-8">
@@ -123,7 +134,7 @@ function TechCardCreateDialog({
               Закрыть
             </button>
           </div>
-          <div className="grid gap-2 rounded-[18px] border border-white/70 bg-white/74 p-2 shadow-[0_18px_60px_rgba(127,29,29,0.10)] backdrop-blur-2xl sm:grid-cols-2">
+          <div className="grid gap-2 rounded-[18px] border border-white/70 bg-white/74 p-2 shadow-[0_18px_60px_rgba(127,29,29,0.10)] backdrop-blur-2xl md:grid-cols-3">
             {kinds.map((item) => {
               const itemMeta = getKindMeta(item);
               const isActive = kind === item;
@@ -147,7 +158,7 @@ function TechCardCreateDialog({
               );
             })}
           </div>
-          <TechCardForm key={kind} products={products} clearDraft={clearDraft} cardKind={kind} />
+          <TechCardForm key={kind} products={products} componentOptions={componentOptions} clearDraft={clearDraft} cardKind={kind} />
         </div>
       </section>
     </div>

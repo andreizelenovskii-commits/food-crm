@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { PRODUCT_CATEGORIES } from "@/modules/inventory/inventory.types";
 import {
   clearTechCardDraft,
+  type SelectedComponent,
   type SelectedIngredient,
 } from "@/modules/tech-cards/components/tech-card-draft";
 import type { TechCardFormKind } from "@/modules/tech-cards/components/tech-card-form";
@@ -16,6 +17,7 @@ import {
   TECH_CARD_PIZZA_SIZES,
   TECH_CARD_ROLL_SIZES,
   type TechCardCategory,
+  type TechCardItem,
   type TechCardPizzaSize,
   type TechCardRollSize,
   type TechCardProductOption,
@@ -23,12 +25,14 @@ import {
 
 export function useTechCardFormState({
   products,
+  componentOptions,
   state,
   clearDraft,
   isEditMode,
   cardKind,
 }: {
   products: TechCardProductOption[];
+  componentOptions: TechCardItem[];
   state: TechCardFormState;
   clearDraft: boolean;
   isEditMode: boolean;
@@ -61,9 +65,13 @@ export function useTechCardFormState({
   const [autoCreateRollVariants, setAutoCreateRollVariants] = useState(state.values.autoCreateRollVariants !== "false");
   const [description, setDescription] = useState(state.values.description);
   const [isIngredientDialogOpen, setIsIngredientDialogOpen] = useState(false);
+  const [isComponentDialogOpen, setIsComponentDialogOpen] = useState(false);
   const [ingredientQuery, setIngredientQuery] = useState("");
+  const [componentQuery, setComponentQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedComponentCategory, setSelectedComponentCategory] = useState("");
   const [pendingIngredientIds, setPendingIngredientIds] = useState<string[]>([]);
+  const [pendingComponentIds, setPendingComponentIds] = useState<string[]>([]);
   const normalizedStateIngredients = useMemo<SelectedIngredient[]>(
     () =>
       state.values.ingredients.map((ingredient) => ({
@@ -74,7 +82,20 @@ export function useTechCardFormState({
     [state.values.ingredients],
   );
   const [selectedIngredients, setSelectedIngredients] = useState<SelectedIngredient[]>(normalizedStateIngredients);
+  const normalizedStateComponents = useMemo<SelectedComponent[]>(
+    () =>
+      state.values.components.map((component) => ({
+        techCardId: component.techCardId,
+        quantity: component.quantity,
+      })),
+    [state.values.components],
+  );
+  const [selectedComponents, setSelectedComponents] = useState<SelectedComponent[]>(normalizedStateComponents);
   const productsById = useMemo(() => new Map(products.map((product) => [String(product.id), product])), [products]);
+  const componentsById = useMemo(
+    () => new Map(componentOptions.map((component) => [String(component.id), component])),
+    [componentOptions],
+  );
   const availableCategories = useMemo(() => {
     const categorySet = new Set(products.map((product) => product.category).filter((category): category is string => Boolean(category)));
 
@@ -93,6 +114,37 @@ export function useTechCardFormState({
     }
 
     return product.name.toLowerCase().includes(query) || product.unit.toLowerCase().includes(query) || product.category?.toLowerCase().includes(query);
+  });
+  const availableComponentCategories = useMemo(
+    () =>
+      Array.from(new Set(componentOptions.map((component) => component.category))).sort((left, right) =>
+        left.localeCompare(right, "ru"),
+      ),
+    [componentOptions],
+  );
+  const filteredComponents = componentOptions.filter((component) => {
+    const query = componentQuery.trim().toLowerCase();
+    const matchesCategory = !selectedComponentCategory || component.category === selectedComponentCategory;
+
+    if (!matchesCategory) {
+      return false;
+    }
+
+    if (!query) {
+      return true;
+    }
+
+    return [
+      component.name,
+      component.category,
+      component.pizzaSize ?? "",
+      component.rollSize ?? "",
+      component.outputUnit,
+      component.description ?? "",
+    ]
+      .join(" ")
+      .toLowerCase()
+      .includes(query);
   });
 
   useEffect(() => {
@@ -134,6 +186,27 @@ export function useTechCardFormState({
     setSelectedCategory("");
     setIsIngredientDialogOpen(false);
   };
+  const handleAddComponent = (techCardId: string) => {
+    setSelectedComponents((current) => {
+      if (current.some((component) => component.techCardId === techCardId)) {
+        return current;
+      }
+
+      return [...current, { techCardId, quantity: "1" }];
+    });
+  };
+
+  const handleAddPendingComponents = () => {
+    if (pendingComponentIds.length === 0) {
+      return;
+    }
+
+    pendingComponentIds.forEach((techCardId) => handleAddComponent(techCardId));
+    setPendingComponentIds([]);
+    setComponentQuery("");
+    setSelectedComponentCategory("");
+    setIsComponentDialogOpen(false);
+  };
 
   return {
     name,
@@ -146,13 +219,21 @@ export function useTechCardFormState({
     outputQuantity,
     description,
     isIngredientDialogOpen,
+    isComponentDialogOpen,
     ingredientQuery,
+    componentQuery,
     selectedCategory,
+    selectedComponentCategory,
     pendingIngredientIds,
+    pendingComponentIds,
     selectedIngredients,
+    selectedComponents,
     productsById,
+    componentsById,
     availableCategories,
+    availableComponentCategories,
     filteredProducts,
+    filteredComponents,
     setName,
     setSelectedTechCardCategory,
     setSelectedPizzaSize,
@@ -163,10 +244,15 @@ export function useTechCardFormState({
     setOutputQuantity,
     setDescription,
     setIngredientQuery,
+    setComponentQuery,
     setSelectedCategory,
+    setSelectedComponentCategory,
     setPendingIngredientIds,
+    setPendingComponentIds,
     setIsIngredientDialogOpen,
+    setIsComponentDialogOpen,
     handleAddPendingIngredients,
+    handleAddPendingComponents,
     handleTogglePendingIngredient: (productId: string) => {
       setPendingIngredientIds((current) =>
         current.includes(productId)
@@ -181,6 +267,20 @@ export function useTechCardFormState({
         ),
       );
     },
+    handleTogglePendingComponent: (techCardId: string) => {
+      setPendingComponentIds((current) =>
+        current.includes(techCardId)
+          ? current.filter((id) => id !== techCardId)
+          : [...current, techCardId],
+      );
+    },
+    handleComponentQuantityChange: (techCardId: string, quantity: string) => {
+      setSelectedComponents((current) =>
+        current.map((component) =>
+          component.techCardId === techCardId ? { ...component, quantity } : component,
+        ),
+      );
+    },
     handleRemoveIngredient: (productId: string) => {
       const normalizedProductId = String(productId);
 
@@ -188,6 +288,14 @@ export function useTechCardFormState({
         current.filter((ingredient) => String(ingredient.productId) !== normalizedProductId),
       );
       setPendingIngredientIds((current) => current.filter((id) => String(id) !== normalizedProductId));
+    },
+    handleRemoveComponent: (techCardId: string) => {
+      const normalizedTechCardId = String(techCardId);
+
+      setSelectedComponents((current) =>
+        current.filter((component) => String(component.techCardId) !== normalizedTechCardId),
+      );
+      setPendingComponentIds((current) => current.filter((id) => String(id) !== normalizedTechCardId));
     },
   };
 }
