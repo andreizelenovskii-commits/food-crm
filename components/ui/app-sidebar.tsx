@@ -21,14 +21,27 @@ const NAV_ITEMS = [
   { href: "/dashboard/settings", label: "Настройки", icon: "settings" },
 ] as const;
 
-const INVENTORY_SUB_ITEMS = [
+const PACKAGING_CATEGORY = "Упаковка";
+
+const INVENTORY_SUB_ITEMS: Array<{
+  href: string;
+  label: string;
+  tab: string;
+  category?: string;
+}> = [
   { href: "/dashboard/inventory", label: "Товары", tab: "products" },
+  {
+    href: `/dashboard/inventory?category=${encodeURIComponent(PACKAGING_CATEGORY)}`,
+    label: PACKAGING_CATEGORY,
+    tab: "products",
+    category: PACKAGING_CATEGORY,
+  },
   { href: "/dashboard/inventory?tab=incoming", label: "Поступление", tab: "incoming" },
   { href: "/dashboard/inventory?tab=suppliers", label: "Поставщики", tab: "suppliers" },
   { href: "/dashboard/inventory?tab=writeoff", label: "Списание", tab: "writeoff" },
   { href: "/dashboard/inventory?tab=audit", label: "Инвентаризация", tab: "audit" },
   { href: "/dashboard/inventory?tab=recipes", label: "Техкарты", tab: "recipes" },
-] as const;
+];
 
 function isActivePath(pathname: string, href: string) {
   if (href === "/dashboard") {
@@ -45,6 +58,7 @@ export function AppSidebar() {
   const isInventoryPath = isActivePath(pathname, "/dashboard/inventory");
   const [isInventoryOpen, setIsInventoryOpen] = useState(isInventoryPath);
   const activeInventoryTab = isInventoryPath ? (searchParams.get("tab") ?? "products") : "";
+  const activeInventoryCategory = isInventoryPath ? (searchParams.get("category") ?? "") : "";
 
   return (
     <>
@@ -171,7 +185,9 @@ export function AppSidebar() {
                     {showInventorySubnav ? (
                       <div className="ml-[22px] mt-1.5 space-y-0.5 border-l border-red-800/18 py-1 pl-5 pr-1">
                         {INVENTORY_SUB_ITEMS.map((subItem) => {
-                          const isSubActive = activeInventoryTab === subItem.tab;
+                          const isSubActive = subItem.category
+                            ? activeInventoryTab === subItem.tab && activeInventoryCategory === subItem.category
+                            : activeInventoryTab === subItem.tab && !activeInventoryCategory;
 
                           return (
                             <Link
