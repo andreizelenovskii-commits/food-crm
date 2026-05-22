@@ -110,9 +110,18 @@ function ProductModalControls({
   setQuantity: (getNext: (current: number) => number) => void;
   onAdd: () => void;
 }) {
+  const totalCents = selectedVariant.priceCents * quantity;
+
   return (
     <div className="mt-6 flex flex-wrap items-center gap-4">
-      <p className="text-3xl font-semibold text-[#241316]">{formatPublicMenuMoney(selectedVariant.priceCents)}</p>
+      <div>
+        <p className="text-3xl font-semibold text-[#241316]">{formatPublicMenuMoney(totalCents)}</p>
+        {quantity > 1 ? (
+          <p className="mt-1 text-xs font-semibold text-[#9b7d83]">
+            {quantity} × {formatPublicMenuMoney(selectedVariant.priceCents)}
+          </p>
+        ) : null}
+      </div>
       <div className="inline-flex min-h-12 items-center rounded-full bg-[#fff5f6] p-1">
         <QuantityButton label="-" onClick={() => setQuantity((current) => Math.max(current - 1, 1))} />
         <span className="min-w-10 text-center text-base font-semibold text-[#241316]">{quantity}</span>
