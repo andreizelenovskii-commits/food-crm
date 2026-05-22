@@ -56,7 +56,16 @@ export type CatalogItem = {
   technologicalCardId: number;
   technologicalCardName: string;
   variants: CatalogItemVariant[];
+  excludedIngredients: CatalogItemExcludedIngredient[];
   choiceSlots: CatalogChoiceSlot[];
+};
+
+export type CatalogItemExcludedIngredient = {
+  id: number;
+  productId: number;
+  productName: string;
+  label: string;
+  displayOrder: number;
 };
 
 export type CatalogItemVariant = {

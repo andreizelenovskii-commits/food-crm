@@ -18,6 +18,7 @@ function getCatalogFormValues(formData: FormData): CatalogFormValues {
     price: read("price"),
     technologicalCardId: read("technologicalCardId"),
     variants: read("variants"),
+    excludedIngredients: read("excludedIngredients"),
   };
 }
 
@@ -35,6 +36,7 @@ export async function addCatalogItemAction(
           ...variant,
           price: variant.priceCents / 100,
         }))),
+        excludedIngredients: JSON.stringify(input.excludedIngredients),
       },
     });
   } catch (error) {
@@ -76,6 +78,7 @@ export async function updateCatalogItemAction(
           ...variant,
           price: variant.priceCents / 100,
         }))),
+        excludedIngredients: JSON.stringify(input.excludedIngredients),
       },
     });
   } catch (error) {

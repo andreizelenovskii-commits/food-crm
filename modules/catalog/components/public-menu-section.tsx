@@ -3,60 +3,35 @@
 import { FormEvent, useMemo, useState } from "react";
 import Image from "next/image";
 import type { PublicClientProfile } from "@/modules/clients/clients.types";
-import type { CatalogItem } from "@/modules/catalog/catalog.types";
+import type { CatalogItem, CatalogItemVariant } from "@/modules/catalog/catalog.types";
+import {
+  PublicMenuCart,
+  type PublicOrderStatus,
+} from "@/modules/catalog/components/public-menu-cart";
 import {
   type AuthMode,
   PublicAuthModal,
 } from "@/modules/catalog/components/public-auth-modal";
+import { PublicMenuProductModal } from "@/modules/catalog/components/public-menu-product-modal";
+import {
+  describePublicMenuItem,
+  formatPublicMenuMoney,
+  resolvePublicMenuVariant,
+} from "@/modules/catalog/components/public-menu-utils";
 import { ORDER_STATUS_LABELS } from "@/modules/orders/orders.workflow";
-import type { OrderStatus } from "@/modules/orders/orders.types";
 import { browserBackendJson } from "@/shared/api/browser-backend";
 
-type Cart = Record<string, { itemId: number; variantId: number; quantity: number }>;
-type CartVariants = Record<number, number>;
+type Cart = Record<string, {
+  itemId: number;
+  variantId: number;
+  excludedIngredientIds: number[];
+  quantity: number;
+}>;
 type CartChoices = Record<string, Record<number, number>>;
 
-type PublicOrderStatus = {
-  id: number;
-  status: OrderStatus;
-  totalCents: number;
-  createdAt: string;
-};
-
-function cartKey(itemId: number, variantId: number) {
-  return `${itemId}:${variantId}`;
-}
-
-function formatMoney(cents: number) {
-  return new Intl.NumberFormat("ru-RU", {
-    style: "currency",
-    currency: "RUB",
-    maximumFractionDigits: 0,
-  }).format(cents / 100);
-}
-
-function itemDescription(item: CatalogItem) {
-  const variant = item.pizzaSize ?? item.rollSize;
-  return item.description ?? `Позиция из меню${variant ? `, вариант ${variant}` : ""}.`;
-}
-
-function resolveSelectedVariant(item: CatalogItem, selectedVariantId?: number) {
-  return (
-    item.variants.find((variant) => variant.id === selectedVariantId) ??
-    item.variants.find((variant) => variant.isDefault) ??
-    item.variants[0] ??
-    {
-      id: 0,
-      label: item.pizzaSize ?? item.rollSize ?? "Стандарт",
-      priceCents: item.priceCents,
-      isDefault: true,
-      displayOrder: 0,
-      technologicalCardId: item.technologicalCardId,
-      technologicalCardName: item.technologicalCardName,
-      pizzaSize: item.pizzaSize,
-      rollSize: item.rollSize,
-    }
-  );
+function cartKey(itemId: number, variantId: number, excludedIngredientIds: number[] = []) {
+  const exclusions = [...excludedIngredientIds].sort((left, right) => left - right).join(".");
+  return `${itemId}:${variantId}:${exclusions}`;
 }
 
 export function PublicMenuSection({
@@ -68,8 +43,8 @@ export function PublicMenuSection({
 }) {
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [activeItem, setActiveItem] = useState<CatalogItem | null>(null);
   const [cart, setCart] = useState<Cart>({});
-  const [cartVariants, setCartVariants] = useState<CartVariants>({});
   const [cartChoices, setCartChoices] = useState<CartChoices>({});
   const [isPending, setIsPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -89,7 +64,10 @@ export function PublicMenuSection({
             key,
             item,
             quantity: entry.quantity,
-            variant: resolveSelectedVariant(item, entry.variantId),
+            variant: resolvePublicMenuVariant(item, entry.variantId),
+            excludedIngredients: item.excludedIngredients.filter((ingredient) =>
+              entry.excludedIngredientIds.includes(ingredient.id),
+            ),
             choices: cartChoices[key] ?? {},
           };
         })
@@ -102,24 +80,23 @@ export function PublicMenuSection({
     0,
   );
 
-  function addItem(itemId: number) {
-    const item = items.find((candidate) => candidate.id === itemId);
-
-    if (!item) {
-      return;
-    }
-
-    const variant = resolveSelectedVariant(item, cartVariants[item.id]);
-    const key = cartKey(item.id, variant.id);
-
+  function addConfiguredItem(
+    item: CatalogItem,
+    variant: CatalogItemVariant,
+    quantity: number,
+    excludedIngredientIds: number[],
+  ) {
+    const key = cartKey(item.id, variant.id, excludedIngredientIds);
     setCart((current) => ({
       ...current,
       [key]: {
         itemId: item.id,
         variantId: variant.id,
-        quantity: (current[key]?.quantity ?? 0) + 1,
+        excludedIngredientIds,
+        quantity: (current[key]?.quantity ?? 0) + quantity,
       },
     }));
+    setActiveItem(null);
     setMessage(null);
   }
 
@@ -178,6 +155,7 @@ export function PublicMenuSection({
           items: cartItems.map((entry) => ({
             catalogItemId: entry.item.id,
             catalogItemVariantId: entry.variant.id,
+            excludedIngredientIds: entry.excludedIngredients.map((ingredient) => ingredient.id),
             quantity: entry.quantity,
             choices: entry.item.choiceSlots.map((slot) => ({
               choiceSlotId: slot.id,
@@ -229,7 +207,11 @@ export function PublicMenuSection({
                   key={item.id}
                   className="overflow-hidden rounded-[8px] border border-[#ffe0e3] bg-white shadow-sm shadow-[#d50014]/8"
                 >
-                  <div className="flex aspect-[4/3] items-center justify-center overflow-hidden bg-[#fff1f2]">
+                  <button
+                    type="button"
+                    onClick={() => setActiveItem(item)}
+                    className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden bg-[#fff1f2]"
+                  >
                     {item.imageUrl ? (
                       <Image
                         src={item.imageUrl}
@@ -244,7 +226,7 @@ export function PublicMenuSection({
                         FoodLike
                       </span>
                     )}
-                  </div>
+                  </button>
                   <div className="p-5">
                     <div className="flex items-start justify-between gap-4">
                       <div>
@@ -254,39 +236,16 @@ export function PublicMenuSection({
                         <h3 className="mt-2 text-xl font-semibold text-[#241316]">{item.name}</h3>
                       </div>
                       <p className="shrink-0 text-lg font-semibold text-[#c90013]">
-                        {formatMoney(resolveSelectedVariant(item, cartVariants[item.id]).priceCents)}
+                        {formatPublicMenuMoney(resolvePublicMenuVariant(item).priceCents)}
                       </p>
                     </div>
-                    <p className="mt-3 text-sm leading-6 text-[#6b5960]">{itemDescription(item)}</p>
-                    {item.variants.length > 1 ? (
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {item.variants.map((variant) => {
-                          const selectedVariant = resolveSelectedVariant(item, cartVariants[item.id]);
-                          const isActive = selectedVariant.id === variant.id;
-
-                          return (
-                            <button
-                              key={variant.id}
-                              type="button"
-                              onClick={() => setCartVariants((current) => ({ ...current, [item.id]: variant.id }))}
-                              className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
-                                isActive
-                                  ? "border-[#d50014] bg-[#d50014] text-white"
-                                  : "border-[#ffd7dc] bg-white text-[#b00012]"
-                              }`}
-                            >
-                              {variant.label} · {formatMoney(variant.priceCents)}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    ) : null}
+                    <p className="mt-3 text-sm leading-6 text-[#6b5960]">{describePublicMenuItem(item)}</p>
                     <button
                       type="button"
-                      onClick={() => addItem(item.id)}
+                      onClick={() => setActiveItem(item)}
                       className="mt-4 min-h-11 w-full rounded-full bg-[#d50014] px-5 text-sm font-semibold text-white transition hover:bg-[#b90012]"
                     >
-                      В корзину
+                      Выбрать
                     </button>
                   </div>
                 </article>
@@ -298,96 +257,27 @@ export function PublicMenuSection({
             </div>
           )}
 
-          <form
+          <PublicMenuCart
+            cartItems={cartItems}
+            createdOrder={createdOrder}
+            currentClient={currentClient}
+            isPending={isPending}
+            message={message}
+            totalCents={totalCents}
+            onChoiceChange={changeChoice}
+            onQuantityChange={changeQuantity}
             onSubmit={submitOrder}
-            className="mt-8 grid gap-5 rounded-[8px] border border-[#ffe0e3] bg-[#fff7f8] p-5 lg:grid-cols-[1fr_0.72fr]"
-          >
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#d50014]">
-                Корзина
-              </p>
-              <div className="mt-4 space-y-3">
-                {cartItems.length ? (
-                  cartItems.map((entry) => (
-                    <div key={entry.key} className="flex items-center justify-between gap-3 rounded-[8px] bg-white p-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-[#241316]">{entry.item.name}</p>
-                        <p className="text-sm text-[#6b5960]">
-                          {entry.variant.label} · {formatMoney(entry.variant.priceCents)}
-                        </p>
-                        {entry.item.choiceSlots.length > 0 ? (
-                          <div className="mt-2 space-y-2">
-                            {entry.item.choiceSlots.map((slot) => (
-                              <label key={slot.id} className="block space-y-1">
-                                <span className="text-xs font-semibold text-[#3a292d]">{slot.name}</span>
-                                <select
-                                  value={entry.choices[slot.id] ?? ""}
-                                  onChange={(event) => changeChoice(entry.key, slot.id, Number(event.target.value))}
-                                  className="foodlike-field min-h-10 rounded-[8px] text-sm"
-                                  required
-                                >
-                                  <option value="">Выбрать</option>
-                                  {slot.options.map((option) => (
-                                    <option key={option.catalogItemId} value={option.catalogItemId}>
-                                      {option.name}
-                                      {option.pizzaSize ? ` · ${option.pizzaSize}` : ""}
-                                      {option.rollSize ? ` · ${option.rollSize}` : ""}
-                                    </option>
-                                  ))}
-                                </select>
-                              </label>
-                            ))}
-                          </div>
-                        ) : null}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <CartButton onClick={() => changeQuantity(entry.key, -1)} label="-" />
-                        <span className="w-6 text-center text-sm font-semibold">{entry.quantity}</span>
-                        <CartButton onClick={() => changeQuantity(entry.key, 1)} label="+" />
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="rounded-[8px] bg-white p-4 text-sm text-[#6b5960]">
-                    Добавьте блюда из меню.
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="rounded-[8px] bg-white p-4">
-              <p className="text-lg font-semibold text-[#241316]">
-                Итого: {formatMoney(totalCents)}
-              </p>
-              <label className="mt-4 block space-y-2">
-                <span className="text-sm font-semibold text-[#3a292d]">Адрес доставки</span>
-                <input name="deliveryAddress" className="foodlike-field min-h-12 rounded-[8px]" required />
-              </label>
-              <label className="mt-3 block space-y-2">
-                <span className="text-sm font-semibold text-[#3a292d]">Комментарий</span>
-                <textarea name="customerComment" className="foodlike-field min-h-24 rounded-[8px] py-3" />
-              </label>
-              {message ? (
-                <p className="mt-3 rounded-[8px] border border-[#f3dadd] bg-[#fffafa] px-4 py-3 text-sm text-[#6b5960]">
-                  {message}
-                </p>
-              ) : null}
-              {createdOrder ? (
-                <p className="mt-3 text-sm font-semibold text-[#b00012]">
-                  Текущий статус: {ORDER_STATUS_LABELS[createdOrder.status]}
-                </p>
-              ) : null}
-              <button
-                type="submit"
-                disabled={isPending}
-                className="mt-4 min-h-12 w-full rounded-full bg-[#d50014] px-5 text-sm font-semibold text-white transition hover:bg-[#b90012] disabled:opacity-60"
-              >
-                {currentClient ? "Оформить заказ" : "Войти для заказа"}
-              </button>
-            </div>
-          </form>
+          />
         </div>
       </section>
+
+      {activeItem ? (
+        <PublicMenuProductModal
+          item={activeItem}
+          onClose={() => setActiveItem(null)}
+          onAdd={addConfiguredItem}
+        />
+      ) : null}
 
       {isAuthOpen ? (
         <PublicAuthModal
@@ -397,18 +287,5 @@ export function PublicMenuSection({
         />
       ) : null}
     </>
-  );
-}
-
-function CartButton({ label, onClick }: { label: string; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex size-8 items-center justify-center rounded-full border border-[#f0cfd3] text-sm font-semibold text-[#b00012] transition hover:bg-[#fff1f2]"
-      aria-label={label}
-    >
-      {label}
-    </button>
   );
 }

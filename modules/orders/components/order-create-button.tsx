@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useState } from "react";
-import { createOrderAction, type OrderFormState } from "@/modules/orders/orders.actions";
+import { createOrderAction } from "@/modules/orders/orders.actions";
 import type { SessionUser } from "@/modules/auth/auth.types";
 import type { CatalogItem } from "@/modules/catalog/catalog.types";
 import type { Client } from "@/modules/clients/clients.types";
@@ -11,16 +11,17 @@ import {
   OrderCreateDialog,
   OrderCreateFab,
 } from "@/modules/orders/components/order-create-dialog";
-import {
-  ClientPickerDialog,
-  EmployeePickerDialog,
-} from "@/modules/orders/components/order-person-picker-dialogs";
+import { OrderCreatePersonPickers } from "@/modules/orders/components/order-create-person-pickers";
 import type { SelectedOrderItem } from "@/modules/orders/components/order-create.types";
+import {
+  createInitialOrderFormState,
+  filterClients,
+  filterEmployees,
+} from "@/modules/orders/components/order-create-button-helpers";
 import { normalizeSearchValue } from "@/modules/orders/components/order-create-utils";
 import {
   canAdjustDeliveryFee,
   DEFAULT_DELIVERY_FEE_CENTS,
-  INITIAL_ORDER_STATUS,
 } from "@/modules/orders/orders.workflow";
 
 export function OrderCreateButton({
@@ -34,19 +35,7 @@ export function OrderCreateButton({
   employees: Employee[];
   catalogItems: CatalogItem[];
 }) {
-  const initialState: OrderFormState = {
-    errorMessage: null,
-    successMessage: null,
-    values: {
-      clientId: "",
-      employeeId: "",
-      status: INITIAL_ORDER_STATUS,
-      source: "PHONE",
-      deliveryFeeCents: String(DEFAULT_DELIVERY_FEE_CENTS),
-      isInternal: false,
-      items: "[]",
-    },
-  };
+  const initialState = createInitialOrderFormState();
   const [isOpen, setIsOpen] = useState(false);
   const [activePicker, setActivePicker] = useState<"client" | "employee" | null>(null);
   const [isInternal, setIsInternal] = useState(false);
@@ -229,37 +218,8 @@ export function OrderCreateButton({
     setSelectedChoices({});
   };
 
-  const filteredClients = useMemo(() => {
-    const query = normalizeSearchValue(clientQuery);
-
-    return clients.filter((client) => {
-      if (!query) {
-        return true;
-      }
-
-      const haystack = normalizeSearchValue(
-        [client.name, client.phone, client.email, client.address].filter(Boolean).join(" "),
-      );
-
-      return haystack.includes(query);
-    });
-  }, [clientQuery, clients]);
-
-  const filteredEmployees = useMemo(() => {
-    const query = normalizeSearchValue(employeeQuery);
-
-    return employees.filter((employee) => {
-      if (!query) {
-        return true;
-      }
-
-      const haystack = normalizeSearchValue(
-        [employee.name, employee.phone, employee.email, employee.role].filter(Boolean).join(" "),
-      );
-
-      return haystack.includes(query);
-    });
-  }, [employeeQuery, employees]);
+  const filteredClients = useMemo(() => filterClients(clients, clientQuery), [clientQuery, clients]);
+  const filteredEmployees = useMemo(() => filterEmployees(employees, employeeQuery), [employeeQuery, employees]);
 
   const closePicker = () => setActivePicker(null);
 
@@ -304,35 +264,28 @@ export function OrderCreateButton({
         />
       ) : null}
 
-      {activePicker === "client" ? (
-        <ClientPickerDialog
-          clients={filteredClients}
-          selectedClientId={selectedClientId}
-          query={clientQuery}
-          onQueryChange={setClientQuery}
-          onSelect={(client) => {
-            setSelectedClientId(String(client.id));
-            setClientQuery(client.name);
-            closePicker();
-          }}
-          onClose={closePicker}
-        />
-      ) : null}
-
-      {activePicker === "employee" ? (
-        <EmployeePickerDialog
-          employees={filteredEmployees}
-          selectedEmployeeId={selectedEmployeeId}
-          query={employeeQuery}
-          onQueryChange={setEmployeeQuery}
-          onSelect={(employee) => {
-            setSelectedEmployeeId(String(employee.id));
-            setEmployeeQuery(employee.name);
-            closePicker();
-          }}
-          onClose={closePicker}
-        />
-      ) : null}
+      <OrderCreatePersonPickers
+        activePicker={activePicker}
+        clients={filteredClients}
+        employees={filteredEmployees}
+        selectedClientId={selectedClientId}
+        selectedEmployeeId={selectedEmployeeId}
+        clientQuery={clientQuery}
+        employeeQuery={employeeQuery}
+        onClientQueryChange={setClientQuery}
+        onEmployeeQueryChange={setEmployeeQuery}
+        onClientSelect={(client) => {
+          setSelectedClientId(String(client.id));
+          setClientQuery(client.name);
+          closePicker();
+        }}
+        onEmployeeSelect={(employee) => {
+          setSelectedEmployeeId(String(employee.id));
+          setEmployeeQuery(employee.name);
+          closePicker();
+        }}
+        onClose={closePicker}
+      />
     </>
   );
 }

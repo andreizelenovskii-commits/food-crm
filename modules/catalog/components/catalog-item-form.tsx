@@ -7,6 +7,10 @@ import {
   uploadCatalogImageAction,
 } from "@/modules/catalog/catalog.actions";
 import { CatalogItemImageField } from "@/modules/catalog/components/catalog-item-image-field";
+import {
+  CatalogExcludedIngredientsEditor,
+  type CatalogExcludedIngredientDraft,
+} from "@/modules/catalog/components/catalog-excluded-ingredients-editor";
 import { CatalogPriceListPicker } from "@/modules/catalog/components/catalog-price-list-picker";
 import { CatalogDropdown } from "@/modules/catalog/components/catalog-tech-card-fields";
 import {
@@ -45,6 +49,9 @@ export function CatalogItemForm({
     initialState.values.kitchenZone as KitchenZone | "",
   );
   const [variants, setVariants] = useState<CatalogVariantDraft[]>(() => buildInitialVariants(initialItem, initialState.values));
+  const [excludedIngredients, setExcludedIngredients] = useState<CatalogExcludedIngredientDraft[]>(() =>
+    buildInitialExcludedIngredients(initialItem, initialState.values),
+  );
   const [imageUrl, setImageUrl] = useState(initialState.values.imageUrl);
   const [imageUploadError, setImageUploadError] = useState<string | null>(null);
   const [isImageUploading, setIsImageUploading] = useState(false);
@@ -165,11 +172,19 @@ export function CatalogItemForm({
       <input type="hidden" name="technologicalCardId" value={defaultVariant?.technologicalCardId ?? ""} />
       <input type="hidden" name="price" value={defaultVariant?.price ?? ""} />
       <input type="hidden" name="variants" value={JSON.stringify(variants)} />
+      <input type="hidden" name="excludedIngredients" value={JSON.stringify(excludedIngredients)} />
 
       <CatalogVariantsEditor
         variants={variants}
         options={techCardDropdownOptions}
         onChange={setVariants}
+      />
+
+      <CatalogExcludedIngredientsEditor
+        exclusions={excludedIngredients}
+        techCardOptions={techCardOptions}
+        variants={variants}
+        onChange={setExcludedIngredients}
       />
 
       <label className="block space-y-2.5">
@@ -202,6 +217,28 @@ export function CatalogItemForm({
       </button>
     </form>
   );
+}
+
+function buildInitialExcludedIngredients(
+  initialItem: CatalogItemFormProps["initialItem"],
+  values: CatalogFormState["values"],
+): CatalogExcludedIngredientDraft[] {
+  if (initialItem?.excludedIngredients.length) {
+    return initialItem.excludedIngredients.map((ingredient) => ({
+      productId: String(ingredient.productId),
+      label: ingredient.label,
+    }));
+  }
+
+  try {
+    const parsed = JSON.parse(values.excludedIngredients) as Array<{ productId: number | string; label: string }>;
+    return parsed.map((ingredient) => ({
+      productId: String(ingredient.productId),
+      label: String(ingredient.label ?? ""),
+    }));
+  } catch {
+    return [];
+  }
 }
 
 function buildInitialVariants(

@@ -24,6 +24,7 @@ export const ORDER_SOURCE_LABELS: Record<OrderSource, string> = {
 export type OrderDraftItem = {
   catalogItemId: number;
   catalogItemVariantId?: number;
+  excludedIngredientIds?: number[];
   quantity: number;
 };
 
@@ -39,6 +40,12 @@ export type OrderPackagingUsage = {
   createdAt: string;
 };
 
+export type OrderItemExcludedIngredient = {
+  id: number;
+  productId: number;
+  label: string;
+};
+
 export type OrderItemSummary = {
   id: number;
   catalogItemId: number | null;
@@ -49,6 +56,7 @@ export type OrderItemSummary = {
   totalPriceCents: number;
   catalogCategory: string | null;
   kitchenZone: KitchenZone | null;
+  excludedIngredients: OrderItemExcludedIngredient[];
   packagingUsages: OrderPackagingUsage[];
 };
 

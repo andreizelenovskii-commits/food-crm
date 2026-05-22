@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { PRODUCT_CATEGORIES } from "@/modules/inventory/inventory.types";
 import {
   clearTechCardDraft,
   type SelectedChoiceSlot,
@@ -10,6 +9,14 @@ import {
   type SelectedIngredient,
 } from "@/modules/tech-cards/components/tech-card-draft";
 import type { TechCardFormKind } from "@/modules/tech-cards/components/tech-card-form";
+import {
+  filterComponents,
+  filterProducts,
+  getAvailableProductCategories,
+  normalizeStateChoiceSlots,
+  normalizeStateComponents,
+  normalizeStateIngredients,
+} from "@/modules/tech-cards/components/tech-card-form-state-utils";
 import type { OutputUnit } from "@/modules/tech-cards/components/tech-card-main-fields";
 import type { TechCardFormState } from "@/modules/tech-cards/tech-cards.actions";
 import {
@@ -75,37 +82,19 @@ export function useTechCardFormState({
   const [pendingComponentIds, setPendingComponentIds] = useState<string[]>([]);
   const normalizedStateIngredients = useMemo<SelectedIngredient[]>(
     () =>
-      state.values.ingredients.map((ingredient) => ({
-        productId: ingredient.productId,
-        quantity: ingredient.quantity,
-        unit: ingredient.unit === "кг" ? "кг" : "шт",
-      })),
+      normalizeStateIngredients(state.values.ingredients),
     [state.values.ingredients],
   );
   const [selectedIngredients, setSelectedIngredients] = useState<SelectedIngredient[]>(normalizedStateIngredients);
   const normalizedStateComponents = useMemo<SelectedComponent[]>(
     () =>
-      state.values.components.map((component) => ({
-        techCardId: component.techCardId,
-        quantity: component.quantity,
-      })),
+      normalizeStateComponents(state.values.components),
     [state.values.components],
   );
   const [selectedComponents, setSelectedComponents] = useState<SelectedComponent[]>(normalizedStateComponents);
   const normalizedStateChoiceSlots = useMemo<SelectedChoiceSlot[]>(
     () =>
-      state.values.choiceSlots.map((slot, index) => ({
-        id: `${index}-${slot.name}`,
-        name: slot.name,
-        category: TECH_CARD_CATEGORIES.includes(slot.category as TechCardCategory)
-          ? slot.category
-          : "Пиццы",
-        allowedPizzaSizes: slot.allowedPizzaSizes
-          .split(",")
-          .map((size) => size.trim())
-          .filter((size) => TECH_CARD_PIZZA_SIZES.includes(size as TechCardPizzaSize)),
-        quantity: slot.quantity,
-      })),
+      normalizeStateChoiceSlots(state.values.choiceSlots),
     [state.values.choiceSlots],
   );
   const [selectedChoiceSlots, setSelectedChoiceSlots] = useState<SelectedChoiceSlot[]>(normalizedStateChoiceSlots);
@@ -115,24 +104,9 @@ export function useTechCardFormState({
     [componentOptions],
   );
   const availableCategories = useMemo(() => {
-    const categorySet = new Set(products.map((product) => product.category).filter((category): category is string => Boolean(category)));
-
-    return PRODUCT_CATEGORIES.filter((category) => categorySet.has(category));
+    return getAvailableProductCategories(products);
   }, [products]);
-  const filteredProducts = products.filter((product) => {
-    const query = ingredientQuery.trim().toLowerCase();
-    const matchesCategory = !selectedCategory || product.category === selectedCategory;
-
-    if (!matchesCategory) {
-      return false;
-    }
-
-    if (!query) {
-      return true;
-    }
-
-    return product.name.toLowerCase().includes(query) || product.unit.toLowerCase().includes(query) || product.category?.toLowerCase().includes(query);
-  });
+  const filteredProducts = filterProducts(products, ingredientQuery, selectedCategory);
   const availableComponentCategories = useMemo(
     () =>
       Array.from(new Set(componentOptions.map((component) => component.category))).sort((left, right) =>
@@ -140,30 +114,7 @@ export function useTechCardFormState({
       ),
     [componentOptions],
   );
-  const filteredComponents = componentOptions.filter((component) => {
-    const query = componentQuery.trim().toLowerCase();
-    const matchesCategory = !selectedComponentCategory || component.category === selectedComponentCategory;
-
-    if (!matchesCategory) {
-      return false;
-    }
-
-    if (!query) {
-      return true;
-    }
-
-    return [
-      component.name,
-      component.category,
-      component.pizzaSize ?? "",
-      component.rollSize ?? "",
-      component.outputUnit,
-      component.description ?? "",
-    ]
-      .join(" ")
-      .toLowerCase()
-      .includes(query);
-  });
+  const filteredComponents = filterComponents(componentOptions, componentQuery, selectedComponentCategory);
 
   useEffect(() => {
     if (isEditMode) {

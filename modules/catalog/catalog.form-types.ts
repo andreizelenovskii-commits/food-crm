@@ -8,6 +8,7 @@ export type CatalogFormValues = {
   price: string;
   technologicalCardId: string;
   variants: string;
+  excludedIngredients: string;
 };
 
 export type CatalogFormState = {

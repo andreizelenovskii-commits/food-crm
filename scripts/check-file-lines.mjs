@@ -1,4 +1,4 @@
-import { readdir, readFile } from "node:fs/promises";
+import { access, readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
 const ROOT = process.cwd();
@@ -50,6 +50,10 @@ if (tooLong.length > 0) {
 console.log(`OK: checked source/docs files, all <= ${MAX_LINES} lines.`);
 
 async function walk(dir) {
+  if (dir !== ROOT && await hasNestedGitRoot(dir)) {
+    return;
+  }
+
   const entries = await readdir(dir, { withFileTypes: true });
 
   for (const entry of entries) {
@@ -74,6 +78,15 @@ async function walk(dir) {
     if (lines > MAX_LINES) {
       tooLong.push({ file: relativePath, lines });
     }
+  }
+}
+
+async function hasNestedGitRoot(dir) {
+  try {
+    await access(path.join(dir, ".git"));
+    return true;
+  } catch {
+    return false;
   }
 }
 

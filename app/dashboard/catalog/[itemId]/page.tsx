@@ -46,6 +46,10 @@ export default async function CatalogItemEditPage(props: {
       price: variant.priceCents / 100,
       isDefault: variant.isDefault,
     }))),
+    excludedIngredients: JSON.stringify(catalogItem.excludedIngredients.map((ingredient) => ({
+      productId: ingredient.productId,
+      label: ingredient.label,
+    }))),
   };
 
   return (

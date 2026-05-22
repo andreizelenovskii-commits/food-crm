@@ -12,6 +12,7 @@ export const EMPTY_CATALOG_FORM_VALUES: CatalogFormValues = {
   price: "",
   technologicalCardId: "",
   variants: "[]",
+  excludedIngredients: "[]",
 };
 
 export const CATALOG_FIELD_CLASS_NAME =
@@ -23,6 +24,11 @@ export type CatalogTechCardOption = {
   category: string;
   pizzaSize: string | null;
   rollSize: string | null;
+  ingredients: Array<{
+    productId: number;
+    productName: string;
+    productUnit: string;
+  }>;
 };
 
 export type CatalogItemFormProps = {
