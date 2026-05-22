@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import Image from "next/image";
 import type { PublicClientProfile } from "@/modules/clients/clients.types";
 import type { CatalogItem, CatalogItemVariant } from "@/modules/catalog/catalog.types";
 import {
@@ -12,12 +11,9 @@ import {
   type AuthMode,
   PublicAuthModal,
 } from "@/modules/catalog/components/public-auth-modal";
+import { PublicMenuCard } from "@/modules/catalog/components/public-menu-card";
 import { PublicMenuProductModal } from "@/modules/catalog/components/public-menu-product-modal";
-import {
-  describePublicMenuItem,
-  getPublicMenuCardPrice,
-  resolvePublicMenuVariant,
-} from "@/modules/catalog/components/public-menu-utils";
+import { resolvePublicMenuVariant } from "@/modules/catalog/components/public-menu-utils";
 import { ORDER_STATUS_LABELS } from "@/modules/orders/orders.workflow";
 import { browserBackendJson } from "@/shared/api/browser-backend";
 
@@ -201,62 +197,10 @@ export function PublicMenuSection({
           </div>
 
           {items.length ? (
-            <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {items.map((item) => {
-                const cardPrice = getPublicMenuCardPrice(item);
-
-                return (
-                  <article
-                    key={item.id}
-                    className="overflow-hidden rounded-[8px] border border-[#ffe0e3] bg-white shadow-sm shadow-[#d50014]/8"
-                  >
-                  <button
-                    type="button"
-                    onClick={() => setActiveItem(item)}
-                    className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden bg-[#faf6f2] p-2"
-                  >
-                    {item.imageUrl ? (
-                      <Image
-                        src={item.imageUrl}
-                        alt={item.name}
-                        width={640}
-                        height={480}
-                        sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
-                        className="h-full w-full rounded-[6px] object-contain transition duration-500 hover:scale-[1.02]"
-                      />
-                    ) : (
-                      <span className="text-sm font-semibold uppercase tracking-[0.2em] text-[#d50014]">
-                        FoodLike
-                      </span>
-                    )}
-                  </button>
-                  <div className="p-5">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#d50014]">
-                          {item.category ?? "Меню"}
-                        </p>
-                        <h3 className="mt-2 text-xl font-semibold text-[#241316]">{item.name}</h3>
-                      </div>
-                      <div className="shrink-0 text-right">
-                        <p className="text-lg font-semibold text-[#c90013]">{cardPrice.label}</p>
-                        {cardPrice.hint ? (
-                          <p className="mt-1 text-xs font-semibold text-[#9b7d83]">{cardPrice.hint}</p>
-                        ) : null}
-                      </div>
-                    </div>
-                    <p className="mt-3 text-sm leading-6 text-[#6b5960]">{describePublicMenuItem(item)}</p>
-                    <button
-                      type="button"
-                      onClick={() => setActiveItem(item)}
-                      className="mt-4 min-h-11 w-full rounded-full bg-[#d50014] px-5 text-sm font-semibold text-white transition hover:bg-[#b90012]"
-                    >
-                      Выбрать
-                    </button>
-                  </div>
-                  </article>
-                );
-              })}
+            <div className="mt-10 grid items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {items.map((item) => (
+                <PublicMenuCard key={item.id} item={item} onSelect={setActiveItem} />
+              ))}
             </div>
           ) : (
             <div className="mt-10 rounded-[8px] border border-[#ffe0e3] bg-[#fffafa] p-6 text-[#6b5960]">
