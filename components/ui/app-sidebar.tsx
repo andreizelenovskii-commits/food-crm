@@ -22,21 +22,12 @@ const NAV_ITEMS = [
   { href: "/dashboard/settings", label: "Настройки", icon: "settings" },
 ] as const;
 
-const PACKAGING_CATEGORY = "Упаковка";
-
 const INVENTORY_SUB_ITEMS: Array<{
   href: string;
   label: string;
   tab: string;
-  category?: string;
 }> = [
   { href: "/dashboard/inventory", label: "Товары", tab: "products" },
-  {
-    href: `/dashboard/inventory?category=${encodeURIComponent(PACKAGING_CATEGORY)}`,
-    label: PACKAGING_CATEGORY,
-    tab: "products",
-    category: PACKAGING_CATEGORY,
-  },
   { href: "/dashboard/inventory?tab=incoming", label: "Поступление", tab: "incoming" },
   { href: "/dashboard/inventory?tab=suppliers", label: "Поставщики", tab: "suppliers" },
   { href: "/dashboard/inventory?tab=writeoff", label: "Списание", tab: "writeoff" },
@@ -67,7 +58,6 @@ export function AppSidebar() {
   const [isInventoryOpen, setIsInventoryOpen] = useState(isInventoryPath);
   const [isSettingsOpen, setIsSettingsOpen] = useState(isSettingsPath);
   const activeInventoryTab = isInventoryPath ? (searchParams.get("tab") ?? "products") : "";
-  const activeInventoryCategory = isInventoryPath ? (searchParams.get("category") ?? "") : "";
 
   return (
     <>
@@ -151,9 +141,7 @@ export function AppSidebar() {
                     subItems={INVENTORY_SUB_ITEMS.map((subItem) => ({
                       href: subItem.href,
                       label: subItem.label,
-                      isActive: subItem.category
-                        ? activeInventoryTab === subItem.tab && activeInventoryCategory === subItem.category
-                        : activeInventoryTab === subItem.tab && !activeInventoryCategory,
+                      isActive: activeInventoryTab === subItem.tab,
                     }))}
                   />
                 );
