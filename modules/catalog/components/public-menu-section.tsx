@@ -11,8 +11,9 @@ import { ORDER_STATUS_LABELS } from "@/modules/orders/orders.workflow";
 import type { OrderStatus } from "@/modules/orders/orders.types";
 import { browserBackendJson } from "@/shared/api/browser-backend";
 
-type Cart = Record<number, number>;
-type CartChoices = Record<number, Record<number, number>>;
+type Cart = Record<string, { itemId: number; variantId: number; quantity: number }>;
+type CartVariants = Record<number, number>;
+type CartChoices = Record<string, Record<number, number>>;
 
 type PublicOrderStatus = {
   id: number;
@@ -20,6 +21,10 @@ type PublicOrderStatus = {
   totalCents: number;
   createdAt: string;
 };
+
+function cartKey(itemId: number, variantId: number) {
+  return `${itemId}:${variantId}`;
+}
 
 function formatMoney(cents: number) {
   return new Intl.NumberFormat("ru-RU", {
@@ -34,6 +39,25 @@ function itemDescription(item: CatalogItem) {
   return item.description ?? `Позиция из меню${variant ? `, вариант ${variant}` : ""}.`;
 }
 
+function resolveSelectedVariant(item: CatalogItem, selectedVariantId?: number) {
+  return (
+    item.variants.find((variant) => variant.id === selectedVariantId) ??
+    item.variants.find((variant) => variant.isDefault) ??
+    item.variants[0] ??
+    {
+      id: 0,
+      label: item.pizzaSize ?? item.rollSize ?? "Стандарт",
+      priceCents: item.priceCents,
+      isDefault: true,
+      displayOrder: 0,
+      technologicalCardId: item.technologicalCardId,
+      technologicalCardName: item.technologicalCardName,
+      pizzaSize: item.pizzaSize,
+      rollSize: item.rollSize,
+    }
+  );
+}
+
 export function PublicMenuSection({
   currentClient,
   items,
@@ -44,6 +68,7 @@ export function PublicMenuSection({
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [cart, setCart] = useState<Cart>({});
+  const [cartVariants, setCartVariants] = useState<CartVariants>({});
   const [cartChoices, setCartChoices] = useState<CartChoices>({});
   const [isPending, setIsPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -51,44 +76,76 @@ export function PublicMenuSection({
   const categories = Array.from(new Set(items.map((item) => item.category ?? "Меню")));
   const cartItems = useMemo(
     () =>
-      items
-        .map((item) => ({ item, quantity: cart[item.id] ?? 0, choices: cartChoices[item.id] ?? {} }))
+      Object.entries(cart)
+        .map(([key, entry]) => {
+          const item = items.find((candidate) => candidate.id === entry.itemId);
+
+          if (!item) {
+            return null;
+          }
+
+          return {
+            key,
+            item,
+            quantity: entry.quantity,
+            variant: resolveSelectedVariant(item, entry.variantId),
+            choices: cartChoices[key] ?? {},
+          };
+        })
+        .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))
         .filter((entry) => entry.quantity > 0),
     [cart, cartChoices, items],
   );
   const totalCents = cartItems.reduce(
-    (sum, entry) => sum + entry.item.priceCents * entry.quantity,
+    (sum, entry) => sum + entry.variant.priceCents * entry.quantity,
     0,
   );
 
   function addItem(itemId: number) {
-    setCart((current) => ({ ...current, [itemId]: (current[itemId] ?? 0) + 1 }));
+    const item = items.find((candidate) => candidate.id === itemId);
+
+    if (!item) {
+      return;
+    }
+
+    const variant = resolveSelectedVariant(item, cartVariants[item.id]);
+    const key = cartKey(item.id, variant.id);
+
+    setCart((current) => ({
+      ...current,
+      [key]: {
+        itemId: item.id,
+        variantId: variant.id,
+        quantity: (current[key]?.quantity ?? 0) + 1,
+      },
+    }));
     setMessage(null);
   }
 
-  function changeQuantity(itemId: number, delta: number) {
+  function changeQuantity(key: string, delta: number) {
     setCart((current) => {
-      const nextQuantity = Math.max((current[itemId] ?? 0) + delta, 0);
+      const entry = current[key];
+      const nextQuantity = Math.max((entry?.quantity ?? 0) + delta, 0);
       const next = { ...current };
       if (nextQuantity === 0) {
-        delete next[itemId];
+        delete next[key];
         setCartChoices((currentChoices) => {
           const nextChoices = { ...currentChoices };
-          delete nextChoices[itemId];
+          delete nextChoices[key];
           return nextChoices;
         });
-      } else {
-        next[itemId] = nextQuantity;
+      } else if (entry) {
+        next[key] = { ...entry, quantity: nextQuantity };
       }
       return next;
     });
   }
 
-  function changeChoice(itemId: number, choiceSlotId: number, selectedCatalogItemId: number) {
+  function changeChoice(key: string, choiceSlotId: number, selectedCatalogItemId: number) {
     setCartChoices((current) => ({
       ...current,
-      [itemId]: {
-        ...(current[itemId] ?? {}),
+      [key]: {
+        ...(current[key] ?? {}),
         [choiceSlotId]: selectedCatalogItemId,
       },
     }));
@@ -119,6 +176,7 @@ export function PublicMenuSection({
           customerComment: String(formData.get("customerComment") ?? "").trim(),
           items: cartItems.map((entry) => ({
             catalogItemId: entry.item.id,
+            catalogItemVariantId: entry.variant.id,
             quantity: entry.quantity,
             choices: entry.item.choiceSlots.map((slot) => ({
               choiceSlotId: slot.id,
@@ -194,10 +252,33 @@ export function PublicMenuSection({
                         <h3 className="mt-2 text-xl font-semibold text-[#241316]">{item.name}</h3>
                       </div>
                       <p className="shrink-0 text-lg font-semibold text-[#c90013]">
-                        {formatMoney(item.priceCents)}
+                        {formatMoney(resolveSelectedVariant(item, cartVariants[item.id]).priceCents)}
                       </p>
                     </div>
                     <p className="mt-3 text-sm leading-6 text-[#6b5960]">{itemDescription(item)}</p>
+                    {item.variants.length > 1 ? (
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {item.variants.map((variant) => {
+                          const selectedVariant = resolveSelectedVariant(item, cartVariants[item.id]);
+                          const isActive = selectedVariant.id === variant.id;
+
+                          return (
+                            <button
+                              key={variant.id}
+                              type="button"
+                              onClick={() => setCartVariants((current) => ({ ...current, [item.id]: variant.id }))}
+                              className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                                isActive
+                                  ? "border-[#d50014] bg-[#d50014] text-white"
+                                  : "border-[#ffd7dc] bg-white text-[#b00012]"
+                              }`}
+                            >
+                              {variant.label} · {formatMoney(variant.priceCents)}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : null}
                     <button
                       type="button"
                       onClick={() => addItem(item.id)}
@@ -226,10 +307,12 @@ export function PublicMenuSection({
               <div className="mt-4 space-y-3">
                 {cartItems.length ? (
                   cartItems.map((entry) => (
-                    <div key={entry.item.id} className="flex items-center justify-between gap-3 rounded-[8px] bg-white p-3">
+                    <div key={entry.key} className="flex items-center justify-between gap-3 rounded-[8px] bg-white p-3">
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold text-[#241316]">{entry.item.name}</p>
-                        <p className="text-sm text-[#6b5960]">{formatMoney(entry.item.priceCents)}</p>
+                        <p className="text-sm text-[#6b5960]">
+                          {entry.variant.label} · {formatMoney(entry.variant.priceCents)}
+                        </p>
                         {entry.item.choiceSlots.length > 0 ? (
                           <div className="mt-2 space-y-2">
                             {entry.item.choiceSlots.map((slot) => (
@@ -237,7 +320,7 @@ export function PublicMenuSection({
                                 <span className="text-xs font-semibold text-[#3a292d]">{slot.name}</span>
                                 <select
                                   value={entry.choices[slot.id] ?? ""}
-                                  onChange={(event) => changeChoice(entry.item.id, slot.id, Number(event.target.value))}
+                                  onChange={(event) => changeChoice(entry.key, slot.id, Number(event.target.value))}
                                   className="foodlike-field min-h-10 rounded-[8px] text-sm"
                                   required
                                 >
@@ -256,9 +339,9 @@ export function PublicMenuSection({
                         ) : null}
                       </div>
                       <div className="flex items-center gap-2">
-                        <CartButton onClick={() => changeQuantity(entry.item.id, -1)} label="-" />
+                        <CartButton onClick={() => changeQuantity(entry.key, -1)} label="-" />
                         <span className="w-6 text-center text-sm font-semibold">{entry.quantity}</span>
-                        <CartButton onClick={() => changeQuantity(entry.item.id, 1)} label="+" />
+                        <CartButton onClick={() => changeQuantity(entry.key, 1)} label="+" />
                       </div>
                     </div>
                   ))

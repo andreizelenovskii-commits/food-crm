@@ -258,10 +258,11 @@ function OrderTotals({
               <div className="min-w-0">
                 <p className="truncate font-medium text-zinc-900">
                   {entry.item.name}
-                  {entry.item.pizzaSize ? ` · ${entry.item.pizzaSize}` : ""}
-                  {entry.item.rollSize ? ` · ${entry.item.rollSize}` : ""}
+                  {entry.variant ? ` · ${entry.variant.label}` : ""}
                 </p>
-                <p className="text-zinc-500">{entry.quantity} × {formatMoney(entry.item.priceCents)}</p>
+                <p className="text-zinc-500">
+                  {entry.quantity} × {formatMoney(entry.variant?.priceCents ?? entry.item.priceCents)}
+                </p>
               </div>
               <span className="shrink-0 font-medium text-zinc-900">{formatMoney(entry.totalCents)}</span>
             </div>

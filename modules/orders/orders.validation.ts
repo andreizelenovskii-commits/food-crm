@@ -69,11 +69,16 @@ export function parseCreateOrderInput(formData: FormData): OrderCreateInput {
   let items: OrderDraftItem[] = [];
 
   try {
-    const parsed = JSON.parse(itemsRaw) as Array<{ catalogItemId: number; quantity: number }>;
+    const parsed = JSON.parse(itemsRaw) as Array<{
+      catalogItemId: number;
+      catalogItemVariantId?: number;
+      quantity: number;
+    }>;
     items = parsed
       .filter((item) => Number.isInteger(item.catalogItemId) && Number.isInteger(item.quantity))
       .map((item) => ({
         catalogItemId: item.catalogItemId,
+        catalogItemVariantId: Number.isInteger(item.catalogItemVariantId) ? item.catalogItemVariantId : undefined,
         quantity: item.quantity,
       }));
   } catch {

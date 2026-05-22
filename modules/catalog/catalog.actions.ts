@@ -12,10 +12,12 @@ function getCatalogFormValues(formData: FormData): CatalogFormValues {
     name: read("name"),
     priceListType: read("priceListType"),
     category: read("category"),
+    kitchenZone: read("kitchenZone"),
     description: read("description"),
     imageUrl: read("imageUrl"),
     price: read("price"),
     technologicalCardId: read("technologicalCardId"),
+    variants: read("variants"),
   };
 }
 
@@ -29,6 +31,10 @@ export async function addCatalogItemAction(
       body: {
         ...getCatalogFormValues(formData),
         price: String(input.priceCents / 100),
+        variants: JSON.stringify(input.variants.map((variant) => ({
+          ...variant,
+          price: variant.priceCents / 100,
+        }))),
       },
     });
   } catch (error) {
@@ -66,6 +72,10 @@ export async function updateCatalogItemAction(
       body: {
         ...getCatalogFormValues(formData),
         price: String(input.priceCents / 100),
+        variants: JSON.stringify(input.variants.map((variant) => ({
+          ...variant,
+          price: variant.priceCents / 100,
+        }))),
       },
     });
   } catch (error) {

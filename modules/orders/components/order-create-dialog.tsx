@@ -37,6 +37,7 @@ export function OrderCreateDialog({
   availableCategories,
   filteredCatalogItems,
   selectedItems,
+  selectedVariants,
   selectedChoices,
   selectedClient,
   selectedEmployee,
@@ -56,6 +57,7 @@ export function OrderCreateDialog({
   onCatalogQueryChange,
   onCategoryChange,
   onQuantityChange,
+  onVariantChange,
   onChoiceChange,
   onOpenClientPicker,
   onOpenEmployeePicker,
@@ -68,6 +70,7 @@ export function OrderCreateDialog({
   availableCategories: string[];
   filteredCatalogItems: CatalogItem[];
   selectedItems: Record<number, number>;
+  selectedVariants: Record<number, number>;
   selectedChoices: Record<number, Record<number, number>>;
   selectedClient: Client | null;
   selectedEmployee: Employee | null;
@@ -87,6 +90,7 @@ export function OrderCreateDialog({
   onCatalogQueryChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
   onQuantityChange: (catalogItemId: number, quantity: number) => void;
+  onVariantChange: (catalogItemId: number, catalogItemVariantId: number) => void;
   onChoiceChange: (catalogItemId: number, choiceSlotId: number, selectedCatalogItemId: number) => void;
   onOpenClientPicker: () => void;
   onOpenEmployeePicker: () => void;
@@ -113,11 +117,13 @@ export function OrderCreateDialog({
                 availableCategories={availableCategories}
                 filteredCatalogItems={filteredCatalogItems}
                 selectedItems={selectedItems}
+                selectedVariants={selectedVariants}
                 selectedChoices={selectedChoices}
                 onSwitchOrderType={onSwitchOrderType}
                 onCatalogQueryChange={onCatalogQueryChange}
                 onCategoryChange={onCategoryChange}
                 onQuantityChange={onQuantityChange}
+                onVariantChange={onVariantChange}
                 onChoiceChange={onChoiceChange}
               />
               <OrderCreateParamsPanel

@@ -293,7 +293,20 @@ function CatalogItemCard({ item, canManageCatalog }: { item: CatalogItem; canMan
               {item.rollSize ? <Badge>{item.rollSize}</Badge> : null}
             </div>
             <p className="text-sm text-zinc-600">Техкарта: {item.technologicalCardName}</p>
-            <p className="text-sm font-semibold text-zinc-950">{formatMoney(item.priceCents)}</p>
+            <p className="text-sm font-semibold text-zinc-950">
+              {item.variants.length > 1
+                ? `${item.variants.length} варианта`
+                : formatMoney(item.variants[0]?.priceCents ?? item.priceCents)}
+            </p>
+            {item.variants.length > 1 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {item.variants.map((variant) => (
+                  <Badge key={variant.id}>
+                    {variant.label} · {formatMoney(variant.priceCents)}
+                  </Badge>
+                ))}
+              </div>
+            ) : null}
             {item.description ? <p className="text-sm leading-6 text-zinc-600">{item.description}</p> : null}
           </div>
         </div>

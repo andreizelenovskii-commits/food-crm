@@ -8,11 +8,13 @@ export function OrderCreateCatalogSection({
   availableCategories,
   filteredCatalogItems,
   selectedItems,
+  selectedVariants,
   selectedChoices,
   onSwitchOrderType,
   onCatalogQueryChange,
   onCategoryChange,
   onQuantityChange,
+  onVariantChange,
   onChoiceChange,
 }: {
   isInternal: boolean;
@@ -21,11 +23,13 @@ export function OrderCreateCatalogSection({
   availableCategories: string[];
   filteredCatalogItems: CatalogItem[];
   selectedItems: Record<number, number>;
+  selectedVariants: Record<number, number>;
   selectedChoices: Record<number, Record<number, number>>;
   onSwitchOrderType: (value: boolean) => void;
   onCatalogQueryChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
   onQuantityChange: (catalogItemId: number, quantity: number) => void;
+  onVariantChange: (catalogItemId: number, catalogItemVariantId: number) => void;
   onChoiceChange: (catalogItemId: number, choiceSlotId: number, selectedCatalogItemId: number) => void;
 }) {
   return (
@@ -67,8 +71,10 @@ export function OrderCreateCatalogSection({
                 key={item.id}
                 item={item}
                 quantity={selectedItems[item.id] ?? 0}
+                selectedVariantId={selectedVariants[item.id]}
                 selectedChoices={selectedChoices[item.id] ?? {}}
                 onQuantityChange={onQuantityChange}
+                onVariantChange={onVariantChange}
                 onChoiceChange={onChoiceChange}
               />
             ))
@@ -166,16 +172,24 @@ function CategoryChips({
 function CatalogOrderItemRow({
   item,
   quantity,
+  selectedVariantId,
   selectedChoices,
   onQuantityChange,
+  onVariantChange,
   onChoiceChange,
 }: {
   item: CatalogItem;
   quantity: number;
+  selectedVariantId?: number;
   selectedChoices: Record<number, number>;
   onQuantityChange: (catalogItemId: number, quantity: number) => void;
+  onVariantChange: (catalogItemId: number, catalogItemVariantId: number) => void;
   onChoiceChange: (catalogItemId: number, choiceSlotId: number, selectedCatalogItemId: number) => void;
 }) {
+  const defaultVariant = item.variants.find((variant) => variant.isDefault) ?? item.variants[0] ?? null;
+  const selectedVariant = item.variants.find((variant) => variant.id === selectedVariantId) ?? defaultVariant;
+  const displayPriceCents = selectedVariant?.priceCents ?? item.priceCents;
+
   return (
     <div className="rounded-[18px] border border-red-100 bg-white/85 p-4 shadow-sm shadow-red-950/5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -187,7 +201,7 @@ function CatalogOrderItemRow({
             {item.rollSize ? <CatalogBadge>{item.rollSize}</CatalogBadge> : null}
           </div>
           {item.description ? <p className="text-xs leading-5 text-zinc-500">{item.description}</p> : null}
-          <p className="text-sm font-medium text-zinc-900">{formatMoney(item.priceCents)}</p>
+          <p className="text-sm font-medium text-zinc-900">{formatMoney(displayPriceCents)}</p>
         </div>
 
         <div className="flex items-center gap-2 self-start">
@@ -198,6 +212,28 @@ function CatalogOrderItemRow({
           <QuantityButton onClick={() => onQuantityChange(item.id, quantity + 1)} label="+" />
         </div>
       </div>
+      {quantity > 0 && item.variants.length > 1 ? (
+        <div className="mt-3 flex flex-wrap gap-2 rounded-[14px] border border-red-950/10 bg-red-50/40 p-3">
+          {item.variants.map((variant) => {
+            const isSelected = selectedVariant?.id === variant.id;
+
+            return (
+              <button
+                key={variant.id}
+                type="button"
+                onClick={() => onVariantChange(item.id, variant.id)}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                  isSelected
+                    ? "bg-red-800 text-white"
+                    : "border border-red-100 bg-white text-red-800 hover:border-red-200 hover:bg-red-50"
+                }`}
+              >
+                {variant.label} · {formatMoney(variant.priceCents)}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
       {quantity > 0 && item.choiceSlots.length > 0 ? (
         <div className="mt-3 grid gap-2 rounded-[14px] border border-red-950/10 bg-red-50/40 p-3">
           {item.choiceSlots.map((slot) => (

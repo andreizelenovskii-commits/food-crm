@@ -8,14 +8,19 @@ import {
 } from "@/modules/catalog/catalog.actions";
 import { CatalogItemImageField } from "@/modules/catalog/components/catalog-item-image-field";
 import { CatalogPriceListPicker } from "@/modules/catalog/components/catalog-price-list-picker";
-import { CatalogTechCardFields } from "@/modules/catalog/components/catalog-tech-card-fields";
+import { CatalogDropdown } from "@/modules/catalog/components/catalog-tech-card-fields";
+import {
+  CatalogVariantsEditor,
+  type CatalogVariantDraft,
+} from "@/modules/catalog/components/catalog-variants-editor";
 import {
   CATALOG_FIELD_CLASS_NAME,
   type CatalogItemFormProps,
   EMPTY_CATALOG_FORM_VALUES,
 } from "@/modules/catalog/components/catalog-item-form.model";
 import type { CatalogFormState } from "@/modules/catalog/catalog.form-types";
-import type { CatalogPriceListType } from "@/modules/catalog/catalog.types";
+import { CATALOG_SITE_CATEGORIES, type CatalogPriceListType } from "@/modules/catalog/catalog.types";
+import { KITCHEN_ZONE_LABELS, KITCHEN_ZONES, type KitchenZone } from "@/modules/inventory/inventory.types";
 
 export function CatalogItemForm({
   mode = "create",
@@ -36,9 +41,10 @@ export function CatalogItemForm({
       : "",
   );
   const [selectedCategory, setSelectedCategory] = useState(initialState.values.category);
-  const [selectedTechCardId, setSelectedTechCardId] = useState(
-    initialState.values.technologicalCardId,
+  const [selectedKitchenZone, setSelectedKitchenZone] = useState(
+    initialState.values.kitchenZone as KitchenZone | "",
   );
+  const [variants, setVariants] = useState<CatalogVariantDraft[]>(() => buildInitialVariants(initialItem, initialState.values));
   const [imageUrl, setImageUrl] = useState(initialState.values.imageUrl);
   const [imageUploadError, setImageUploadError] = useState<string | null>(null);
   const [isImageUploading, setIsImageUploading] = useState(false);
@@ -54,6 +60,21 @@ export function CatalogItemForm({
   const filteredTechCardOptions = useMemo(() => {
     return sortedTechCardOptions;
   }, [sortedTechCardOptions]);
+  const techCardDropdownOptions = filteredTechCardOptions.map((option) => ({
+    value: String(option.id),
+    label: [
+      option.name,
+      option.category,
+      option.pizzaSize,
+      option.rollSize,
+    ].filter(Boolean).join(" - "),
+  }));
+  const defaultVariant = variants.find((variant) => variant.isDefault) ?? variants[0];
+  const categoryOptions = CATALOG_SITE_CATEGORIES.map((category) => ({ value: category, label: category }));
+  const kitchenZoneOptions = KITCHEN_ZONES.map((zone) => ({
+    value: zone,
+    label: KITCHEN_ZONE_LABELS[zone],
+  }));
   const uploadImage = async (file: File | undefined) => {
     if (!file) {
       return;
@@ -87,8 +108,8 @@ export function CatalogItemForm({
         </h2>
         <p className="text-sm leading-6 text-zinc-600">
           {mode === "edit"
-            ? "Обнови прайс, категорию, цену и привязку к технологической карте."
-            : "Добавь позицию в нужный прайс и сразу привяжи её к технологической карте."}
+            ? "Обнови прайс, категорию, кухонную зону и варианты карточки."
+            : "Добавь одну карточку и привяжи к ней варианты: размеры пиццы или роллы 8/4."}
         </p>
       </div>
 
@@ -119,13 +140,36 @@ export function CatalogItemForm({
         onChange={setSelectedPriceListType}
       />
 
-      <CatalogTechCardFields
-        priceDefaultValue={state.values.price}
-        selectedCategory={selectedCategory}
-        selectedTechCardId={selectedTechCardId}
-        filteredTechCardOptions={filteredTechCardOptions}
-        onCategoryChange={setSelectedCategory}
-        onTechCardIdChange={setSelectedTechCardId}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <CatalogDropdown
+          name="category"
+          label="Категория на сайте"
+          placeholder="Выбери категорию сайта"
+          value={selectedCategory}
+          options={categoryOptions}
+          onChange={(value) => {
+            setSelectedCategory(value);
+            setSelectedKitchenZone(resolveKitchenZoneByCategory(value));
+          }}
+        />
+        <CatalogDropdown
+          name="kitchenZone"
+          label="Кухонная зона"
+          placeholder="Выбери зону"
+          value={selectedKitchenZone}
+          options={kitchenZoneOptions}
+          onChange={(value) => setSelectedKitchenZone(value as KitchenZone | "")}
+        />
+      </div>
+
+      <input type="hidden" name="technologicalCardId" value={defaultVariant?.technologicalCardId ?? ""} />
+      <input type="hidden" name="price" value={defaultVariant?.price ?? ""} />
+      <input type="hidden" name="variants" value={JSON.stringify(variants)} />
+
+      <CatalogVariantsEditor
+        variants={variants}
+        options={techCardDropdownOptions}
+        onChange={setVariants}
       />
 
       <label className="block space-y-2.5">
@@ -158,4 +202,41 @@ export function CatalogItemForm({
       </button>
     </form>
   );
+}
+
+function buildInitialVariants(
+  initialItem: CatalogItemFormProps["initialItem"],
+  values: CatalogFormState["values"],
+): CatalogVariantDraft[] {
+  if (initialItem?.variants.length) {
+    return initialItem.variants.map((variant) => ({
+      technologicalCardId: String(variant.technologicalCardId),
+      label: variant.label,
+      price: String(variant.priceCents / 100),
+      isDefault: variant.isDefault,
+    }));
+  }
+
+  return [{
+    technologicalCardId: values.technologicalCardId,
+    label: "Стандарт",
+    price: values.price,
+    isDefault: true,
+  }];
+}
+
+function resolveKitchenZoneByCategory(category: string): KitchenZone | "" {
+  if (category === "Пицца") {
+    return "pizza";
+  }
+
+  if (category === "Роллы" || category === "Онигири" || category === "Суши-доги") {
+    return "rolls";
+  }
+
+  if (category === "Фастфуд") {
+    return "fastfood";
+  }
+
+  return "";
 }

@@ -6,10 +6,12 @@ export const EMPTY_CATALOG_FORM_VALUES: CatalogFormValues = {
   name: "",
   priceListType: "",
   category: "",
+  kitchenZone: "",
   description: "",
   imageUrl: "",
   price: "",
   technologicalCardId: "",
+  variants: "[]",
 };
 
 export const CATALOG_FIELD_CLASS_NAME =

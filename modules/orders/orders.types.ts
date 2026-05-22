@@ -23,6 +23,7 @@ export const ORDER_SOURCE_LABELS: Record<OrderSource, string> = {
 
 export type OrderDraftItem = {
   catalogItemId: number;
+  catalogItemVariantId?: number;
   quantity: number;
 };
 
@@ -41,6 +42,7 @@ export type OrderPackagingUsage = {
 export type OrderItemSummary = {
   id: number;
   catalogItemId: number | null;
+  catalogItemVariantId: number | null;
   itemName: string;
   quantity: number;
   unitPriceCents: number;

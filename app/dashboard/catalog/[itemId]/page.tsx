@@ -35,10 +35,17 @@ export default async function CatalogItemEditPage(props: {
     name: catalogItem.name,
     priceListType: catalogItem.priceListType,
     category: catalogItem.category ?? "",
+    kitchenZone: catalogItem.kitchenZone ?? "",
     description: catalogItem.description ?? "",
     imageUrl: catalogItem.imageUrl ?? "",
     price: formatPriceInput(catalogItem.priceCents),
     technologicalCardId: String(catalogItem.technologicalCardId),
+    variants: JSON.stringify(catalogItem.variants.map((variant) => ({
+      technologicalCardId: variant.technologicalCardId,
+      label: variant.label,
+      price: variant.priceCents / 100,
+      isDefault: variant.isDefault,
+    }))),
   };
 
   return (

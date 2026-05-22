@@ -60,6 +60,7 @@ export function OrderCreateButton({
   );
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedItems, setSelectedItems] = useState<Record<number, number>>({});
+  const [selectedVariants, setSelectedVariants] = useState<Record<number, number>>({});
   const [selectedChoices, setSelectedChoices] = useState<Record<number, Record<number, number>>>({});
   const [state, formAction, isPending] = useActionState(createOrderAction, initialState);
   const canEditDeliveryFee = canAdjustDeliveryFee(user.role);
@@ -78,6 +79,7 @@ export function OrderCreateButton({
         setDeliveryFeeRubles(String(DEFAULT_DELIVERY_FEE_CENTS / 100));
         setSelectedCategory("");
         setSelectedItems({});
+        setSelectedVariants({});
         setSelectedChoices({});
       }, 0);
 
@@ -136,15 +138,21 @@ export function OrderCreateButton({
             return null;
           }
 
+          const defaultVariant = item.variants.find((variant) => variant.isDefault) ?? item.variants[0] ?? null;
+          const selectedVariant =
+            item.variants.find((variant) => variant.id === selectedVariants[item.id]) ?? defaultVariant;
+          const unitPriceCents = selectedVariant?.priceCents ?? item.priceCents;
+
           return {
             item,
+            variant: selectedVariant,
             quantity,
-            totalCents: item.priceCents * quantity,
+            totalCents: unitPriceCents * quantity,
             choices: selectedChoices[item.id] ?? {},
           };
         })
         .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry)),
-    [catalogItems, selectedChoices, selectedItems],
+    [catalogItems, selectedChoices, selectedItems, selectedVariants],
   );
 
   const totalCents = selectedOrderItems.reduce((sum, entry) => sum + entry.totalCents, 0);
@@ -165,6 +173,7 @@ export function OrderCreateButton({
   const itemsPayload = JSON.stringify(
     selectedOrderItems.map((entry) => ({
       catalogItemId: entry.item.id,
+      catalogItemVariantId: entry.variant?.id,
       quantity: entry.quantity,
       choices: entry.item.choiceSlots.map((slot) => ({
         choiceSlotId: slot.id,
@@ -185,6 +194,13 @@ export function OrderCreateButton({
 
       return next;
     });
+  };
+
+  const setVariant = (catalogItemId: number, catalogItemVariantId: number) => {
+    setSelectedVariants((current) => ({
+      ...current,
+      [catalogItemId]: catalogItemVariantId,
+    }));
   };
 
   const setChoice = (catalogItemId: number, choiceSlotId: number, selectedCatalogItemId: number) => {
@@ -209,6 +225,7 @@ export function OrderCreateButton({
 
       return Object.fromEntries(nextEntries);
     });
+    setSelectedVariants({});
     setSelectedChoices({});
   };
 
@@ -259,6 +276,7 @@ export function OrderCreateButton({
           availableCategories={availableCategories}
           filteredCatalogItems={filteredCatalogItems}
           selectedItems={selectedItems}
+          selectedVariants={selectedVariants}
           selectedChoices={selectedChoices}
           selectedClient={selectedClient}
           selectedEmployee={selectedEmployee}
@@ -278,6 +296,7 @@ export function OrderCreateButton({
           onCatalogQueryChange={setCatalogQuery}
           onCategoryChange={setSelectedCategory}
           onQuantityChange={setQuantity}
+          onVariantChange={setVariant}
           onChoiceChange={setChoice}
           onOpenClientPicker={() => setActivePicker("client")}
           onOpenEmployeePicker={() => setActivePicker("employee")}
