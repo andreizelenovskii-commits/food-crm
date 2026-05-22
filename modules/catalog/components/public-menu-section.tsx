@@ -15,7 +15,7 @@ import {
 import { PublicMenuProductModal } from "@/modules/catalog/components/public-menu-product-modal";
 import {
   describePublicMenuItem,
-  formatPublicMenuMoney,
+  getPublicMenuCardPrice,
   resolvePublicMenuVariant,
 } from "@/modules/catalog/components/public-menu-utils";
 import { ORDER_STATUS_LABELS } from "@/modules/orders/orders.workflow";
@@ -202,11 +202,14 @@ export function PublicMenuSection({
 
           {items.length ? (
             <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {items.map((item) => (
-                <article
-                  key={item.id}
-                  className="overflow-hidden rounded-[8px] border border-[#ffe0e3] bg-white shadow-sm shadow-[#d50014]/8"
-                >
+              {items.map((item) => {
+                const cardPrice = getPublicMenuCardPrice(item);
+
+                return (
+                  <article
+                    key={item.id}
+                    className="overflow-hidden rounded-[8px] border border-[#ffe0e3] bg-white shadow-sm shadow-[#d50014]/8"
+                  >
                   <button
                     type="button"
                     onClick={() => setActiveItem(item)}
@@ -235,9 +238,12 @@ export function PublicMenuSection({
                         </p>
                         <h3 className="mt-2 text-xl font-semibold text-[#241316]">{item.name}</h3>
                       </div>
-                      <p className="shrink-0 text-lg font-semibold text-[#c90013]">
-                        {formatPublicMenuMoney(resolvePublicMenuVariant(item).priceCents)}
-                      </p>
+                      <div className="shrink-0 text-right">
+                        <p className="text-lg font-semibold text-[#c90013]">{cardPrice.label}</p>
+                        {cardPrice.hint ? (
+                          <p className="mt-1 text-xs font-semibold text-[#9b7d83]">{cardPrice.hint}</p>
+                        ) : null}
+                      </div>
                     </div>
                     <p className="mt-3 text-sm leading-6 text-[#6b5960]">{describePublicMenuItem(item)}</p>
                     <button
@@ -248,8 +254,9 @@ export function PublicMenuSection({
                       Выбрать
                     </button>
                   </div>
-                </article>
-              ))}
+                  </article>
+                );
+              })}
             </div>
           ) : (
             <div className="mt-10 rounded-[8px] border border-[#ffe0e3] bg-[#fffafa] p-6 text-[#6b5960]">

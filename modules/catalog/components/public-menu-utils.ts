@@ -1,5 +1,8 @@
 import type { CatalogItem } from "@/modules/catalog/catalog.types";
 
+const PIZZA_SIZE_ORDER = ["24 см", "26 см", "30 см"] as const;
+const ROLL_SIZE_ORDER = ["4 шт", "8 шт"] as const;
+
 export function formatPublicMenuMoney(cents: number) {
   return new Intl.NumberFormat("ru-RU", {
     style: "currency",
@@ -30,4 +33,47 @@ export function resolvePublicMenuVariant(item: CatalogItem, selectedVariantId?: 
       rollSize: item.rollSize,
     }
   );
+}
+
+export function getPublicMenuCardPrice(item: CatalogItem) {
+  const variant = resolvePublicMenuVariant(item);
+  const isSizedItem = item.category === "Пицца" || item.category === "Пиццы" || item.category === "Роллы";
+
+  if (!isSizedItem || item.variants.length <= 1) {
+    return {
+      label: formatPublicMenuMoney(variant.priceCents),
+      hint: null,
+    };
+  }
+
+  const baseVariant = findBaseSizedVariant(item) ?? variant;
+
+  return {
+    label: `от ${formatPublicMenuMoney(baseVariant.priceCents)}`,
+    hint: baseVariant.label,
+  };
+}
+
+function findBaseSizedVariant(item: CatalogItem) {
+  if (item.category === "Пицца" || item.category === "Пиццы") {
+    return [...item.variants].sort((left, right) => {
+      const leftIndex = PIZZA_SIZE_ORDER.indexOf(left.label as never);
+      const rightIndex = PIZZA_SIZE_ORDER.indexOf(right.label as never);
+      return normalizeSortIndex(leftIndex, PIZZA_SIZE_ORDER.length) - normalizeSortIndex(rightIndex, PIZZA_SIZE_ORDER.length);
+    })[0];
+  }
+
+  if (item.category === "Роллы") {
+    return [...item.variants].sort((left, right) => {
+      const leftIndex = ROLL_SIZE_ORDER.indexOf(left.label as never);
+      const rightIndex = ROLL_SIZE_ORDER.indexOf(right.label as never);
+      return normalizeSortIndex(leftIndex, ROLL_SIZE_ORDER.length) - normalizeSortIndex(rightIndex, ROLL_SIZE_ORDER.length);
+    })[0];
+  }
+
+  return null;
+}
+
+function normalizeSortIndex(index: number, fallback: number) {
+  return index === -1 ? fallback : index;
 }
