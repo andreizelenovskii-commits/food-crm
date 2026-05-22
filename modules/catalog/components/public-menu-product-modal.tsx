@@ -60,13 +60,9 @@ export function PublicMenuProductModal({
 
 function ProductModalImage({ item }: { item: CatalogItem }) {
   return (
-    <div className="relative flex min-h-[300px] items-center justify-center overflow-hidden bg-[#fff4f1] p-5 sm:p-8">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_14%,rgba(213,0,20,0.12),transparent_28%),radial-gradient(circle_at_78%_82%,rgba(255,198,163,0.36),transparent_34%),linear-gradient(145deg,#fff8f5_0%,#fff0ef_48%,#fff7f0_100%)]" />
-      <div className="absolute left-8 top-8 h-28 w-28 rounded-full border border-white/70 bg-white/35 blur-[1px]" />
-      <div className="absolute bottom-10 right-8 h-40 w-40 rounded-full border border-[#ffd6c8]/70 bg-white/28" />
-      <div className="relative w-full max-w-[560px]">
-        <div className="absolute -inset-4 rounded-[34px] bg-white/45 shadow-[0_28px_80px_rgba(127,29,29,0.14)]" />
-        <div className="relative overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-[0_22px_70px_rgba(80,8,16,0.16)]">
+    <div className="flex min-h-[300px] items-center justify-center bg-[#faf6f2] p-4 sm:p-7">
+      <div className="w-full max-w-[590px] rounded-[30px] border border-[#eadfd8] bg-[#fffdfb] p-3 shadow-[0_24px_70px_rgba(43,24,19,0.12)]">
+        <div className="overflow-hidden rounded-[22px] bg-[#f4eee9]">
           {item.imageUrl ? (
             <div className="relative aspect-[4/3] w-full">
               <Image
