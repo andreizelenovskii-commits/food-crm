@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { PaginatedList } from "@/components/ui/paginated-list";
 import { CatalogItemDeleteButton } from "@/modules/catalog/components/catalog-item-delete-button";
@@ -276,8 +277,14 @@ function CatalogItemCard({ item, canManageCatalog }: { item: CatalogItem; canMan
         <div className="flex min-w-0 flex-col gap-4 sm:flex-row">
           <div className="h-24 w-full shrink-0 overflow-hidden rounded-[16px] bg-red-50 sm:w-32">
             {item.imageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
+              <Image
+                src={item.imageUrl}
+                alt={item.name}
+                width={256}
+                height={192}
+                sizes="128px"
+                className="h-full w-full object-cover"
+              />
             ) : (
               <div className="flex h-full items-center justify-center px-3 text-center text-xs text-zinc-500">
                 Нет фото

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import Image from "next/image";
 import type { PublicClientProfile } from "@/modules/clients/clients.types";
 import type { CatalogItem } from "@/modules/catalog/catalog.types";
 import {
@@ -230,12 +231,13 @@ export function PublicMenuSection({
                 >
                   <div className="flex aspect-[4/3] items-center justify-center overflow-hidden bg-[#fff1f2]">
                     {item.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <Image
                         src={item.imageUrl}
                         alt={item.name}
+                        width={640}
+                        height={480}
+                        sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
                         className="h-full w-full object-cover transition duration-500 hover:scale-105"
-                        loading="lazy"
                       />
                     ) : (
                       <span className="text-sm font-semibold uppercase tracking-[0.2em] text-[#d50014]">
