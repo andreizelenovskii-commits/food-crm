@@ -3,6 +3,7 @@
 export type ProductFormValues = {
   name: string;
   category: string;
+  kitchenZone: string;
   unit: string;
   stockQuantity: string;
   price: string;

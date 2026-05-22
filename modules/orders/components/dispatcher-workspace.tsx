@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { SessionUser } from "@/modules/auth/auth.types";
+import type { ProductItem } from "@/modules/inventory/inventory.types";
 import { GlassPanel, KpiTile } from "@/modules/dashboard/components/dashboard-widgets";
 import { OrderCreateButton } from "@/modules/orders/components/order-create-button";
 import { OrderCard } from "@/modules/orders/components/order-display";
@@ -20,11 +21,13 @@ export function DispatcherWorkspace({
   user,
   canCreate,
   orders,
+  packagingOptions,
   orderCreateOptions,
 }: {
   user: SessionUser;
   canCreate: boolean;
   orders: OrderListItem[];
+  packagingOptions: ProductItem[];
   orderCreateOptions: OrderCreateOptions;
 }) {
   const [dateMode, setDateMode] = useState<DateMode>("day");
@@ -59,8 +62,20 @@ export function DispatcherWorkspace({
           </section>
 
           <div className="grid gap-4 xl:grid-cols-[minmax(320px,0.9fr)_minmax(420px,1.1fr)]">
-            <DispatcherColumn title="Заказы с сайта" orders={websiteOrders} user={user} emptyText="Новых входящих заказов нет." />
-            <DispatcherColumn title="В работе у диспетчера" orders={activeClientOrders} user={user} emptyText="Активных клиентских заказов нет." />
+            <DispatcherColumn
+              title="Заказы с сайта"
+              orders={websiteOrders}
+              user={user}
+              packagingOptions={packagingOptions}
+              emptyText="Новых входящих заказов нет."
+            />
+            <DispatcherColumn
+              title="В работе у диспетчера"
+              orders={activeClientOrders}
+              user={user}
+              packagingOptions={packagingOptions}
+              emptyText="Активных клиентских заказов нет."
+            />
           </div>
         </div>
       </div>
@@ -165,11 +180,13 @@ function DispatcherColumn({
   title,
   orders,
   user,
+  packagingOptions,
   emptyText,
 }: {
   title: string;
   orders: OrderListItem[];
   user: SessionUser;
+  packagingOptions: ProductItem[];
   emptyText: string;
 }) {
   return (
@@ -184,7 +201,15 @@ function DispatcherColumn({
             {emptyText}
           </div>
         ) : (
-          orders.map((order) => <OrderCard key={order.id} order={order} user={user} compact />)
+          orders.map((order) => (
+            <OrderCard
+              key={order.id}
+              order={order}
+              user={user}
+              packagingOptions={packagingOptions}
+              compact
+            />
+          ))
         )}
       </div>
     </GlassPanel>

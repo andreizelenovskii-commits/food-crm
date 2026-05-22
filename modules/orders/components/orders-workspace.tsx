@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { PaginatedList } from "@/components/ui/paginated-list";
 import type { SessionUser } from "@/modules/auth/auth.types";
+import type { ProductItem } from "@/modules/inventory/inventory.types";
 import { GlassPanel, KpiTile } from "@/modules/dashboard/components/dashboard-widgets";
 import { OrderCreateButton } from "@/modules/orders/components/order-create-button";
 import { OrderCard, formatOrderMoney } from "@/modules/orders/components/order-display";
@@ -25,11 +26,13 @@ export function OrdersWorkspace({
   user,
   canCreate,
   orders,
+  packagingOptions,
   orderCreateOptions,
 }: {
   user: SessionUser;
   canCreate: boolean;
   orders: OrderListItem[];
+  packagingOptions: ProductItem[];
   orderCreateOptions: OrderCreateOptions;
 }) {
   const [scope, setScope] = useState<OrderScope>("all");
@@ -136,7 +139,12 @@ export function OrdersWorkspace({
             ) : (
               <PaginatedList className="space-y-3" itemLabel="заказов" pageSize={8}>
                 {visibleOrders.map((order) => (
-                  <OrderCard key={order.id} order={order} user={user} />
+                  <OrderCard
+                    key={order.id}
+                    order={order}
+                    user={user}
+                    packagingOptions={packagingOptions}
+                  />
                 ))}
               </PaginatedList>
             )}

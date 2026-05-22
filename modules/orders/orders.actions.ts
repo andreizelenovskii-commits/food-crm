@@ -85,3 +85,23 @@ export async function updateOrderStatusAction(formData: FormData) {
   });
   window.location.reload();
 }
+
+export async function chooseOrderPackagingAction(formData: FormData) {
+  const orderId = Number(String(formData.get("orderId") ?? "").trim());
+  const orderItemId = Number(String(formData.get("orderItemId") ?? "").trim());
+  const unitIndex = Number(String(formData.get("unitIndex") ?? "").trim());
+  const packageProductId = Number(String(formData.get("packageProductId") ?? "").trim());
+
+  if (![orderId, orderItemId, unitIndex, packageProductId].every((value) => Number.isInteger(value) && value > 0)) {
+    return;
+  }
+
+  await browserBackendJson(`/api/v1/orders/${orderId}/packaging`, {
+    body: {
+      orderItemId,
+      unitIndex,
+      packageProductId,
+    },
+  });
+  window.location.reload();
+}

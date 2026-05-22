@@ -8,7 +8,10 @@ import {
   updateProductAction,
 } from "@/modules/inventory/inventory.actions";
 import {
+  KITCHEN_ZONE_LABELS,
+  KITCHEN_ZONES,
   PRODUCT_CATEGORIES,
+  type KitchenZone,
   type ProductCategory,
   type ProductItem,
 } from "@/modules/inventory/inventory.types";
@@ -34,6 +37,7 @@ export function ProductForm({ initialProduct }: { initialProduct?: ProductItem }
     values: {
       name: initialProduct?.name ?? "",
       category: initialProduct?.category ?? "",
+      kitchenZone: initialProduct?.kitchenZone ?? "",
       unit: initialProduct?.unit ?? "",
       stockQuantity: initialProduct ? String(initialProduct.stockQuantity) : "",
       price: formatPriceInput(initialProduct?.priceCents),
@@ -96,6 +100,7 @@ export function ProductForm({ initialProduct }: { initialProduct?: ProductItem }
             name: "",
             category: "",
             unit: "",
+            kitchenZone: "",
             stockQuantity: "",
             price: "",
             description: "",
@@ -171,6 +176,30 @@ export function ProductForm({ initialProduct }: { initialProduct?: ProductItem }
           Категория помогает аккуратно вести склад и быстрее находить нужные позиции.
         </p>
       </label>
+
+      {selectedCategory === "Упаковка" ? (
+        <label className="block space-y-1.5">
+          <span className="text-[11px] font-semibold text-zinc-700">Зона кухни</span>
+          <select
+            name="kitchenZone"
+            defaultValue={activeState.values.kitchenZone}
+            className="h-10 w-full rounded-full border border-red-100 bg-red-50/60 px-4 text-sm font-medium text-zinc-950 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
+            required
+          >
+            <option value="">Выбери зону для упаковки</option>
+            {KITCHEN_ZONES.map((zone) => (
+              <option key={zone} value={zone}>
+                {KITCHEN_ZONE_LABELS[zone as KitchenZone]}
+              </option>
+            ))}
+          </select>
+          <p className="text-[11px] leading-4 text-zinc-500">
+            Эта привязка определяет, какие упаковки увидит сотрудник зоны при отдаче блюда.
+          </p>
+        </label>
+      ) : (
+        <input type="hidden" name="kitchenZone" value="" />
+      )}
 
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="block space-y-1.5">

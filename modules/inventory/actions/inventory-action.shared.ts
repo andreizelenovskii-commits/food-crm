@@ -11,6 +11,7 @@ export function getProductFormValues(formData: FormData): ProductFormValues {
   return {
     name: read("name"),
     category: read("category"),
+    kitchenZone: read("kitchenZone"),
     unit: read("unit"),
     stockQuantity: read("stockQuantity"),
     price: read("price"),
@@ -22,6 +23,7 @@ export function getEmptyProductFormValues(): ProductFormValues {
   return {
     name: "",
     category: "",
+    kitchenZone: "",
     unit: "",
     stockQuantity: "",
     price: "",

@@ -3,12 +3,14 @@ import { SessionUserActions } from "@/modules/auth/components/session-user-actio
 import { OrdersWorkspace } from "@/modules/orders/components/orders-workspace";
 import type { OrderCreateOptions } from "@/modules/orders/orders.page-model";
 import type { OrderListItem } from "@/modules/orders/orders.types";
+import type { ProductItem } from "@/modules/inventory/inventory.types";
 import type { SessionUser } from "@/modules/auth/auth.types";
 
 type OrdersPageProps = {
   user: SessionUser;
   canCreate: boolean;
   orders: OrderListItem[];
+  packagingOptions: ProductItem[];
   orderCreateOptions: OrderCreateOptions;
 };
 
@@ -16,6 +18,7 @@ export function OrdersPage({
   user,
   canCreate,
   orders,
+  packagingOptions,
   orderCreateOptions,
 }: OrdersPageProps) {
   return (
@@ -29,6 +32,7 @@ export function OrdersPage({
         user={user}
         canCreate={canCreate}
         orders={orders}
+        packagingOptions={packagingOptions}
         orderCreateOptions={orderCreateOptions}
       />
     </PageShell>

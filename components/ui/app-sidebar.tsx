@@ -5,6 +5,7 @@ import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { ModuleIcon } from "@/components/ui/module-icon";
+import { SidebarNavGroup } from "@/components/ui/sidebar-nav-group";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Главная", icon: "grid" },
@@ -43,6 +44,12 @@ const INVENTORY_SUB_ITEMS: Array<{
   { href: "/dashboard/inventory?tab=recipes", label: "Техкарты", tab: "recipes" },
 ];
 
+const SETTINGS_SUB_ITEMS = [
+  { href: "/dashboard/settings/rights", label: "Права" },
+  { href: "/dashboard/settings/roles", label: "Роли" },
+  { href: "/dashboard/settings/kitchen-zones", label: "Кухонные зоны" },
+] as const;
+
 function isActivePath(pathname: string, href: string) {
   if (href === "/dashboard") {
     return pathname === href;
@@ -56,7 +63,9 @@ export function AppSidebar() {
   const searchParams = useSearchParams();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const isInventoryPath = isActivePath(pathname, "/dashboard/inventory");
+  const isSettingsPath = isActivePath(pathname, "/dashboard/settings");
   const [isInventoryOpen, setIsInventoryOpen] = useState(isInventoryPath);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(isSettingsPath);
   const activeInventoryTab = isInventoryPath ? (searchParams.get("tab") ?? "products") : "";
   const activeInventoryCategory = isInventoryPath ? (searchParams.get("category") ?? "") : "";
 
@@ -123,98 +132,56 @@ export function AppSidebar() {
               const isActive = isActivePath(pathname, item.href);
 
               if (item.href === "/dashboard/inventory") {
-                const showInventorySubnav = isInventoryOpen;
-
                 return (
-                  <div key={item.href} className="space-y-1">
-                    <div
-                      className={[
-                        "flex h-10 items-center gap-1 rounded-[12px] transition",
-                        isActive
-                          ? "bg-red-800 text-white shadow-md shadow-red-950/10 hover:bg-red-800 hover:text-white"
-                          : "text-zinc-600 hover:bg-red-50/80 hover:text-red-900 hover:shadow-sm hover:shadow-red-950/5",
-                      ].join(" ")}
-                    >
-                      <Link
-                        href={item.href}
-                        onClick={() => {
-                          setIsInventoryOpen(true);
-                          setIsMobileOpen(false);
-                        }}
-                        className="flex h-full min-w-0 flex-1 items-center gap-2.5 rounded-l-[12px] pl-2 text-sm font-medium"
-                      >
-                        <span
-                          className={[
-                            "flex h-7 w-7 shrink-0 items-center justify-center rounded-[9px]",
-                            isActive ? "bg-white/16 text-white" : "bg-red-50 text-red-800",
-                          ].join(" ")}
-                        >
-                          <ModuleIcon name={item.icon} />
-                        </span>
-                        <span className="whitespace-nowrap">{item.label}</span>
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => setIsInventoryOpen((current) => !current)}
-                        className={[
-                          "mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] transition",
-                          isActive
-                            ? "text-white hover:bg-white/14 hover:text-white"
-                            : "text-red-800 hover:bg-red-50 hover:text-red-900",
-                        ].join(" ")}
-                        aria-label={showInventorySubnav ? "Скрыть вкладки склада" : "Показать вкладки склада"}
-                        aria-expanded={showInventorySubnav}
-                      >
-                        <svg
-                          viewBox="0 0 20 20"
-                          aria-hidden="true"
-                          className={`h-4 w-4 transition-transform ${showInventorySubnav ? "rotate-90" : ""}`}
-                        >
-                          <path
-                            d="M7.5 4.75 12.25 10 7.5 15.25"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="1.8"
-                          />
-                        </svg>
-                      </button>
-                    </div>
+                  <SidebarNavGroup
+                    key={item.href}
+                    href={item.href}
+                    label={item.label}
+                    icon={item.icon}
+                    isActive={isActive}
+                    isOpen={isInventoryOpen}
+                    expandLabel="Показать вкладки склада"
+                    collapseLabel="Скрыть вкладки склада"
+                    onOpen={() => {
+                      setIsInventoryOpen(true);
+                      setIsMobileOpen(false);
+                    }}
+                    onToggle={() => setIsInventoryOpen((current) => !current)}
+                    onCloseMobile={() => setIsMobileOpen(false)}
+                    subItems={INVENTORY_SUB_ITEMS.map((subItem) => ({
+                      href: subItem.href,
+                      label: subItem.label,
+                      isActive: subItem.category
+                        ? activeInventoryTab === subItem.tab && activeInventoryCategory === subItem.category
+                        : activeInventoryTab === subItem.tab && !activeInventoryCategory,
+                    }))}
+                  />
+                );
+              }
 
-                    {showInventorySubnav ? (
-                      <div className="ml-[22px] mt-1.5 space-y-0.5 border-l border-red-800/18 py-1 pl-5 pr-1">
-                        {INVENTORY_SUB_ITEMS.map((subItem) => {
-                          const isSubActive = subItem.category
-                            ? activeInventoryTab === subItem.tab && activeInventoryCategory === subItem.category
-                            : activeInventoryTab === subItem.tab && !activeInventoryCategory;
-
-                          return (
-                            <Link
-                              key={subItem.href}
-                              href={subItem.href}
-                              onClick={() => setIsMobileOpen(false)}
-                              className={[
-                                "group relative flex h-8 items-center rounded-[9px] px-3 text-[13px] font-semibold transition",
-                                isSubActive
-                                  ? "bg-red-50/85 text-red-800"
-                                  : "text-zinc-500 hover:bg-red-50/55 hover:text-red-900",
-                              ].join(" ")}
-                            >
-                              <span
-                                className={[
-                                  "absolute -left-[25px] h-1.5 w-1.5 rounded-full border border-[#fffdfc] transition",
-                                  isSubActive ? "bg-red-800" : "bg-red-800/24 group-hover:bg-red-800/50",
-                                ].join(" ")}
-                                aria-hidden="true"
-                              />
-                              <span className="truncate">{subItem.label}</span>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    ) : null}
-                  </div>
+              if (item.href === "/dashboard/settings") {
+                return (
+                  <SidebarNavGroup
+                    key={item.href}
+                    href={item.href}
+                    label={item.label}
+                    icon={item.icon}
+                    isActive={isActive}
+                    isOpen={isSettingsOpen}
+                    expandLabel="Показать разделы настроек"
+                    collapseLabel="Скрыть разделы настроек"
+                    onOpen={() => {
+                      setIsSettingsOpen(true);
+                      setIsMobileOpen(false);
+                    }}
+                    onToggle={() => setIsSettingsOpen((current) => !current)}
+                    onCloseMobile={() => setIsMobileOpen(false)}
+                    subItems={SETTINGS_SUB_ITEMS.map((subItem) => ({
+                      href: subItem.href,
+                      label: subItem.label,
+                      isActive: isActivePath(pathname, subItem.href),
+                    }))}
+                  />
                 );
               }
 
