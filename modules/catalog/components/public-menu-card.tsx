@@ -22,27 +22,16 @@ export function PublicMenuCard({
         <button
           type="button"
           onClick={() => onSelect(item)}
-          className="relative block aspect-[4/3] w-full overflow-hidden bg-[#f7f1ee]"
+          className="relative block aspect-square w-full overflow-hidden bg-[#fbf8f6]"
         >
           {item.imageUrl ? (
-            <>
-              <Image
-                src={item.imageUrl}
-                alt=""
-                fill
-                aria-hidden="true"
-                sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
-                className="scale-110 object-cover object-center opacity-35 blur-xl saturate-110"
-              />
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.16),rgba(255,247,244,0.72))]" />
-              <Image
-                src={item.imageUrl}
-                alt={item.name}
-                fill
-                sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
-                className="p-3 object-contain object-center transition duration-500 group-hover:scale-[1.025]"
-              />
-            </>
+            <Image
+              src={item.imageUrl}
+              alt={item.name}
+              fill
+              sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
+              className="object-cover object-center transition duration-500 group-hover:scale-[1.025]"
+            />
           ) : (
             <span className="flex h-full items-center justify-center text-sm font-semibold uppercase tracking-[0.2em] text-[#d50014]">
               FoodLike
