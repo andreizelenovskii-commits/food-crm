@@ -32,11 +32,15 @@ function cartKey(itemId: number, variantId: number, excludedIngredientIds: numbe
 
 export function PublicMenuSection({
   currentClient,
+  description = "Небольшая витрина из меню на сегодня. Полный выбор откроется через строку категорий наверху.",
   featuredItems,
+  title = "Популярное сегодня",
   items,
 }: {
   currentClient: PublicClientProfile | null;
+  description?: string;
   featuredItems: CatalogItem[];
+  title?: string;
   items: CatalogItem[];
 }) {
   const [authMode, setAuthMode] = useState<AuthMode>("login");
@@ -185,18 +189,12 @@ export function PublicMenuSection({
                 Меню FoodLike
               </p>
               <h2 className="mt-3 text-3xl font-semibold text-[#241316] sm:text-5xl">
-                Популярное сегодня
+                {title}
               </h2>
               <p className="mt-4 max-w-2xl text-base leading-7 text-[#6b5960]">
-                Небольшая витрина из меню на сегодня. Полный выбор откроется через строку категорий наверху.
+                {description}
               </p>
             </div>
-            <a
-              href="#menu-categories"
-              className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-full border border-[#ffd7dc] bg-[#fff5f6] px-6 text-sm font-semibold text-[#b00012] shadow-sm shadow-[#d50014]/8 transition hover:border-[#d50014] hover:bg-[#d50014] hover:text-white"
-            >
-              Смотреть меню
-            </a>
           </div>
 
           {featuredItems.length ? (

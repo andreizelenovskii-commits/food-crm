@@ -4,11 +4,12 @@ import type { FormEvent } from "react";
 import { useState } from "react";
 import type { PublicClientProfile } from "@/modules/clients/clients.types";
 import type { CatalogItem, CatalogItemExcludedIngredient, CatalogItemVariant } from "@/modules/catalog/catalog.types";
+import {
+  CheckoutPanel,
+  DELIVERY_FEE_CENTS,
+} from "@/modules/catalog/components/public-menu-checkout";
 import { formatPublicMenuMoney } from "@/modules/catalog/components/public-menu-utils";
-import { ORDER_STATUS_LABELS } from "@/modules/orders/orders.workflow";
 import type { OrderStatus } from "@/modules/orders/orders.types";
-
-const DELIVERY_FEE_CENTS = 17000;
 
 export type PublicCartEntry = {
   key: string;
@@ -200,79 +201,6 @@ function CartChoiceSlots({
           </select>
         </label>
       ))}
-    </div>
-  );
-}
-
-function CheckoutPanel({
-  createdOrder,
-  currentClient,
-  isPending,
-  message,
-  deliveryFeeCents,
-  payableCents,
-  subtotalCents,
-}: {
-  createdOrder: PublicOrderStatus | null;
-  currentClient: PublicClientProfile | null;
-  isPending: boolean;
-  message: string | null;
-  deliveryFeeCents: number;
-  payableCents: number;
-  subtotalCents: number;
-}) {
-  return (
-    <aside className="border-t border-[#f6e2e5] bg-[#fffafa] p-4 sm:p-5 lg:border-l lg:border-t-0">
-      <div className="rounded-[18px] bg-white p-4 shadow-sm shadow-[#d50014]/5">
-        <TotalRow label="Блюда" value={formatPublicMenuMoney(subtotalCents)} />
-        <TotalRow label="Доставка" value={formatPublicMenuMoney(deliveryFeeCents)} />
-        <TotalRow label="Итого" value={formatPublicMenuMoney(payableCents)} strong />
-      </div>
-      <CheckoutFields currentClient={currentClient} />
-      {message ? <p className="mt-3 rounded-[14px] border border-[#f3dadd] bg-white px-4 py-3 text-sm text-[#6b5960]">{message}</p> : null}
-      {createdOrder ? <p className="mt-3 text-sm font-semibold text-[#b00012]">Статус: {ORDER_STATUS_LABELS[createdOrder.status]}</p> : null}
-      <button type="submit" disabled={isPending} className="mt-4 min-h-12 w-full rounded-[16px] bg-[#d50014] px-5 text-sm font-semibold text-white transition hover:bg-[#b90012] disabled:opacity-60">
-        {currentClient ? "Оформить заказ" : "Войти для заказа"}
-      </button>
-    </aside>
-  );
-}
-
-function CheckoutFields({ currentClient }: { currentClient: PublicClientProfile | null }) {
-  return (
-    <div className="mt-4 space-y-3">
-      <CartInput name="recipientPhone" label="Телефон получателя" defaultValue={currentClient?.phone ?? ""} required />
-      <CartInput name="deliveryAddress" label="Адрес доставки" defaultValue={currentClient?.address ?? ""} required />
-      <label className="block space-y-2">
-        <span className="text-sm font-semibold text-[#3a292d]">Оплата</span>
-        <select name="paymentMethod" className="foodlike-field min-h-12 rounded-[14px]" defaultValue="cash" required>
-          <option value="cash">Наличными</option>
-          <option value="courier_card">Картой курьеру</option>
-          <option value="online">Онлайн оплата</option>
-        </select>
-      </label>
-      <label className="block space-y-2">
-        <span className="text-sm font-semibold text-[#3a292d]">Комментарий</span>
-        <textarea name="customerComment" className="foodlike-field min-h-24 rounded-[14px] py-3" />
-      </label>
-    </div>
-  );
-}
-
-function CartInput({ defaultValue, label, name, required }: { defaultValue: string; label: string; name: string; required?: boolean }) {
-  return (
-    <label className="block space-y-2">
-      <span className="text-sm font-semibold text-[#3a292d]">{label}</span>
-      <input name={name} defaultValue={defaultValue} className="foodlike-field min-h-12 rounded-[14px]" required={required} />
-    </label>
-  );
-}
-
-function TotalRow({ label, strong, value }: { label: string; strong?: boolean; value: string }) {
-  return (
-    <div className={`flex items-center justify-between gap-3 py-1 ${strong ? "mt-2 border-t border-[#f3dadd] pt-3 text-lg font-semibold text-[#241316]" : "text-sm text-[#6b5960]"}`}>
-      <span>{label}</span>
-      <span className={strong ? "text-[#c90013]" : "font-semibold text-[#241316]"}>{value}</span>
     </div>
   );
 }

@@ -75,12 +75,6 @@ export default async function Home() {
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <a
-                href="#menu"
-                className="inline-flex justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-[#c90013] shadow-sm shadow-black/12 transition hover:bg-[#ffe8ea]"
-              >
-                Смотреть меню
-              </a>
-              <a
                 href="#reviews"
                 className="inline-flex justify-center rounded-full border border-white/34 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/18"
               >

@@ -6,6 +6,10 @@ import { FormEvent, useState } from "react";
 import type { PublicClientProfile } from "@/modules/clients/clients.types";
 import { PublicHeaderInfoActions } from "@/modules/catalog/components/public-header-info-actions";
 import {
+  PublicAvatarBadge,
+  usePublicAvatar,
+} from "@/modules/catalog/components/public-avatar";
+import {
   type AuthMode,
   PublicAuthModal,
 } from "@/modules/catalog/components/public-auth-modal";
@@ -15,6 +19,7 @@ import {
   UserIcon,
 } from "@/modules/catalog/components/public-icons";
 import { PublicProfileModal } from "@/modules/catalog/components/public-profile-modal";
+import { getMenuCategoryHref } from "@/modules/catalog/components/public-menu-category-utils";
 import { PUBLIC_SITE_CONTACTS } from "@/shared/config/public-site";
 
 function TelegramIcon({ className }: { className?: string }) {
@@ -123,6 +128,7 @@ export function PublicSiteHeader({
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const { avatarId } = usePublicAvatar();
 
   function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -193,9 +199,10 @@ export function PublicSiteHeader({
             <button
               type="button"
               onClick={() => setIsProfileOpen(true)}
-              className="ml-auto flex min-h-10 shrink-0 items-center gap-2 rounded-full bg-[#fff1f2] px-4 text-sm font-semibold text-[#b00012] transition hover:bg-[#ffe3e6] md:ml-0"
+              className="ml-auto flex min-h-10 shrink-0 items-center gap-2 rounded-full bg-[#fff1f2] py-1 pl-1 pr-4 text-sm font-semibold text-[#b00012] transition hover:bg-[#ffe3e6] md:ml-0"
             >
-              <UserIcon className="size-5" />
+              <PublicAvatarBadge avatarId={avatarId} className="size-8 rounded-full text-base" />
+              <UserIcon className="hidden size-5 sm:block" />
               <span className="hidden max-w-[150px] truncate sm:inline">
                 Личный кабинет
               </span>
@@ -224,7 +231,7 @@ export function PublicSiteHeader({
               {categories.map((category) => (
                 <a
                   key={category.value}
-                  href="#menu"
+                  href={getMenuCategoryHref(category.value)}
                   className="flex min-h-10 shrink-0 items-center rounded-full px-3.5 text-sm font-bold text-[#5c464b] transition hover:bg-[#fff1f2] hover:text-[#d50014]"
                 >
                   {category.label}
