@@ -135,7 +135,7 @@ export function PublicSiteHeader({
     }
 
     if (query) {
-      window.history.replaceState(null, "", "#menu");
+      window.history.replaceState(null, "", "#menu-categories");
     }
   }
 
@@ -215,8 +215,12 @@ export function PublicSiteHeader({
         </div>
 
         {categories.length ? (
-          <nav className="border-t border-[#f7e5e7] bg-white" aria-label="Категории меню">
-            <div className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 py-2 sm:px-6">
+          <nav
+            id="menu-categories"
+            className="scroll-mt-28 border-t border-[#f7e5e7] bg-white"
+            aria-label="Категории меню"
+          >
+            <div className="menu-category-strip mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 py-2 sm:px-6">
               {categories.map((category) => (
                 <a
                   key={category.value}

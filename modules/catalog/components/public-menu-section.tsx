@@ -32,9 +32,11 @@ function cartKey(itemId: number, variantId: number, excludedIngredientIds: numbe
 
 export function PublicMenuSection({
   currentClient,
+  featuredItems,
   items,
 }: {
   currentClient: PublicClientProfile | null;
+  featuredItems: CatalogItem[];
   items: CatalogItem[];
 }) {
   const [authMode, setAuthMode] = useState<AuthMode>("login");
@@ -45,7 +47,6 @@ export function PublicMenuSection({
   const [isPending, setIsPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [createdOrder, setCreatedOrder] = useState<PublicOrderStatus | null>(null);
-  const categories = Array.from(new Set(items.map((item) => item.category ?? "Меню")));
   const cartItems = useMemo(
     () =>
       Object.entries(cart)
@@ -147,6 +148,8 @@ export function PublicMenuSection({
       const order = await browserBackendJson<PublicOrderStatus>("/api/v1/public/orders", {
         body: {
           deliveryAddress: String(formData.get("deliveryAddress") ?? "").trim(),
+          recipientPhone: String(formData.get("recipientPhone") ?? "").trim(),
+          paymentMethod: String(formData.get("paymentMethod") ?? "").trim(),
           customerComment: String(formData.get("customerComment") ?? "").trim(),
           items: cartItems.map((entry) => ({
             catalogItemId: entry.item.id,
@@ -173,9 +176,10 @@ export function PublicMenuSection({
 
   return (
     <>
-      <section id="menu" className="bg-white py-16 sm:py-20">
+      <section id="menu" className="relative overflow-hidden bg-white py-16 sm:py-20">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[linear-gradient(180deg,#fff5f6_0%,rgba(255,255,255,0)_100%)]" />
         <div className="mx-auto max-w-7xl px-5 sm:px-8">
-          <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <div className="relative flex flex-col justify-between gap-6 md:flex-row md:items-end">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#d50014]">
                 Меню FoodLike
@@ -183,22 +187,21 @@ export function PublicMenuSection({
               <h2 className="mt-3 text-3xl font-semibold text-[#241316] sm:text-5xl">
                 Популярное сегодня
               </h2>
+              <p className="mt-4 max-w-2xl text-base leading-7 text-[#6b5960]">
+                Небольшая витрина из меню на сегодня. Полный выбор откроется через строку категорий наверху.
+              </p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {categories.map((category) => (
-                <span
-                  key={category}
-                  className="rounded-full border border-[#ffd7dc] bg-[#fff5f6] px-4 py-2 text-sm font-semibold text-[#b00012]"
-                >
-                  {category}
-                </span>
-              ))}
-            </div>
+            <a
+              href="#menu-categories"
+              className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-full border border-[#ffd7dc] bg-[#fff5f6] px-6 text-sm font-semibold text-[#b00012] shadow-sm shadow-[#d50014]/8 transition hover:border-[#d50014] hover:bg-[#d50014] hover:text-white"
+            >
+              Смотреть меню
+            </a>
           </div>
 
-          {items.length ? (
-            <div className="mt-10 grid items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {items.map((item) => (
+          {featuredItems.length ? (
+            <div className="relative mt-10 grid items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {featuredItems.map((item) => (
                 <PublicMenuCard key={item.id} item={item} onSelect={setActiveItem} />
               ))}
             </div>

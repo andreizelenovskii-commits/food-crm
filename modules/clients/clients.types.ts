@@ -27,6 +27,7 @@ export type PublicClientProfile = Pick<
   | "name"
   | "phone"
   | "birthDate"
+  | "address"
   | "totalSpentCents"
   | "loyaltyLevel"
   | "loyaltyNextLevel"

@@ -99,23 +99,23 @@ export function PublicBirthDatePicker() {
 
   return (
     <label className="relative block space-y-2">
-      <span className="text-sm font-semibold text-[#3a292d]">Дата рождения</span>
+      <span className="text-[13px] font-semibold text-[#4a3439]">Дата рождения</span>
       <input type="hidden" name="birthDate" value={toIsoDate(selectedDate)} />
       <button
         type="button"
         onClick={() => setIsOpen((current) => !current)}
-        className="foodlike-field flex min-h-12 items-center justify-between rounded-[8px] bg-white text-left shadow-sm shadow-[#d50014]/6 transition hover:border-[#f2b8bf]"
+        className="foodlike-field flex min-h-[54px] items-center justify-between rounded-[14px] border-[#f0d7dc] bg-white px-4 text-left shadow-sm shadow-[#d50014]/5 transition hover:border-[#f2b8bf] focus:border-[#d50014]/45 focus:ring-4 focus:ring-[#d50014]/10"
       >
         <span className={selectedDate ? "text-[#241316]" : "text-[#a98f95]"}>
           {formatValue(selectedDate) || "дд.мм.гггг"}
         </span>
-        <span className="flex size-8 items-center justify-center rounded-full bg-[#fff1f2] text-[#b00012]">
+        <span className="flex size-9 items-center justify-center rounded-full bg-[#fff1f2] text-[#b00012]">
           <CalendarIcon className="size-4" />
         </span>
       </button>
 
       {isOpen ? (
-        <div className="absolute left-0 top-[calc(100%+10px)] z-[60] w-[min(22rem,calc(100vw-2.5rem))] overflow-hidden rounded-[8px] border border-[#f3dadd] bg-white shadow-[0_24px_70px_rgba(80,8,18,0.22)]">
+        <div className="absolute left-0 top-[calc(100%+10px)] z-[60] w-[min(22rem,calc(100vw-2.5rem))] overflow-hidden rounded-[16px] border border-[#f3dadd] bg-white shadow-[0_24px_70px_rgba(80,8,18,0.22)]">
           <div className="border-b border-[#f6e2e5] bg-[#fff7f8] p-4">
             <div className="flex items-start justify-between gap-3">
               <div>

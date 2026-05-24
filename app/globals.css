@@ -103,12 +103,27 @@ textarea {
   }
 }
 
+@keyframes menu-strip-pulse {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 0 rgba(213, 0, 20, 0);
+  }
+  35% {
+    box-shadow: inset 0 -4px 0 rgba(213, 0, 20, 0.14);
+  }
+}
+
 .foodlike-float-soft {
   animation: foodlike-float-soft 7s ease-in-out infinite;
 }
 
 .foodlike-float-slow {
   animation: foodlike-float-slow 9s ease-in-out infinite;
+}
+
+#menu-categories:target .menu-category-strip {
+  animation: menu-strip-pulse 1.5s ease;
+  background: linear-gradient(90deg, rgba(255, 245, 246, 0), rgba(255, 245, 246, 0.94), rgba(255, 245, 246, 0));
 }
 
 @layer components {
