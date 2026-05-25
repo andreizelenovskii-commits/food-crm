@@ -15,6 +15,9 @@ export function PublicMenuCard({
   onSelect: (item: CatalogItem) => void;
 }) {
   const cardPrice = getPublicMenuCardPrice(item);
+  const imageFitClassName = isRollCategory(item.category)
+    ? "object-contain object-center"
+    : "object-cover object-center";
 
   return (
     <article className="group flex h-full overflow-hidden rounded-[12px] border border-[#f2d9dc] bg-white shadow-[0_14px_34px_rgba(86,24,31,0.07)] transition hover:-translate-y-0.5 hover:border-[#efc4c9] hover:shadow-[0_20px_46px_rgba(86,24,31,0.11)]">
@@ -30,7 +33,7 @@ export function PublicMenuCard({
               alt={item.name}
               fill
               sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
-              className="object-cover object-center transition duration-500 group-hover:scale-[1.025]"
+              className={`${imageFitClassName} transition duration-500 group-hover:scale-[1.025]`}
             />
           ) : (
             <span className="flex h-full items-center justify-center text-sm font-semibold uppercase tracking-[0.2em] text-[#d50014]">
@@ -69,5 +72,14 @@ export function PublicMenuCard({
         </div>
       </div>
     </article>
+  );
+}
+
+function isRollCategory(category: string | null) {
+  return (
+    category === "Роллы" ||
+    category === "Холодные роллы" ||
+    category === "Запеченные роллы" ||
+    category === "Теплые роллы"
   );
 }
