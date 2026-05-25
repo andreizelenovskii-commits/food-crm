@@ -2,9 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { useState } from "react";
 import type { PublicClientProfile } from "@/modules/clients/clients.types";
+import type { CatalogItem } from "@/modules/catalog/catalog.types";
 import { PublicHeaderInfoActions } from "@/modules/catalog/components/public-header-info-actions";
+import { PublicHeaderSearch } from "@/modules/catalog/components/public-header-search";
 import {
   PublicAvatarBadge,
   usePublicAvatar,
@@ -15,7 +17,6 @@ import {
 } from "@/modules/catalog/components/public-auth-modal";
 import {
   PhoneIcon,
-  SearchIcon,
   UserIcon,
 } from "@/modules/catalog/components/public-icons";
 import { PublicProfileModal } from "@/modules/catalog/components/public-profile-modal";
@@ -71,14 +72,9 @@ function SocialIconLinks({ className }: { className: string }) {
           rel="noreferrer"
           className={contactButtonClass}
         >
-          <Image
-            src="/max-logo.png"
-            alt=""
-            width={22}
-            height={22}
-            unoptimized
-            className="size-[22px] rounded-[7px] object-contain opacity-80 grayscale contrast-125 saturate-0 transition group-hover:opacity-100"
-          />
+          <span className="flex size-6 items-center justify-center rounded-[8px] border border-current text-[9px] font-black leading-none tracking-[-0.02em]">
+            MAX
+          </span>
         </a>
       ) : null}
       {PUBLIC_SITE_CONTACTS.whatsappUrl ? (
@@ -113,6 +109,39 @@ function PhoneNumberLink() {
   );
 }
 
+function CategoryNavIcon({ category }: { category: string }) {
+  if (category === "Пицца") {
+    return (
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#fff1f2] text-[#d50014] transition duration-300 group-hover:-rotate-6 group-hover:scale-110 group-hover:bg-[#d50014] group-hover:text-white">
+        <svg viewBox="0 0 24 24" className="size-5" aria-hidden="true">
+          <path
+            fill="currentColor"
+            d="M4.2 20.1 11.5 3.7c.22-.5.86-.66 1.3-.34 4.08 2.93 6.48 7.03 7.3 12.24.08.53-.38.98-.91.89L4.2 20.1Zm7.78-13.96-4.9 11.02 10.43-2.52c-.82-3.5-2.63-6.33-5.53-8.5Z"
+          />
+          <circle cx="12.1" cy="12.1" r="1.25" fill="white" opacity="0.92" />
+          <circle cx="14.8" cy="9.3" r="1.05" fill="white" opacity="0.9" />
+          <circle cx="10.1" cy="15.2" r="0.95" fill="white" opacity="0.88" />
+        </svg>
+      </span>
+    );
+  }
+
+  if (category === "Роллы") {
+    return (
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#fff1f2] text-[#d50014] transition duration-300 group-hover:scale-110 group-hover:bg-[#d50014] group-hover:text-white">
+        <svg viewBox="0 0 24 24" className="size-5 transition duration-500 group-hover:rotate-180" aria-hidden="true">
+          <circle cx="12" cy="12" r="8.2" fill="currentColor" />
+          <circle cx="12" cy="12" r="5.6" fill="white" opacity="0.94" />
+          <circle cx="12" cy="12" r="2.4" fill="currentColor" opacity="0.9" />
+          <path d="M12 6.8v10.4M6.8 12h10.4" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" opacity="0.42" />
+        </svg>
+      </span>
+    );
+  }
+
+  return null;
+}
+
 type PublicMenuCategoryLink = {
   value: string;
   label: string;
@@ -121,29 +150,16 @@ type PublicMenuCategoryLink = {
 export function PublicSiteHeader({
   categories,
   currentClient,
+  searchableItems = [],
 }: {
   categories: readonly PublicMenuCategoryLink[];
   currentClient: PublicClientProfile | null;
+  searchableItems?: CatalogItem[];
 }) {
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const { avatarId } = usePublicAvatar();
-
-  function submitSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const query = String(formData.get("search") ?? "").trim();
-    const menu = document.getElementById("menu");
-
-    if (menu) {
-      menu.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-
-    if (query) {
-      window.history.replaceState(null, "", "#menu-categories");
-    }
-  }
 
   function openAuth(mode: AuthMode) {
     setAuthMode(mode);
@@ -181,19 +197,7 @@ export function PublicSiteHeader({
 
           <SocialIconLinks className="hidden shrink-0 items-center gap-1.5 md:flex" />
 
-          <form
-            onSubmit={submitSearch}
-            className="relative order-last min-w-full flex-1 md:order-none md:min-w-[180px] xl:min-w-[230px]"
-            role="search"
-          >
-            <SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-[#9b7d83]" />
-            <input
-              name="search"
-              type="search"
-              placeholder="Поиск"
-              className="h-10 w-full rounded-full border border-[#f0d9dc] bg-[#fff8f8] pl-10 pr-4 text-sm font-medium text-[#241316] outline-none transition placeholder:text-[#a98f95] focus:border-[#d50014] focus:bg-white focus:ring-2 focus:ring-[#d50014]/12"
-            />
-          </form>
+          <PublicHeaderSearch items={searchableItems} />
 
           {currentClient ? (
             <button
@@ -232,8 +236,9 @@ export function PublicSiteHeader({
                 <a
                   key={category.value}
                   href={getMenuCategoryHref(category.value)}
-                  className="flex min-h-10 shrink-0 items-center rounded-full px-3.5 text-sm font-bold text-[#5c464b] transition hover:bg-[#fff1f2] hover:text-[#d50014]"
+                  className="group flex min-h-11 shrink-0 items-center gap-2 rounded-full px-3.5 text-sm font-black text-[#5c464b] transition hover:bg-[#fff1f2] hover:text-[#d50014]"
                 >
+                  <CategoryNavIcon category={category.value} />
                   {category.label}
                 </a>
               ))}

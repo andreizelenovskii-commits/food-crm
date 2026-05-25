@@ -11,6 +11,10 @@ import {
   type AuthMode,
   PublicAuthModal,
 } from "@/modules/catalog/components/public-auth-modal";
+import {
+  PublicMenuCategoryCarousel,
+  type MenuCategorySection,
+} from "@/modules/catalog/components/public-menu-category-carousel";
 import { PublicMenuCard } from "@/modules/catalog/components/public-menu-card";
 import { getMenuCategoryHref } from "@/modules/catalog/components/public-menu-category-utils";
 import { PublicMenuProductModal } from "@/modules/catalog/components/public-menu-product-modal";
@@ -60,6 +64,7 @@ function cartKey(itemId: number, variantId: number, excludedIngredientIds: numbe
 }
 
 export function PublicMenuSection({
+  categorySections = [],
   currentClient,
   categoryLinks = [],
   description = "Небольшая витрина из меню на сегодня. Полный выбор откроется через строку категорий наверху.",
@@ -67,8 +72,9 @@ export function PublicMenuSection({
   title = "Популярное сегодня",
   items,
 }: {
+  categorySections?: MenuCategorySection[];
   currentClient: PublicClientProfile | null;
-  categoryLinks?: Array<{ value: string; label: string }>;
+  categoryLinks?: readonly { value: string; label: string }[];
   description?: string;
   featuredItems: CatalogItem[];
   title?: string;
@@ -242,7 +248,17 @@ export function PublicMenuSection({
             </div>
           ) : null}
 
-          {featuredItems.length ? (
+          {categorySections.length ? (
+            <div className="relative mt-10 space-y-10">
+              {categorySections.map((section) => (
+                <PublicMenuCategoryCarousel
+                  key={section.value}
+                  section={section}
+                  onSelect={setActiveItem}
+                />
+              ))}
+            </div>
+          ) : featuredItems.length ? (
             <div className="relative mt-10 grid items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3">
               {featuredItems.map((item) => (
                 <PublicMenuCard key={item.id} item={item} onSelect={setActiveItem} />

@@ -30,9 +30,11 @@ function getProfileInitial(name: string) {
 }
 
 function getProgress(client: PublicClientProfile) {
-  if (!client.loyaltyLevel || !client.loyaltyNextLevel) return 100;
+  if (!client.loyaltyNextLevel) return 100;
 
-  const current = LOYALTY_LEVEL_CONFIG.find((entry) => entry.level === client.loyaltyLevel)?.minSpentCents ?? 0;
+  const current = client.loyaltyLevel
+    ? LOYALTY_LEVEL_CONFIG.find((entry) => entry.level === client.loyaltyLevel)?.minSpentCents ?? 0
+    : 0;
   const next = LOYALTY_LEVEL_CONFIG.find((entry) => entry.level === client.loyaltyNextLevel)?.minSpentCents ?? current;
   return Math.min(Math.max(((client.totalSpentCents - current) / Math.max(next - current, 1)) * 100, 4), 100);
 }

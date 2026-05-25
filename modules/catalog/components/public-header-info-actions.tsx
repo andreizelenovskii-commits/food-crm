@@ -21,8 +21,9 @@ const INFO_CONTENT = {
   },
   giveaways: {
     title: "Розыгрыши FoodLike",
-    signedInTitle: "Вы участвуете как клиент FoodLike",
-    signedInText: "Следите за активными розыгрышами и призами в личном кабинете.",
+    signedInTitle: "Пока нет активных розыгрышей",
+    signedInText:
+      "Мы готовим новые акции. Как только розыгрыш стартует, здесь появятся условия, призы и статус участия.",
     guestTitle: "Войдите, чтобы участвовать в розыгрышах",
     guestText:
       "Авторизуйтесь или зарегистрируйтесь на сайте, чтобы видеть розыгрыши, условия участия и свои шансы.",
@@ -38,13 +39,15 @@ function formatMoney(cents: number) {
 }
 
 function getLoyaltyProgress(client: PublicClientProfile) {
-  if (!client.loyaltyLevel || !client.loyaltyNextLevel) {
+  if (!client.loyaltyNextLevel) {
     return 100;
   }
 
   const currentLevelMin =
-    LOYALTY_LEVEL_CONFIG.find((entry) => entry.level === client.loyaltyLevel)
-      ?.minSpentCents ?? 0;
+    client.loyaltyLevel
+      ? LOYALTY_LEVEL_CONFIG.find((entry) => entry.level === client.loyaltyLevel)
+        ?.minSpentCents ?? 0
+      : 0;
   const nextLevelMin =
     LOYALTY_LEVEL_CONFIG.find((entry) => entry.level === client.loyaltyNextLevel)
       ?.minSpentCents ?? client.totalSpentCents;
@@ -115,6 +118,8 @@ export function PublicHeaderInfoActions({
           </p>
           {currentClient && activeInfo === "loyalty" ? (
             <LoyaltyPanel client={currentClient} />
+          ) : currentClient && activeInfo === "giveaways" ? (
+            <GiveawaysEmptyPanel />
           ) : (
             <>
               <h3 className="mt-3 text-xl font-semibold text-[#241316]">
@@ -149,8 +154,36 @@ export function PublicHeaderInfoActions({
   );
 }
 
+function GiveawaysEmptyPanel() {
+  return (
+    <div className="mt-3 rounded-[18px] border border-[#f3dadd] bg-[#fffafa] p-4">
+      <div className="flex items-start gap-3">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#fff1f2] text-[#d50014]">
+          <TicketIcon className="size-5" />
+        </span>
+        <div>
+          <h3 className="text-xl font-black text-[#241316]">
+            Пока нет активных розыгрышей
+          </h3>
+          <p className="mt-2 text-sm font-semibold leading-6 text-[#6b5960]">
+            Пауза перед следующей вкусной акцией. Когда запустим розыгрыш, здесь появятся призы, сроки и кнопка участия.
+          </p>
+        </div>
+      </div>
+      <div className="mt-4 rounded-[14px] border border-dashed border-[#f1cfd3] bg-white px-4 py-3">
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-[#b00012]">
+          Следующий розыгрыш
+        </p>
+        <p className="mt-1 text-sm font-semibold text-[#7b5e64]">
+          Скоро объявим в личном кабинете.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function LoyaltyPanel({ client }: { client: PublicClientProfile | null }) {
-  if (!client?.loyaltyLevel) {
+  if (!client) {
     return (
       <>
         <h3 className="mt-3 text-xl font-semibold text-[#241316]">
@@ -165,11 +198,12 @@ function LoyaltyPanel({ client }: { client: PublicClientProfile | null }) {
   }
 
   const progress = getLoyaltyProgress(client);
+  const title = client.loyaltyLevel ? `${LOYALTY_LEVEL_LABELS[client.loyaltyLevel]} уровень` : "Клиент FoodLike";
 
   return (
     <>
       <h3 className="mt-3 text-xl font-semibold text-[#241316]">
-        {LOYALTY_LEVEL_LABELS[client.loyaltyLevel]} уровень
+        {title}
       </h3>
       <div className="mt-3 rounded-[16px] border border-[#f3dadd] bg-[#fffafa] p-3">
         <div className="flex items-center justify-between gap-3 text-sm">

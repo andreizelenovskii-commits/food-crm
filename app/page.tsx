@@ -48,6 +48,7 @@ export default async function Home() {
       <PublicSiteHeader
         categories={headerCategories}
         currentClient={currentClient}
+        searchableItems={menuItems}
       />
       <main className="min-h-screen bg-white text-[#211316]">
       <section className="relative min-h-[92vh] overflow-hidden bg-[#d50014] text-white">

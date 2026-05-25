@@ -113,8 +113,8 @@ function ProductModalControls({
   const totalCents = selectedVariant.priceCents * quantity;
 
   return (
-    <div className="mt-6 flex flex-wrap items-center gap-4">
-      <div>
+    <div className="mt-6 grid gap-4 sm:grid-cols-[minmax(0,1fr)_9.5rem] lg:grid-cols-[minmax(0,1fr)_9.5rem_auto] lg:items-center">
+      <div className="min-w-0">
         <p className="text-3xl font-semibold text-[#241316]">{formatPublicMenuMoney(totalCents)}</p>
         {quantity > 1 ? (
           <p className="mt-1 text-xs font-semibold text-[#9b7d83]">
@@ -122,12 +122,12 @@ function ProductModalControls({
           </p>
         ) : null}
       </div>
-      <div className="inline-flex min-h-12 items-center rounded-full bg-[#fff5f6] p-1">
+      <div className="grid h-12 w-[9.5rem] grid-cols-[2.5rem_minmax(0,1fr)_2.5rem] items-center rounded-full bg-[#fff5f6] p-1">
         <QuantityButton label="-" onClick={() => setQuantity((current) => Math.max(current - 1, 1))} />
-        <span className="min-w-10 text-center text-base font-semibold text-[#241316]">{quantity}</span>
+        <span className="text-center text-base font-semibold tabular-nums text-[#241316]">{quantity}</span>
         <QuantityButton label="+" onClick={() => setQuantity((current) => current + 1)} />
       </div>
-      <button type="button" onClick={onAdd} className="min-h-12 rounded-full bg-[#d50014] px-8 text-sm font-semibold text-white transition hover:bg-[#b90012]">
+      <button type="button" onClick={onAdd} className="min-h-12 rounded-full bg-[#d50014] px-8 text-sm font-semibold text-white transition hover:bg-[#b90012] sm:col-span-2 lg:col-span-1">
         Добавить
       </button>
     </div>

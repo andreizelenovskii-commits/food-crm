@@ -41,11 +41,17 @@ function formatMoney(cents: number) {
 }
 
 function getProgress(client: PublicClientProfile | null) {
-  if (!client?.loyaltyLevel || !client.loyaltyNextLevel) {
+  if (!client) {
+    return 0;
+  }
+
+  if (!client.loyaltyNextLevel) {
     return client ? 100 : 0;
   }
 
-  const current = LOYALTY_LEVEL_CONFIG.find((entry) => entry.level === client.loyaltyLevel);
+  const current = client.loyaltyLevel
+    ? LOYALTY_LEVEL_CONFIG.find((entry) => entry.level === client.loyaltyLevel)
+    : null;
   const next = LOYALTY_LEVEL_CONFIG.find((entry) => entry.level === client.loyaltyNextLevel);
   const start = current?.minSpentCents ?? 0;
   const end = next?.minSpentCents ?? start;

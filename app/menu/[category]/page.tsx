@@ -28,16 +28,19 @@ export default async function PublicMenuCategoryPage(props: {
     menuItems.some((menuItem) => matchesMenuCategory(menuItem.category, item)),
   );
   const categoryItems = menuItems.filter((item) => matchesMenuCategory(item.category, category));
-  const subcategories = getMenuCategorySubcategories(category).filter((subcategory) =>
-    menuItems.some((item) => item.category === subcategory.value),
-  );
+  const subcategories = getMenuCategorySubcategories(category);
+  const categorySections = subcategories.map((subcategory) => ({
+    ...subcategory,
+    items: menuItems.filter((item) => item.category === subcategory.value),
+  }));
 
   return (
     <>
-      <PublicSiteHeader categories={headerCategories} currentClient={currentClient} />
+      <PublicSiteHeader categories={headerCategories} currentClient={currentClient} searchableItems={menuItems} />
       <main className="min-h-screen bg-white pt-28 text-[#211316]">
         <PublicMenuSection
           categoryLinks={subcategories}
+          categorySections={categorySections}
           currentClient={currentClient}
           description={`Все позиции категории «${category.label}», которые сейчас опубликованы на сайте.`}
           featuredItems={categoryItems}
