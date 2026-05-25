@@ -16,9 +16,7 @@ function PublicCatalogImageFallback({ item }: { item: CatalogItem }) {
   const isPizza = isPizzaCategory(item.category);
 
   return (
-    <span className="absolute inset-0 flex items-center justify-center overflow-hidden bg-[linear-gradient(135deg,#fff8f8_0%,#fff0f1_100%)]">
-      <span className="absolute -right-8 -top-8 size-24 rounded-full bg-[#d50014]/10" />
-      <span className="absolute -bottom-10 -left-10 size-28 rounded-full bg-[#241316]/5" />
+    <span className="absolute inset-0 flex items-center justify-center overflow-hidden bg-[#fff7f8]">
       {isRoll ? <RollFallbackMark /> : isPizza ? <PizzaFallbackMark /> : <MenuFallbackMark />}
     </span>
   );
@@ -26,11 +24,11 @@ function PublicCatalogImageFallback({ item }: { item: CatalogItem }) {
 
 function PizzaFallbackMark() {
   return (
-    <span className="relative block size-20 rotate-[-18deg] rounded-full bg-[#f9c24d] shadow-[inset_0_0_0_7px_#f6d089]">
-      <span className="absolute left-7 top-1 h-[4.5rem] w-7 origin-bottom skew-x-[-18deg] bg-[#fff8f8]" />
-      <span className="absolute left-4 top-5 size-3 rounded-full bg-[#d50014]" />
-      <span className="absolute bottom-5 right-5 size-3 rounded-full bg-[#d50014]" />
-      <span className="absolute right-5 top-4 size-2 rounded-full bg-[#7a3f22]" />
+    <span className="relative block size-10 rotate-[-18deg] rounded-full bg-[#f9c24d] shadow-[inset_0_0_0_4px_#f6d089]">
+      <span className="absolute left-[1.15rem] top-0 h-10 w-4 origin-bottom skew-x-[-18deg] bg-[#fff8f8]" />
+      <span className="absolute left-2 top-3 size-2 rounded-full bg-[#d50014]" />
+      <span className="absolute bottom-2 right-2 size-2 rounded-full bg-[#d50014]" />
+      <span className="absolute right-2 top-2 size-1.5 rounded-full bg-[#7a3f22]" />
     </span>
   );
 }
@@ -39,8 +37,8 @@ function RollFallbackMark() {
   return (
     <span className="grid grid-cols-2 gap-2">
       {Array.from({ length: 4 }, (_, index) => (
-        <span key={index} className="flex size-8 items-center justify-center rounded-[10px] bg-white shadow-[inset_0_0_0_4px_#241316]">
-          <span className="size-3 rounded-full bg-[#d50014]" />
+        <span key={index} className="flex size-5 items-center justify-center rounded-[7px] bg-white shadow-[inset_0_0_0_2px_#241316]">
+          <span className="size-2 rounded-full bg-[#d50014]" />
         </span>
       ))}
     </span>
@@ -49,10 +47,8 @@ function RollFallbackMark() {
 
 function MenuFallbackMark() {
   return (
-    <span className="rounded-[18px] border border-[#f0c9cd] bg-white/80 px-4 py-3 text-center text-[10px] font-black uppercase tracking-[0.18em] text-[#d50014]">
-      Фото
-      <br />
-      скоро
+    <span className="text-[9px] font-black uppercase tracking-[0.14em] text-[#d50014]">
+      Food
     </span>
   );
 }
