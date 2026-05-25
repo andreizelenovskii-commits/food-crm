@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 import type { CatalogItem } from "@/modules/catalog/catalog.types";
@@ -10,10 +9,6 @@ import { formatPublicMenuMoney } from "@/modules/catalog/components/public-menu-
 
 function getSearchProductHref(item: CatalogItem) {
   return item.category ? `${getMenuCategoryHref(item.category)}#product-${item.id}` : `/#product-${item.id}`;
-}
-
-function isCatalogUploadImage(imageUrl: string) {
-  return imageUrl.startsWith("/uploads/catalog/");
 }
 
 function SearchResultsPopover({
@@ -41,20 +36,7 @@ function SearchResultsPopover({
               className="group flex gap-3 rounded-[18px] p-2.5 transition hover:bg-[#fff1f2]"
             >
               <span className="relative size-16 shrink-0 overflow-hidden rounded-[14px] bg-[#fff7f8]">
-                {item.imageUrl ? (
-                  <Image
-                    src={item.imageUrl}
-                    alt=""
-                    fill
-                    unoptimized={isCatalogUploadImage(item.imageUrl)}
-                    sizes="64px"
-                    className="object-cover object-center transition duration-300 group-hover:scale-105"
-                  />
-                ) : (
-                  <span className="flex h-full items-center justify-center text-[10px] font-black uppercase tracking-[0.14em] text-[#d50014]">
-                    Food
-                  </span>
-                )}
+                <SearchResultImage item={item} />
               </span>
               <span className="min-w-0 flex-1 py-1">
                 <span className="block truncate text-sm font-black text-[#241316]">{item.name}</span>
@@ -77,6 +59,29 @@ function SearchResultsPopover({
         </div>
       )}
     </div>
+  );
+}
+
+function SearchResultImage({ item }: { item: CatalogItem }) {
+  const [hasImageError, setHasImageError] = useState(false);
+
+  if (!item.imageUrl || hasImageError) {
+    return (
+      <span className="flex h-full items-center justify-center text-[10px] font-black uppercase tracking-[0.14em] text-[#d50014]">
+        Food
+      </span>
+    );
+  }
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={item.imageUrl}
+      alt={item.name}
+      loading="lazy"
+      className="h-full w-full object-cover object-center transition duration-300 group-hover:scale-105"
+      onError={() => setHasImageError(true)}
+    />
   );
 }
 
