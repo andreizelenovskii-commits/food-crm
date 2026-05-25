@@ -2,6 +2,7 @@ import type { CatalogItem } from "@/modules/catalog/catalog.types";
 
 const PIZZA_SIZE_ORDER = ["24 см", "26 см", "30 см"] as const;
 const ROLL_SIZE_ORDER = ["4 шт", "8 шт"] as const;
+const ROLL_CATEGORY_NAMES = ["Роллы", "Холодные роллы", "Запеченные роллы", "Теплые роллы"] as const;
 
 export function formatPublicMenuMoney(cents: number) {
   return new Intl.NumberFormat("ru-RU", {
@@ -37,7 +38,7 @@ export function resolvePublicMenuVariant(item: CatalogItem, selectedVariantId?: 
 
 export function getPublicMenuCardPrice(item: CatalogItem) {
   const variant = resolvePublicMenuVariant(item);
-  const isSizedItem = item.category === "Пицца" || item.category === "Пиццы" || item.category === "Роллы";
+  const isSizedItem = item.category === "Пицца" || item.category === "Пиццы" || isRollCategory(item.category);
 
   if (!isSizedItem || item.variants.length <= 1) {
     return {
@@ -63,7 +64,7 @@ function findBaseSizedVariant(item: CatalogItem) {
     })[0];
   }
 
-  if (item.category === "Роллы") {
+  if (isRollCategory(item.category)) {
     return [...item.variants].sort((left, right) => {
       const leftIndex = ROLL_SIZE_ORDER.indexOf(left.label as never);
       const rightIndex = ROLL_SIZE_ORDER.indexOf(right.label as never);
@@ -72,6 +73,10 @@ function findBaseSizedVariant(item: CatalogItem) {
   }
 
   return null;
+}
+
+function isRollCategory(category: string | null) {
+  return ROLL_CATEGORY_NAMES.includes(category as (typeof ROLL_CATEGORY_NAMES)[number]);
 }
 
 function normalizeSortIndex(index: number, fallback: number) {

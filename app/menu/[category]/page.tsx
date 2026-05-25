@@ -4,7 +4,11 @@ import { fetchPublicCatalogItems } from "@/modules/catalog/catalog.api";
 import { PUBLIC_MENU_CATEGORY_LINKS } from "@/modules/catalog/catalog.types";
 import { PublicMenuSection } from "@/modules/catalog/components/public-menu-section";
 import { PublicSiteHeader } from "@/modules/catalog/components/public-site-header";
-import { findMenuCategoryBySlug } from "@/modules/catalog/components/public-menu-category-utils";
+import {
+  findMenuCategoryBySlug,
+  getMenuCategorySubcategories,
+  matchesMenuCategory,
+} from "@/modules/catalog/components/public-menu-category-utils";
 
 export default async function PublicMenuCategoryPage(props: {
   params: Promise<{ category: string }>;
@@ -20,17 +24,20 @@ export default async function PublicMenuCategoryPage(props: {
     fetchPublicCatalogItems().catch(() => []),
     fetchCurrentClient(),
   ]);
-  const priceCategories = new Set(menuItems.map((item) => item.category).filter(Boolean));
   const headerCategories = PUBLIC_MENU_CATEGORY_LINKS.filter((item) =>
-    priceCategories.has(item.value),
+    menuItems.some((menuItem) => matchesMenuCategory(menuItem.category, item)),
   );
-  const categoryItems = menuItems.filter((item) => item.category === category.value);
+  const categoryItems = menuItems.filter((item) => matchesMenuCategory(item.category, category));
+  const subcategories = getMenuCategorySubcategories(category).filter((subcategory) =>
+    menuItems.some((item) => item.category === subcategory.value),
+  );
 
   return (
     <>
       <PublicSiteHeader categories={headerCategories} currentClient={currentClient} />
       <main className="min-h-screen bg-white pt-28 text-[#211316]">
         <PublicMenuSection
+          categoryLinks={subcategories}
           currentClient={currentClient}
           description={`Все позиции категории «${category.label}», которые сейчас опубликованы на сайте.`}
           featuredItems={categoryItems}

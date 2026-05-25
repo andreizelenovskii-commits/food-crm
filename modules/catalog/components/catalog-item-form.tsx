@@ -267,7 +267,14 @@ function resolveKitchenZoneByCategory(category: string): KitchenZone | "" {
     return "pizza";
   }
 
-  if (category === "Роллы" || category === "Онигири" || category === "Суши-доги") {
+  if (
+    category === "Роллы" ||
+    category === "Холодные роллы" ||
+    category === "Запеченные роллы" ||
+    category === "Теплые роллы" ||
+    category === "Онигири" ||
+    category === "Суши-доги"
+  ) {
     return "rolls";
   }
 

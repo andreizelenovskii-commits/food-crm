@@ -6,6 +6,7 @@ import { PublicMenuSection } from "@/modules/catalog/components/public-menu-sect
 import { PublicSiteHeader } from "@/modules/catalog/components/public-site-header";
 import { fetchPublicCatalogItems } from "@/modules/catalog/catalog.api";
 import { PUBLIC_MENU_CATEGORY_LINKS, type CatalogItem } from "@/modules/catalog/catalog.types";
+import { matchesMenuCategory } from "@/modules/catalog/components/public-menu-category-utils";
 import { PUBLIC_SITE_CONTACTS } from "@/shared/config/public-site";
 
 export const metadata: Metadata = {
@@ -37,9 +38,8 @@ export default async function Home() {
     fetchPublicCatalogItems().catch(() => []),
     fetchCurrentClient(),
   ]);
-  const priceCategories = new Set(menuItems.map((item) => item.category).filter(Boolean));
   const headerCategories = PUBLIC_MENU_CATEGORY_LINKS.filter((category) =>
-    priceCategories.has(category.value),
+    menuItems.some((item) => matchesMenuCategory(item.category, category)),
   );
   const featuredItems = getFeaturedMenuItems(menuItems);
 

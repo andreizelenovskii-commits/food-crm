@@ -12,6 +12,7 @@ import {
   PublicAuthModal,
 } from "@/modules/catalog/components/public-auth-modal";
 import { PublicMenuCard } from "@/modules/catalog/components/public-menu-card";
+import { getMenuCategoryHref } from "@/modules/catalog/components/public-menu-category-utils";
 import { PublicMenuProductModal } from "@/modules/catalog/components/public-menu-product-modal";
 import { resolvePublicMenuVariant } from "@/modules/catalog/components/public-menu-utils";
 import { ORDER_STATUS_LABELS } from "@/modules/orders/orders.workflow";
@@ -32,12 +33,14 @@ function cartKey(itemId: number, variantId: number, excludedIngredientIds: numbe
 
 export function PublicMenuSection({
   currentClient,
+  categoryLinks = [],
   description = "Небольшая витрина из меню на сегодня. Полный выбор откроется через строку категорий наверху.",
   featuredItems,
   title = "Популярное сегодня",
   items,
 }: {
   currentClient: PublicClientProfile | null;
+  categoryLinks?: Array<{ value: string; label: string }>;
   description?: string;
   featuredItems: CatalogItem[];
   title?: string;
@@ -196,6 +199,20 @@ export function PublicMenuSection({
               </p>
             </div>
           </div>
+
+          {categoryLinks.length ? (
+            <div className="relative mt-7 flex flex-wrap gap-2">
+              {categoryLinks.map((category) => (
+                <a
+                  key={category.value}
+                  href={getMenuCategoryHref(category.value)}
+                  className="inline-flex min-h-10 items-center rounded-full border border-[#ffd8dd] bg-[#fff7f8] px-4 text-sm font-bold text-[#9b0010] transition hover:border-[#d50014] hover:bg-[#fff1f2] hover:text-[#d50014]"
+                >
+                  {category.label}
+                </a>
+              ))}
+            </div>
+          ) : null}
 
           {featuredItems.length ? (
             <div className="relative mt-10 grid items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3">

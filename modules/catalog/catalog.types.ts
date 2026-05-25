@@ -2,6 +2,9 @@ export const CATALOG_PRICE_LIST_TYPES = ["CLIENT", "INTERNAL"] as const;
 export const CATALOG_SITE_CATEGORIES = [
   "Пицца",
   "Роллы",
+  "Холодные роллы",
+  "Запеченные роллы",
+  "Теплые роллы",
   "Фастфуд",
   "Паназиатская кухня",
   "Пасты",
@@ -18,7 +21,15 @@ export const CATALOG_SITE_CATEGORIES = [
 
 export const PUBLIC_MENU_CATEGORY_LINKS = [
   { value: "Пицца", label: "Пиццы" },
-  { value: "Роллы", label: "Роллы" },
+  {
+    value: "Роллы",
+    label: "Роллы",
+    subcategories: [
+      { value: "Холодные роллы", label: "Холодные роллы" },
+      { value: "Запеченные роллы", label: "Запеченные роллы" },
+      { value: "Теплые роллы", label: "Теплые роллы" },
+    ],
+  },
   { value: "Фастфуд", label: "Фастфуд" },
   { value: "Паназиатская кухня", label: "Паназиатская кухня" },
   { value: "Пасты", label: "Пасты" },
