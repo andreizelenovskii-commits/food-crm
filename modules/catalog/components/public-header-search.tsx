@@ -12,6 +12,10 @@ function getSearchProductHref(item: CatalogItem) {
   return item.category ? `${getMenuCategoryHref(item.category)}#product-${item.id}` : `/#product-${item.id}`;
 }
 
+function isCatalogUploadImage(imageUrl: string) {
+  return imageUrl.startsWith("/uploads/catalog/");
+}
+
 function SearchResultsPopover({
   items,
   query,
@@ -42,6 +46,7 @@ function SearchResultsPopover({
                     src={item.imageUrl}
                     alt=""
                     fill
+                    unoptimized={isCatalogUploadImage(item.imageUrl)}
                     sizes="64px"
                     className="object-cover object-center transition duration-300 group-hover:scale-105"
                   />
