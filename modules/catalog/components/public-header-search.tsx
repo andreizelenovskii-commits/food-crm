@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 import type { CatalogItem } from "@/modules/catalog/catalog.types";
+import { PublicCatalogImage } from "@/modules/catalog/components/public-catalog-image";
 import { SearchIcon } from "@/modules/catalog/components/public-icons";
 import { getMenuCategoryHref } from "@/modules/catalog/components/public-menu-category-utils";
 import { formatPublicMenuMoney } from "@/modules/catalog/components/public-menu-utils";
@@ -35,9 +36,11 @@ function SearchResultsPopover({
               onClick={onResultClick}
               className="group flex gap-3 rounded-[18px] p-2.5 transition hover:bg-[#fff1f2]"
             >
-              <span className="relative size-16 shrink-0 overflow-hidden rounded-[14px] bg-[#fff7f8]">
-                <SearchResultImage item={item} />
-              </span>
+              <PublicCatalogImage
+                item={item}
+                className="size-16 shrink-0 rounded-[14px] bg-[#fff7f8]"
+                imageClassName="transition duration-300 group-hover:scale-105"
+              />
               <span className="min-w-0 flex-1 py-1">
                 <span className="block truncate text-sm font-black text-[#241316]">{item.name}</span>
                 <span className="mt-1 block truncate text-xs font-semibold uppercase tracking-[0.12em] text-[#d50014]">
@@ -59,29 +62,6 @@ function SearchResultsPopover({
         </div>
       )}
     </div>
-  );
-}
-
-function SearchResultImage({ item }: { item: CatalogItem }) {
-  const [hasImageError, setHasImageError] = useState(false);
-
-  if (!item.imageUrl || hasImageError) {
-    return (
-      <span className="flex h-full items-center justify-center text-[10px] font-black uppercase tracking-[0.14em] text-[#d50014]">
-        Food
-      </span>
-    );
-  }
-
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={item.imageUrl}
-      alt={item.name}
-      loading="lazy"
-      className="h-full w-full object-cover object-center transition duration-300 group-hover:scale-105"
-      onError={() => setHasImageError(true)}
-    />
   );
 }
 
