@@ -46,6 +46,7 @@ export function CheckoutPanel({
 
 function CheckoutFields({ currentClient }: { currentClient: PublicClientProfile | null }) {
   const [isOtherRecipient, setIsOtherRecipient] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "courier_card" | "online">("cash");
   const addressOptions = (currentClient?.address ?? "").split("\n").map((address) => address.trim()).filter(Boolean);
   const hasCompleteProfile = Boolean(currentClient?.birthDate && addressOptions.length);
 
@@ -78,19 +79,108 @@ function CheckoutFields({ currentClient }: { currentClient: PublicClientProfile 
           <AddressPicker addresses={addressOptions} fallbackAddress={currentClient?.address ?? ""} />
         </>
       )}
-      <label className="block space-y-2">
-        <span className="text-sm font-black text-[#3a292d]">Оплата</span>
-        <select name="paymentMethod" className="foodlike-field min-h-[52px] rounded-[16px] bg-white font-semibold shadow-sm shadow-[#d50014]/5" defaultValue="cash" required>
-          <option value="cash">Наличными</option>
-          <option value="courier_card">Картой курьеру</option>
-          <option value="online">Онлайн оплата</option>
-        </select>
-      </label>
+      <PaymentMethodPicker value={paymentMethod} onChange={setPaymentMethod} />
       <label className="block space-y-2">
         <span className="text-sm font-black text-[#3a292d]">Комментарий</span>
-        <textarea name="customerComment" className="foodlike-field min-h-28 rounded-[18px] bg-white py-3 font-semibold shadow-sm shadow-[#d50014]/5" />
+        <textarea
+          name="customerComment"
+          className="foodlike-field min-h-28 rounded-[18px] bg-white py-3 font-semibold shadow-sm shadow-[#d50014]/5"
+          placeholder="Комментарий к заказу"
+        />
       </label>
     </div>
+  );
+}
+
+function PaymentMethodPicker({
+  onChange,
+  value,
+}: {
+  onChange: (value: "cash" | "courier_card" | "online") => void;
+  value: "cash" | "courier_card" | "online";
+}) {
+  return (
+    <section className="rounded-[22px] border border-[#f3dadd] bg-white p-4 shadow-sm shadow-[#d50014]/5">
+      <p className="text-xs font-black uppercase tracking-[0.2em] text-[#b00012]">Оплата</p>
+      <input type="hidden" name="paymentMethod" value={value} />
+      <div className="mt-4 grid gap-2">
+        <PaymentOption
+          active={value === "cash"}
+          description="Подготовим сдачу заранее."
+          label="Наличными"
+          onClick={() => onChange("cash")}
+        />
+        <PaymentOption
+          active={value === "courier_card"}
+          description="Наш курьер привезет с собой терминал."
+          label="Картой курьеру"
+          onClick={() => onChange("courier_card")}
+        />
+        <PaymentOption
+          active={value === "online"}
+          description="Скоро появится окно онлайн-оплаты."
+          label="Онлайн оплата"
+          onClick={() => onChange("online")}
+        />
+      </div>
+
+      {value === "cash" ? (
+        <label className="mt-4 block space-y-2">
+          <span className="text-sm font-black text-[#3a292d]">Сдача с купюры</span>
+          <input
+            name="cashChangeFrom"
+            inputMode="numeric"
+            placeholder="Например, 5000"
+            className="foodlike-field min-h-[52px] rounded-[16px] bg-white font-semibold shadow-sm shadow-[#d50014]/5"
+          />
+        </label>
+      ) : null}
+
+      {value === "courier_card" ? (
+        <p className="mt-4 rounded-[16px] border border-[#f3dadd] bg-[#fff7f8] px-4 py-3 text-sm font-semibold leading-6 text-[#6b5960]">
+          Наш курьер привезет с собой терминал. Оплатить можно картой при получении.
+        </p>
+      ) : null}
+
+      {value === "online" ? (
+        <p className="mt-4 rounded-[16px] border border-[#ffd0d6] bg-[#fff1f2] px-4 py-3 text-sm font-black leading-6 text-[#b00012]">
+          Онлайн-оплата скоро появится.
+        </p>
+      ) : null}
+    </section>
+  );
+}
+
+function PaymentOption({
+  active,
+  description,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  description: string;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        "flex min-h-16 items-center justify-between gap-3 rounded-[18px] border px-4 py-3 text-left transition",
+        active
+          ? "border-[#d50014] bg-[#fff1f2] shadow-sm shadow-[#d50014]/10"
+          : "border-[#f3dadd] bg-white hover:border-[#d50014] hover:bg-[#fff8f8]",
+      ].join(" ")}
+    >
+      <span>
+        <span className="block text-sm font-black text-[#241316]">{label}</span>
+        <span className="mt-1 block text-xs font-semibold leading-5 text-[#7b5e64]">{description}</span>
+      </span>
+      <span className={`flex size-6 shrink-0 items-center justify-center rounded-full border ${active ? "border-[#d50014] bg-[#d50014]" : "border-[#f0cfd3] bg-white"}`}>
+        <span className={`size-2.5 rounded-full bg-white ${active ? "opacity-100" : "opacity-0"}`} />
+      </span>
+    </button>
   );
 }
 
