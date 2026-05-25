@@ -57,7 +57,7 @@ export function PublicModalCloseButton({
     <button
       type="button"
       onClick={onClose}
-      className={`flex size-10 items-center justify-center rounded-full border border-[#f1d6d9] bg-white text-[#6b5960] transition hover:border-[#d50014] hover:text-[#d50014] ${className}`}
+      className={`flex size-11 items-center justify-center rounded-full border border-[#f1d6d9] bg-white text-[#b00012] shadow-sm shadow-[#d50014]/5 transition hover:border-[#d50014] hover:bg-[#fff1f2] hover:text-[#d50014] ${className}`}
       aria-label={label}
     >
       <CloseIcon className="size-5" />

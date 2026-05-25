@@ -19,6 +19,16 @@ const MONTHS = [
 
 const WEEKDAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"] as const;
 const AGE_PRESETS = [18, 25, 35] as const;
+const MIN_CLIENT_AGE = 18;
+
+function parseIsoDate(value: string | null | undefined) {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return null;
+  }
+
+  const date = new Date(`${value}T00:00:00`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
 
 function formatValue(date: Date | null) {
   if (!date) {
@@ -71,11 +81,27 @@ function isFutureDate(date: Date) {
   return date > new Date(today.getFullYear(), today.getMonth(), today.getDate());
 }
 
-export function PublicBirthDatePicker() {
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+function getMaxBirthDate() {
+  const today = new Date();
+  return new Date(today.getFullYear() - MIN_CLIENT_AGE, today.getMonth(), today.getDate());
+}
+
+function isTooYoungDate(date: Date) {
+  const maxBirthDate = getMaxBirthDate();
+  return date > new Date(maxBirthDate.getFullYear(), maxBirthDate.getMonth(), maxBirthDate.getDate());
+}
+
+export function PublicBirthDatePicker({
+  defaultValue,
+  name = "birthDate",
+}: {
+  defaultValue?: string | null;
+  name?: string;
+}) {
+  const initialDate = parseIsoDate(defaultValue);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(initialDate);
   const [viewDate, setViewDate] = useState(() => {
-    const date = new Date();
-    date.setFullYear(date.getFullYear() - 18);
+    const date = initialDate ?? getMaxBirthDate();
     return new Date(date.getFullYear(), date.getMonth(), 1);
   });
   const [isOpen, setIsOpen] = useState(false);
@@ -100,7 +126,7 @@ export function PublicBirthDatePicker() {
   return (
     <label className="relative block space-y-2">
       <span className="text-[13px] font-semibold text-[#4a3439]">Дата рождения</span>
-      <input type="hidden" name="birthDate" value={toIsoDate(selectedDate)} />
+      <input type="hidden" name={name} value={toIsoDate(selectedDate)} />
       <button
         type="button"
         onClick={() => setIsOpen((current) => !current)}
@@ -116,7 +142,7 @@ export function PublicBirthDatePicker() {
 
       {isOpen ? (
         <div className="absolute left-0 top-[calc(100%+10px)] z-[60] w-[min(22rem,calc(100vw-2.5rem))] overflow-hidden rounded-[16px] border border-[#f3dadd] bg-white shadow-[0_24px_70px_rgba(80,8,18,0.22)]">
-          <div className="border-b border-[#f6e2e5] bg-[#fff7f8] p-4">
+          <div className="border-b border-[#f6e2e5] bg-[linear-gradient(135deg,#fff7f8_0%,#fff_54%,#fff1f2_100%)] p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#d50014]">
@@ -153,6 +179,9 @@ export function PublicBirthDatePicker() {
                 </button>
               ))}
             </div>
+            <p className="mt-3 rounded-[12px] bg-white/80 px-3 py-2 text-[11px] font-medium leading-4 text-[#8a6870]">
+              Выбрать можно только дату, где возраст уже {MIN_CLIENT_AGE}+.
+            </p>
           </div>
 
           <div className="p-4">
@@ -165,7 +194,7 @@ export function PublicBirthDatePicker() {
             </div>
             <div className="mt-2 grid grid-cols-7 gap-1">
               {days.map((date) => {
-                const disabled = isFutureDate(date);
+                const disabled = isFutureDate(date) || isTooYoungDate(date);
                 const isCurrentMonth = date.getMonth() === viewDate.getMonth();
                 const isSelected = sameDate(selectedDate, date);
 
