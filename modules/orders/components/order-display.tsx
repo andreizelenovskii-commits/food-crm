@@ -91,7 +91,7 @@ export function OrderCard({
             ) : null}
           </div>
 
-          <div className="mt-3 grid gap-3 text-sm sm:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
             <OrderFact label="Клиент" value={<OrderClientLink order={order} />} />
             <OrderFact label="Время" value={formatOrderDate(order.createdAt)} />
             <OrderFact label="Состав" value={`${itemsCount} поз. / ${order.items.length} строк`} />
@@ -125,7 +125,7 @@ export function OrderCard({
         </div>
 
         {!compact ? (
-          <div className="mt-3 grid gap-2 lg:grid-cols-3">
+          <div className="mt-3 grid gap-2">
             <OrderDetailsPanel title="Клиент и доставка">
               <OrderDetailLine label="Телефон" value={order.customerPhoneSnapshot ?? "Не указан"} />
               <OrderDetailLine label="Адрес" value={order.deliveryAddressSnapshot ?? "Самовывоз или без адреса"} />
