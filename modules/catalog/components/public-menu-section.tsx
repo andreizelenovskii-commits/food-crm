@@ -26,6 +26,34 @@ type Cart = Record<string, {
 }>;
 type CartChoices = Record<string, Record<number, number>>;
 
+function getDeliveryAddressFromFormData(formData: FormData) {
+  const deliveryAddress = String(formData.get("deliveryAddress") ?? "").trim();
+
+  if (deliveryAddress) {
+    return deliveryAddress;
+  }
+
+  const addressesJson = String(formData.get("addressesJson") ?? "").trim();
+
+  if (!addressesJson) {
+    return "";
+  }
+
+  try {
+    const parsed = JSON.parse(addressesJson) as unknown;
+
+    if (!Array.isArray(parsed)) {
+      return "";
+    }
+
+    return parsed
+      .map((address) => String(address ?? "").trim())
+      .filter(Boolean)[0] ?? "";
+  } catch {
+    return "";
+  }
+}
+
 function cartKey(itemId: number, variantId: number, excludedIngredientIds: number[] = []) {
   const exclusions = [...excludedIngredientIds].sort((left, right) => left - right).join(".");
   return `${itemId}:${variantId}:${exclusions}`;
@@ -154,7 +182,7 @@ export function PublicMenuSection({
     try {
       const order = await browserBackendJson<PublicOrderStatus>("/api/v1/public/orders", {
         body: {
-          deliveryAddress: String(formData.get("deliveryAddress") ?? "").trim(),
+          deliveryAddress: getDeliveryAddressFromFormData(formData),
           recipientPhone: String(formData.get("recipientPhone") ?? "").trim(),
           paymentMethod: String(formData.get("paymentMethod") ?? "").trim(),
           customerComment: String(formData.get("customerComment") ?? "").trim(),

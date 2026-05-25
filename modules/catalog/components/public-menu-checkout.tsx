@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { PhoneInput } from "@/components/ui/phone-input";
 import type { PublicClientProfile } from "@/modules/clients/clients.types";
+import { ClientAddressFieldsWithDefaults } from "@/modules/clients/components/client-address-fields";
 import { formatPublicMenuMoney } from "@/modules/catalog/components/public-menu-utils";
 import { ORDER_STATUS_LABELS } from "@/modules/orders/orders.workflow";
 import type { PublicOrderStatus } from "@/modules/catalog/components/public-menu-cart";
@@ -26,16 +28,16 @@ export function CheckoutPanel({
   subtotalCents: number;
 }) {
   return (
-    <aside className="border-t border-[#f6e2e5] bg-[#fffafa] p-4 sm:p-5 lg:border-l lg:border-t-0">
-      <div className="rounded-[18px] bg-white p-4 shadow-sm shadow-[#d50014]/5">
+    <aside className="border-t border-[#f6e2e5] bg-[#fffafa] p-5 sm:p-7 lg:border-l lg:border-t-0">
+      <div className="rounded-[24px] bg-white p-5 shadow-sm shadow-[#d50014]/5">
         <TotalRow label="Блюда" value={formatPublicMenuMoney(subtotalCents)} />
-        <TotalRow label="Доставка" value={formatPublicMenuMoney(deliveryFeeCents)} />
+        <TotalRow label="Доставка" value={formatPublicMenuMoney(deliveryFeeCents)} hint="фиксировано" />
         <TotalRow label="Итого" value={formatPublicMenuMoney(payableCents)} strong />
       </div>
       <CheckoutFields currentClient={currentClient} />
-      {message ? <p className="mt-3 rounded-[14px] border border-[#f3dadd] bg-white px-4 py-3 text-sm text-[#6b5960]">{message}</p> : null}
-      {createdOrder ? <p className="mt-3 text-sm font-semibold text-[#b00012]">Статус: {ORDER_STATUS_LABELS[createdOrder.status]}</p> : null}
-      <button type="submit" disabled={isPending} className="mt-4 min-h-12 w-full rounded-[16px] bg-[#d50014] px-5 text-sm font-semibold text-white transition hover:bg-[#b90012] disabled:opacity-60">
+      {message ? <p className="mt-4 rounded-[16px] border border-[#f3dadd] bg-white px-4 py-3 text-sm font-semibold leading-6 text-[#6b5960]">{message}</p> : null}
+      {createdOrder ? <p className="mt-3 text-sm font-black text-[#b00012]">Статус: {ORDER_STATUS_LABELS[createdOrder.status]}</p> : null}
+      <button type="submit" disabled={isPending} className="mt-5 min-h-[52px] w-full rounded-full bg-[#d50014] px-6 text-sm font-black text-white shadow-[0_14px_28px_rgba(213,0,20,0.20)] transition hover:bg-[#b90012] disabled:opacity-60">
         {currentClient ? "Оформить заказ" : "Войти для заказа"}
       </button>
     </aside>
@@ -48,24 +50,28 @@ function CheckoutFields({ currentClient }: { currentClient: PublicClientProfile 
   const hasCompleteProfile = Boolean(currentClient?.birthDate && addressOptions.length);
 
   return (
-    <div className="mt-4 space-y-3">
+    <div className="mt-5 space-y-4">
       {currentClient && !hasCompleteProfile ? (
-        <div className="rounded-[16px] border border-[#ffd0d6] bg-[#fff1f2] p-3 text-sm leading-5 text-[#a00010]">
+        <div className="rounded-[18px] border border-[#ffd0d6] bg-[#fff1f2] p-4 text-sm font-semibold leading-6 text-[#a00010]">
           Профиль заполнен не полностью. Откройте личный кабинет и сохраните дату рождения и адреса доставки.
         </div>
       ) : null}
-      <div className="rounded-[16px] border border-[#f3dadd] bg-white p-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#b00012]">Получатель</p>
-        <p className="mt-1 text-sm font-semibold text-[#241316]">{currentClient?.phone ?? "Войдите для заказа"}</p>
-        <button type="button" onClick={() => setIsOtherRecipient((current) => !current)} className="mt-3 rounded-full border border-[#f0d9dc] px-3 py-1.5 text-xs font-semibold text-[#b00012] transition hover:bg-[#fff1f2]">
+      <div className="rounded-[22px] border border-[#f3dadd] bg-white p-4 shadow-sm shadow-[#d50014]/5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-[#b00012]">Получатель</p>
+            <p className="mt-2 text-base font-black text-[#241316]">{currentClient?.phone ?? "Войдите для заказа"}</p>
+          </div>
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#fff1f2] text-sm font-black text-[#b00012]">
+            {currentClient?.name?.slice(0, 1).toLocaleUpperCase("ru-RU") ?? "F"}
+          </span>
+        </div>
+        <button type="button" onClick={() => setIsOtherRecipient((current) => !current)} className="mt-4 min-h-10 rounded-full border border-[#f0d9dc] bg-white px-4 text-sm font-black text-[#b00012] transition hover:border-[#d50014] hover:bg-[#fff1f2]">
           {isOtherRecipient ? "Получатель снова я" : "Получатель не я"}
         </button>
       </div>
       {isOtherRecipient ? (
-        <>
-          <CartInput name="recipientPhone" label="Телефон получателя" defaultValue="" required />
-          <CartInput name="deliveryAddress" label="Адрес получателя" defaultValue="" required />
-        </>
+        <OtherRecipientFields />
       ) : (
         <>
           <input type="hidden" name="recipientPhone" value={currentClient?.phone ?? ""} />
@@ -73,17 +79,39 @@ function CheckoutFields({ currentClient }: { currentClient: PublicClientProfile 
         </>
       )}
       <label className="block space-y-2">
-        <span className="text-sm font-semibold text-[#3a292d]">Оплата</span>
-        <select name="paymentMethod" className="foodlike-field min-h-12 rounded-[14px]" defaultValue="cash" required>
+        <span className="text-sm font-black text-[#3a292d]">Оплата</span>
+        <select name="paymentMethod" className="foodlike-field min-h-[52px] rounded-[16px] bg-white font-semibold shadow-sm shadow-[#d50014]/5" defaultValue="cash" required>
           <option value="cash">Наличными</option>
           <option value="courier_card">Картой курьеру</option>
           <option value="online">Онлайн оплата</option>
         </select>
       </label>
       <label className="block space-y-2">
-        <span className="text-sm font-semibold text-[#3a292d]">Комментарий</span>
-        <textarea name="customerComment" className="foodlike-field min-h-24 rounded-[14px] py-3" />
+        <span className="text-sm font-black text-[#3a292d]">Комментарий</span>
+        <textarea name="customerComment" className="foodlike-field min-h-28 rounded-[18px] bg-white py-3 font-semibold shadow-sm shadow-[#d50014]/5" />
       </label>
+    </div>
+  );
+}
+
+function OtherRecipientFields() {
+  return (
+    <div className="rounded-[22px] border border-[#f3dadd] bg-white p-4 shadow-sm shadow-[#d50014]/5">
+      <p className="text-xs font-black uppercase tracking-[0.2em] text-[#b00012]">Другой получатель</p>
+      <div className="mt-4 space-y-4">
+        <label className="block space-y-2">
+          <span className="text-sm font-black text-[#3a292d]">Телефон получателя</span>
+          <PhoneInput
+            name="recipientPhone"
+            className="foodlike-field min-h-[52px] rounded-[16px] bg-white font-semibold shadow-sm shadow-[#d50014]/5"
+            required
+          />
+        </label>
+        <div>
+          <p className="mb-3 text-sm font-black text-[#3a292d]">Адрес получателя</p>
+          <ClientAddressFieldsWithDefaults />
+        </div>
+      </div>
     </div>
   );
 }
@@ -92,8 +120,8 @@ function AddressPicker({ addresses, fallbackAddress }: { addresses: string[]; fa
   if (addresses.length > 1) {
     return (
       <label className="block space-y-2">
-        <span className="text-sm font-semibold text-[#3a292d]">Адрес доставки</span>
-        <select name="deliveryAddress" className="foodlike-field min-h-12 rounded-[14px]" required>
+        <span className="text-sm font-black text-[#3a292d]">Адрес доставки</span>
+        <select name="deliveryAddress" className="foodlike-field min-h-[52px] rounded-[16px] bg-white font-semibold shadow-sm shadow-[#d50014]/5" required>
           {addresses.map((address) => <option key={address} value={address}>{address}</option>)}
         </select>
       </label>
@@ -106,16 +134,19 @@ function AddressPicker({ addresses, fallbackAddress }: { addresses: string[]; fa
 function CartInput({ defaultValue, label, name, required }: { defaultValue: string; label: string; name: string; required?: boolean }) {
   return (
     <label className="block space-y-2">
-      <span className="text-sm font-semibold text-[#3a292d]">{label}</span>
-      <input name={name} defaultValue={defaultValue} className="foodlike-field min-h-12 rounded-[14px]" required={required} />
+      <span className="text-sm font-black text-[#3a292d]">{label}</span>
+      <input name={name} defaultValue={defaultValue} className="foodlike-field min-h-[52px] rounded-[16px] bg-white font-semibold shadow-sm shadow-[#d50014]/5" required={required} />
     </label>
   );
 }
 
-function TotalRow({ label, strong, value }: { label: string; strong?: boolean; value: string }) {
+function TotalRow({ hint, label, strong, value }: { hint?: string; label: string; strong?: boolean; value: string }) {
   return (
-    <div className={`flex items-center justify-between gap-3 py-1 ${strong ? "mt-2 border-t border-[#f3dadd] pt-3 text-lg font-semibold text-[#241316]" : "text-sm text-[#6b5960]"}`}>
-      <span>{label}</span>
+    <div className={`flex items-center justify-between gap-3 py-1.5 ${strong ? "mt-3 border-t border-[#f3dadd] pt-4 text-xl font-black text-[#241316]" : "text-sm font-semibold text-[#6b5960]"}`}>
+      <span>
+        {label}
+        {hint ? <span className="ml-2 text-xs font-black uppercase tracking-[0.12em] text-[#b00012]">{hint}</span> : null}
+      </span>
       <span className={strong ? "text-[#c90013]" : "font-semibold text-[#241316]"}>{value}</span>
     </div>
   );
