@@ -15,6 +15,7 @@ import type {
   TechCardItem,
   TechCardProductOption,
 } from "@/modules/tech-cards/tech-cards.types";
+import { matchesSmartSearch } from "@/shared/lib/smart-search";
 
 export function KindDialog({
   kind,
@@ -230,9 +231,7 @@ function filterTechCards(
   selectedCategory: string,
   productCategoriesById: Map<number, string | null>,
 ) {
-  const normalizedQuery = query.trim().toLowerCase();
-
-  if (!normalizedQuery && !selectedCategory) {
+  if (!query.trim() && !selectedCategory) {
     return cards;
   }
 
@@ -251,7 +250,7 @@ function filterTechCards(
       return false;
     }
 
-    const searchableValue = [
+    return matchesSmartSearch([
       card.name,
       card.category,
       card.pizzaSize ?? "",
@@ -262,10 +261,6 @@ function filterTechCards(
       ...card.components.map((component) => component.techCardName),
       ...ingredientCategories,
       ...card.ingredients.map((ingredient) => ingredient.productName),
-    ]
-      .join(" ")
-      .toLowerCase();
-
-    return searchableValue.includes(normalizedQuery);
+    ], query);
   });
 }

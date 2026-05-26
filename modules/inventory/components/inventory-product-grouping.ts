@@ -4,24 +4,21 @@ import {
   type ProductItem,
   type WriteoffActSummary,
 } from "@/modules/inventory/inventory.types";
+import { matchesSmartSearch } from "@/shared/lib/smart-search";
 
 export function filterInventoryProducts(
   products: ProductItem[],
   selectedCategory: ProductCategory | "",
   query: string,
 ) {
-  const normalizedQuery = query.trim().toLowerCase();
-
   return products.filter((product) => {
     if (selectedCategory && product.category !== selectedCategory) {
       return false;
     }
 
     return (
-      !normalizedQuery ||
-      product.name.toLowerCase().includes(normalizedQuery) ||
-      product.sku?.toLowerCase().includes(normalizedQuery) ||
-      product.category?.toLowerCase().includes(normalizedQuery)
+      !query.trim() ||
+      matchesSmartSearch([product.name, product.sku, product.category], query)
     );
   });
 }

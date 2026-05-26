@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ClientSearchResultCard } from "@/modules/clients/components/client-search-result-card";
 import type { Client, ClientLoyaltyLevel } from "@/modules/clients/clients.types";
+import { matchesSmartSearch } from "@/shared/lib/smart-search";
 
 function normalizePhone(value: string) {
   return value.replace(/\D/g, "");
@@ -17,10 +18,8 @@ function matchesClientSearch(client: Client, query: string) {
   }
 
   const queryPhone = normalizePhone(normalizedQuery);
-  const nameTokens = normalizedQuery.split(/\s+/).filter(Boolean);
-  const normalizedName = client.name.toLowerCase();
   const searchablePhone = normalizePhone(client.phone);
-  const matchesName = nameTokens.every((token) => normalizedName.includes(token));
+  const matchesName = matchesSmartSearch(client.name, normalizedQuery);
   const matchesPhone = queryPhone.length > 0 && searchablePhone.includes(queryPhone);
 
   return matchesName || matchesPhone;

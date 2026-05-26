@@ -9,6 +9,7 @@ import {
   type ProductCategory,
   type ProductItem,
 } from "@/modules/inventory/inventory.types";
+import { matchesSmartSearch } from "@/shared/lib/smart-search";
 
 const PRODUCTS_PER_PAGE = 10;
 
@@ -53,19 +54,18 @@ export function InventoryProductsDialog({
   const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
 
   const hasUncategorized = products.some((product) => !product.category);
-  const normalizedQuery = query.trim().toLowerCase();
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
-      const matchesName = normalizedQuery
-        ? product.name.toLowerCase().includes(normalizedQuery)
+      const matchesQuery = query.trim()
+        ? matchesSmartSearch([product.name, product.sku, product.category], query)
         : true;
       const matchesCategory =
         category === "all" ||
         (category === "none" ? !product.category : product.category === category);
 
-      return matchesName && matchesCategory;
+      return matchesQuery && matchesCategory;
     });
-  }, [category, normalizedQuery, products]);
+  }, [category, products, query]);
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE));
   const safePage = Math.min(page, totalPages);
   const pageProducts = filteredProducts.slice(

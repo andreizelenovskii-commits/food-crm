@@ -1,6 +1,7 @@
 import type { SessionUser } from "@/modules/auth/auth.types";
 import type { Client, ClientLoyaltyLevel } from "@/modules/clients/clients.types";
 import { LOYALTY_LEVELS } from "@/modules/loyalty/loyalty.types";
+import { matchesSmartSearch, normalizeSearchText } from "@/shared/lib/smart-search";
 
 export type ClientsPageSearchParams = {
   q?: string;
@@ -99,10 +100,8 @@ function matchesClientSearch(client: Client, normalizedQuery: string, queryPhone
     return true;
   }
 
-  const nameTokens = normalizedQuery.split(/\s+/).filter(Boolean);
-  const normalizedName = client.name.toLowerCase();
   const searchablePhone = normalizePhone(client.phone);
-  const matchesName = nameTokens.every((token) => normalizedName.includes(token));
+  const matchesName = matchesSmartSearch(client.name, normalizedQuery);
   const matchesPhone = queryPhone.length > 0 && searchablePhone.includes(queryPhone);
 
   return matchesName || matchesPhone;
@@ -113,7 +112,7 @@ export function buildClientsPageViewModel(
   rawQuery: string,
   activeLoyaltyLevel: ClientLoyaltyLevel | null = null,
 ): ClientsPageViewModel {
-  const normalizedQuery = rawQuery.toLowerCase();
+  const normalizedQuery = normalizeSearchText(rawQuery);
   const queryPhone = normalizePhone(rawQuery);
   const upcomingBirthdays = clients
     .filter((client) => client.type === "CLIENT")

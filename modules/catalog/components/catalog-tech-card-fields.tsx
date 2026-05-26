@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { CATALOG_FIELD_CLASS_NAME } from "@/modules/catalog/components/catalog-item-form.model";
 import { CATALOG_SITE_CATEGORIES } from "@/modules/catalog/catalog.types";
+import { matchesSmartSearch } from "@/shared/lib/smart-search";
 
 type TechCardOption = {
   id: number;
@@ -151,13 +152,11 @@ export function CatalogDropdown({
   const [query, setQuery] = useState("");
   const selectedOption = options.find((option) => option.value === value);
   const visibleOptions = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-
-    if (!normalizedQuery) {
+    if (!query.trim()) {
       return options;
     }
 
-    return options.filter((option) => option.label.toLowerCase().includes(normalizedQuery));
+    return options.filter((option) => matchesSmartSearch(option.label, query));
   }, [options, query]);
 
   return (

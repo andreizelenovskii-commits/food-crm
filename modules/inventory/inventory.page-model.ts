@@ -16,6 +16,7 @@ import {
   type TechCardItem,
   type TechCardProductOption,
 } from "@/modules/tech-cards/tech-cards.types";
+import { matchesSmartSearch } from "@/shared/lib/smart-search";
 
 export const INVENTORY_TABS = [
   { key: "products", label: "Товары" },
@@ -96,7 +97,6 @@ export function buildInventoryPageViewModel({
   searchParams,
 }: Pick<InventoryPageProps, "products" | "techCards" | "searchParams">) {
   const rawQuery = searchParams?.q?.trim() ?? "";
-  const normalizedQuery = rawQuery.toLowerCase();
   const selectedCategory = resolveCategory(searchParams?.category, PRODUCT_CATEGORIES);
   const selectedRecipeCategory = resolveCategory(searchParams?.recipeCategory, TECH_CARD_CATEGORIES);
   const selectedRecipeKind = resolveRecipeKind(searchParams?.recipeKind);
@@ -113,15 +113,11 @@ export function buildInventoryPageViewModel({
       return false;
     }
 
-    if (!normalizedQuery) {
+    if (!rawQuery) {
       return true;
     }
 
-    return (
-      product.name.toLowerCase().includes(normalizedQuery) ||
-      product.sku?.toLowerCase().includes(normalizedQuery) ||
-      product.category?.toLowerCase().includes(normalizedQuery)
-    );
+    return matchesSmartSearch([product.name, product.sku, product.category], rawQuery);
   });
   const categorySummaries = buildCategorySummaries<ProductCategory, ProductItem>(
     PRODUCT_CATEGORIES,

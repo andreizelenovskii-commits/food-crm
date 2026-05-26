@@ -6,6 +6,7 @@ import { ProductDetailDialog } from "@/modules/inventory/components/product-deta
 import { ProductForm } from "@/modules/inventory/components/product-form";
 import { formatInventoryQuantity } from "@/modules/inventory/inventory.format";
 import type { ProductItem } from "@/modules/inventory/inventory.types";
+import { matchesSmartSearch } from "@/shared/lib/smart-search";
 
 function formatMoney(cents: number) {
   return new Intl.NumberFormat("ru-RU", {
@@ -140,14 +141,12 @@ export function InventoryProductLiveSearch({
   const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
   const trimmedQuery = query.trim();
   const results = useMemo(() => {
-    const normalizedQuery = trimmedQuery.toLowerCase();
-
-    if (!normalizedQuery) {
+    if (!trimmedQuery) {
       return [];
     }
 
     return products
-      .filter((product) => product.name.toLowerCase().includes(normalizedQuery))
+      .filter((product) => matchesSmartSearch([product.name, product.sku, product.category], trimmedQuery))
       .slice(0, 7);
   }, [products, trimmedQuery]);
 

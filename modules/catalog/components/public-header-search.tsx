@@ -7,6 +7,7 @@ import { PublicCatalogImage } from "@/modules/catalog/components/public-catalog-
 import { SearchIcon } from "@/modules/catalog/components/public-icons";
 import { getMenuCategoryHref } from "@/modules/catalog/components/public-menu-category-utils";
 import { formatPublicMenuMoney } from "@/modules/catalog/components/public-menu-utils";
+import { matchesSmartSearch } from "@/shared/lib/smart-search";
 
 function getSearchProductHref(item: CatalogItem) {
   return item.category ? `${getMenuCategoryHref(item.category)}#product-${item.id}` : `/#product-${item.id}`;
@@ -69,19 +70,16 @@ export function PublicHeaderSearch({ items }: { items: CatalogItem[] }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchResults = useMemo(() => {
-    const normalizedQuery = searchQuery.trim().toLowerCase();
-
-    if (!normalizedQuery) {
+    if (!searchQuery.trim()) {
       return [];
     }
 
     return items
       .filter((item) =>
-        [item.name, item.category, item.description, item.pizzaSize, item.rollSize]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase()
-          .includes(normalizedQuery),
+        matchesSmartSearch(
+          [item.name, item.category, item.description, item.pizzaSize, item.rollSize],
+          searchQuery,
+        ),
       )
       .slice(0, 7);
   }, [items, searchQuery]);

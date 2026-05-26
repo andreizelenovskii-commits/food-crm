@@ -1,11 +1,11 @@
 import type { Client } from "@/modules/clients/clients.types";
 import type { Employee } from "@/modules/employees/employees.types";
-import { normalizeSearchValue } from "@/modules/orders/components/order-create-utils";
 import type { OrderFormState } from "@/modules/orders/orders.actions";
 import {
   DEFAULT_DELIVERY_FEE_CENTS,
   INITIAL_ORDER_STATUS,
 } from "@/modules/orders/orders.workflow";
+import { matchesSmartSearch } from "@/shared/lib/smart-search";
 
 export function createInitialOrderFormState(): OrderFormState {
   return {
@@ -24,33 +24,21 @@ export function createInitialOrderFormState(): OrderFormState {
 }
 
 export function filterClients(clients: Client[], queryValue: string) {
-  const query = normalizeSearchValue(queryValue);
-
   return clients.filter((client) => {
-    if (!query) {
+    if (!queryValue.trim()) {
       return true;
     }
 
-    const haystack = normalizeSearchValue(
-      [client.name, client.phone, client.email, client.address].filter(Boolean).join(" "),
-    );
-
-    return haystack.includes(query);
+    return matchesSmartSearch([client.name, client.phone, client.email, client.address], queryValue);
   });
 }
 
 export function filterEmployees(employees: Employee[], queryValue: string) {
-  const query = normalizeSearchValue(queryValue);
-
   return employees.filter((employee) => {
-    if (!query) {
+    if (!queryValue.trim()) {
       return true;
     }
 
-    const haystack = normalizeSearchValue(
-      [employee.name, employee.phone, employee.email, employee.role].filter(Boolean).join(" "),
-    );
-
-    return haystack.includes(query);
+    return matchesSmartSearch([employee.name, employee.phone, employee.email, employee.role], queryValue);
   });
 }

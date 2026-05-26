@@ -18,11 +18,11 @@ import {
   filterClients,
   filterEmployees,
 } from "@/modules/orders/components/order-create-button-helpers";
-import { normalizeSearchValue } from "@/modules/orders/components/order-create-utils";
 import {
   canAdjustDeliveryFee,
   DEFAULT_DELIVERY_FEE_CENTS,
 } from "@/modules/orders/orders.workflow";
+import { matchesSmartSearch } from "@/shared/lib/smart-search";
 
 export function OrderCreateButton({
   user,
@@ -100,19 +100,14 @@ export function OrderCreateButton({
         if (!matchesCategory) {
           return false;
         }
-        const query = normalizeSearchValue(catalogQuery);
-
-        if (!query) {
+        if (!catalogQuery.trim()) {
           return true;
         }
 
-        const haystack = normalizeSearchValue(
-          [item.name, item.category, item.description, item.pizzaSize, item.rollSize]
-            .filter(Boolean)
-            .join(" "),
+        return matchesSmartSearch(
+          [item.name, item.category, item.description, item.pizzaSize, item.rollSize],
+          catalogQuery,
         );
-
-        return haystack.includes(query);
       }),
     [catalogQuery, selectedCategory, visibleCatalogItems],
   );

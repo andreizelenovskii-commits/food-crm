@@ -12,6 +12,7 @@ import {
   type TechCardProductOption,
   type TechCardPizzaSize,
 } from "@/modules/tech-cards/tech-cards.types";
+import { matchesSmartSearch } from "@/shared/lib/smart-search";
 
 export function normalizeStateIngredients(
   ingredients: Array<{ productId: string; quantity: string; unit: string }>,
@@ -67,8 +68,6 @@ export function filterProducts(
   queryValue: string,
   selectedCategory: string,
 ) {
-  const query = queryValue.trim().toLowerCase();
-
   return products.filter((product) => {
     const matchesCategory = !selectedCategory || product.category === selectedCategory;
 
@@ -76,11 +75,11 @@ export function filterProducts(
       return false;
     }
 
-    if (!query) {
+    if (!queryValue.trim()) {
       return true;
     }
 
-    return product.name.toLowerCase().includes(query) || product.unit.toLowerCase().includes(query) || product.category?.toLowerCase().includes(query);
+    return matchesSmartSearch([product.name, product.unit, product.category], queryValue);
   });
 }
 
@@ -89,8 +88,6 @@ export function filterComponents(
   queryValue: string,
   selectedComponentCategory: string,
 ) {
-  const query = queryValue.trim().toLowerCase();
-
   return componentOptions.filter((component) => {
     const matchesCategory = !selectedComponentCategory || component.category === selectedComponentCategory;
 
@@ -98,20 +95,17 @@ export function filterComponents(
       return false;
     }
 
-    if (!query) {
+    if (!queryValue.trim()) {
       return true;
     }
 
-    return [
+    return matchesSmartSearch([
       component.name,
       component.category,
       component.pizzaSize ?? "",
       component.rollSize ?? "",
       component.outputUnit,
       component.description ?? "",
-    ]
-      .join(" ")
-      .toLowerCase()
-      .includes(query);
+    ], queryValue);
   });
 }

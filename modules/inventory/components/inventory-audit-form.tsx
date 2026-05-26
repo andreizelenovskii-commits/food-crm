@@ -24,6 +24,7 @@ import {
   type ProductCategory,
   type ProductItem,
 } from "@/modules/inventory/inventory.types";
+import { matchesSmartSearch } from "@/shared/lib/smart-search";
 
 export function InventoryAuditForm({
   products,
@@ -88,7 +89,6 @@ export function InventoryAuditForm({
     return () => window.cancelAnimationFrame(frameId);
   }, [onSuccess, router, state.successMessage]);
 
-  const normalizedQuery = query.trim().toLowerCase();
   const filteredProducts = useMemo(
     () =>
       products.filter((product) => {
@@ -98,17 +98,13 @@ export function InventoryAuditForm({
           return false;
         }
 
-        if (!normalizedQuery) {
+        if (!query.trim()) {
           return true;
         }
 
-        return (
-          product.name.toLowerCase().includes(normalizedQuery) ||
-          product.sku?.toLowerCase().includes(normalizedQuery) ||
-          product.category?.toLowerCase().includes(normalizedQuery)
-        );
+        return matchesSmartSearch([product.name, product.sku, product.category], query);
       }),
-    [normalizedQuery, products, selectedCategory],
+    [products, query, selectedCategory],
   );
 
   const categorySummaries = useMemo(
