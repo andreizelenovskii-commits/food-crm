@@ -57,8 +57,8 @@ export function CatalogCategoryPicker({
       </button>
 
       {isOpen ? (
-        <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-20 overflow-hidden rounded-[18px] border border-red-100 bg-white/98 p-1.5 shadow-[0_22px_60px_rgba(90,12,20,0.16)] backdrop-blur-xl">
-          <div className="max-h-72 overflow-y-auto">
+        <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 overflow-hidden rounded-[18px] border border-red-100 bg-white/98 p-1.5 shadow-[0_22px_60px_rgba(90,12,20,0.16)] backdrop-blur-xl">
+          <div className="max-h-64 overflow-y-auto">
             {options.map((option) => {
               const isActive = option.category === value;
               const label = option.category || "Все категории";

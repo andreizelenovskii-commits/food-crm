@@ -109,7 +109,7 @@ export function CatalogListDialog({
 
   return (
     <CatalogDialogFrame title={title} eyebrow="Прайс" onClose={onClose}>
-      <div className="mb-4 grid gap-3 lg:grid-cols-[minmax(0,0.76fr)_minmax(0,1.24fr)]">
+      <div className="relative z-30 mb-4 grid gap-3 lg:grid-cols-[minmax(0,0.76fr)_minmax(0,1.24fr)]">
         <div className="rounded-[20px] border border-white/70 bg-white/74 p-3 shadow-sm shadow-red-950/5 backdrop-blur-2xl">
           <p className="foodlike-kicker">Тип прайса</p>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -170,7 +170,7 @@ export function CatalogListDialog({
       {visibleItems.length === 0 ? (
         <div className="foodlike-empty p-5">Пока пусто.</div>
       ) : (
-        <div className="rounded-[22px] border border-white/70 bg-white/60 p-2 shadow-sm shadow-red-950/5 backdrop-blur-2xl">
+        <div className="relative z-0 rounded-[22px] border border-white/70 bg-white/60 p-2 shadow-sm shadow-red-950/5 backdrop-blur-2xl">
           <PaginatedList itemLabel="позиций" pageSize={6}>
             {visibleItems.map((item) => (
               <CatalogItemCard key={item.id} item={item} canManageCatalog={canManageCatalog} />
