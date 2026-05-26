@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import type { CatalogItem } from "@/modules/catalog/catalog.types";
+import { PublicCatalogImage } from "@/modules/catalog/components/public-catalog-image";
 import {
   describePublicMenuItem,
   getPublicMenuCardPrice,
@@ -24,19 +24,11 @@ export function PublicMenuCard({
           onClick={() => onSelect(item)}
           className="relative block aspect-square w-full overflow-hidden bg-[#fbf8f6]"
         >
-          {item.imageUrl ? (
-            <Image
-              src={item.imageUrl}
-              alt={item.name}
-              fill
-              sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
-              className="object-cover object-center transition duration-500 group-hover:scale-[1.025]"
-            />
-          ) : (
-            <span className="flex h-full items-center justify-center text-sm font-semibold uppercase tracking-[0.2em] text-[#d50014]">
-              FoodLike
-            </span>
-          )}
+          <PublicCatalogImage
+            item={item}
+            className="h-full w-full"
+            imageClassName="transition duration-500 group-hover:scale-[1.025]"
+          />
         </button>
 
         <div className="flex flex-1 flex-col p-5">
