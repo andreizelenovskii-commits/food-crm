@@ -22,4 +22,17 @@ describe("matchesSmartSearch", () => {
     expect(matchesSmartSearch("Пепперони с беконом", "бекон")).toBe(true);
     expect(matchesSmartSearch("Пепперони с беконом", "пепп")).toBe(true);
   });
+
+  it("does not match unrelated items through weak description fragments", () => {
+    expect(
+      matchesSmartSearch(
+        [
+          "Аригато",
+          "Холодные роллы",
+          "Нежный лосось, маринованные морские водоросли и творожный сыр",
+        ],
+        "асакава",
+      ),
+    ).toBe(false);
+  });
 });

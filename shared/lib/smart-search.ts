@@ -166,13 +166,10 @@ function getLatinSoundVariants(value: string) {
   return Array.from(variants);
 }
 
-function getSearchSkeleton(value: string) {
-  return cyrillicToLatin(value).replace(/[aeiouy]+/g, "");
-}
-
 export function normalizeSearchText(value: string) {
   return value
     .normalize("NFKD")
+    .replace(/и\u0306/gi, "й")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/ё/g, "е")
@@ -196,9 +193,6 @@ export function getSmartSearchVariants(value: string) {
   addVariant(variants, convertByMap(normalized, RU_TO_EN_KEYBOARD));
   for (const latinVariant of getLatinSoundVariants(cyrillicToLatin(normalized))) {
     addVariant(variants, latinVariant);
-  }
-  for (const variant of Array.from(variants)) {
-    addVariant(variants, getSearchSkeleton(variant));
   }
 
   return Array.from(variants);
