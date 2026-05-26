@@ -9,6 +9,7 @@ import {
   type CatalogItem,
   type CatalogPriceListType,
 } from "@/modules/catalog/catalog.types";
+import { CatalogCategoryPicker } from "@/modules/catalog/components/catalog-category-picker";
 import { CatalogItemDeleteButton } from "@/modules/catalog/components/catalog-item-delete-button";
 import { matchesSmartSearch } from "@/shared/lib/smart-search";
 
@@ -139,21 +140,11 @@ export function CatalogListDialog({
                 className="mt-2 h-11 w-full rounded-full border border-red-950/10 bg-white px-4 text-sm font-medium text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
               />
             </label>
-            <label className="min-w-0 xl:w-64">
-              <span className="foodlike-kicker">Категория</span>
-              <select
-                value={category}
-                onChange={(event) => setCategory(event.target.value)}
-                className="mt-2 h-11 w-full rounded-full border border-red-950/10 bg-white px-4 text-sm font-semibold text-zinc-950 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
-              >
-                <option value="">Все категории</option>
-                {categories.map((item) => (
-                  <option key={item.category} value={item.category}>
-                    {item.category} · {item.count}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <CatalogCategoryPicker
+              value={category}
+              categories={categories}
+              onChange={setCategory}
+            />
           </div>
         </div>
       </div>
