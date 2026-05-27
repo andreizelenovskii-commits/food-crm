@@ -57,12 +57,15 @@ export function PublicCatalogImage({
   item,
   className = "",
   imageClassName = "",
+  fit = "cover",
 }: {
   item: CatalogItem;
   className?: string;
   imageClassName?: string;
+  fit?: "cover" | "contain";
 }) {
   const [hasImageError, setHasImageError] = useState(false);
+  const fitClassName = fit === "contain" ? "object-contain" : "object-cover";
 
   return (
     <span className={`relative block overflow-hidden ${className}`}>
@@ -72,7 +75,7 @@ export function PublicCatalogImage({
           src={item.imageUrl}
           alt={item.name}
           loading="lazy"
-          className={`absolute inset-0 h-full w-full object-cover object-center ${imageClassName}`}
+          className={`absolute inset-0 h-full w-full ${fitClassName} object-center ${imageClassName}`}
           onError={() => setHasImageError(true)}
         />
       ) : (

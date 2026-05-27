@@ -26,6 +26,7 @@ export function PublicMenuCard({
         >
           <PublicCatalogImage
             item={item}
+            fit="contain"
             className="h-full w-full"
             imageClassName="transition duration-500 group-hover:scale-[1.025]"
           />

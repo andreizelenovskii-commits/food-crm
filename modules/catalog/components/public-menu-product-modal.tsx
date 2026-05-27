@@ -63,7 +63,7 @@ function ProductModalImage({ item }: { item: CatalogItem }) {
     <div className="flex min-h-[300px] items-center justify-center bg-[#faf6f2] p-4 sm:p-7">
       <div className="w-full max-w-[590px] rounded-[30px] border border-[#eadfd8] bg-[#fffdfb] p-3 shadow-[0_24px_70px_rgba(43,24,19,0.12)]">
         <div className="overflow-hidden rounded-[22px] bg-[#f4eee9]">
-          <PublicCatalogImage item={item} className="aspect-[4/3] w-full" />
+          <PublicCatalogImage item={item} fit="contain" className="aspect-[4/3] w-full" />
         </div>
       </div>
     </div>
