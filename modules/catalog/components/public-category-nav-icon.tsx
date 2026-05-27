@@ -46,10 +46,32 @@ export function CategoryNavIcon({ category }: { category: string }) {
     return (
       <CategoryIconFrame>
         <svg viewBox="0 0 24 24" className="size-5 transition duration-300 group-hover:rotate-3" aria-hidden="true">
-          <path d="M5.2 11.8c0-3 2.35-5.4 5.25-5.4h3.1c2.9 0 5.25 2.4 5.25 5.4s-2.35 5.4-5.25 5.4h-3.1c-2.9 0-5.25-2.4-5.25-5.4Z" fill="currentColor" />
-          <path d="M7.6 11.8c0-1.7 1.35-3.1 3-3.1h2.8c1.65 0 3 1.4 3 3.1s-1.35 3.1-3 3.1h-2.8c-1.65 0-3-1.4-3-3.1Z" fill="white" opacity="0.94" />
-          <path d="M9.5 11.8c0-.75.6-1.35 1.35-1.35h2.3c.75 0 1.35.6 1.35 1.35s-.6 1.35-1.35 1.35h-2.3c-.75 0-1.35-.6-1.35-1.35Z" fill="currentColor" opacity="0.92" />
-          <path d="M11.2 10.9v1.8M12.8 10.9v1.8" stroke="white" strokeLinecap="round" strokeWidth="0.95" opacity="0.62" />
+          <g transform="rotate(-18 12 12)">
+            <path
+              d="M4.7 10.1c0-1.5 1.2-2.7 2.7-2.7h9.2c1.5 0 2.7 1.2 2.7 2.7v3.8c0 1.5-1.2 2.7-2.7 2.7H7.4c-1.5 0-2.7-1.2-2.7-2.7v-3.8Z"
+              fill="currentColor"
+            />
+            <path
+              d="M7.3 9.6h9.4c.72 0 1.3.58 1.3 1.3v2.2c0 .72-.58 1.3-1.3 1.3H7.3c-.72 0-1.3-.58-1.3-1.3v-2.2c0-.72.58-1.3 1.3-1.3Z"
+              fill="white"
+              opacity="0.94"
+            />
+            <path
+              d="M9.2 12h5.6"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeWidth="1.55"
+              opacity="0.9"
+            />
+            <path
+              d="M7.9 9.9v4.2M16.1 9.9v4.2"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeWidth="1.05"
+              opacity="0.5"
+            />
+          </g>
         </svg>
       </CategoryIconFrame>
     );

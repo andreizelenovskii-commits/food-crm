@@ -11,10 +11,17 @@ export function slugifyMenuCategory(value: string) {
 }
 
 export function findMenuCategoryBySlug(slug: string) {
-  const decoded = decodeURIComponent(slug).replaceAll("-", " ");
+  const decoded = decodeURIComponent(slug);
+  const normalized = decoded.toLowerCase();
+  const normalizedWithSpaces = normalized.replaceAll("-", " ");
 
   return getPublicMenuLinks().find(
-    (category) => category.value.toLowerCase() === decoded || category.label.toLowerCase() === decoded,
+    (category) => {
+      const value = category.value.toLowerCase();
+      const label = category.label.toLowerCase();
+
+      return value === normalized || label === normalized || value === normalizedWithSpaces || label === normalizedWithSpaces;
+    },
   ) ?? null;
 }
 
