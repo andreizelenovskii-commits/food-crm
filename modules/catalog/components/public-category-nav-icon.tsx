@@ -77,6 +77,40 @@ export function CategoryNavIcon({ category }: { category: string }) {
     );
   }
 
+  if (category === "Супы") {
+    return (
+      <CategoryIconFrame>
+        <svg viewBox="0 0 24 24" className="size-5 transition duration-300 group-hover:-rotate-3" aria-hidden="true">
+          <path
+            d="M6 12.2h12c-.18 4-2.65 6.2-6 6.2s-5.82-2.2-6-6.2Z"
+            fill="currentColor"
+          />
+          <path
+            d="M5.2 11.8c0-.68.55-1.22 1.22-1.22h11.16c.67 0 1.22.54 1.22 1.22s-.55 1.22-1.22 1.22H6.42c-.67 0-1.22-.54-1.22-1.22Z"
+            fill="white"
+            opacity="0.95"
+          />
+          <path
+            d="M8.3 7.9c-.55-.62-.55-1.28 0-1.9M12 8.1c-.55-.62-.55-1.28 0-1.9M15.7 7.9c-.55-.62-.55-1.28 0-1.9"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeWidth="1.25"
+            opacity="0.9"
+          />
+          <path
+            d="M8.4 15.4h7.2"
+            fill="none"
+            stroke="white"
+            strokeLinecap="round"
+            strokeWidth="1.1"
+            opacity="0.75"
+          />
+        </svg>
+      </CategoryIconFrame>
+    );
+  }
+
   if (category === "Фастфуд") {
     return (
       <CategoryIconFrame>
