@@ -42,7 +42,7 @@ export function getPublicMenuCardPrice(item: CatalogItem) {
 
   if (!isSizedItem || item.variants.length <= 1) {
     return {
-      label: formatPublicMenuMoney(variant.priceCents),
+      label: `от ${formatPublicMenuMoney(variant.priceCents)}`,
       hint: null,
     };
   }

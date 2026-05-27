@@ -139,6 +139,32 @@ function CategoryNavIcon({ category }: { category: string }) {
     );
   }
 
+  if (category === "Фастфуд") {
+    return (
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#fff1f2] text-[#d50014] transition duration-300 group-hover:scale-110 group-hover:bg-[#d50014] group-hover:text-white">
+        <svg viewBox="0 0 24 24" className="size-5 transition duration-300 group-hover:-rotate-3" aria-hidden="true">
+          <path
+            d="M7.4 7.2 6.3 3.8M10.4 7.2 9.9 3.3M13.5 7.2l.5-3.9M16.6 7.2l1.1-3.4"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeWidth="1.7"
+          />
+          <path
+            d="M6.2 7h11.6l-1.1 13.2H7.3L6.2 7Z"
+            fill="currentColor"
+          />
+          <path
+            d="M8.2 10h7.6l-.6 7.8H8.8L8.2 10Z"
+            fill="white"
+            opacity="0.9"
+          />
+          <path d="M10.2 12.3h3.6M9.9 14.7h4.2" stroke="currentColor" strokeLinecap="round" strokeWidth="1.1" opacity="0.5" />
+        </svg>
+      </span>
+    );
+  }
+
   return null;
 }
 
