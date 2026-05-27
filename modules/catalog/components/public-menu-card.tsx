@@ -22,11 +22,10 @@ export function PublicMenuCard({
         <button
           type="button"
           onClick={() => onSelect(item)}
-          className="relative block aspect-square w-full overflow-hidden bg-[#fbf8f6]"
+          className="relative block aspect-[3/2] w-full overflow-hidden bg-[#fbf8f6]"
         >
           <PublicCatalogImage
             item={item}
-            fit="contain"
             className="h-full w-full"
             imageClassName="transition duration-500 group-hover:scale-[1.025]"
           />
