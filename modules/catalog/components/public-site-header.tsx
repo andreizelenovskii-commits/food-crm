@@ -144,22 +144,27 @@ function CategoryNavIcon({ category }: { category: string }) {
       <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#fff1f2] text-[#d50014] transition duration-300 group-hover:scale-110 group-hover:bg-[#d50014] group-hover:text-white">
         <svg viewBox="0 0 24 24" className="size-5 transition duration-300 group-hover:-rotate-3" aria-hidden="true">
           <path
-            d="M7.4 7.2 6.3 3.8M10.4 7.2 9.9 3.3M13.5 7.2l.5-3.9M16.6 7.2l1.1-3.4"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeWidth="1.7"
-          />
-          <path
-            d="M6.2 7h11.6l-1.1 13.2H7.3L6.2 7Z"
+            d="M7.6 9.1 6.8 4.7h1.8l.8 4.4h1.3L10.4 4h1.9l.3 5.1H14l.8-4.4h1.8l-.8 4.4h1.1c.55 0 .98.47.91 1.02l-1.1 9.1a1 1 0 0 1-1 .88H8.3a1 1 0 0 1-1-.88l-1.1-9.1a.92.92 0 0 1 .91-1.02h.49Z"
             fill="currentColor"
           />
           <path
-            d="M8.2 10h7.6l-.6 7.8H8.8L8.2 10Z"
+            d="M8.8 11.7h6.4l-.66 5.78a.6.6 0 0 1-.6.52H10.06a.6.6 0 0 1-.6-.52L8.8 11.7Z"
+            fill="white"
+            opacity="0.92"
+          />
+          <path
+            d="M10.6 14h2.8M10.85 16h2.3"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeWidth="1.15"
+            opacity="0.55"
+          />
+          <path
+            d="M8.4 6h1.1l.65 3.1h-1.2L8.4 6Zm6.1 0h1.1l-.55 3.1h-1.2L14.5 6Z"
             fill="white"
             opacity="0.9"
           />
-          <path d="M10.2 12.3h3.6M9.9 14.7h4.2" stroke="currentColor" strokeLinecap="round" strokeWidth="1.1" opacity="0.5" />
         </svg>
       </span>
     );
