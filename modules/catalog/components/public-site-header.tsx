@@ -144,26 +144,41 @@ function CategoryNavIcon({ category }: { category: string }) {
       <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#fff1f2] text-[#d50014] transition duration-300 group-hover:scale-110 group-hover:bg-[#d50014] group-hover:text-white">
         <svg viewBox="0 0 24 24" className="size-5 transition duration-300 group-hover:-rotate-3" aria-hidden="true">
           <path
-            d="M7.6 9.1 6.8 4.7h1.8l.8 4.4h1.3L10.4 4h1.9l.3 5.1H14l.8-4.4h1.8l-.8 4.4h1.1c.55 0 .98.47.91 1.02l-1.1 9.1a1 1 0 0 1-1 .88H8.3a1 1 0 0 1-1-.88l-1.1-9.1a.92.92 0 0 1 .91-1.02h.49Z"
+            d="M5.4 11.1c.45-3.55 3.18-6 6.6-6s6.15 2.45 6.6 6H5.4Z"
             fill="currentColor"
           />
           <path
-            d="M8.8 11.7h6.4l-.66 5.78a.6.6 0 0 1-.6.52H10.06a.6.6 0 0 1-.6-.52L8.8 11.7Z"
-            fill="white"
-            opacity="0.92"
-          />
-          <path
-            d="M10.6 14h2.8M10.85 16h2.3"
+            d="M7.4 10.6h9.2"
             fill="none"
-            stroke="currentColor"
+            stroke="white"
             strokeLinecap="round"
-            strokeWidth="1.15"
-            opacity="0.55"
+            strokeWidth="1.25"
+            opacity="0.9"
           />
           <path
-            d="M8.4 6h1.1l.65 3.1h-1.2L8.4 6Zm6.1 0h1.1l-.55 3.1h-1.2L14.5 6Z"
+            d="M5.2 13h13.6c.45 0 .8.35.8.8v.1c0 .44-.35.8-.8.8H5.2a.8.8 0 0 1-.8-.8v-.1c0-.45.35-.8.8-.8Z"
             fill="white"
-            opacity="0.9"
+            opacity="0.95"
+          />
+          <path
+            d="M6.2 15.8h11.6c.55 0 1 .45 1 1v.1c0 1.1-.9 2-2 2H7.2c-1.1 0-2-.9-2-2v-.1c0-.55.45-1 1-1Z"
+            fill="currentColor"
+          />
+          <path
+            d="M8.1 7.9h.02M11.8 6.9h.02M15.3 8.1h.02"
+            fill="white"
+            stroke="white"
+            strokeLinecap="round"
+            strokeWidth="1.55"
+            opacity="0.95"
+          />
+          <path
+            d="M7.5 17.1h9"
+            fill="none"
+            stroke="white"
+            strokeLinecap="round"
+            strokeWidth="1.2"
+            opacity="0.78"
           />
         </svg>
       </span>
