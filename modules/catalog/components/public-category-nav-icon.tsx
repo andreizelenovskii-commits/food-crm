@@ -111,6 +111,37 @@ export function CategoryNavIcon({ category }: { category: string }) {
     );
   }
 
+  if (category === "Салаты") {
+    return (
+      <CategoryIconFrame>
+        <svg viewBox="0 0 24 24" className="size-5 transition duration-300 group-hover:rotate-3" aria-hidden="true">
+          <path
+            d="M6.2 12.8h11.6c-.2 3.6-2.55 5.6-5.8 5.6s-5.6-2-5.8-5.6Z"
+            fill="currentColor"
+          />
+          <path
+            d="M5.5 12.5c0-.62.5-1.12 1.12-1.12h10.76c.62 0 1.12.5 1.12 1.12s-.5 1.12-1.12 1.12H6.62c-.62 0-1.12-.5-1.12-1.12Z"
+            fill="white"
+            opacity="0.95"
+          />
+          <path
+            d="M8.1 9.9c-.58-1.45.24-2.9 1.92-3.4.64 1.44-.18 2.86-1.92 3.4ZM13.8 9.4c.52-1.54 1.95-2.18 3.44-1.5-.54 1.5-1.96 2.12-3.44 1.5Z"
+            fill="currentColor"
+          />
+          <circle cx="12.2" cy="9.2" r="1.05" fill="currentColor" opacity="0.88" />
+          <path
+            d="M8.9 15.3h6.2"
+            fill="none"
+            stroke="white"
+            strokeLinecap="round"
+            strokeWidth="1.05"
+            opacity="0.75"
+          />
+        </svg>
+      </CategoryIconFrame>
+    );
+  }
+
   if (category === "Фастфуд") {
     return (
       <CategoryIconFrame>
