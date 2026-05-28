@@ -77,6 +77,48 @@ export function CategoryNavIcon({ category }: { category: string }) {
     );
   }
 
+  if (category === "Пасты") {
+    return (
+      <CategoryIconFrame>
+        <svg viewBox="0 0 24 24" className="size-5 transition duration-300 group-hover:-rotate-3" aria-hidden="true">
+          <path
+            d="M5.7 13.2h12.6c-.2 3.45-2.62 5.35-6.3 5.35s-6.1-1.9-6.3-5.35Z"
+            fill="currentColor"
+          />
+          <path
+            d="M5.1 12.8c0-.67.54-1.2 1.2-1.2h11.4c.66 0 1.2.53 1.2 1.2s-.54 1.2-1.2 1.2H6.3c-.66 0-1.2-.53-1.2-1.2Z"
+            fill="white"
+            opacity="0.95"
+          />
+          <path
+            d="M9.15 10.25c1.15-1.75 4.4-1.68 5.22.2.62 1.4-.72 2.42-2.34 1.72-1.3-.56-1.03-1.7.18-1.76.9-.05 1.5.32 2.06.92"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeWidth="1.2"
+            opacity="0.95"
+          />
+          <path
+            d="M16.8 6.3v4.4M15.65 6.3v2.5M17.95 6.3v2.5"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeWidth="1.05"
+            opacity="0.9"
+          />
+          <path
+            d="M8.7 15.5h6.6"
+            fill="none"
+            stroke="white"
+            strokeLinecap="round"
+            strokeWidth="1.05"
+            opacity="0.75"
+          />
+        </svg>
+      </CategoryIconFrame>
+    );
+  }
+
   if (category === "Супы") {
     return (
       <CategoryIconFrame>
