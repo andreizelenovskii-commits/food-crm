@@ -77,6 +77,42 @@ export function CategoryNavIcon({ category }: { category: string }) {
     );
   }
 
+  if (category === "Паназиатская кухня") {
+    return (
+      <CategoryIconFrame>
+        <svg viewBox="0 0 24 24" className="size-5 transition duration-300 group-hover:rotate-3" aria-hidden="true">
+          <path
+            d="M6.1 12.7h11.8c-.25 3.65-2.55 5.75-5.9 5.75s-5.65-2.1-5.9-5.75Z"
+            fill="currentColor"
+          />
+          <path
+            d="M5.35 12.25c0-.67.54-1.2 1.2-1.2h10.9c.66 0 1.2.53 1.2 1.2s-.54 1.2-1.2 1.2H6.55c-.66 0-1.2-.53-1.2-1.2Z"
+            fill="white"
+            opacity="0.95"
+          />
+          <path
+            d="M7.65 7.1 16.8 4.8M8.2 9.35 18 6.9"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeWidth="1.2"
+            opacity="0.9"
+          />
+          <path
+            d="M9.1 15.45h5.8"
+            fill="none"
+            stroke="white"
+            strokeLinecap="round"
+            strokeWidth="1.05"
+            opacity="0.75"
+          />
+          <circle cx="11.3" cy="9.6" r="0.75" fill="currentColor" opacity="0.9" />
+          <circle cx="13.6" cy="9.25" r="0.6" fill="currentColor" opacity="0.82" />
+        </svg>
+      </CategoryIconFrame>
+    );
+  }
+
   if (category === "Пасты") {
     return (
       <CategoryIconFrame>
