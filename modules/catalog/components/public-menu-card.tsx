@@ -15,6 +15,7 @@ export function PublicMenuCard({
   onSelect: (item: CatalogItem) => void;
 }) {
   const cardPrice = getPublicMenuCardPrice(item);
+  const description = describePublicMenuItem(item);
 
   return (
     <article id={`product-${item.id}`} className="group flex h-full scroll-mt-40 overflow-hidden rounded-[12px] border border-[#f2d9dc] bg-white shadow-[0_14px_34px_rgba(86,24,31,0.07)] transition hover:-translate-y-0.5 hover:border-[#efc4c9] hover:shadow-[0_20px_46px_rgba(86,24,31,0.11)]">
@@ -47,9 +48,11 @@ export function PublicMenuCard({
             </div>
           </div>
 
-          <p className="mt-3 min-h-[96px] overflow-hidden text-sm leading-6 text-[#6b5960] [display:-webkit-box] [-webkit-line-clamp:4] [-webkit-box-orient:vertical]">
-            {describePublicMenuItem(item)}
-          </p>
+          {description ? (
+            <p className="mt-3 min-h-[96px] overflow-hidden text-sm leading-6 text-[#6b5960] [display:-webkit-box] [-webkit-line-clamp:4] [-webkit-box-orient:vertical]">
+              {description}
+            </p>
+          ) : null}
 
           <button
             type="button"

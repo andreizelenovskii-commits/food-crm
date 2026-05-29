@@ -13,6 +13,10 @@ export function formatPublicMenuMoney(cents: number) {
 }
 
 export function describePublicMenuItem(item: CatalogItem) {
+  if (item.category === "Напитки" && !item.description) {
+    return "";
+  }
+
   const variant = item.pizzaSize ?? item.rollSize;
   return item.description ?? `Позиция из меню${variant ? `, вариант ${variant}` : ""}.`;
 }
