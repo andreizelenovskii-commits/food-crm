@@ -8,6 +8,10 @@ import {
   CheckoutPanel,
   DELIVERY_FEE_CENTS,
 } from "@/modules/catalog/components/public-menu-checkout";
+import {
+  choiceKey,
+  getChoiceSlotSelectionCount,
+} from "@/modules/catalog/components/public-menu-choice-utils";
 import { PublicModalCloseButton } from "@/modules/catalog/components/public-modal-shell";
 import { formatPublicMenuMoney } from "@/modules/catalog/components/public-menu-utils";
 import type { OrderStatus } from "@/modules/orders/orders.types";
@@ -18,7 +22,7 @@ export type PublicCartEntry = {
   quantity: number;
   variant: CatalogItemVariant;
   excludedIngredients: CatalogItemExcludedIngredient[];
-  choices: Record<number, number>;
+  choices: Record<string, number>;
 };
 
 export type PublicOrderStatus = {
@@ -45,7 +49,7 @@ export function PublicMenuCart({
   isPending: boolean;
   message: string | null;
   totalCents: number;
-  onChoiceChange: (key: string, choiceSlotId: number, selectedCatalogItemId: number) => void;
+  onChoiceChange: (key: string, choiceSlotId: number, position: number, selectedCatalogItemId: number) => void;
   onQuantityChange: (key: string, delta: number) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
@@ -138,7 +142,7 @@ function CartLine({
   onQuantityChange,
 }: {
   entry: PublicCartEntry;
-  onChoiceChange: (key: string, choiceSlotId: number, selectedCatalogItemId: number) => void;
+  onChoiceChange: (key: string, choiceSlotId: number, position: number, selectedCatalogItemId: number) => void;
   onQuantityChange: (key: string, delta: number) => void;
 }) {
   return (
@@ -183,27 +187,32 @@ function CartChoiceSlots({
   onChoiceChange,
 }: {
   entry: PublicCartEntry;
-  onChoiceChange: (key: string, choiceSlotId: number, selectedCatalogItemId: number) => void;
+  onChoiceChange: (key: string, choiceSlotId: number, position: number, selectedCatalogItemId: number) => void;
 }) {
   if (!entry.item.choiceSlots.length) return null;
 
   return (
     <div className="mt-3 space-y-2">
-      {entry.item.choiceSlots.map((slot) => (
-        <label key={slot.id} className="block space-y-1">
-          <span className="text-xs font-black text-[#3a292d]">{slot.name}</span>
-          <select value={entry.choices[slot.id] ?? ""} onChange={(event) => onChoiceChange(entry.key, slot.id, Number(event.target.value))} className="foodlike-field min-h-11 rounded-[16px] text-sm font-semibold" required>
-            <option value="">Выбрать</option>
-            {slot.options.map((option) => (
-              <option key={option.catalogItemId} value={option.catalogItemId}>
-                {option.name}
-                {option.pizzaSize ? ` · ${option.pizzaSize}` : ""}
-                {option.rollSize ? ` · ${option.rollSize}` : ""}
-              </option>
-            ))}
-          </select>
-        </label>
-      ))}
+      {entry.item.choiceSlots.flatMap((slot) =>
+        Array.from({ length: getChoiceSlotSelectionCount(slot.quantity) }, (_, position) => (
+          <label key={`${slot.id}-${position}`} className="block space-y-1">
+            <span className="text-xs font-black text-[#3a292d]">
+              {slot.name}
+              {getChoiceSlotSelectionCount(slot.quantity) > 1 ? ` #${position + 1}` : ""}
+            </span>
+            <select value={entry.choices[choiceKey(slot.id, position)] ?? ""} onChange={(event) => onChoiceChange(entry.key, slot.id, position, Number(event.target.value))} className="foodlike-field min-h-11 rounded-[16px] text-sm font-semibold" required>
+              <option value="">Выбрать</option>
+              {slot.options.map((option) => (
+                <option key={option.catalogItemId} value={option.catalogItemId}>
+                  {option.name}
+                  {option.pizzaSize ? ` · ${option.pizzaSize}` : ""}
+                  {option.rollSize ? ` · ${option.rollSize}` : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+        )),
+      )}
     </div>
   );
 }

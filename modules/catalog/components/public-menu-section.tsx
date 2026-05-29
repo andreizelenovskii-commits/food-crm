@@ -18,6 +18,13 @@ import {
 import { PublicMenuCard } from "@/modules/catalog/components/public-menu-card";
 import { getMenuCategoryHref } from "@/modules/catalog/components/public-menu-category-utils";
 import { PublicMenuProductModal } from "@/modules/catalog/components/public-menu-product-modal";
+import { getDeliveryAddressFromFormData } from "@/modules/catalog/components/public-menu-order-utils";
+import {
+  cartKey,
+  choiceKey,
+  getChoiceSlotSelectionCount,
+  type PublicMenuChoiceSelection,
+} from "@/modules/catalog/components/public-menu-choice-utils";
 import { resolvePublicMenuVariant } from "@/modules/catalog/components/public-menu-utils";
 import { ORDER_STATUS_LABELS } from "@/modules/orders/orders.workflow";
 import { browserBackendJson } from "@/shared/api/browser-backend";
@@ -28,40 +35,7 @@ type Cart = Record<string, {
   excludedIngredientIds: number[];
   quantity: number;
 }>;
-type CartChoices = Record<string, Record<number, number>>;
-
-function getDeliveryAddressFromFormData(formData: FormData) {
-  const deliveryAddress = String(formData.get("deliveryAddress") ?? "").trim();
-
-  if (deliveryAddress) {
-    return deliveryAddress;
-  }
-
-  const addressesJson = String(formData.get("addressesJson") ?? "").trim();
-
-  if (!addressesJson) {
-    return "";
-  }
-
-  try {
-    const parsed = JSON.parse(addressesJson) as unknown;
-
-    if (!Array.isArray(parsed)) {
-      return "";
-    }
-
-    return parsed
-      .map((address) => String(address ?? "").trim())
-      .filter(Boolean)[0] ?? "";
-  } catch {
-    return "";
-  }
-}
-
-function cartKey(itemId: number, variantId: number, excludedIngredientIds: number[] = []) {
-  const exclusions = [...excludedIngredientIds].sort((left, right) => left - right).join(".");
-  return `${itemId}:${variantId}:${exclusions}`;
-}
+type CartChoices = Record<string, Record<string, number>>;
 
 export function PublicMenuSection({
   categorySections = [],
@@ -123,8 +97,9 @@ export function PublicMenuSection({
     variant: CatalogItemVariant,
     quantity: number,
     excludedIngredientIds: number[],
+    choices: PublicMenuChoiceSelection[],
   ) {
-    const key = cartKey(item.id, variant.id, excludedIngredientIds);
+    const key = cartKey(item.id, variant.id, excludedIngredientIds, choices);
     setCart((current) => ({
       ...current,
       [key]: {
@@ -133,6 +108,15 @@ export function PublicMenuSection({
         excludedIngredientIds,
         quantity: (current[key]?.quantity ?? 0) + quantity,
       },
+    }));
+    setCartChoices((current) => ({
+      ...current,
+      [key]: Object.fromEntries(
+        choices.map((choice) => [
+          choiceKey(choice.choiceSlotId, choice.position),
+          choice.selectedCatalogItemId,
+        ]),
+      ),
     }));
     setActiveItem(null);
     setMessage(null);
@@ -157,12 +141,12 @@ export function PublicMenuSection({
     });
   }
 
-  function changeChoice(key: string, choiceSlotId: number, selectedCatalogItemId: number) {
+  function changeChoice(key: string, choiceSlotId: number, position: number, selectedCatalogItemId: number) {
     setCartChoices((current) => ({
       ...current,
       [key]: {
         ...(current[key] ?? {}),
-        [choiceSlotId]: selectedCatalogItemId,
+        [choiceKey(choiceSlotId, position)]: selectedCatalogItemId,
       },
     }));
   }
@@ -197,10 +181,13 @@ export function PublicMenuSection({
             catalogItemVariantId: entry.variant.id,
             excludedIngredientIds: entry.excludedIngredients.map((ingredient) => ingredient.id),
             quantity: entry.quantity,
-            choices: entry.item.choiceSlots.map((slot) => ({
-              choiceSlotId: slot.id,
-              selectedCatalogItemId: entry.choices[slot.id],
-            })),
+            choices: entry.item.choiceSlots.flatMap((slot) =>
+              Array.from({ length: getChoiceSlotSelectionCount(slot.quantity) }, (_, position) => ({
+                choiceSlotId: slot.id,
+                position,
+                selectedCatalogItemId: entry.choices[choiceKey(slot.id, position)],
+              })),
+            ),
           })),
         },
       });

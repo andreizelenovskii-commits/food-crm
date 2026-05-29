@@ -1,7 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import type { CatalogItem, CatalogItemVariant } from "@/modules/catalog/catalog.types";
+import type { CatalogChoiceSlot, CatalogItem, CatalogItemVariant } from "@/modules/catalog/catalog.types";
+import {
+  choiceKey,
+  getChoiceSlotSelectionCount,
+  type PublicMenuChoiceSelection,
+} from "@/modules/catalog/components/public-menu-choice-utils";
 import { PublicCatalogImage } from "@/modules/catalog/components/public-catalog-image";
 import {
   describePublicMenuItem,
@@ -15,19 +20,35 @@ export function PublicMenuProductModal({
   onClose,
 }: {
   item: CatalogItem;
-  onAdd: (item: CatalogItem, variant: CatalogItemVariant, quantity: number, excludedIngredientIds: number[]) => void;
+  onAdd: (
+    item: CatalogItem,
+    variant: CatalogItemVariant,
+    quantity: number,
+    excludedIngredientIds: number[],
+    choices: PublicMenuChoiceSelection[],
+  ) => void;
   onClose: () => void;
 }) {
   const initialVariant = resolvePublicMenuVariant(item);
   const [selectedVariantId, setSelectedVariantId] = useState(initialVariant.id);
   const [quantity, setQuantity] = useState(1);
   const [excludedIngredientIds, setExcludedIngredientIds] = useState<number[]>([]);
+  const [selectedChoices, setSelectedChoices] = useState<Record<string, number>>({});
   const selectedVariant = resolvePublicMenuVariant(item, selectedVariantId);
+  const choices = buildChoiceSelections(item.choiceSlots, selectedChoices);
+  const isChoiceComplete = areChoiceSlotsComplete(item.choiceSlots, selectedChoices);
 
   const toggleExcludedIngredient = (id: number) => {
     setExcludedIngredientIds((current) =>
       current.includes(id) ? current.filter((ingredientId) => ingredientId !== id) : [...current, id],
     );
+  };
+
+  const setChoice = (choiceSlotId: number, position: number, selectedCatalogItemId: number) => {
+    setSelectedChoices((current) => ({
+      ...current,
+      [choiceKey(choiceSlotId, position)]: selectedCatalogItemId,
+    }));
   };
 
   return (
@@ -37,15 +58,21 @@ export function PublicMenuProductModal({
         <div className="min-h-0 overflow-y-auto p-5 sm:p-7">
           <ProductModalHeader item={item} onClose={onClose} />
           <ProductModalControls
+            isAddDisabled={!isChoiceComplete}
             quantity={quantity}
             selectedVariant={selectedVariant}
             setQuantity={setQuantity}
-            onAdd={() => onAdd(item, selectedVariant, quantity, excludedIngredientIds)}
+            onAdd={() => onAdd(item, selectedVariant, quantity, excludedIngredientIds, choices)}
           />
           <ProductVariantPicker
             item={item}
             selectedVariant={selectedVariant}
             onSelect={setSelectedVariantId}
+          />
+          <ProductChoiceSlotPicker
+            item={item}
+            selectedChoices={selectedChoices}
+            onChoiceChange={setChoice}
           />
           <ExcludedIngredientPicker
             excludedIngredientIds={excludedIngredientIds}
@@ -55,6 +82,27 @@ export function PublicMenuProductModal({
         </div>
       </section>
     </div>
+  );
+}
+
+function buildChoiceSelections(
+  slots: CatalogChoiceSlot[],
+  selectedChoices: Record<string, number>,
+): PublicMenuChoiceSelection[] {
+  return slots.flatMap((slot) =>
+    Array.from({ length: getChoiceSlotSelectionCount(slot.quantity) }, (_, index) => ({
+      choiceSlotId: slot.id,
+      position: index,
+      selectedCatalogItemId: selectedChoices[choiceKey(slot.id, index)],
+    })).filter((choice) => Number.isInteger(choice.selectedCatalogItemId) && choice.selectedCatalogItemId > 0),
+  );
+}
+
+function areChoiceSlotsComplete(slots: CatalogChoiceSlot[], selectedChoices: Record<string, number>) {
+  return slots.every((slot) =>
+    Array.from({ length: getChoiceSlotSelectionCount(slot.quantity) }, (_, index) =>
+      Number.isInteger(selectedChoices[choiceKey(slot.id, index)]),
+    ).every(Boolean),
   );
 }
 
@@ -86,11 +134,13 @@ function ProductModalHeader({ item, onClose }: { item: CatalogItem; onClose: () 
 }
 
 function ProductModalControls({
+  isAddDisabled,
   selectedVariant,
   quantity,
   setQuantity,
   onAdd,
 }: {
+  isAddDisabled: boolean;
   selectedVariant: CatalogItemVariant;
   quantity: number;
   setQuantity: (getNext: (current: number) => number) => void;
@@ -113,7 +163,7 @@ function ProductModalControls({
         <span className="text-center text-base font-semibold tabular-nums text-[#241316]">{quantity}</span>
         <QuantityButton label="+" onClick={() => setQuantity((current) => current + 1)} />
       </div>
-      <button type="button" onClick={onAdd} className="min-h-12 rounded-full bg-[#d50014] px-8 text-sm font-semibold text-white transition hover:bg-[#b90012] sm:col-span-2 lg:col-span-1">
+      <button type="button" onClick={onAdd} disabled={isAddDisabled} className="min-h-12 rounded-full bg-[#d50014] px-8 text-sm font-semibold text-white transition hover:bg-[#b90012] disabled:cursor-not-allowed disabled:bg-[#f0c4c9] sm:col-span-2 lg:col-span-1">
         Добавить
       </button>
     </div>
@@ -151,6 +201,54 @@ function ProductVariantPicker({
             {variant.label} · {formatPublicMenuMoney(variant.priceCents)}
           </button>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function ProductChoiceSlotPicker({
+  item,
+  selectedChoices,
+  onChoiceChange,
+}: {
+  item: CatalogItem;
+  selectedChoices: Record<string, number>;
+  onChoiceChange: (choiceSlotId: number, position: number, selectedCatalogItemId: number) => void;
+}) {
+  if (!item.choiceSlots.length) return null;
+
+  return (
+    <div className="mt-7 border-t border-[#f3dadd] pt-5">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-lg font-semibold text-[#241316]">Состав комбо</p>
+        <span className="text-xs font-semibold text-[#9b7d83]">Выберите варианты</span>
+      </div>
+      <div className="mt-3 space-y-3">
+        {item.choiceSlots.flatMap((slot) =>
+          Array.from({ length: getChoiceSlotSelectionCount(slot.quantity) }, (_, index) => (
+            <label key={`${slot.id}-${index}`} className="block space-y-1.5">
+              <span className="text-sm font-semibold text-[#3a292d]">
+                {slot.name}
+                {getChoiceSlotSelectionCount(slot.quantity) > 1 ? ` #${index + 1}` : ""}
+              </span>
+              <select
+                value={selectedChoices[choiceKey(slot.id, index)] ?? ""}
+                onChange={(event) => onChoiceChange(slot.id, index, Number(event.target.value))}
+                className="foodlike-field min-h-12 rounded-[16px] bg-white text-sm font-semibold"
+                required
+              >
+                <option value="">Выбрать</option>
+                {slot.options.map((option) => (
+                  <option key={option.catalogItemId} value={option.catalogItemId}>
+                    {option.name}
+                    {option.pizzaSize ? ` · ${option.pizzaSize}` : ""}
+                    {option.rollSize ? ` · ${option.rollSize}` : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )),
+        )}
       </div>
     </div>
   );
