@@ -220,6 +220,77 @@ export function CategoryNavIcon({ category }: { category: string }) {
     );
   }
 
+  if (category === "Комбо") {
+    return (
+      <CategoryIconFrame>
+        <svg viewBox="0 0 24 24" className="size-5 transition duration-300 group-hover:-rotate-3" aria-hidden="true">
+          <path
+            d="M4.9 9.6h14.2c.64 0 1.12.58 1 1.21l-.98 6.3a2.7 2.7 0 0 1-2.67 2.29h-8.9a2.7 2.7 0 0 1-2.67-2.29l-.98-6.3c-.1-.63.36-1.21 1-1.21Z"
+            fill="currentColor"
+          />
+          <path
+            d="M6.8 12.15h10.4"
+            fill="none"
+            stroke="white"
+            strokeLinecap="round"
+            strokeWidth="1.35"
+            opacity="0.9"
+          />
+          <path
+            d="M8.2 8.25c.42-1.98 1.92-3.35 3.8-3.35s3.38 1.37 3.8 3.35H8.2Z"
+            fill="currentColor"
+            opacity="0.9"
+          />
+          <path
+            d="M10.1 7.85h3.8M8.4 15.55h1.85M11.1 15.55h1.85M13.8 15.55h1.85"
+            fill="none"
+            stroke="white"
+            strokeLinecap="round"
+            strokeWidth="1.15"
+            opacity="0.82"
+          />
+        </svg>
+      </CategoryIconFrame>
+    );
+  }
+
+  if (category === "Напитки" || category === "Баббл-напитки") {
+    return (
+      <CategoryIconFrame>
+        <svg viewBox="0 0 24 24" className="size-5 transition duration-300 group-hover:rotate-3" aria-hidden="true">
+          <path
+            d="M8 8.3h8l-.72 8.9a2.2 2.2 0 0 1-2.2 2H10.9a2.2 2.2 0 0 1-2.19-2L8 8.3Z"
+            fill="currentColor"
+          />
+          <path
+            d="M7.45 8.25h9.1"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeWidth="1.7"
+          />
+          <path
+            d="M10.2 11.35h3.6M10.45 14.2h3.1"
+            fill="none"
+            stroke="white"
+            strokeLinecap="round"
+            strokeWidth="1.15"
+            opacity="0.85"
+          />
+          <path
+            d="M12.45 8.05 15.8 4.7"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeWidth="1.2"
+          />
+          <circle cx="11.1" cy="16.8" r="0.7" fill="white" opacity="0.92" />
+          <circle cx="13.3" cy="16.45" r="0.58" fill="white" opacity="0.82" />
+        </svg>
+      </CategoryIconFrame>
+    );
+  }
+
   if (category === "Фастфуд") {
     return (
       <CategoryIconFrame>
