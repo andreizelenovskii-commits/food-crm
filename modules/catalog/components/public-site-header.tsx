@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import type { PublicClientProfile } from "@/modules/clients/clients.types";
 import type { CatalogItem } from "@/modules/catalog/catalog.types";
 import { PublicHeaderInfoActions } from "@/modules/catalog/components/public-header-info-actions";
@@ -19,9 +19,8 @@ import {
   PhoneIcon,
   UserIcon,
 } from "@/modules/catalog/components/public-icons";
-import { CategoryNavIcon } from "@/modules/catalog/components/public-category-nav-icon";
+import { PublicCategoryPager } from "@/modules/catalog/components/public-category-pager";
 import { PublicProfileModal } from "@/modules/catalog/components/public-profile-modal";
-import { getMenuCategoryHref } from "@/modules/catalog/components/public-menu-category-utils";
 import { PUBLIC_SITE_CONTACTS } from "@/shared/config/public-site";
 
 function TelegramIcon({ className }: { className?: string }) {
@@ -110,40 +109,6 @@ function PhoneNumberLink() {
   );
 }
 
-function CategoryArrowIcon({ direction }: { direction: "left" | "right" }) {
-  return (
-    <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
-      <path
-        d={direction === "left" ? "M14.5 6.5 9 12l5.5 5.5" : "M9.5 6.5 15 12l-5.5 5.5"}
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2.2"
-      />
-    </svg>
-  );
-}
-
-function CategoryScrollButton({
-  direction,
-  onClick,
-}: {
-  direction: "left" | "right";
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="hidden size-10 shrink-0 items-center justify-center rounded-full border border-[#f0d9dc] bg-white text-[#b00012] shadow-sm shadow-[#d50014]/8 transition hover:border-[#ffc3ca] hover:bg-[#fff1f2] hover:text-[#d50014] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d50014]/25 md:flex"
-      aria-label={direction === "left" ? "Показать предыдущие категории" : "Показать следующие категории"}
-    >
-      <CategoryArrowIcon direction={direction} />
-    </button>
-  );
-}
-
 type PublicMenuCategoryLink = {
   value: string;
   label: string;
@@ -161,25 +126,11 @@ export function PublicSiteHeader({
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const categoryStripRef = useRef<HTMLDivElement | null>(null);
   const { avatarId } = usePublicAvatar();
 
   function openAuth(mode: AuthMode) {
     setAuthMode(mode);
     setIsAuthOpen(true);
-  }
-
-  function scrollCategories(direction: "left" | "right") {
-    const strip = categoryStripRef.current;
-
-    if (!strip) {
-      return;
-    }
-
-    strip.scrollBy({
-      left: (direction === "left" ? -1 : 1) * Math.max(strip.clientWidth * 0.82, 320),
-      behavior: "smooth",
-    });
   }
 
   return (
@@ -247,25 +198,7 @@ export function PublicSiteHeader({
             className="scroll-mt-28 border-t border-[#f7e5e7] bg-white"
             aria-label="Категории меню"
           >
-            <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-2 sm:px-6">
-              <CategoryScrollButton direction="left" onClick={() => scrollCategories("left")} />
-              <div
-                ref={categoryStripRef}
-                className="menu-category-strip flex min-w-0 flex-1 snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth"
-              >
-                {categories.map((category) => (
-                  <a
-                    key={category.value}
-                    href={getMenuCategoryHref(category.value)}
-                    className="group flex min-h-11 shrink-0 snap-start items-center gap-2 rounded-full px-3 text-sm font-black text-[#5c464b] transition hover:bg-[#fff1f2] hover:text-[#d50014] xl:px-3.5"
-                  >
-                    <CategoryNavIcon category={category.value} />
-                    {category.label}
-                  </a>
-                ))}
-              </div>
-              <CategoryScrollButton direction="right" onClick={() => scrollCategories("right")} />
-            </div>
+            <PublicCategoryPager categories={categories} />
           </nav>
         ) : null}
       </header>
