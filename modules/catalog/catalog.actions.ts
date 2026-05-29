@@ -13,6 +13,7 @@ function getCatalogFormValues(formData: FormData): CatalogFormValues {
     priceListType: read("priceListType"),
     category: read("category"),
     kitchenZone: read("kitchenZone"),
+    kitchenZones: read("kitchenZones"),
     description: read("description"),
     imageUrl: read("imageUrl"),
     price: read("price"),
@@ -31,6 +32,7 @@ export async function addCatalogItemAction(
     await browserBackendJson("/api/v1/catalog", {
       body: {
         ...getCatalogFormValues(formData),
+        kitchenZones: JSON.stringify(input.kitchenZones),
         price: String(input.priceCents / 100),
         variants: JSON.stringify(input.variants.map((variant) => ({
           ...variant,
@@ -73,6 +75,7 @@ export async function updateCatalogItemAction(
       method: "PATCH",
       body: {
         ...getCatalogFormValues(formData),
+        kitchenZones: JSON.stringify(input.kitchenZones),
         price: String(input.priceCents / 100),
         variants: JSON.stringify(input.variants.map((variant) => ({
           ...variant,

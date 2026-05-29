@@ -11,8 +11,17 @@ import {
   CatalogExcludedIngredientsEditor,
   type CatalogExcludedIngredientDraft,
 } from "@/modules/catalog/components/catalog-excluded-ingredients-editor";
+import {
+  buildInitialExcludedIngredients,
+  buildInitialVariants,
+} from "@/modules/catalog/components/catalog-item-form.initializers";
 import { CatalogPriceListPicker } from "@/modules/catalog/components/catalog-price-list-picker";
 import { CatalogDropdown } from "@/modules/catalog/components/catalog-tech-card-fields";
+import {
+  ComboKitchenZonePicker,
+  parseInitialKitchenZones,
+  resolveKitchenZoneByCategory,
+} from "@/modules/catalog/components/catalog-combo-kitchen-zone-picker";
 import {
   CatalogVariantsEditor,
   type CatalogVariantDraft,
@@ -45,9 +54,11 @@ export function CatalogItemForm({
       : "",
   );
   const [selectedCategory, setSelectedCategory] = useState(initialState.values.category);
-  const [selectedKitchenZone, setSelectedKitchenZone] = useState(
-    initialState.values.kitchenZone as KitchenZone | "",
+  const initialKitchenZones = parseInitialKitchenZones(initialItem, initialState.values);
+  const [selectedKitchenZone, setSelectedKitchenZone] = useState<KitchenZone | "">(
+    (initialState.values.kitchenZone as KitchenZone | "") || initialKitchenZones[0] || "",
   );
+  const [selectedKitchenZones, setSelectedKitchenZones] = useState<KitchenZone[]>(initialKitchenZones);
   const [variants, setVariants] = useState<CatalogVariantDraft[]>(() => buildInitialVariants(initialItem, initialState.values));
   const [excludedIngredients, setExcludedIngredients] = useState<CatalogExcludedIngredientDraft[]>(() =>
     buildInitialExcludedIngredients(initialItem, initialState.values),
@@ -78,6 +89,7 @@ export function CatalogItemForm({
   }));
   const defaultVariant = variants.find((variant) => variant.isDefault) ?? variants[0];
   const categoryOptions = CATALOG_SITE_CATEGORIES.map((category) => ({ value: category, label: category }));
+  const isComboCategory = selectedCategory === "Комбо";
   const kitchenZoneOptions = KITCHEN_ZONES.map((zone) => ({
     value: zone,
     label: KITCHEN_ZONE_LABELS[zone],
@@ -101,6 +113,42 @@ export function CatalogItemForm({
       setIsImageUploading(false);
     }
   };
+
+  function setCategory(value: string) {
+    const resolvedKitchenZone = resolveKitchenZoneByCategory(value);
+
+    setSelectedCategory(value);
+
+    if (value === "Комбо") {
+      const currentZones = selectedKitchenZones.length
+        ? selectedKitchenZones
+        : resolvedKitchenZone
+          ? [resolvedKitchenZone]
+          : [];
+      setSelectedKitchenZones(currentZones);
+      setSelectedKitchenZone(currentZones[0] ?? "");
+      return;
+    }
+
+    setSelectedKitchenZone(resolvedKitchenZone);
+    setSelectedKitchenZones(resolvedKitchenZone ? [resolvedKitchenZone] : []);
+  }
+
+  function setSingleKitchenZone(value: KitchenZone | "") {
+    setSelectedKitchenZone(value);
+    setSelectedKitchenZones(value ? [value] : []);
+  }
+
+  function toggleComboKitchenZone(zone: KitchenZone) {
+    setSelectedKitchenZones((current) => {
+      const next = current.includes(zone)
+        ? current.filter((currentZone) => currentZone !== zone)
+        : [...current, zone];
+
+      setSelectedKitchenZone(next[0] ?? "");
+      return next;
+    });
+  }
 
   return (
     <form
@@ -154,21 +202,27 @@ export function CatalogItemForm({
           placeholder="Выбери категорию сайта"
           value={selectedCategory}
           options={categoryOptions}
-          onChange={(value) => {
-            setSelectedCategory(value);
-            setSelectedKitchenZone(resolveKitchenZoneByCategory(value));
-          }}
+          onChange={setCategory}
         />
-        <CatalogDropdown
-          name="kitchenZone"
-          label="Кухонная зона"
-          placeholder="Выбери зону"
-          value={selectedKitchenZone}
-          options={kitchenZoneOptions}
-          onChange={(value) => setSelectedKitchenZone(value as KitchenZone | "")}
-        />
+        {isComboCategory ? (
+          <ComboKitchenZonePicker
+            selectedZones={selectedKitchenZones}
+            onToggle={toggleComboKitchenZone}
+          />
+        ) : (
+          <CatalogDropdown
+            name="kitchenZone"
+            label="Кухонная зона"
+            placeholder="Выбери зону"
+            value={selectedKitchenZone}
+            options={kitchenZoneOptions}
+            onChange={(value) => setSingleKitchenZone(value as KitchenZone | "")}
+          />
+        )}
       </div>
 
+      {isComboCategory ? <input type="hidden" name="kitchenZone" value={selectedKitchenZone} /> : null}
+      <input type="hidden" name="kitchenZones" value={JSON.stringify(selectedKitchenZones)} />
       <input type="hidden" name="technologicalCardId" value={defaultVariant?.technologicalCardId ?? ""} />
       <input type="hidden" name="price" value={defaultVariant?.price ?? ""} />
       <input type="hidden" name="variants" value={JSON.stringify(variants)} />
@@ -217,70 +271,4 @@ export function CatalogItemForm({
       </button>
     </form>
   );
-}
-
-function buildInitialExcludedIngredients(
-  initialItem: CatalogItemFormProps["initialItem"],
-  values: CatalogFormState["values"],
-): CatalogExcludedIngredientDraft[] {
-  if (initialItem?.excludedIngredients.length) {
-    return initialItem.excludedIngredients.map((ingredient) => ({
-      productId: String(ingredient.productId),
-      label: ingredient.label,
-    }));
-  }
-
-  try {
-    const parsed = JSON.parse(values.excludedIngredients) as Array<{ productId: number | string; label: string }>;
-    return parsed.map((ingredient) => ({
-      productId: String(ingredient.productId),
-      label: String(ingredient.label ?? ""),
-    }));
-  } catch {
-    return [];
-  }
-}
-
-function buildInitialVariants(
-  initialItem: CatalogItemFormProps["initialItem"],
-  values: CatalogFormState["values"],
-): CatalogVariantDraft[] {
-  if (initialItem?.variants.length) {
-    return initialItem.variants.map((variant) => ({
-      technologicalCardId: String(variant.technologicalCardId),
-      label: variant.label,
-      price: String(variant.priceCents / 100),
-      isDefault: variant.isDefault,
-    }));
-  }
-
-  return [{
-    technologicalCardId: values.technologicalCardId,
-    label: "Стандарт",
-    price: values.price,
-    isDefault: true,
-  }];
-}
-
-function resolveKitchenZoneByCategory(category: string): KitchenZone | "" {
-  if (category === "Пицца") {
-    return "pizza";
-  }
-
-  if (
-    category === "Роллы" ||
-    category === "Холодные роллы" ||
-    category === "Запеченные роллы" ||
-    category === "Теплые роллы" ||
-    category === "Онигири" ||
-    category === "Суши-доги"
-  ) {
-    return "rolls";
-  }
-
-  if (category === "Фастфуд") {
-    return "fastfood";
-  }
-
-  return "";
 }

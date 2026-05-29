@@ -90,6 +90,7 @@ export async function chooseOrderPackagingAction(formData: FormData) {
   const orderId = Number(String(formData.get("orderId") ?? "").trim());
   const orderItemId = Number(String(formData.get("orderItemId") ?? "").trim());
   const unitIndex = Number(String(formData.get("unitIndex") ?? "").trim());
+  const kitchenZone = String(formData.get("kitchenZone") ?? "").trim();
   const packageProductId = Number(String(formData.get("packageProductId") ?? "").trim());
 
   if (![orderId, orderItemId, unitIndex, packageProductId].every((value) => Number.isInteger(value) && value > 0)) {
@@ -100,6 +101,7 @@ export async function chooseOrderPackagingAction(formData: FormData) {
     body: {
       orderItemId,
       unitIndex,
+      kitchenZone,
       packageProductId,
     },
   });

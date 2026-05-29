@@ -36,6 +36,13 @@ export default async function CatalogItemEditPage(props: {
     priceListType: catalogItem.priceListType,
     category: catalogItem.category ?? "",
     kitchenZone: catalogItem.kitchenZone ?? "",
+    kitchenZones: JSON.stringify(
+      catalogItem.kitchenZones.length
+        ? catalogItem.kitchenZones
+        : catalogItem.kitchenZone
+          ? [catalogItem.kitchenZone]
+          : [],
+    ),
     description: catalogItem.description ?? "",
     imageUrl: catalogItem.imageUrl ?? "",
     price: formatPriceInput(catalogItem.priceCents),

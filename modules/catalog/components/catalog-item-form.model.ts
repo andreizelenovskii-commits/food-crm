@@ -7,6 +7,7 @@ export const EMPTY_CATALOG_FORM_VALUES: CatalogFormValues = {
   priceListType: "",
   category: "",
   kitchenZone: "",
+  kitchenZones: "[]",
   description: "",
   imageUrl: "",
   price: "",

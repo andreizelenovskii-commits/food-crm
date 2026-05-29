@@ -16,6 +16,7 @@ export function PublicMenuCard({
 }) {
   const cardPrice = getPublicMenuCardPrice(item);
   const description = describePublicMenuItem(item);
+  const isCombo = item.category === "Комбо";
 
   return (
     <article id={`product-${item.id}`} className="group flex h-full scroll-mt-40 overflow-hidden rounded-[12px] border border-[#f2d9dc] bg-white shadow-[0_14px_34px_rgba(86,24,31,0.07)] transition hover:-translate-y-0.5 hover:border-[#efc4c9] hover:shadow-[0_20px_46px_rgba(86,24,31,0.11)]">
@@ -23,17 +24,20 @@ export function PublicMenuCard({
         <button
           type="button"
           onClick={() => onSelect(item)}
-          className="relative block aspect-[3/2] w-full overflow-hidden bg-[#fbf8f6]"
+          className={`relative block w-full overflow-hidden bg-[#fbf8f6] ${
+            isCombo ? "aspect-[4/3]" : "aspect-[3/2]"
+          }`}
         >
           <PublicCatalogImage
             item={item}
             className="h-full w-full"
             imageClassName="transition duration-500 group-hover:scale-[1.025]"
+            fit={isCombo ? "contain" : "cover"}
           />
         </button>
 
-        <div className="flex flex-1 flex-col p-5">
-          <div className="flex min-h-[72px] items-start justify-between gap-4">
+        <div className={`flex flex-1 flex-col p-5 ${isCombo ? "gap-5" : ""}`}>
+          <div className={`flex items-start justify-between gap-4 ${isCombo ? "" : "min-h-[72px]"}`}>
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#d50014]">
                 {item.category ?? "Меню"}
@@ -57,7 +61,9 @@ export function PublicMenuCard({
           <button
             type="button"
             onClick={() => onSelect(item)}
-            className="mt-auto min-h-12 w-full rounded-full bg-[#d50014] px-5 text-sm font-semibold text-white shadow-[0_10px_22px_rgba(213,0,20,0.18)] transition hover:bg-[#b90012]"
+            className={`min-h-12 w-full rounded-full bg-[#d50014] px-5 text-sm font-semibold text-white shadow-[0_10px_22px_rgba(213,0,20,0.18)] transition hover:bg-[#b90012] ${
+              isCombo ? "mt-2" : "mt-auto"
+            }`}
           >
             Выбрать
           </button>

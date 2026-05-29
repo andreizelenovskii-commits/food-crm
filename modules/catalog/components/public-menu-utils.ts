@@ -13,7 +13,7 @@ export function formatPublicMenuMoney(cents: number) {
 }
 
 export function describePublicMenuItem(item: CatalogItem) {
-  if (item.category === "Напитки" && !item.description) {
+  if (item.category === "Комбо" || (item.category === "Напитки" && !item.description)) {
     return "";
   }
 

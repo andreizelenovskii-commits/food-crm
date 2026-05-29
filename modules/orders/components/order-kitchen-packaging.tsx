@@ -16,7 +16,7 @@ export function OrderKitchenPackaging({
   packagingOptions: ProductItem[];
 }) {
   const canChoosePackaging = order.status === "SENT_TO_KITCHEN" && canAdvanceOrder(order.status, user.role);
-  const kitchenItems = order.items.filter((item) => item.kitchenZone);
+  const kitchenItems = order.items.filter((item) => getItemKitchenZones(item).length);
 
   if (!kitchenItems.length) return null;
 
@@ -30,7 +30,7 @@ export function OrderKitchenPackaging({
       </div>
       <div className="space-y-3">
         {KITCHEN_ZONES.map((zone) => {
-          const zoneItems = kitchenItems.filter((item) => item.kitchenZone === zone);
+          const zoneItems = kitchenItems.filter((item) => getItemKitchenZones(item).includes(zone));
           if (!zoneItems.length) return null;
 
           return (
@@ -120,7 +120,9 @@ function OrderItemPackagingUnit({
   packagingOptions: ProductItem[];
   canChoosePackaging: boolean;
 }) {
-  const usage = item.packagingUsages.find((current) => current.unitIndex === unitIndex);
+  const usage = item.packagingUsages.find(
+    (current) => current.unitIndex === unitIndex && current.kitchenZone === zone,
+  );
 
   return (
     <div className="rounded-[12px] border border-red-950/10 bg-white/80 p-2">
@@ -172,6 +174,7 @@ function PackagingButtons({
           <input type="hidden" name="orderId" value={orderId} />
           <input type="hidden" name="orderItemId" value={orderItemId} />
           <input type="hidden" name="unitIndex" value={unitIndex} />
+          <input type="hidden" name="kitchenZone" value={zone} />
           <input type="hidden" name="packageProductId" value={packaging.id} />
           <button type="submit" disabled={disabled || packaging.stockQuantity < 1} className="rounded-full border border-red-100 bg-white px-3 py-1.5 text-xs font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white disabled:cursor-not-allowed disabled:border-zinc-200 disabled:text-zinc-400 disabled:hover:bg-white">
             {packaging.name} · {packaging.stockQuantity} шт
@@ -180,4 +183,12 @@ function PackagingButtons({
       ))}
     </div>
   );
+}
+
+function getItemKitchenZones(item: OrderItemSummary): KitchenZone[] {
+  if (item.kitchenZones.length) {
+    return item.kitchenZones;
+  }
+
+  return item.kitchenZone ? [item.kitchenZone] : [];
 }
