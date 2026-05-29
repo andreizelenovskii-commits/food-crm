@@ -1,7 +1,7 @@
 "use client";
 
 import type { SessionUser } from "@/modules/auth/auth.types";
-import { KITCHEN_ZONE_LABELS, type ProductItem } from "@/modules/inventory/inventory.types";
+import { KITCHEN_ZONE_LABELS, KITCHEN_ZONES, type ProductItem } from "@/modules/inventory/inventory.types";
 import { chooseOrderPackagingAction } from "@/modules/orders/orders.actions";
 import type { KitchenZone, OrderItemSummary, OrderListItem } from "@/modules/orders/orders.types";
 import { canAdvanceOrder } from "@/modules/orders/orders.workflow";
@@ -29,7 +29,7 @@ export function OrderKitchenPackaging({
         <span className="text-xs font-medium text-zinc-500">Выбор для каждой единицы</span>
       </div>
       <div className="space-y-3">
-        {(["pizza", "rolls", "fastfood"] as const).map((zone) => {
+        {KITCHEN_ZONES.map((zone) => {
           const zoneItems = kitchenItems.filter((item) => item.kitchenZone === zone);
           if (!zoneItems.length) return null;
 

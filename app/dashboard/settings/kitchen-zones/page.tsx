@@ -8,6 +8,7 @@ const ZONE_HINTS = {
   pizza: "Пиццы и пиццерийная упаковка.",
   rolls: "Роллы, онигири, суши-доги и упаковка суши-зоны.",
   fastfood: "Фастфуд и горячие блюда с отдельной упаковкой.",
+  dispatch: "Позиции и упаковка, которые обрабатывает диспетчерская.",
 } as const;
 
 export default async function KitchenZonesSettingsPage() {
@@ -23,7 +24,7 @@ export default async function KitchenZonesSettingsPage() {
       <GlassPanel className="p-4 sm:p-5">
         <p className="foodlike-kicker">Кухня</p>
         <h2 className="mt-2 text-2xl font-semibold text-zinc-950">Зоны приготовления</h2>
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
+        <div className="mt-4 grid gap-3 md:grid-cols-4">
           {KITCHEN_ZONES.map((zone) => (
             <div
               key={zone}

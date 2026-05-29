@@ -28,7 +28,7 @@ export type OrderDraftItem = {
   quantity: number;
 };
 
-export type KitchenZone = "pizza" | "rolls" | "fastfood";
+export type KitchenZone = "pizza" | "rolls" | "fastfood" | "dispatch";
 
 export type OrderPackagingUsage = {
   id: number;
