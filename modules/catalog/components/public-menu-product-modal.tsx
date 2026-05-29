@@ -95,6 +95,9 @@ function buildChoiceSelections(
       choiceSlotId: slot.id,
       position: index,
       selectedCatalogItemId: selectedChoices[choiceKey(slot.id, index)],
+      selectedCatalogItemVariantId: slot.options.find(
+        (option) => option.catalogItemId === selectedChoices[choiceKey(slot.id, index)],
+      )?.catalogItemVariantId ?? undefined,
     })).filter((choice) => Number.isInteger(choice.selectedCatalogItemId) && choice.selectedCatalogItemId > 0),
   );
 }

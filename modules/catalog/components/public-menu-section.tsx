@@ -186,6 +186,9 @@ export function PublicMenuSection({
                 choiceSlotId: slot.id,
                 position,
                 selectedCatalogItemId: entry.choices[choiceKey(slot.id, position)],
+                selectedCatalogItemVariantId: slot.options.find(
+                  (option) => option.catalogItemId === entry.choices[choiceKey(slot.id, position)],
+                )?.catalogItemVariantId ?? undefined,
               })),
             ),
           })),

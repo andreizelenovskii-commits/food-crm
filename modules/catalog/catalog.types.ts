@@ -94,6 +94,7 @@ export type CatalogItemVariant = {
 
 export type CatalogChoiceOption = {
   catalogItemId: number;
+  catalogItemVariantId: number | null;
   name: string;
   category: string | null;
   imageUrl: string | null;

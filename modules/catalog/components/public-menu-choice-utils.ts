@@ -2,6 +2,7 @@ export type PublicMenuChoiceSelection = {
   choiceSlotId: number;
   position: number;
   selectedCatalogItemId: number;
+  selectedCatalogItemVariantId?: number;
 };
 
 export function choiceKey(choiceSlotId: number, position: number) {

@@ -25,6 +25,14 @@ function getChoiceLabel(option: CatalogChoiceOption | undefined) {
   ].filter(Boolean).join(" · ");
 }
 
+function getChoiceSlotDisplayName(slot: CatalogChoiceSlot) {
+  if (slot.category === "Пицца" || slot.category === "Пиццы") {
+    return "Пицца на выбор";
+  }
+
+  return slot.name.replace(/\s+\d+\s*см/gi, "");
+}
+
 export function ProductChoiceSlotPicker({
   item,
   selectedChoices,
@@ -53,7 +61,7 @@ export function ProductChoiceSlotPicker({
             return (
               <div key={`${slot.id}-${index}`} className="space-y-1.5">
                 <span className="text-sm font-semibold text-[#3a292d]">
-                  {slot.name}
+                  {getChoiceSlotDisplayName(slot)}
                   {getChoiceSlotSelectionCount(slot.quantity) > 1 ? ` #${index + 1}` : ""}
                 </span>
                 <button
@@ -117,7 +125,7 @@ function ChoiceOptionDialog({
           <div>
             <p className="text-xs font-black uppercase tracking-[0.22em] text-[#d50014]">Выбор комбо</p>
             <h4 className="mt-2 text-2xl font-black text-[#241316]">
-              {activePicker.slot.name}
+              {getChoiceSlotDisplayName(activePicker.slot)}
               {getChoiceSlotSelectionCount(activePicker.slot.quantity) > 1 ? ` #${activePicker.position + 1}` : ""}
             </h4>
           </div>
