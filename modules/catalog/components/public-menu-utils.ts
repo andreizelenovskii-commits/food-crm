@@ -98,7 +98,12 @@ function findLowestPriceVariant(item: CatalogItem) {
 }
 
 function formatSingleVariantHint(variant: ReturnType<typeof resolvePublicMenuVariant>) {
-  return variant.rollSize ?? variant.pizzaSize ?? formatPublicMenuOutput(variant.outputQuantity, variant.outputUnit);
+  return variant.rollSize ?? variant.pizzaSize ?? getMeaningfulVariantLabel(variant.label) ?? formatPublicMenuOutput(variant.outputQuantity, variant.outputUnit);
+}
+
+function getMeaningfulVariantLabel(label: string) {
+  const normalizedLabel = label.trim();
+  return normalizedLabel && normalizedLabel.toLowerCase() !== "стандарт" ? normalizedLabel : null;
 }
 
 function normalizeSortIndex(index: number, fallback: number) {

@@ -24,7 +24,7 @@ export function PublicMenuCard({
   const imageMotionClass = isPizza ? "" : "group-hover:scale-[1.025]";
 
   return (
-    <article id={`product-${item.id}`} className={`group flex h-full scroll-mt-40 overflow-hidden rounded-[12px] border border-[#f2d9dc] bg-white shadow-[0_14px_34px_rgba(86,24,31,0.07)] transition hover:-translate-y-0.5 hover:border-[#efc4c9] hover:shadow-[0_20px_46px_rgba(86,24,31,0.11)] ${isSet ? "xl:col-span-2" : ""}`}>
+    <article id={`product-${item.id}`} className="group flex h-full scroll-mt-40 overflow-hidden rounded-[12px] border border-[#f2d9dc] bg-white shadow-[0_14px_34px_rgba(86,24,31,0.07)] transition hover:-translate-y-0.5 hover:border-[#efc4c9] hover:shadow-[0_20px_46px_rgba(86,24,31,0.11)]">
       <div className="flex w-full flex-col">
         <button
           type="button"
