@@ -3,7 +3,10 @@
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 import { CategoryNavIcon } from "@/modules/catalog/components/public-category-nav-icon";
-import { getMenuCategoryHref } from "@/modules/catalog/components/public-menu-category-utils";
+import {
+  findMenuCategoryBySlug,
+  getMenuCategoryHref,
+} from "@/modules/catalog/components/public-menu-category-utils";
 
 const CATEGORY_PAGE_SIZE = 6;
 
@@ -56,11 +59,7 @@ function getCurrentCategoryFromPath(pathname: string | null) {
     return "";
   }
 
-  try {
-    return decodeURIComponent(categorySlug);
-  } catch {
-    return categorySlug;
-  }
+  return findMenuCategoryBySlug(categorySlug)?.value ?? "";
 }
 
 function getCategoryPageForValue(categories: readonly PublicMenuCategoryLink[], categoryValue: string) {
