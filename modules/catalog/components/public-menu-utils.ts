@@ -18,8 +18,7 @@ export function describePublicMenuItem(item: CatalogItem) {
     return "";
   }
 
-  const variant = item.pizzaSize ?? item.rollSize;
-  return item.description ?? `Позиция из меню${variant ? `, вариант ${variant}` : ""}.`;
+  return item.description ?? "";
 }
 
 export function resolvePublicMenuVariant(item: CatalogItem, selectedVariantId?: number) {

@@ -4,9 +4,8 @@ export function GET() {
   return NextResponse.json(
     {
       data: {
-        service: "food-crm-frontend",
+        service: "foodlike-site",
         status: "ok",
-        environment: process.env.NODE_ENV ?? "development",
         timestamp: new Date().toISOString(),
       },
     },

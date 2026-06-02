@@ -21,7 +21,7 @@ export function PublicMenuCategoryCarousel({
       <div className="mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.28em] text-[#d50014]">
-            Роллы FoodLike
+            Меню FoodLike
           </p>
           <h3 className="mt-2 text-3xl font-black leading-tight text-[#241316]">
             {section.label}
@@ -43,7 +43,7 @@ export function PublicMenuCategoryCarousel({
       ) : (
         <div className="rounded-[22px] border border-dashed border-[#f2d8dc] bg-[#fffafa] p-6">
           <p className="text-sm font-semibold leading-6 text-[#7b5e64]">
-            В этой подкатегории пока нет опубликованных позиций. Как только карточки появятся в CRM, они отобразятся здесь.
+            В этой подкатегории пока нет доступных позиций. Посмотрите соседние разделы меню.
           </p>
         </div>
       )}

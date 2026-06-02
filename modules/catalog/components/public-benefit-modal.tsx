@@ -113,7 +113,7 @@ function GiveawaysContent({ client }: { client: PublicClientProfile }) {
         {["Активные акции", "История участия", "Подарки"].map((label) => (
           <div key={label} className="rounded-[8px] border border-[#f3dadd] bg-white p-4">
             <p className="text-sm font-semibold text-[#241316]">{label}</p>
-            <p className="mt-2 text-sm leading-6 text-[#6b5960]">Скоро</p>
+            <p className="mt-2 text-sm leading-6 text-[#6b5960]">Анонсы появятся здесь</p>
           </div>
         ))}
       </div>

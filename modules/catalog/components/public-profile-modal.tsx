@@ -156,7 +156,7 @@ export function PublicProfileModal({
             <div className="mb-4">
               <p className="text-sm font-black text-[#241316]">Адреса доставки</p>
               <p className="mt-1 text-sm leading-6 text-[#7b5e64]">
-                Формат такой же, как в CRM: город, улица, дом и детали квартиры или частного дома.
+                Укажите город, улицу, дом и детали квартиры или частного дома.
               </p>
             </div>
             <ClientAddressFieldsWithDefaults defaultAddress={client.address} />

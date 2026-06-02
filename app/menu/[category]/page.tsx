@@ -29,10 +29,12 @@ export default async function PublicMenuCategoryPage(props: {
   );
   const categoryItems = menuItems.filter((item) => matchesMenuCategory(item.category, category));
   const subcategories = getMenuCategorySubcategories(category);
-  const categorySections = subcategories.map((subcategory) => ({
-    ...subcategory,
-    items: menuItems.filter((item) => item.category === subcategory.value),
-  }));
+  const categorySections = subcategories
+    .map((subcategory) => ({
+      ...subcategory,
+      items: menuItems.filter((item) => item.category === subcategory.value),
+    }))
+    .filter((section) => section.items.length > 0);
 
   return (
     <>

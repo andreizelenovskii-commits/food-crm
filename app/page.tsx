@@ -21,6 +21,15 @@ const CUSTOMER_REVIEWS = [
   ["Марина", "Доставка без суеты: всё подписано, упаковано чисто, дети довольны десертами."],
 ] as const;
 
+const RELEASE_UPDATES = [
+  "Полностью обновлённое меню и интерфейс сайта.",
+  "Улучшенная система лояльности.",
+  "Еженедельные розыгрыши и специальные акции.",
+  "Более быстрая и удобная система доставки.",
+  "Улучшенная обратная связь и поддержка пользователей.",
+  "Повышенная стабильность и производительность сервиса.",
+] as const;
+
 function scoreFeaturedItem(item: CatalogItem, seed: number) {
   const source = `${item.id}:${item.name}:${seed}`;
   return Array.from(source).reduce((sum, char) => (sum * 31 + char.charCodeAt(0)) % 9973, 7);
@@ -93,6 +102,39 @@ export default async function Home() {
 
       <PublicAccountSection currentClient={currentClient} />
 
+      <section className="bg-white py-12 sm:py-16">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8">
+          <div className="overflow-hidden rounded-[18px] border border-[#ffd8dd] bg-[#fff7f8] shadow-[0_18px_50px_rgba(143,0,16,0.08)]">
+            <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.24em] text-[#d50014]">
+                  Крупное обновление
+                </p>
+                <h2 className="mt-3 text-3xl font-semibold leading-tight text-[#241316] sm:text-4xl">
+                  Мы рады представить вам глобальное обновление нашего сервиса!
+                </h2>
+                <p className="mt-4 text-base leading-7 text-[#6b5960]">
+                  Спасибо, что остаётесь с нами. Рады видеть вас и надеемся, что обновление сделает ваш опыт ещё лучше!
+                </p>
+              </div>
+              <div className="rounded-[14px] border border-white bg-white p-5 shadow-sm shadow-[#d50014]/8">
+                <p className="text-sm font-black uppercase tracking-[0.18em] text-[#b00012]">
+                  Что нового
+                </p>
+                <ul className="mt-4 grid gap-3 text-sm font-semibold leading-6 text-[#5f4a50] sm:grid-cols-2">
+                  {RELEASE_UPDATES.map((update) => (
+                    <li key={update} className="flex gap-2">
+                      <span className="mt-2 size-1.5 shrink-0 rounded-full bg-[#d50014]" />
+                      <span>{update}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <PublicMenuSection
         currentClient={currentClient}
         featuredItems={featuredItems}
@@ -134,8 +176,8 @@ export default async function Home() {
             </p>
             <h2 className="mt-3 text-3xl font-semibold">FoodLike на связи</h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-white/72">
-              Заказы с сайта попадают в CRM, а по телефону и мессенджерам можно
-              уточнить доставку или состав заказа.
+              Оформляйте заказ на сайте, а по телефону и в мессенджерах мы
+              поможем уточнить доставку, состав блюд или детали оплаты.
               {PUBLIC_SITE_CONTACTS.address ? ` Адрес: ${PUBLIC_SITE_CONTACTS.address}.` : ""}
             </p>
           </div>

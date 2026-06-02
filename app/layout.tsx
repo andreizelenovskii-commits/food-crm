@@ -3,8 +3,8 @@ import { BodyScrollLockObserver } from "@/components/ui/body-scroll-lock-observe
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "FoodLike",
-  description: "Минималистичная CRM для доставки еды",
+  title: "FoodLike | Доставка еды",
+  description: "FoodLike: пицца, роллы, горячие блюда, акции и удобная доставка.",
   icons: {
     icon: [
       {

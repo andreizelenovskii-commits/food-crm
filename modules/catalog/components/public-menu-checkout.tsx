@@ -46,7 +46,7 @@ export function CheckoutPanel({
 
 function CheckoutFields({ currentClient }: { currentClient: PublicClientProfile | null }) {
   const [isOtherRecipient, setIsOtherRecipient] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "courier_card" | "online">("cash");
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "courier_card">("cash");
   const addressOptions = (currentClient?.address ?? "").split("\n").map((address) => address.trim()).filter(Boolean);
   const hasCompleteProfile = Boolean(currentClient?.birthDate && addressOptions.length);
 
@@ -96,8 +96,8 @@ function PaymentMethodPicker({
   onChange,
   value,
 }: {
-  onChange: (value: "cash" | "courier_card" | "online") => void;
-  value: "cash" | "courier_card" | "online";
+  onChange: (value: "cash" | "courier_card") => void;
+  value: "cash" | "courier_card";
 }) {
   return (
     <section className="rounded-[22px] border border-[#f3dadd] bg-white p-4 shadow-sm shadow-[#d50014]/5">
@@ -115,12 +115,6 @@ function PaymentMethodPicker({
           description="Наш курьер привезет с собой терминал."
           label="Картой курьеру"
           onClick={() => onChange("courier_card")}
-        />
-        <PaymentOption
-          active={value === "online"}
-          description="Скоро появится окно онлайн-оплаты."
-          label="Онлайн оплата"
-          onClick={() => onChange("online")}
         />
       </div>
 
@@ -142,11 +136,6 @@ function PaymentMethodPicker({
         </p>
       ) : null}
 
-      {value === "online" ? (
-        <p className="mt-4 rounded-[16px] border border-[#ffd0d6] bg-[#fff1f2] px-4 py-3 text-sm font-black leading-6 text-[#b00012]">
-          Онлайн-оплата скоро появится.
-        </p>
-      ) : null}
     </section>
   );
 }

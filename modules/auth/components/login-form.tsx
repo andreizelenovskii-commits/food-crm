@@ -115,10 +115,10 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-3">
             <span className="foodlike-pill uppercase tracking-[0.14em]">
-              FoodLike Access
+              Команда FoodLike
             </span>
             <h2 className="text-2xl font-semibold text-zinc-950">
-              Вход в CRM
+              Вход для сотрудников
             </h2>
           </div>
         </div>
