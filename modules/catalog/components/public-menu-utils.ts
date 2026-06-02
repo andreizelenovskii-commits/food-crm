@@ -36,6 +36,8 @@ export function resolvePublicMenuVariant(item: CatalogItem, selectedVariantId?: 
       technologicalCardName: item.technologicalCardName,
       pizzaSize: item.pizzaSize,
       rollSize: item.rollSize,
+      outputQuantity: item.outputQuantity,
+      outputUnit: item.outputUnit,
     }
   );
 }
@@ -43,19 +45,20 @@ export function resolvePublicMenuVariant(item: CatalogItem, selectedVariantId?: 
 export function getPublicMenuCardPrice(item: CatalogItem) {
   const variant = resolvePublicMenuVariant(item);
   const isSizedItem = item.category === "Пицца" || item.category === "Пиццы" || isRollCategory(item.category);
+  const hasVariantChoice = item.variants.length > 1;
 
-  if (!isSizedItem || item.variants.length <= 1) {
+  if (!hasVariantChoice) {
     return {
-      label: `от ${formatPublicMenuMoney(variant.priceCents)}`,
-      hint: null,
+      label: formatPublicMenuMoney(variant.priceCents),
+      hint: formatPublicMenuOutput(variant.outputQuantity, variant.outputUnit),
     };
   }
 
-  const baseVariant = findBaseSizedVariant(item) ?? variant;
+  const baseVariant = (isSizedItem ? findBaseSizedVariant(item) : findLowestPriceVariant(item)) ?? variant;
 
   return {
     label: `от ${formatPublicMenuMoney(baseVariant.priceCents)}`,
-    hint: baseVariant.label,
+    hint: baseVariant.label || null,
   };
 }
 
@@ -83,6 +86,28 @@ function isRollCategory(category: string | null) {
   return ROLL_CATEGORY_NAMES.includes(category as (typeof ROLL_CATEGORY_NAMES)[number]);
 }
 
+function findLowestPriceVariant(item: CatalogItem) {
+  return [...item.variants].sort((left, right) =>
+    left.priceCents - right.priceCents || left.displayOrder - right.displayOrder,
+  )[0] ?? null;
+}
+
 function normalizeSortIndex(index: number, fallback: number) {
   return index === -1 ? fallback : index;
+}
+
+function formatPublicMenuOutput(quantity: number, unit: string) {
+  if (!Number.isFinite(quantity) || quantity <= 0) return null;
+
+  if (unit === "кг") {
+    const grams = quantity * 1000;
+    const roundedGrams = Number.isInteger(grams) ? grams : Math.round(grams);
+    return `${roundedGrams} г`;
+  }
+
+  const normalizedQuantity = Number.isInteger(quantity)
+    ? quantity.toString()
+    : quantity.toLocaleString("ru-RU", { maximumFractionDigits: 2 });
+
+  return `${normalizedQuantity} ${unit}`;
 }
