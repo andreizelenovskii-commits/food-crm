@@ -32,9 +32,8 @@ export function PublicMenuCard({
           <PublicCatalogImage
             item={item}
             className="h-full w-full"
-            fit={isPizza ? "contain" : "cover"}
             imageClassName={`transition duration-500 group-hover:scale-[1.025] ${
-              isCombo ? "object-[50%_48%]" : ""
+              isCombo ? "object-[50%_48%]" : isPizza ? "object-center" : ""
             }`}
           />
         </button>
