@@ -71,11 +71,10 @@ function getCategoryPageForValue(categories: readonly PublicMenuCategoryLink[], 
 export function PublicCategoryPager({ categories }: { categories: readonly PublicMenuCategoryLink[] }) {
   const pathname = usePathname();
   const currentCategory = getCurrentCategoryFromPath(pathname);
-  const isCategoryPage = Boolean(currentCategory);
   const currentCategoryPage = getCategoryPageForValue(categories, currentCategory);
   const [categoryPage, setCategoryPage] = useState(currentCategoryPage);
   const categoryPagesCount = Math.max(Math.ceil(categories.length / CATEGORY_PAGE_SIZE), 1);
-  const normalizedCategoryPage = Math.min(isCategoryPage ? currentCategoryPage : categoryPage, categoryPagesCount - 1);
+  const normalizedCategoryPage = Math.min(categoryPage, categoryPagesCount - 1);
   const visibleCategories = useMemo(
     () =>
       categories.slice(
@@ -96,7 +95,7 @@ export function PublicCategoryPager({ categories }: { categories: readonly Publi
     <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-2 sm:px-6">
       <CategoryPagerButton
         direction="left"
-        disabled={isCategoryPage || normalizedCategoryPage === 0}
+        disabled={normalizedCategoryPage === 0}
         onClick={() => changeCategoryPage("left")}
       />
       <div className="flex min-w-0 flex-1 items-center justify-center gap-2 overflow-hidden">
@@ -123,7 +122,7 @@ export function PublicCategoryPager({ categories }: { categories: readonly Publi
       </div>
       <CategoryPagerButton
         direction="right"
-        disabled={isCategoryPage || normalizedCategoryPage >= categoryPagesCount - 1}
+        disabled={normalizedCategoryPage >= categoryPagesCount - 1}
         onClick={() => changeCategoryPage("right")}
       />
     </div>
