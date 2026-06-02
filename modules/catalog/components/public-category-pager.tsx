@@ -71,9 +71,11 @@ function getCategoryPageForValue(categories: readonly PublicMenuCategoryLink[], 
 export function PublicCategoryPager({ categories }: { categories: readonly PublicMenuCategoryLink[] }) {
   const pathname = usePathname();
   const currentCategory = getCurrentCategoryFromPath(pathname);
-  const [categoryPage, setCategoryPage] = useState(() => getCategoryPageForValue(categories, currentCategory));
+  const isCategoryPage = Boolean(currentCategory);
+  const currentCategoryPage = getCategoryPageForValue(categories, currentCategory);
+  const [categoryPage, setCategoryPage] = useState(currentCategoryPage);
   const categoryPagesCount = Math.max(Math.ceil(categories.length / CATEGORY_PAGE_SIZE), 1);
-  const normalizedCategoryPage = Math.min(categoryPage, categoryPagesCount - 1);
+  const normalizedCategoryPage = Math.min(isCategoryPage ? currentCategoryPage : categoryPage, categoryPagesCount - 1);
   const visibleCategories = useMemo(
     () =>
       categories.slice(
@@ -94,7 +96,7 @@ export function PublicCategoryPager({ categories }: { categories: readonly Publi
     <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-2 sm:px-6">
       <CategoryPagerButton
         direction="left"
-        disabled={normalizedCategoryPage === 0}
+        disabled={isCategoryPage || normalizedCategoryPage === 0}
         onClick={() => changeCategoryPage("left")}
       />
       <div className="flex min-w-0 flex-1 items-center justify-center gap-2 overflow-hidden">
@@ -105,9 +107,11 @@ export function PublicCategoryPager({ categories }: { categories: readonly Publi
             <a
               key={category.value}
               href={getMenuCategoryHref(category.value)}
+              data-current={isCurrent ? "true" : "false"}
+              aria-current={isCurrent ? "page" : undefined}
               className={`group flex min-h-11 shrink-0 items-center gap-2 rounded-full px-3 text-sm font-black transition xl:px-3.5 ${
                 isCurrent
-                  ? "bg-[#fff1f2] text-[#d50014]"
+                  ? "bg-[#d50014] text-white shadow-[0_10px_24px_rgba(213,0,20,0.22)]"
                   : "text-[#5c464b] hover:bg-[#fff1f2] hover:text-[#d50014]"
               }`}
             >
@@ -119,7 +123,7 @@ export function PublicCategoryPager({ categories }: { categories: readonly Publi
       </div>
       <CategoryPagerButton
         direction="right"
-        disabled={normalizedCategoryPage >= categoryPagesCount - 1}
+        disabled={isCategoryPage || normalizedCategoryPage >= categoryPagesCount - 1}
         onClick={() => changeCategoryPage("right")}
       />
     </div>

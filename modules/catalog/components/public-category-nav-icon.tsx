@@ -1,17 +1,10 @@
-function CategoryIconFrame({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
+function CategoryIconFrame({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <span className={`flex size-8 shrink-0 items-center justify-center rounded-full bg-[#fff1f2] text-[#d50014] transition duration-300 group-hover:scale-110 group-hover:bg-[#d50014] group-hover:text-white ${className}`}>
+    <span className={`flex size-8 shrink-0 items-center justify-center rounded-full bg-[#fff1f2] text-[#d50014] transition duration-300 group-hover:scale-110 group-hover:bg-[#d50014] group-hover:text-white group-data-[current=true]:bg-white group-data-[current=true]:text-[#d50014] ${className}`}>
       {children}
     </span>
   );
 }
-
 export function CategoryNavIcon({ category }: { category: string }) {
   if (category === "Пицца") {
     return (
@@ -29,7 +22,7 @@ export function CategoryNavIcon({ category }: { category: string }) {
     );
   }
 
-  if (category === "Роллы" || category === "Сеты") {
+  if (category === "Роллы") {
     return (
       <CategoryIconFrame>
         <svg viewBox="0 0 24 24" className="size-5 transition duration-500 group-hover:rotate-180" aria-hidden="true">
@@ -39,6 +32,12 @@ export function CategoryNavIcon({ category }: { category: string }) {
           <path d="M12 6.8v10.4M6.8 12h10.4" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" opacity="0.42" />
         </svg>
       </CategoryIconFrame>
+    );
+  }
+
+  if (category === "Сеты") {
+    return (
+      <CategoryIconFrame><svg viewBox="0 0 24 24" className="size-5 transition duration-300 group-hover:rotate-3" aria-hidden="true"><rect x="4.8" y="5" width="14.4" height="14" rx="3.1" fill="currentColor" /><path d="M8.8 9h6.4M8.8 12h6.4M8.8 15h6.4" stroke="white" strokeLinecap="round" strokeWidth="1.35" opacity="0.92" /><path d="M8.4 9h.02M8.4 12h.02M8.4 15h.02" stroke="white" strokeLinecap="round" strokeWidth="1.7" opacity="0.92" /></svg></CategoryIconFrame>
     );
   }
 
