@@ -20,7 +20,7 @@ export function PublicMenuCard({
   const isSet = item.category === "Сеты";
   const isPizza = item.category?.toLowerCase().includes("пицц") ?? false;
   const hasDescription = Boolean(description);
-  const imageAspectClass = isPizza ? "aspect-square" : isSet ? "aspect-[16/9]" : isCombo || !hasDescription ? "aspect-[4/3]" : "aspect-[3/2]";
+  const imageAspectClass = isPizza ? "aspect-square" : isSet || isCombo || !hasDescription ? "aspect-[4/3]" : "aspect-[3/2]";
   const imageMotionClass = isPizza ? "" : "group-hover:scale-[1.025]";
 
   return (
