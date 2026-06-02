@@ -1,6 +1,6 @@
 function CategoryIconFrame({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <span className={`flex size-8 shrink-0 items-center justify-center rounded-full bg-[#fff1f2] text-[#d50014] transition duration-300 group-hover:scale-110 group-hover:bg-[#d50014] group-hover:text-white group-data-[current=true]:bg-white group-data-[current=true]:text-[#d50014] ${className}`}>
+    <span className={`flex size-8 shrink-0 items-center justify-center rounded-full bg-[#fff1f2] text-[#d50014] transition duration-300 group-hover:scale-110 group-hover:bg-[#d50014] group-hover:text-white group-data-[current=true]:scale-110 group-data-[current=true]:bg-[#d50014] group-data-[current=true]:text-white ${className}`}>
       {children}
     </span>
   );

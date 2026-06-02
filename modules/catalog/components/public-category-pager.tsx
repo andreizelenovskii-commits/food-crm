@@ -111,7 +111,7 @@ export function PublicCategoryPager({ categories }: { categories: readonly Publi
               aria-current={isCurrent ? "page" : undefined}
               className={`group flex min-h-11 shrink-0 items-center gap-2 rounded-full px-3 text-sm font-black transition xl:px-3.5 ${
                 isCurrent
-                  ? "bg-[#d50014] text-white shadow-[0_10px_24px_rgba(213,0,20,0.22)]"
+                  ? "bg-[#fff1f2] text-[#d50014]"
                   : "text-[#5c464b] hover:bg-[#fff1f2] hover:text-[#d50014]"
               }`}
             >
