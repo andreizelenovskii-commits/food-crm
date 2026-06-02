@@ -17,12 +17,14 @@ export function PublicMenuCard({
   const cardPrice = getPublicMenuCardPrice(item);
   const description = describePublicMenuItem(item);
   const isCombo = item.category === "Комбо";
+  const isSet = item.category === "Сеты";
   const isPizza = item.category?.toLowerCase().includes("пицц") ?? false;
-  const imageAspectClass = isPizza ? "aspect-square" : isCombo ? "aspect-[4/3]" : "aspect-[3/2]";
+  const hasDescription = Boolean(description);
+  const imageAspectClass = isPizza ? "aspect-square" : isSet ? "aspect-[16/9]" : isCombo || !hasDescription ? "aspect-[4/3]" : "aspect-[3/2]";
   const imageMotionClass = isPizza ? "" : "group-hover:scale-[1.025]";
 
   return (
-    <article id={`product-${item.id}`} className="group flex h-full scroll-mt-40 overflow-hidden rounded-[12px] border border-[#f2d9dc] bg-white shadow-[0_14px_34px_rgba(86,24,31,0.07)] transition hover:-translate-y-0.5 hover:border-[#efc4c9] hover:shadow-[0_20px_46px_rgba(86,24,31,0.11)]">
+    <article id={`product-${item.id}`} className={`group flex h-full scroll-mt-40 overflow-hidden rounded-[12px] border border-[#f2d9dc] bg-white shadow-[0_14px_34px_rgba(86,24,31,0.07)] transition hover:-translate-y-0.5 hover:border-[#efc4c9] hover:shadow-[0_20px_46px_rgba(86,24,31,0.11)] ${isSet ? "xl:col-span-2" : ""}`}>
       <div className="flex w-full flex-col">
         <button
           type="button"
@@ -39,8 +41,8 @@ export function PublicMenuCard({
           />
         </button>
 
-        <div className={`flex flex-1 flex-col p-5 ${isCombo ? "gap-5" : ""}`}>
-          <div className={`flex items-start justify-between gap-4 ${isCombo ? "" : "min-h-[72px]"}`}>
+        <div className={`flex flex-1 flex-col p-5 ${!hasDescription ? "gap-5" : isCombo ? "gap-5" : ""}`}>
+          <div className={`flex items-start justify-between gap-4 ${!hasDescription || isCombo ? "" : "min-h-[72px]"}`}>
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#d50014]">
                 {item.category ?? "Меню"}
@@ -55,7 +57,7 @@ export function PublicMenuCard({
             </div>
           </div>
 
-          {description ? (
+          {hasDescription ? (
             <p className="mt-3 min-h-[96px] overflow-hidden text-sm leading-6 text-[#6b5960] [display:-webkit-box] [-webkit-line-clamp:4] [-webkit-box-orient:vertical]">
               {description}
             </p>
@@ -65,7 +67,7 @@ export function PublicMenuCard({
             type="button"
             onClick={() => onSelect(item)}
             className={`min-h-12 w-full rounded-full bg-[#d50014] px-5 text-sm font-semibold text-white shadow-[0_10px_22px_rgba(213,0,20,0.18)] transition hover:bg-[#b90012] ${
-              isCombo ? "mt-2" : "mt-auto"
+              !hasDescription || isCombo ? "mt-2" : "mt-auto"
             }`}
           >
             Выбрать

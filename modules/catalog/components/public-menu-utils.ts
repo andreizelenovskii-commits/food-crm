@@ -3,6 +3,7 @@ import type { CatalogItem } from "@/modules/catalog/catalog.types";
 const PIZZA_SIZE_ORDER = ["24 см", "26 см", "30 см"] as const;
 const ROLL_SIZE_ORDER = ["4 шт", "8 шт"] as const;
 const ROLL_CATEGORY_NAMES = ["Роллы", "Холодные роллы", "Запеченные роллы", "Теплые роллы"] as const;
+const DESCRIPTIONLESS_CATEGORIES = ["Комбо", "Сеты"] as const;
 
 export function formatPublicMenuMoney(cents: number) {
   return new Intl.NumberFormat("ru-RU", {
@@ -13,7 +14,7 @@ export function formatPublicMenuMoney(cents: number) {
 }
 
 export function describePublicMenuItem(item: CatalogItem) {
-  if (item.category === "Комбо" || (item.category === "Напитки" && !item.description)) {
+  if (isDescriptionlessCategory(item.category) || (item.category === "Напитки" && !item.description)) {
     return "";
   }
 
@@ -50,7 +51,7 @@ export function getPublicMenuCardPrice(item: CatalogItem) {
   if (!hasVariantChoice) {
     return {
       label: formatPublicMenuMoney(variant.priceCents),
-      hint: formatPublicMenuOutput(variant.outputQuantity, variant.outputUnit),
+      hint: formatSingleVariantHint(variant),
     };
   }
 
@@ -86,10 +87,18 @@ function isRollCategory(category: string | null) {
   return ROLL_CATEGORY_NAMES.includes(category as (typeof ROLL_CATEGORY_NAMES)[number]);
 }
 
+function isDescriptionlessCategory(category: string | null) {
+  return DESCRIPTIONLESS_CATEGORIES.includes(category as (typeof DESCRIPTIONLESS_CATEGORIES)[number]);
+}
+
 function findLowestPriceVariant(item: CatalogItem) {
   return [...item.variants].sort((left, right) =>
     left.priceCents - right.priceCents || left.displayOrder - right.displayOrder,
   )[0] ?? null;
+}
+
+function formatSingleVariantHint(variant: ReturnType<typeof resolvePublicMenuVariant>) {
+  return variant.rollSize ?? variant.pizzaSize ?? formatPublicMenuOutput(variant.outputQuantity, variant.outputUnit);
 }
 
 function normalizeSortIndex(index: number, fallback: number) {
