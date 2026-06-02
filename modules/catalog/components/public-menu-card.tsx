@@ -18,6 +18,8 @@ export function PublicMenuCard({
   const description = describePublicMenuItem(item);
   const isCombo = item.category === "Комбо";
   const isPizza = item.category?.toLowerCase().includes("пицц") ?? false;
+  const imageAspectClass = isPizza ? "aspect-square" : isCombo ? "aspect-[4/3]" : "aspect-[3/2]";
+  const imageMotionClass = isPizza ? "" : "group-hover:scale-[1.025]";
 
   return (
     <article id={`product-${item.id}`} className="group flex h-full scroll-mt-40 overflow-hidden rounded-[12px] border border-[#f2d9dc] bg-white shadow-[0_14px_34px_rgba(86,24,31,0.07)] transition hover:-translate-y-0.5 hover:border-[#efc4c9] hover:shadow-[0_20px_46px_rgba(86,24,31,0.11)]">
@@ -25,14 +27,13 @@ export function PublicMenuCard({
         <button
           type="button"
           onClick={() => onSelect(item)}
-          className={`relative block w-full overflow-hidden bg-[#fbf8f6] ${
-            isCombo || isPizza ? "aspect-[4/3]" : "aspect-[3/2]"
-          }`}
+          className={`relative block w-full overflow-hidden bg-[#fbf8f6] ${imageAspectClass}`}
         >
           <PublicCatalogImage
             item={item}
             className="h-full w-full"
-            imageClassName={`transition duration-500 group-hover:scale-[1.025] ${
+            fit={isPizza ? "contain" : "cover"}
+            imageClassName={`transition duration-500 ${imageMotionClass} ${
               isCombo ? "object-[50%_48%]" : isPizza ? "object-center" : ""
             }`}
           />
