@@ -8,7 +8,7 @@ import {
   getMenuCategoryHref,
 } from "@/modules/catalog/components/public-menu-category-utils";
 
-const CATEGORY_PAGE_SIZE = 6;
+const CATEGORY_PAGE_SIZE = 7;
 
 type PublicMenuCategoryLink = {
   value: string;
