@@ -38,6 +38,7 @@ export function PublicMenuProductModal({
   const selectedVariant = resolvePublicMenuVariant(item, selectedVariantId);
   const choices = buildChoiceSelections(item.choiceSlots, selectedChoices);
   const isChoiceComplete = areChoiceSlotsComplete(item.choiceSlots, selectedChoices);
+  const isSet = isSetCategory(item.category);
 
   const toggleExcludedIngredient = (id: number) => {
     setExcludedIngredientIds((current) =>
@@ -54,7 +55,15 @@ export function PublicMenuProductModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/45 px-4 py-5 backdrop-blur-sm" onClick={onClose}>
-      <section role="dialog" aria-modal="true" aria-label={item.name} className="grid max-h-[calc(100vh-2rem)] w-full max-w-6xl overflow-hidden rounded-[28px] border border-white/70 bg-white shadow-[0_28px_90px_rgba(80,8,16,0.24)] md:grid-cols-[0.9fr_1.1fr]" onClick={(event) => event.stopPropagation()}>
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-label={item.name}
+        className={`grid max-h-[calc(100vh-2rem)] w-full overflow-hidden rounded-[28px] border border-white/70 bg-white shadow-[0_28px_90px_rgba(80,8,16,0.24)] ${
+          isSet ? "max-w-7xl md:grid-cols-[1.25fr_0.75fr]" : "max-w-6xl md:grid-cols-[0.9fr_1.1fr]"
+        }`}
+        onClick={(event) => event.stopPropagation()}
+      >
         <ProductModalImage item={item} />
         <div className="min-h-0 overflow-y-auto p-5 sm:p-7">
           <ProductModalHeader item={item} onClose={onClose} />
@@ -110,11 +119,17 @@ function areChoiceSlotsComplete(slots: CatalogChoiceSlot[], selectedChoices: Rec
   );
 }
 
+function isSetCategory(category: string | null) {
+  return category === "Сеты";
+}
+
 function ProductModalImage({ item }: { item: CatalogItem }) {
+  const isSet = isSetCategory(item.category);
+
   return (
-    <div className="flex min-h-[300px] items-center justify-center bg-[#faf6f2] p-4 sm:p-7">
-      <div className="w-full max-w-[590px] rounded-[30px] border border-[#eadfd8] bg-[#fffdfb] p-3 shadow-[0_24px_70px_rgba(43,24,19,0.12)]">
-        <div className="overflow-hidden rounded-[22px] bg-[#f4eee9]">
+    <div className={`flex items-center justify-center bg-[#faf6f2] ${isSet ? "min-h-[420px] p-3 sm:p-4" : "min-h-[300px] p-4 sm:p-7"}`}>
+      <div className={`w-full border border-[#eadfd8] bg-[#fffdfb] shadow-[0_24px_70px_rgba(43,24,19,0.12)] ${isSet ? "max-w-[820px] rounded-[24px] p-2" : "max-w-[590px] rounded-[30px] p-3"}`}>
+        <div className={`overflow-hidden bg-[#f4eee9] ${isSet ? "rounded-[18px]" : "rounded-[22px]"}`}>
           <PublicCatalogImage item={item} className="aspect-[3/2] w-full" />
         </div>
       </div>
