@@ -22,7 +22,7 @@ export function CategoryNavIcon({ category }: { category: string }) {
     );
   }
 
-  if (category === "Роллы") {
+  if (category.toLowerCase().includes("ролл")) {
     return (
       <CategoryIconFrame>
         <svg viewBox="0 0 24 24" className="size-5 transition duration-500 group-hover:rotate-180" aria-hidden="true">

@@ -11,12 +11,9 @@ import {
   type AuthMode,
   PublicAuthModal,
 } from "@/modules/catalog/components/public-auth-modal";
-import {
-  PublicMenuCategoryCarousel,
-  type MenuCategorySection,
-} from "@/modules/catalog/components/public-menu-category-carousel";
+import type { MenuCategorySection } from "@/modules/catalog/components/public-menu-category-carousel";
 import { PublicMenuCard } from "@/modules/catalog/components/public-menu-card";
-import { getMenuCategoryHref } from "@/modules/catalog/components/public-menu-category-utils";
+import { PublicMenuSubcategoryLayout } from "@/modules/catalog/components/public-menu-subcategory-layout";
 import { PublicMenuProductModal } from "@/modules/catalog/components/public-menu-product-modal";
 import { getDeliveryAddressFromFormData } from "@/modules/catalog/components/public-menu-order-utils";
 import {
@@ -224,30 +221,12 @@ export function PublicMenuSection({
             </div>
           </div>
 
-          {categoryLinks.length ? (
-            <div className="relative mt-7 flex flex-wrap gap-2">
-              {categoryLinks.map((category) => (
-                <a
-                  key={category.value}
-                  href={getMenuCategoryHref(category.value)}
-                  className="inline-flex min-h-10 items-center rounded-full border border-[#ffd8dd] bg-[#fff7f8] px-4 text-sm font-bold text-[#9b0010] transition hover:border-[#d50014] hover:bg-[#fff1f2] hover:text-[#d50014]"
-                >
-                  {category.label}
-                </a>
-              ))}
-            </div>
-          ) : null}
-
           {categorySections.length ? (
-            <div className="relative mt-10 space-y-10">
-              {categorySections.map((section) => (
-                <PublicMenuCategoryCarousel
-                  key={section.value}
-                  section={section}
-                  onSelect={setActiveItem}
-                />
-              ))}
-            </div>
+            <PublicMenuSubcategoryLayout
+              categoryLinks={categoryLinks}
+              sections={categorySections}
+              onSelect={setActiveItem}
+            />
           ) : featuredItems.length ? (
             <div className="relative mt-10 grid items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3">
               {featuredItems.map((item) => (
