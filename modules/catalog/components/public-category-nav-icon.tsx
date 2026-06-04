@@ -253,40 +253,15 @@ export function CategoryNavIcon({ category }: { category: string }) {
     );
   }
 
+  if (category === "Десерты") {
+    return (
+      <CategoryIconFrame><svg viewBox="0 0 24 24" className="size-5 transition duration-300 group-hover:rotate-3" aria-hidden="true"><path d="M6.2 10.25h11.6c.62 0 1.12.5 1.12 1.12v.28c0 .62-.5 1.12-1.12 1.12H6.2c-.62 0-1.12-.5-1.12-1.12v-.28c0-.62.5-1.12 1.12-1.12Z" fill="currentColor" /><path d="M6.95 12.3h10.1l-.7 4.3a2.35 2.35 0 0 1-2.32 1.98H9.97a2.35 2.35 0 0 1-2.32-1.98l-.7-4.3Z" fill="currentColor" opacity="0.92" /><path d="M7.7 13.25h8.6M8.25 15.6h7.5M10.35 8.55c.55-.55 1.4-.55 1.95 0 .55.55 1.4.55 1.95 0" fill="none" stroke="white" strokeLinecap="round" strokeWidth="1.05" opacity="0.85" /><path d="M8.25 10.2c.42-2.55 1.98-4 3.75-4s3.33 1.45 3.75 4h-7.5Z" fill="currentColor" /><circle cx="12" cy="5.45" r="0.95" fill="currentColor" /></svg></CategoryIconFrame>
+    );
+  }
+
   if (category === "Напитки" || category === "Баббл-напитки") {
     return (
-      <CategoryIconFrame>
-        <svg viewBox="0 0 24 24" className="size-5 transition duration-300 group-hover:rotate-3" aria-hidden="true">
-          <path
-            d="M8 8.3h8l-.72 8.9a2.2 2.2 0 0 1-2.2 2H10.9a2.2 2.2 0 0 1-2.19-2L8 8.3Z"
-            fill="currentColor"
-          />
-          <path
-            d="M7.45 8.25h9.1"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeWidth="1.7"
-          />
-          <path
-            d="M10.2 11.35h3.6M10.45 14.2h3.1"
-            fill="none"
-            stroke="white"
-            strokeLinecap="round"
-            strokeWidth="1.15"
-            opacity="0.85"
-          />
-          <path
-            d="M12.45 8.05 15.8 4.7"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeWidth="1.2"
-          />
-          <circle cx="11.1" cy="16.8" r="0.7" fill="white" opacity="0.92" />
-          <circle cx="13.3" cy="16.45" r="0.58" fill="white" opacity="0.82" />
-        </svg>
-      </CategoryIconFrame>
+      <CategoryIconFrame><svg viewBox="0 0 24 24" className="size-5 transition duration-300 group-hover:rotate-3" aria-hidden="true"><path d="M8 8.3h8l-.72 8.9a2.2 2.2 0 0 1-2.2 2H10.9a2.2 2.2 0 0 1-2.19-2L8 8.3Z" fill="currentColor" /><path d="M7.45 8.25h9.1M12.45 8.05 15.8 4.7" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.2" /><path d="M10.2 11.35h3.6M10.45 14.2h3.1" fill="none" stroke="white" strokeLinecap="round" strokeWidth="1.15" opacity="0.85" /><circle cx="11.1" cy="16.8" r="0.7" fill="white" opacity="0.92" /><circle cx="13.3" cy="16.45" r="0.58" fill="white" opacity="0.82" /></svg></CategoryIconFrame>
     );
   }
 
