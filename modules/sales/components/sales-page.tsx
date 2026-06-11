@@ -83,6 +83,49 @@ function InsightList({
   );
 }
 
+function ForecastPanel({
+  label,
+  metrics,
+  factors,
+}: {
+  label: string;
+  metrics: SalesMetric[];
+  factors: SalesMetric[];
+}) {
+  return (
+    <GlassPanel className="p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="foodlike-kicker">Прогноз</p>
+          <h2 className="mt-1 foodlike-title-sm">Прогноз продаж</h2>
+          <p className="mt-1 text-xs leading-5 text-zinc-500">Автоматический расчет на {label}.</p>
+        </div>
+        <PanelLink href="/dashboard/reports">Отчеты</PanelLink>
+      </div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        {metrics.map((item) => (
+          <article key={item.label} className="rounded-[18px] border border-red-950/10 bg-white/78 p-4 shadow-sm shadow-red-950/5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">{item.label}</p>
+            <p className="mt-2 text-xl font-semibold leading-none text-zinc-950">{item.value}</p>
+            <p className="mt-2 text-xs leading-5 text-zinc-500">{item.hint}</p>
+          </article>
+        ))}
+      </div>
+      <div className="mt-3 divide-y divide-red-950/10">
+        {factors.map((item) => (
+          <div key={item.label} className="grid gap-2 py-2.5 sm:grid-cols-[1fr_auto] sm:items-center">
+            <div>
+              <p className="text-sm font-medium text-zinc-900">{item.label}</p>
+              <p className="mt-0.5 text-xs leading-5 text-zinc-500">{item.hint}</p>
+            </div>
+            <p className="text-sm font-semibold text-zinc-950">{item.value}</p>
+          </div>
+        ))}
+      </div>
+    </GlassPanel>
+  );
+}
+
 function LinkRow({ item }: { item: SalesMetric }) {
   const content = (
     <>
@@ -168,20 +211,27 @@ export function SalesPage(props: SalesPageProps) {
         </section>
 
         <section className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
-          <GlassPanel className="p-4">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="foodlike-kicker">Воронка</p>
-                <h2 className="mt-1 foodlike-title-sm">Заказы и статусы</h2>
+          <div className="grid content-start gap-4">
+            <GlassPanel className="p-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="foodlike-kicker">Воронка</p>
+                  <h2 className="mt-1 foodlike-title-sm">Заказы и статусы</h2>
+                </div>
+                <PanelLink href="/dashboard/orders">Все заказы</PanelLink>
               </div>
-              <PanelLink href="/dashboard/orders">Все заказы</PanelLink>
-            </div>
-            <div className="mt-3 grid gap-3 sm:grid-cols-3">
-              {analytics.orderFlow.map((item) =>
-                item.tone ? <ToneMetricCard key={item.label} {...item} /> : <MetricCard key={item.label} {...item} />,
-              )}
-            </div>
-          </GlassPanel>
+              <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                {analytics.orderFlow.map((item) =>
+                  item.tone ? <ToneMetricCard key={item.label} {...item} /> : <MetricCard key={item.label} {...item} />,
+                )}
+              </div>
+            </GlassPanel>
+            <ForecastPanel
+              label={analytics.salesForecast.label}
+              metrics={analytics.salesForecast.metrics}
+              factors={analytics.salesForecast.factors}
+            />
+          </div>
           <InsightList title="Маржинальность" eyebrow="Расчет" items={analytics.profitability} actionHref="/dashboard/inventory" actionLabel="Склад" />
         </section>
 

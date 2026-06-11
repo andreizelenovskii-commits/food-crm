@@ -22,6 +22,7 @@ const MONEY_FORMATTER = new Intl.NumberFormat("ru-RU", {
   maximumFractionDigits: 0,
 });
 const NUMBER_FORMATTER = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 1 });
+const HOLIDAY_DATES = new Set(["01-01", "01-02", "01-03", "01-07", "02-23", "03-08", "05-01", "05-09", "06-12", "11-04", "12-31"]);
 
 export type SalesAnalyticsInput = {
   period?: string | null;
@@ -58,6 +59,10 @@ function sumBy<T>(items: T[], getValue: (item: T) => number) {
   return items.reduce((sum, item) => sum + getValue(item), 0);
 }
 
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
 function groupBy<T>(
   items: T[],
   getKey: (item: T) => string,
@@ -77,6 +82,36 @@ function getActDate(act: IncomingActSummary | WriteoffActSummary) {
 
 function flattenOrderItems(orders: OrderListItem[]) {
   return orders.flatMap((order) => order.items);
+}
+
+function addDays(date: Date, days: number) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function getCalendarDays(start: Date, end: Date) {
+  return Math.max(1, Math.round((end.getTime() - start.getTime()) / 86_400_000));
+}
+
+function isBetween(dateValue: string, start: Date, end: Date) {
+  const date = new Date(dateValue);
+  return !Number.isNaN(date.getTime()) && date >= start && date < end;
+}
+
+function countMonthDays(start: Date) {
+  const end = new Date(start.getFullYear(), start.getMonth() + 1, 1);
+  let weekends = 0;
+  let holidays = 0;
+
+  for (let date = new Date(start); date < end; date = addDays(date, 1)) {
+    const day = date.getDay();
+    const holidayKey = `${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    weekends += day === 0 || day === 6 ? 1 : 0;
+    holidays += HOLIDAY_DATES.has(holidayKey) ? 1 : 0;
+  }
+
+  return { days: getCalendarDays(start, end), weekends, holidays };
 }
 
 function buildMenuPerformance(items: OrderItemSummary[], estimateCost: (item: OrderItemSummary) => number) {
@@ -131,6 +166,52 @@ function buildDateParts(date: Date) {
       return { value, label };
     }),
     years: Array.from({ length: endYear - startYear + 1 }, (_, index) => String(startYear + index)),
+  };
+}
+
+function buildSalesForecast(orders: OrderListItem[], range: ReturnType<typeof buildSalesPeriodRange>) {
+  const completedOrders = orders.filter((order) => order.status === "DELIVERED_PAID");
+  const cancelledOrders = orders.filter((order) => order.status === "CANCELLED");
+  const nextMonthStart = new Date(range.start.getFullYear(), range.start.getMonth() + 1, 1);
+  const last30Start = addDays(range.end, -30);
+  const previous30Start = addDays(range.end, -60);
+  const last30Orders = completedOrders.filter((order) => isBetween(order.createdAt, last30Start, range.end));
+  const previous30Orders = completedOrders.filter((order) => isBetween(order.createdAt, previous30Start, last30Start));
+  const periodOrders = completedOrders.filter((order) => isDateInRange(order.createdAt, range));
+  const last30Revenue = sumBy(last30Orders, (order) => order.totalCents);
+  const previous30Revenue = sumBy(previous30Orders, (order) => order.totalCents);
+  const periodRevenue = sumBy(periodOrders, (order) => order.totalCents);
+  const averageCheckCents = completedOrders.length ? sumBy(completedOrders, (order) => order.totalCents) / completedOrders.length : 0;
+  const last30DailyCents = last30Revenue / 30;
+  const periodDailyCents = periodRevenue / getCalendarDays(range.start, range.end);
+  const baseDailyCents = last30DailyCents || periodDailyCents;
+  const trend = previous30Revenue ? clamp(last30Revenue / previous30Revenue, 0.72, 1.35) : 1;
+  const monthShape = countMonthDays(nextMonthStart);
+  const cancellationRate = orders.length ? cancelledOrders.length / orders.length : 0;
+  const discountCents = sumBy(completedOrders, (order) => Math.max(order.subtotalCents - order.totalCents, 0));
+  const subtotalCents = sumBy(completedOrders, (order) => order.subtotalCents);
+  const discountRate = subtotalCents ? discountCents / subtotalCents : 0;
+  const calendarFactor = 1 + (monthShape.weekends / monthShape.days) * 0.08 + monthShape.holidays * 0.12;
+  const riskFactor = clamp(1 - cancellationRate * 0.16 - discountRate * 0.05, 0.82, 1.04);
+  const forecastRevenueCents = Math.round(baseDailyCents * monthShape.days * trend * calendarFactor * riskFactor);
+  const forecastOrders = averageCheckCents ? Math.round(forecastRevenueCents / averageCheckCents) : 0;
+  const confidence = last30Orders.length >= 80 ? "Высокая" : last30Orders.length >= 25 ? "Средняя" : "Низкая";
+  const label = nextMonthStart.toLocaleDateString("ru-RU", { month: "long", year: "numeric" });
+
+  return {
+    label,
+    metrics: [
+      { label: "Прогноз выручки", value: formatMoney(forecastRevenueCents), hint: `На ${label}` },
+      { label: "Прогноз заказов", value: formatNumber(forecastOrders), hint: `Средний чек ${formatMoney(Math.round(averageCheckCents))}` },
+      { label: "Средний день", value: formatMoney(Math.round(baseDailyCents * trend * calendarFactor * riskFactor)), hint: "С учетом тренда и календаря" },
+      { label: "Уверенность", value: confidence, hint: `${last30Orders.length} заказов за последние 30 дней` },
+    ],
+    factors: [
+      { label: "Тренд продаж", value: formatPercent(Math.round((trend - 1) * 100), 100), hint: "Последние 30 дней к предыдущим 30" },
+      { label: "Выходные", value: String(monthShape.weekends), hint: "Дней с повышенным спросом" },
+      { label: "Праздники", value: String(monthShape.holidays), hint: "Фиксированные праздничные даты месяца" },
+      { label: "Риск отмен", value: formatPercent(cancelledOrders.length, orders.length), hint: "Учитывается как понижающий фактор" },
+    ],
   };
 }
 
@@ -192,6 +273,7 @@ export function buildSalesAnalyticsViewModel(input: SalesAnalyticsInput) {
     dateParts: buildDateParts(range.start),
     kpis,
     orderFlow,
+    salesForecast: buildSalesForecast(input.orders, range),
     profitability,
     revenueByCategory,
     sourceFlow,
