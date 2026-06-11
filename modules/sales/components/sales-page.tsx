@@ -239,13 +239,14 @@ export function SalesPage(props: SalesPageProps) {
               factors={analytics.salesForecast.factors}
             />
           </div>
-          <InsightList title="Маржинальность" eyebrow="Расчет" items={analytics.profitability} actionHref="/dashboard/inventory" actionLabel="Склад" compact />
-        </section>
-
-        <section className="grid gap-4 xl:grid-cols-3">
-          <InsightList title="Выручка по категориям" eyebrow="Меню" items={analytics.revenueByCategory} actionHref="/dashboard/catalog" actionLabel="Каталог" />
-          <InsightList title="Эффективность блюд" eyebrow="Маржа" items={analytics.menuPerformance} actionHref="/dashboard/inventory" actionLabel="Техкарты" />
-          <InsightList title="Каналы продаж" eyebrow="Источники" items={analytics.sourceFlow} actionHref="/dashboard/orders" actionLabel="Заказы" />
+          <div className="grid content-start gap-4">
+            <InsightList title="Маржинальность" eyebrow="Расчет" items={analytics.profitability} actionHref="/dashboard/inventory" actionLabel="Склад" compact />
+            <div className="grid gap-4 lg:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
+              <InsightList title="Выручка по категориям" eyebrow="Меню" items={analytics.revenueByCategory} actionHref="/dashboard/catalog" actionLabel="Каталог" compact />
+              <InsightList title="Эффективность блюд" eyebrow="Маржа" items={analytics.menuPerformance} actionHref="/dashboard/inventory" actionLabel="Техкарты" compact />
+              <InsightList title="Каналы продаж" eyebrow="Источники" items={analytics.sourceFlow} actionHref="/dashboard/orders" actionLabel="Заказы" compact />
+            </div>
+          </div>
         </section>
 
         <section className="grid gap-4 xl:grid-cols-[1fr_1fr]">
