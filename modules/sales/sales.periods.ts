@@ -12,6 +12,7 @@ export const SALES_PERIOD_LABELS: Record<SalesPeriod, string> = {
 export type SalesPeriodRange = {
   period: SalesPeriod;
   date: string;
+  selectedDate: string;
   start: Date;
   end: Date;
   label: string;
@@ -96,6 +97,7 @@ export function normalizeSalesPeriod(period?: string | null): SalesPeriod {
 export function buildSalesPeriodRange(periodInput?: string | null, dateInput?: string | null): SalesPeriodRange {
   const period = normalizeSalesPeriod(periodInput);
   const base = parseDateInput(dateInput ?? undefined);
+  const selectedDate = formatDateInput(base);
   let start: Date;
   let end: Date;
   let previousDate: string;
@@ -131,6 +133,7 @@ export function buildSalesPeriodRange(periodInput?: string | null, dateInput?: s
   return {
     period,
     date,
+    selectedDate,
     start,
     end,
     label: formatRangeLabel(start, end, period),

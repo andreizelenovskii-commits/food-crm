@@ -217,6 +217,7 @@ function buildSalesForecast(orders: OrderListItem[], range: ReturnType<typeof bu
 
 export function buildSalesAnalyticsViewModel(input: SalesAnalyticsInput) {
   const range = buildSalesPeriodRange(input.period, input.date);
+  const selectedDate = new Date(range.selectedDate);
   const periodOrders = input.orders.filter((order) => isDateInRange(order.createdAt, range));
   const completedOrders = periodOrders.filter((order) => order.status === "DELIVERED_PAID");
   const activeOrders = periodOrders.filter((order) => ["SENT_TO_KITCHEN", "READY", "PACKED"].includes(order.status));
@@ -267,10 +268,10 @@ export function buildSalesAnalyticsViewModel(input: SalesAnalyticsInput) {
 
   return {
     range,
-    periodOptions: buildPeriodOptions(range.period, range.date),
+    periodOptions: buildPeriodOptions(range.period, range.selectedDate),
     previousHref: buildSalesHref(range.period, range.previousDate),
     nextHref: buildSalesHref(range.period, range.nextDate),
-    dateParts: buildDateParts(range.start),
+    dateParts: buildDateParts(selectedDate),
     kpis,
     orderFlow,
     salesForecast: buildSalesForecast(input.orders, range),
