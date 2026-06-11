@@ -4,285 +4,188 @@ import type {
   ProductItem,
   WriteoffActSummary,
 } from "@/modules/inventory/inventory.types";
-import type { OrderListItem } from "@/modules/orders/orders.types";
+import type { OrderListItem, OrderItemSummary } from "@/modules/orders/orders.types";
+import { buildOrderItemCostEstimator } from "@/modules/sales/sales.costing";
+import {
+  buildSalesHref,
+  buildSalesPeriodRange,
+  isDateInRange,
+  SALES_PERIOD_LABELS,
+  SALES_PERIODS,
+  type SalesPeriod,
+} from "@/modules/sales/sales.periods";
+import type { TechCardItem } from "@/modules/tech-cards/tech-cards.types";
 
 const MONEY_FORMATTER = new Intl.NumberFormat("ru-RU", {
   style: "currency",
   currency: "RUB",
   maximumFractionDigits: 0,
 });
-
-const NUMBER_FORMATTER = new Intl.NumberFormat("ru-RU", {
-  maximumFractionDigits: 1,
-});
+const NUMBER_FORMATTER = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 1 });
 
 export type SalesAnalyticsInput = {
+  period?: string | null;
+  date?: string | null;
   orders: OrderListItem[];
   catalogItems: CatalogItem[];
   products: ProductItem[];
+  techCards: TechCardItem[];
   incomingActs: IncomingActSummary[];
   writeoffActs: WriteoffActSummary[];
 };
 
-type RankedItem = {
+export type SalesMetric = {
   label: string;
   value: string;
   hint: string;
-};
-
-type CategoryInsight = {
-  label: string;
-  value: string;
-  hint: string;
+  href?: string;
+  tone?: "good" | "warning" | "danger";
 };
 
 function formatMoney(cents: number) {
   return MONEY_FORMATTER.format(cents / 100);
 }
 
-function formatPercent(value: number) {
-  return `${NUMBER_FORMATTER.format(value)}%`;
+function formatNumber(value: number) {
+  return NUMBER_FORMATTER.format(value);
+}
+
+function formatPercent(part: number, total: number) {
+  return total ? `${NUMBER_FORMATTER.format((part / total) * 100)}%` : "0%";
 }
 
 function sumBy<T>(items: T[], getValue: (item: T) => number) {
   return items.reduce((sum, item) => sum + getValue(item), 0);
 }
 
-function groupByCategory<T>(
+function groupBy<T>(
   items: T[],
-  getCategory: (item: T) => string | null,
+  getKey: (item: T) => string,
   getValue: (item: T) => number,
 ) {
   const map = new Map<string, number>();
+  items.forEach((item) => {
+    const key = getKey(item);
+    map.set(key, (map.get(key) ?? 0) + getValue(item));
+  });
+  return [...map.entries()].map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
+}
+
+function getActDate(act: IncomingActSummary | WriteoffActSummary) {
+  return act.completedAt ?? act.createdAt;
+}
+
+function flattenOrderItems(orders: OrderListItem[]) {
+  return orders.flatMap((order) => order.items);
+}
+
+function buildMenuPerformance(items: OrderItemSummary[], estimateCost: (item: OrderItemSummary) => number) {
+  const map = new Map<string, { quantity: number; revenueCents: number; costCents: number }>();
 
   items.forEach((item) => {
-    const category = getCategory(item) || "Без категории";
-    map.set(category, (map.get(category) ?? 0) + getValue(item));
+    const current = map.get(item.itemName) ?? { quantity: 0, revenueCents: 0, costCents: 0 };
+    current.quantity += item.quantity;
+    current.revenueCents += item.totalPriceCents;
+    current.costCents += estimateCost(item);
+    map.set(item.itemName, current);
   });
 
   return [...map.entries()]
-    .map(([label, value]) => ({ label, value }))
-    .sort((a, b) => b.value - a.value);
+    .map(([label, value]) => ({
+      label,
+      marginCents: value.revenueCents - value.costCents,
+      value: formatMoney(value.revenueCents - value.costCents),
+      hint: `${formatNumber(value.quantity)} шт · выручка ${formatMoney(value.revenueCents)} · cost ${formatPercent(value.costCents, value.revenueCents)}`,
+    }))
+    .sort((left, right) => right.marginCents - left.marginCents)
+    .map((item) => ({
+      label: item.label,
+      value: item.value,
+      hint: item.hint,
+    }))
+    .slice(0, 8);
 }
 
-function buildRankedProducts(products: ProductItem[], direction: "top" | "silent") {
-  return [...products]
-    .sort((a, b) =>
-      direction === "top"
-        ? b.orderItemsCount - a.orderItemsCount
-        : a.orderItemsCount - b.orderItemsCount,
-    )
-    .slice(0, 6)
-    .map((product): RankedItem => ({
-      label: product.name,
-      value: `${product.orderItemsCount}`,
-      hint: `${product.category ?? "Без категории"} · ${formatMoney(product.priceCents)}`,
-    }));
+function buildPeriodOptions(period: SalesPeriod, date: string) {
+  return SALES_PERIODS.map((item) => ({
+    label: SALES_PERIOD_LABELS[item],
+    href: buildSalesHref(item, date),
+    isActive: item === period,
+  }));
 }
 
-export function buildSalesAnalyticsViewModel({
-  orders,
-  catalogItems,
-  products,
-  incomingActs,
-  writeoffActs,
-}: SalesAnalyticsInput) {
-  const completedOrders = orders.filter((order) => order.status === "DELIVERED_PAID");
-  const activeOrders = orders.filter((order) =>
-    ["SENT_TO_KITCHEN", "READY", "PACKED"].includes(order.status),
-  );
-  const cancelledOrders = orders.filter((order) => order.status === "CANCELLED");
-  const externalCompletedOrders = completedOrders.filter((order) => !order.isInternal);
-  const internalCompletedOrders = completedOrders.filter((order) => order.isInternal);
+export function buildSalesAnalyticsViewModel(input: SalesAnalyticsInput) {
+  const range = buildSalesPeriodRange(input.period, input.date);
+  const periodOrders = input.orders.filter((order) => isDateInRange(order.createdAt, range));
+  const completedOrders = periodOrders.filter((order) => order.status === "DELIVERED_PAID");
+  const activeOrders = periodOrders.filter((order) => ["SENT_TO_KITCHEN", "READY", "PACKED"].includes(order.status));
+  const cancelledOrders = periodOrders.filter((order) => order.status === "CANCELLED");
+  const incomingActs = input.incomingActs.filter((act) => act.isCompleted && isDateInRange(getActDate(act), range));
+  const writeoffActs = input.writeoffActs.filter((act) => act.isCompleted && isDateInRange(getActDate(act), range));
+  const estimateCost = buildOrderItemCostEstimator(input);
+  const soldItems = flattenOrderItems(completedOrders);
 
-  const grossRevenueCents = sumBy(completedOrders, (order) => order.totalCents);
-  const externalRevenueCents = sumBy(externalCompletedOrders, (order) => order.totalCents);
-  const internalRevenueCents = sumBy(internalCompletedOrders, (order) => order.totalCents);
+  const revenueCents = sumBy(completedOrders, (order) => order.totalCents);
+  const subtotalCents = sumBy(completedOrders, (order) => order.subtotalCents);
+  const discountCents = Math.max(subtotalCents - revenueCents, 0);
+  const averageCheckCents = completedOrders.length ? Math.round(revenueCents / completedOrders.length) : 0;
+  const estimatedCogsCents = sumBy(soldItems, estimateCost);
+  const purchaseCents = sumBy(incomingActs, (act) => act.totalCents);
+  const writeoffCents = sumBy(writeoffActs, (act) => act.totalCents);
+  const productMarginCents = revenueCents - estimatedCogsCents;
+  const operatingMarginCents = revenueCents - purchaseCents - writeoffCents;
   const activePipelineCents = sumBy(activeOrders, (order) => order.totalCents);
-  const discountCents = sumBy(
-    completedOrders,
-    (order) => Math.max(order.subtotalCents - order.totalCents, 0),
-  );
-  const averageCheckCents = completedOrders.length
-    ? Math.round(grossRevenueCents / completedOrders.length)
-    : 0;
 
-  const completedIncomingActs = incomingActs.filter((act) => act.isCompleted);
-  const completedWriteoffActs = writeoffActs.filter((act) => act.isCompleted);
-  const purchaseCostCents = sumBy(completedIncomingActs, (act) => act.totalCents);
-  const writeoffCostCents = sumBy(completedWriteoffActs, (act) => act.totalCents);
-  const stockValueCents = sumBy(
-    products,
-    (product) => product.stockQuantity * product.priceCents,
-  );
-  const operatingMarginCents = grossRevenueCents - purchaseCostCents - writeoffCostCents;
-  const operatingMarginPercent = grossRevenueCents
-    ? (operatingMarginCents / grossRevenueCents) * 100
-    : 0;
-
-  const clientPriceItems = catalogItems.filter((item) => item.priceListType === "CLIENT");
-  const internalPriceItems = catalogItems.filter((item) => item.priceListType === "INTERNAL");
-  const linkedCatalogItems = catalogItems.filter((item) => item.technologicalCardId > 0);
-  const averageClientPriceCents = clientPriceItems.length
-    ? Math.round(sumBy(clientPriceItems, (item) => item.priceCents) / clientPriceItems.length)
-    : 0;
-  const averageInternalPriceCents = internalPriceItems.length
-    ? Math.round(sumBy(internalPriceItems, (item) => item.priceCents) / internalPriceItems.length)
-    : 0;
-
-  const inventoryCategories = groupByCategory(
-    products,
-    (product) => product.category,
-    (product) => product.stockQuantity * product.priceCents,
-  );
-  const catalogCategories = groupByCategory(
-    catalogItems,
-    (item) => item.category,
-    (item) => item.priceCents,
-  );
-  const writeoffCategories = groupByCategory(
-    completedWriteoffActs.flatMap((act) => act.items),
-    (item) => item.productCategory,
-    (item) => item.totalCents,
-  );
-  const purchaseCategories = groupByCategory(
-    completedIncomingActs.flatMap((act) => act.items),
-    (item) => item.productCategory,
-    (item) => item.totalCents,
-  );
-
-  const kpis = [
-    {
-      label: "Выручка",
-      value: formatMoney(grossRevenueCents),
-      hint: `${completedOrders.length} закрытых заказов`,
-    },
-    {
-      label: "Средний чек",
-      value: formatMoney(averageCheckCents),
-      hint: "По доставленным и оплаченным заказам",
-    },
-    {
-      label: "Опер. маржа",
-      value: formatMoney(operatingMarginCents),
-      hint: `${formatPercent(operatingMarginPercent)} после закупок и списаний`,
-    },
-    {
-      label: "Себестоимость склада",
-      value: formatMoney(stockValueCents),
-      hint: `${products.length} складских позиций`,
-    },
+  const kpis: SalesMetric[] = [
+    { label: "Выручка", value: formatMoney(revenueCents), hint: `${completedOrders.length} оплаченных заказов`, href: "/dashboard/orders" },
+    { label: "Средний чек", value: formatMoney(averageCheckCents), hint: "Итог заказа после скидок", href: "/dashboard/orders" },
+    { label: "Маржа по блюдам", value: formatMoney(productMarginCents), hint: `${formatPercent(productMarginCents, revenueCents)} после техкарт`, href: "/dashboard/inventory", tone: productMarginCents < 0 ? "danger" : "good" },
+    { label: "Опер. маржа", value: formatMoney(operatingMarginCents), hint: `${formatPercent(operatingMarginCents, revenueCents)} после закупок и списаний`, href: `/dashboard/reports?month=${range.date.slice(0, 7)}`, tone: operatingMarginCents < 0 ? "danger" : "good" },
   ];
 
-  const orderFlow = [
-    {
-      label: "В работе",
-      value: String(activeOrders.length),
-      hint: formatMoney(activePipelineCents),
-    },
-    {
-      label: "Закрытые",
-      value: String(completedOrders.length),
-      hint: formatMoney(grossRevenueCents),
-    },
-    {
-      label: "Отмененные",
-      value: String(cancelledOrders.length),
-      hint: "Не попадают в выручку",
-    },
+  const profitability: SalesMetric[] = [
+    { label: "Себестоимость проданных блюд", value: formatMoney(estimatedCogsCents), hint: `${formatPercent(estimatedCogsCents, revenueCents)} от выручки` },
+    { label: "Закупки периода", value: formatMoney(purchaseCents), hint: `${incomingActs.length} завершенных актов`, href: "/dashboard/inventory" },
+    { label: "Списания периода", value: formatMoney(writeoffCents), hint: `${writeoffActs.length} завершенных актов`, href: "/dashboard/inventory" },
+    { label: "Скидки", value: formatMoney(discountCents), hint: `${formatPercent(discountCents, subtotalCents)} от суммы до скидки` },
   ];
 
-  const moneyFlow = [
-    {
-      label: "Клиентская выручка",
-      value: formatMoney(externalRevenueCents),
-      hint: `${externalCompletedOrders.length} внешних заказов`,
-    },
-    {
-      label: "Внутренний прайс",
-      value: formatMoney(internalRevenueCents),
-      hint: `${internalCompletedOrders.length} внутренних заказов`,
-    },
-    {
-      label: "Скидки",
-      value: formatMoney(discountCents),
-      hint: "Разница между суммой и итогом",
-    },
-    {
-      label: "Закупки",
-      value: formatMoney(purchaseCostCents),
-      hint: `${completedIncomingActs.length} завершенных приходов`,
-    },
-    {
-      label: "Списания",
-      value: formatMoney(writeoffCostCents),
-      hint: `${completedWriteoffActs.length} завершенных актов`,
-    },
+  const orderFlow: SalesMetric[] = [
+    { label: "В работе", value: String(activeOrders.length), hint: formatMoney(activePipelineCents), href: "/dashboard/orders/dispatcher" },
+    { label: "Закрытые", value: String(completedOrders.length), hint: formatMoney(revenueCents), href: "/dashboard/orders" },
+    { label: "Отмененные", value: String(cancelledOrders.length), hint: `${formatPercent(cancelledOrders.length, periodOrders.length)} от заказов`, href: "/dashboard/orders", tone: cancelledOrders.length ? "warning" : "good" },
   ];
 
-  const categoryInsights: CategoryInsight[] = [
-    {
-      label: "Лучшая категория склада",
-      value: inventoryCategories[0]?.label ?? "Нет данных",
-      hint: inventoryCategories[0] ? formatMoney(inventoryCategories[0].value) : "Нужно заполнить склад",
-    },
-    {
-      label: "Категория с максимальными списаниями",
-      value: writeoffCategories[0]?.label ?? "Нет списаний",
-      hint: writeoffCategories[0] ? formatMoney(writeoffCategories[0].value) : "Списания пока не закрывались",
-    },
-    {
-      label: "Крупнейшая категория закупок",
-      value: purchaseCategories[0]?.label ?? "Нет закупок",
-      hint: purchaseCategories[0] ? formatMoney(purchaseCategories[0].value) : "Приходы пока не закрывались",
-    },
-    {
-      label: "Самая дорогая категория прайса",
-      value: catalogCategories[0]?.label ?? "Нет прайса",
-      hint: catalogCategories[0] ? formatMoney(catalogCategories[0].value) : "Добавьте позиции каталога",
-    },
-  ];
-
-  const priceAnalytics = [
-    {
-      label: "Клиентский прайс",
-      value: String(clientPriceItems.length),
-      hint: `Средняя цена ${formatMoney(averageClientPriceCents)}`,
-    },
-    {
-      label: "Внутренний прайс",
-      value: String(internalPriceItems.length),
-      hint: `Средняя цена ${formatMoney(averageInternalPriceCents)}`,
-    },
-    {
-      label: "Связано с техкартами",
-      value: `${linkedCatalogItems.length}/${catalogItems.length}`,
-      hint: "База для будущей точной себестоимости блюд",
-    },
-  ];
+  const revenueByCategory = groupBy(soldItems, (item) => item.catalogCategory ?? "Без категории", (item) => item.totalPriceCents)
+    .slice(0, 8)
+    .map((item) => ({ label: item.label, value: formatMoney(item.value), hint: `${formatPercent(item.value, revenueCents)} от выручки` }));
+  const sourceFlow = groupBy(completedOrders, (order) => order.source, (order) => order.totalCents)
+    .map((item) => ({ label: item.label, value: formatMoney(item.value), hint: `${formatPercent(item.value, revenueCents)} от выручки` }));
+  const stockValueCents = sumBy(input.products, (product) => product.stockQuantity * product.priceCents);
+  const linkedCatalogItems = input.catalogItems.filter((item) => item.technologicalCardId > 0 || item.variants.some((variant) => variant.technologicalCardId > 0)).length;
 
   return {
+    range,
+    periodOptions: buildPeriodOptions(range.period, range.date),
+    previousHref: buildSalesHref(range.period, range.previousDate),
+    nextHref: buildSalesHref(range.period, range.nextDate),
+    dateInputType: range.period === "year" ? "number" : range.period === "month" ? "month" : "date",
     kpis,
     orderFlow,
-    moneyFlow,
-    categoryInsights,
-    priceAnalytics,
-    topProducts: buildRankedProducts(products, "top"),
-    silentProducts: buildRankedProducts(products, "silent"),
-    inventoryCategories: inventoryCategories.slice(0, 6).map((item) => ({
-      label: item.label,
-      value: formatMoney(item.value),
-      hint: "Оценка по текущему остатку",
-    })),
-    purchaseCategories: purchaseCategories.slice(0, 6).map((item) => ({
-      label: item.label,
-      value: formatMoney(item.value),
-      hint: "Завершенные приходы",
-    })),
-    writeoffCategories: writeoffCategories.slice(0, 6).map((item) => ({
-      label: item.label,
-      value: formatMoney(item.value),
-      hint: "Завершенные списания",
-    })),
+    profitability,
+    revenueByCategory,
+    sourceFlow,
+    menuPerformance: buildMenuPerformance(soldItems, estimateCost),
+    readiness: [
+      { label: "Техкарты", value: `${input.techCards.length}`, hint: "База для себестоимости блюд", href: "/dashboard/inventory" },
+      { label: "Связка прайса", value: `${linkedCatalogItems}/${input.catalogItems.length}`, hint: "Позиции каталога с техкартами", href: "/dashboard/catalog" },
+      { label: "Склад", value: formatMoney(stockValueCents), hint: `${input.products.length} продуктов`, href: "/dashboard/inventory" },
+    ] satisfies SalesMetric[],
+    reportActions: [
+      { label: "Заказы", href: "/dashboard/orders", hint: "Открыть список заказов" },
+      { label: "Месячный отчет", href: `/dashboard/reports?month=${range.date.slice(0, 7)}`, hint: "Сводка по отчетам" },
+      { label: "Склад", href: "/dashboard/inventory", hint: "Закупки и списания" },
+      { label: "Каталог", href: "/dashboard/catalog", hint: "Прайс и техкарты" },
+    ],
   };
 }
