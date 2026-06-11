@@ -113,6 +113,22 @@ function PanelLink({ href, children }: { href: string; children: React.ReactNode
   );
 }
 
+function CalendarIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className} aria-hidden="true">
+      <path d="M8 2v4" />
+      <path d="M16 2v4" />
+      <rect x="3" y="5" width="18" height="16" rx="4" />
+      <path d="M3 10h18" />
+      <path d="M8 14h.01" />
+      <path d="M12 14h.01" />
+      <path d="M16 14h.01" />
+      <path d="M8 18h.01" />
+      <path d="M12 18h.01" />
+    </svg>
+  );
+}
+
 export function SalesPage(props: SalesPageProps) {
   const analytics = buildSalesAnalyticsViewModel(props);
 
@@ -153,12 +169,16 @@ export function SalesPage(props: SalesPageProps) {
               </div>
               <form action="/dashboard/sales" className="flex gap-2">
                 <input type="hidden" name="period" value={analytics.range.period} />
-                <input
-                  type={analytics.dateInputType}
-                  name="date"
-                  defaultValue={analytics.range.date}
-                  className="foodlike-field min-w-36"
-                />
+                <label className="foodlike-date-field min-w-44">
+                  <input
+                    type={analytics.dateInputType}
+                    name="date"
+                    defaultValue={analytics.range.date}
+                    aria-label="Дата отчета"
+                    className="foodlike-date-input"
+                  />
+                  <CalendarIcon className="pointer-events-none size-5 shrink-0 text-red-900" />
+                </label>
                 <button type="submit" className="foodlike-button-primary">Показать</button>
               </form>
             </div>
