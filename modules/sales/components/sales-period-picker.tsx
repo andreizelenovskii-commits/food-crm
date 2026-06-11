@@ -76,7 +76,7 @@ function PickerButton({
         <ChevronIcon className={`size-3.5 text-red-900/70 transition ${isOpen ? "rotate-180" : ""}`} />
       </button>
       {isOpen ? (
-        <div className="absolute right-0 top-11 z-30 w-max min-w-full overflow-hidden rounded-[18px] border border-red-950/10 bg-white p-1.5 shadow-[0_24px_60px_rgba(69,10,10,0.18)]">
+        <div className="absolute right-0 top-11 z-[100] w-max min-w-full overflow-hidden rounded-[18px] border border-red-950/10 bg-white p-1.5 shadow-[0_24px_60px_rgba(69,10,10,0.18)]">
           <div className="max-h-72 overflow-auto rounded-[14px]">
             {options.map((option) => {
               const isSelected = option.value === value;

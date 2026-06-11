@@ -124,7 +124,7 @@ export function SalesPage(props: SalesPageProps) {
       action={<SessionUserActions user={props.user} />}
     >
       <div className="foodlike-frame space-y-4 p-4 sm:p-5">
-        <GlassPanel className="p-4">
+        <GlassPanel className="relative z-30 overflow-visible p-4">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
             <div>
               <p className="foodlike-kicker">Период отчета</p>
