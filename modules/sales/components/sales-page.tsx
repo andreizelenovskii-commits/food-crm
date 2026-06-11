@@ -54,15 +54,17 @@ function InsightList({
   items,
   actionHref,
   actionLabel = "Открыть",
+  compact = false,
 }: {
   title: string;
   eyebrow: string;
   items: SalesMetric[];
   actionHref?: string;
   actionLabel?: string;
+  compact?: boolean;
 }) {
   return (
-    <GlassPanel className="p-4">
+    <GlassPanel className={compact ? "p-4 xl:self-start" : "p-4"}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="foodlike-kicker">{eyebrow}</p>
@@ -73,7 +75,7 @@ function InsightList({
       <div className="mt-3 divide-y divide-red-950/10">
         {items.length ? (
           items.map((item) => (
-            <LinkRow key={`${item.label}-${item.value}`} item={item} />
+            <LinkRow key={`${item.label}-${item.value}`} item={item} compact={compact} />
           ))
         ) : (
           <p className="foodlike-empty mt-3 px-4 py-4">Данных за период пока нет.</p>
@@ -126,7 +128,12 @@ function ForecastPanel({
   );
 }
 
-function LinkRow({ item }: { item: SalesMetric }) {
+function LinkRow({ item, compact = false }: { item: SalesMetric; compact?: boolean }) {
+  const rowClassName = [
+    "grid gap-2 transition sm:grid-cols-[1fr_auto] sm:items-center",
+    compact ? "py-2.5" : "py-3",
+    item.href ? "hover:text-red-800" : "",
+  ].join(" ");
   const content = (
     <>
       <div className="min-w-0">
@@ -138,11 +145,11 @@ function LinkRow({ item }: { item: SalesMetric }) {
   );
 
   return item.href ? (
-    <Link href={item.href} className="grid gap-2 py-3 transition hover:text-red-800 sm:grid-cols-[1fr_auto] sm:items-center">
+    <Link href={item.href} className={rowClassName}>
       {content}
     </Link>
   ) : (
-    <div className="grid gap-2 py-3 sm:grid-cols-[1fr_auto] sm:items-center">{content}</div>
+    <div className={rowClassName}>{content}</div>
   );
 }
 
@@ -210,7 +217,7 @@ export function SalesPage(props: SalesPageProps) {
           )}
         </section>
 
-        <section className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
+        <section className="grid items-start gap-4 xl:grid-cols-[0.95fr_1.05fr]">
           <div className="grid content-start gap-4">
             <GlassPanel className="p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -232,7 +239,7 @@ export function SalesPage(props: SalesPageProps) {
               factors={analytics.salesForecast.factors}
             />
           </div>
-          <InsightList title="Маржинальность" eyebrow="Расчет" items={analytics.profitability} actionHref="/dashboard/inventory" actionLabel="Склад" />
+          <InsightList title="Маржинальность" eyebrow="Расчет" items={analytics.profitability} actionHref="/dashboard/inventory" actionLabel="Склад" compact />
         </section>
 
         <section className="grid gap-4 xl:grid-cols-3">
