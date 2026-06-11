@@ -114,6 +114,26 @@ function buildPeriodOptions(period: SalesPeriod, date: string) {
   }));
 }
 
+function buildDateParts(date: Date) {
+  const currentYear = new Date().getFullYear();
+  const selectedYear = date.getFullYear();
+  const startYear = Math.min(currentYear - 5, selectedYear - 2);
+  const endYear = Math.max(currentYear + 2, selectedYear + 2);
+
+  return {
+    day: String(date.getDate()).padStart(2, "0"),
+    month: String(date.getMonth() + 1).padStart(2, "0"),
+    year: String(selectedYear),
+    days: Array.from({ length: 31 }, (_, index) => String(index + 1).padStart(2, "0")),
+    months: Array.from({ length: 12 }, (_, index) => {
+      const value = String(index + 1).padStart(2, "0");
+      const label = new Date(2026, index, 1).toLocaleDateString("ru-RU", { month: "long" });
+      return { value, label };
+    }),
+    years: Array.from({ length: endYear - startYear + 1 }, (_, index) => String(startYear + index)),
+  };
+}
+
 export function buildSalesAnalyticsViewModel(input: SalesAnalyticsInput) {
   const range = buildSalesPeriodRange(input.period, input.date);
   const periodOrders = input.orders.filter((order) => isDateInRange(order.createdAt, range));
@@ -169,7 +189,7 @@ export function buildSalesAnalyticsViewModel(input: SalesAnalyticsInput) {
     periodOptions: buildPeriodOptions(range.period, range.date),
     previousHref: buildSalesHref(range.period, range.previousDate),
     nextHref: buildSalesHref(range.period, range.nextDate),
-    dateInputType: range.period === "year" ? "number" : range.period === "month" ? "month" : "date",
+    dateParts: buildDateParts(range.start),
     kpis,
     orderFlow,
     profitability,

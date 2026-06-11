@@ -129,8 +129,44 @@ function CalendarIcon({ className = "" }: { className?: string }) {
   );
 }
 
+function DateSelect({
+  name,
+  value,
+  label,
+  options,
+}: {
+  name: string;
+  value: string;
+  label: string;
+  options: Array<{ value: string; label: string }>;
+}) {
+  return (
+    <label className="inline-flex min-h-9 items-center rounded-full bg-white/70 px-2 transition focus-within:bg-white focus-within:shadow-[0_0_0_2px_rgba(153,27,27,0.10)]">
+      <span className="sr-only">{label}</span>
+      <select
+        name={name}
+        defaultValue={value}
+        aria-label={label}
+        className={[
+          "cursor-pointer appearance-none border-0 bg-transparent text-[15px] font-semibold leading-none text-zinc-950 outline-none",
+          name === "month" ? "min-w-28" : name === "year" ? "min-w-14" : "min-w-12",
+        ].join(" ")}
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
 export function SalesPage(props: SalesPageProps) {
   const analytics = buildSalesAnalyticsViewModel(props);
+  const showDaySelect = analytics.range.period !== "year";
+  const dayOptions = analytics.dateParts.days.map((day) => ({ value: day, label: day }));
+  const yearOptions = analytics.dateParts.years.map((year) => ({ value: year, label: year }));
 
   return (
     <PageShell
@@ -167,18 +203,33 @@ export function SalesPage(props: SalesPageProps) {
                   </Link>
                 ))}
               </div>
-              <form action="/dashboard/sales" className="flex gap-2">
+              <form action="/dashboard/sales" className="flex flex-wrap gap-2">
                 <input type="hidden" name="period" value={analytics.range.period} />
-                <label className="foodlike-date-field min-w-44">
-                  <input
-                    type={analytics.dateInputType}
-                    name="date"
-                    defaultValue={analytics.range.date}
-                    aria-label="Дата отчета"
-                    className="foodlike-date-input"
+                <div className="inline-flex min-h-12 items-center gap-1.5 rounded-full border border-red-950/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(255,248,248,0.92))] py-1.5 pl-2 pr-3 text-zinc-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_10px_24px_rgba(127,29,29,0.06)] transition focus-within:border-red-900/40 focus-within:bg-white focus-within:shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_0_0_3px_rgba(153,27,27,0.08),0_14px_30px_rgba(127,29,29,0.08)]">
+                  {showDaySelect ? (
+                    <DateSelect
+                      name="day"
+                      value={analytics.dateParts.day}
+                      label="День отчета"
+                      options={dayOptions}
+                    />
+                  ) : null}
+                  {analytics.range.period !== "year" ? (
+                    <DateSelect
+                      name="month"
+                      value={analytics.dateParts.month}
+                      label="Месяц отчета"
+                      options={analytics.dateParts.months}
+                    />
+                  ) : null}
+                  <DateSelect
+                    name="year"
+                    value={analytics.dateParts.year}
+                    label="Год отчета"
+                    options={yearOptions}
                   />
                   <CalendarIcon className="pointer-events-none size-5 shrink-0 text-red-900" />
-                </label>
+                </div>
                 <button type="submit" className="foodlike-button-primary">Показать</button>
               </form>
             </div>

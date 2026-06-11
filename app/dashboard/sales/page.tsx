@@ -10,8 +10,28 @@ import { fetchOrders } from "@/modules/orders/orders.api";
 import { SalesPage } from "@/modules/sales/components/sales-page";
 import { fetchTechCards } from "@/modules/tech-cards/tech-cards.api";
 
+function padDatePart(value: string | undefined, fallback: string) {
+  const normalized = Number(value);
+  return Number.isFinite(normalized) && normalized > 0
+    ? String(normalized).padStart(2, "0")
+    : fallback;
+}
+
+function resolveDateParam(searchParams?: { date?: string; day?: string; month?: string; year?: string }) {
+  if (searchParams?.year || searchParams?.month || searchParams?.day) {
+    const now = new Date();
+    const year = String(Number(searchParams.year) || now.getFullYear());
+    const month = padDatePart(searchParams.month, "01");
+    const day = padDatePart(searchParams.day, "01");
+
+    return `${year}-${month}-${day}`;
+  }
+
+  return searchParams?.date;
+}
+
 export default async function SalesRoutePage(props: {
-  searchParams?: Promise<{ period?: string; date?: string }>;
+  searchParams?: Promise<{ period?: string; date?: string; day?: string; month?: string; year?: string }>;
 }) {
   const user = await requirePermission("view_dashboard");
   const searchParams = await props.searchParams;
@@ -33,7 +53,7 @@ export default async function SalesRoutePage(props: {
     <SalesPage
       user={user}
       period={searchParams?.period}
-      date={searchParams?.date}
+      date={resolveDateParam(searchParams)}
       orders={orders}
       catalogItems={catalogItems}
       products={products}
