@@ -3,6 +3,7 @@ import { PageShell } from "@/components/ui/page-shell";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
 import type { SessionUser } from "@/modules/auth/auth.types";
 import { GlassPanel, KpiTile } from "@/modules/dashboard/components/dashboard-widgets";
+import { SalesPeriodPicker } from "@/modules/sales/components/sales-period-picker";
 import {
   buildSalesAnalyticsViewModel,
   type SalesAnalyticsInput,
@@ -113,60 +114,8 @@ function PanelLink({ href, children }: { href: string; children: React.ReactNode
   );
 }
 
-function CalendarIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className} aria-hidden="true">
-      <path d="M8 2v4" />
-      <path d="M16 2v4" />
-      <rect x="3" y="5" width="18" height="16" rx="4" />
-      <path d="M3 10h18" />
-      <path d="M8 14h.01" />
-      <path d="M12 14h.01" />
-      <path d="M16 14h.01" />
-      <path d="M8 18h.01" />
-      <path d="M12 18h.01" />
-    </svg>
-  );
-}
-
-function DateSelect({
-  name,
-  value,
-  label,
-  options,
-}: {
-  name: string;
-  value: string;
-  label: string;
-  options: Array<{ value: string; label: string }>;
-}) {
-  return (
-    <label className="inline-flex min-h-9 items-center rounded-full bg-white/70 px-2 transition focus-within:bg-white focus-within:shadow-[0_0_0_2px_rgba(153,27,27,0.10)]">
-      <span className="sr-only">{label}</span>
-      <select
-        name={name}
-        defaultValue={value}
-        aria-label={label}
-        className={[
-          "cursor-pointer appearance-none border-0 bg-transparent text-[15px] font-semibold leading-none text-zinc-950 outline-none",
-          name === "month" ? "min-w-28" : name === "year" ? "min-w-14" : "min-w-12",
-        ].join(" ")}
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
-}
-
 export function SalesPage(props: SalesPageProps) {
   const analytics = buildSalesAnalyticsViewModel(props);
-  const showDaySelect = analytics.range.period !== "year";
-  const dayOptions = analytics.dateParts.days.map((day) => ({ value: day, label: day }));
-  const yearOptions = analytics.dateParts.years.map((year) => ({ value: year, label: year }));
 
   return (
     <PageShell
@@ -203,35 +152,7 @@ export function SalesPage(props: SalesPageProps) {
                   </Link>
                 ))}
               </div>
-              <form action="/dashboard/sales" className="flex flex-wrap gap-2">
-                <input type="hidden" name="period" value={analytics.range.period} />
-                <div className="inline-flex min-h-12 items-center gap-1.5 rounded-full border border-red-950/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(255,248,248,0.92))] py-1.5 pl-2 pr-3 text-zinc-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_10px_24px_rgba(127,29,29,0.06)] transition focus-within:border-red-900/40 focus-within:bg-white focus-within:shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_0_0_3px_rgba(153,27,27,0.08),0_14px_30px_rgba(127,29,29,0.08)]">
-                  {showDaySelect ? (
-                    <DateSelect
-                      name="day"
-                      value={analytics.dateParts.day}
-                      label="День отчета"
-                      options={dayOptions}
-                    />
-                  ) : null}
-                  {analytics.range.period !== "year" ? (
-                    <DateSelect
-                      name="month"
-                      value={analytics.dateParts.month}
-                      label="Месяц отчета"
-                      options={analytics.dateParts.months}
-                    />
-                  ) : null}
-                  <DateSelect
-                    name="year"
-                    value={analytics.dateParts.year}
-                    label="Год отчета"
-                    options={yearOptions}
-                  />
-                  <CalendarIcon className="pointer-events-none size-5 shrink-0 text-red-900" />
-                </div>
-                <button type="submit" className="foodlike-button-primary">Показать</button>
-              </form>
+              <SalesPeriodPicker period={analytics.range.period} dateParts={analytics.dateParts} />
             </div>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
