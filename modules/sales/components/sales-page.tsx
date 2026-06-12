@@ -185,8 +185,8 @@ export function SalesPage(props: SalesPageProps) {
                 Все расчеты ниже отфильтрованы по этому периоду.
               </p>
             </div>
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
-              <div className="flex flex-wrap gap-2">
+            <div className="flex flex-col gap-3 lg:flex-row lg:flex-nowrap lg:items-center xl:shrink-0">
+              <div className="flex flex-wrap gap-2 lg:flex-nowrap">
                 {analytics.periodOptions.map((option) => (
                   <Link
                     key={option.label}

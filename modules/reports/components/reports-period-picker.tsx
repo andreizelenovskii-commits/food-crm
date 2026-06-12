@@ -8,7 +8,7 @@ type PickerOption = {
   label: string;
 };
 
-type SalesDateParts = {
+type ReportsDateParts = {
   day: string;
   month: string;
   year: string;
@@ -76,7 +76,7 @@ function PickerButton({
         <ChevronIcon className={`size-3.5 text-red-900/70 transition ${isOpen ? "rotate-180" : ""}`} />
       </button>
       {isOpen ? (
-        <div className="absolute right-0 top-11 z-[100] w-max min-w-full overflow-hidden rounded-[18px] border border-red-950/10 bg-white p-1.5 shadow-[0_24px_60px_rgba(69,10,10,0.18)]">
+        <div className="absolute right-0 top-11 z-[300] w-max min-w-full overflow-hidden rounded-[18px] border border-red-950/10 bg-white p-1.5 shadow-[0_24px_60px_rgba(69,10,10,0.18)]">
           <div className="max-h-72 overflow-auto rounded-[14px]">
             {options.map((option) => {
               const isSelected = option.value === value;
@@ -104,12 +104,12 @@ function PickerButton({
   );
 }
 
-export function SalesPeriodPicker({
+export function ReportsPeriodPicker({
   period,
   dateParts,
 }: {
   period: SalesPeriod;
-  dateParts: SalesDateParts;
+  dateParts: ReportsDateParts;
 }) {
   const [openPicker, setOpenPicker] = useState<string | null>(null);
   const [day, setDay] = useState(dateParts.day);
@@ -125,7 +125,7 @@ export function SalesPeriodPicker({
   }
 
   return (
-    <form action="/dashboard/sales" className="flex flex-wrap items-center gap-2 lg:flex-nowrap">
+    <form action="/dashboard/reports" className="flex flex-wrap items-center gap-2 lg:flex-nowrap">
       <input type="hidden" name="period" value={period} />
       <div className="inline-flex min-h-12 items-center gap-1.5 rounded-full border border-red-950/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(255,248,248,0.92))] py-1.5 pl-2 pr-3 text-zinc-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_10px_24px_rgba(127,29,29,0.06)] transition focus-within:border-red-900/40 focus-within:bg-white focus-within:shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_0_0_3px_rgba(153,27,27,0.08),0_14px_30px_rgba(127,29,29,0.08)]">
         {showDay ? (
@@ -171,7 +171,7 @@ export function SalesPeriodPicker({
         />
         <CalendarIcon className="pointer-events-none size-5 shrink-0 text-red-900" />
       </div>
-      <button type="submit" className="foodlike-button-primary">Показать</button>
+      <button type="submit" className="foodlike-button-primary">Сформировать</button>
     </form>
   );
 }

@@ -1,316 +1,341 @@
+/* eslint-disable max-lines */
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { PaginatedList } from "@/components/ui/paginated-list";
 import type { SessionUser } from "@/modules/auth/auth.types";
 import type { ProductItem } from "@/modules/inventory/inventory.types";
-import { OrderCreateButton } from "@/modules/orders/components/order-create-button";
 import { OrderCard, formatOrderMoney } from "@/modules/orders/components/order-display";
+import { OrdersPeriodPicker } from "@/modules/orders/components/orders-period-picker";
+import { sortOrdersNewestFirst } from "@/modules/orders/components/orders-filtering";
+import type { OrderListItem, OrderStatus } from "@/modules/orders/orders.types";
 import {
-  buildDayKey,
-  buildMonthKey,
-  matchesDateFilter,
-  type DateMode,
-  sortOrdersNewestFirst,
-  summarizeOrders,
-} from "@/modules/orders/components/orders-filtering";
-import type { OrderCreateOptions } from "@/modules/orders/orders.page-model";
-import type { OrderListItem } from "@/modules/orders/orders.types";
+  buildSalesHref,
+  buildSalesPeriodRange,
+  isDateInRange,
+  SALES_PERIOD_LABELS,
+  SALES_PERIODS,
+  type SalesPeriod,
+} from "@/modules/sales/sales.periods";
 
-type OrdersModuleKey = "new" | "work" | "done";
+type OrdersColumnKey = "new" | "work" | "done";
 
-const ORDER_MODULES: Array<{
-  key: OrdersModuleKey;
+const ORDER_COLUMNS: Array<{
+  key: OrdersColumnKey;
   title: string;
   eyebrow: string;
   description: string;
+  statuses: OrderStatus[];
   emptyText: string;
 }> = [
   {
     key: "new",
-    title: "Новые",
+    title: "Новые заказы",
     eyebrow: "Поступили",
-    description: "Заказы, которые уже переданы на кухню и ждут первого рабочего действия.",
-    emptyText: "Новых заказов сейчас нет.",
+    description: "Заказы, которые только пришли и ждут первого действия.",
+    statuses: ["SENT_TO_KITCHEN"],
+    emptyText: "Новых заказов за период нет.",
   },
   {
     key: "work",
     title: "В работе",
-    eyebrow: "Процесс",
-    description: "Готовые и собранные заказы, которые нужно довести до следующего этапа.",
-    emptyText: "В работе сейчас пусто.",
+    eyebrow: "Готовим",
+    description: "Заказы на кухне, сборке или передаче дальше.",
+    statuses: ["READY", "PACKED"],
+    emptyText: "В работе за период пусто.",
   },
   {
     key: "done",
-    title: "Завершенные",
-    eyebrow: "Архив",
-    description: "Доставленные, оплаченные и отмененные заказы выбранного периода.",
-    emptyText: "Завершенных заказов по фильтру нет.",
+    title: "Выполненные",
+    eyebrow: "Закрыты",
+    description: "Оплаченные, доставленные и отмененные заказы.",
+    statuses: ["DELIVERED_PAID", "CANCELLED"],
+    emptyText: "Выполненных заказов за период нет.",
   },
 ];
 
-export function OrdersWorkspace({
-  user,
-  canCreate,
-  orders,
-  packagingOptions,
-  orderCreateOptions,
-}: {
-  user: SessionUser;
-  canCreate: boolean;
-  orders: OrderListItem[];
-  packagingOptions: ProductItem[];
-  orderCreateOptions: OrderCreateOptions;
-}) {
-  const [dateMode, setDateMode] = useState<DateMode>("day");
-  const [dateValue, setDateValue] = useState(buildDayKey());
-
-  const periodOrders = useMemo(
-    () => sortOrdersNewestFirst(orders.filter((order) => matchesDateFilter(order, dateMode, dateValue))),
-    [dateMode, dateValue, orders],
-  );
-  const modules = useMemo(
-    () =>
-      ORDER_MODULES.map((module) => {
-        const moduleOrders = periodOrders.filter((order) => getOrderModuleKey(order) === module.key);
-        return {
-          ...module,
-          orders: moduleOrders,
-          summary: summarizeOrders(moduleOrders),
-        };
-      }),
-    [periodOrders],
-  );
-  const periodSummary = useMemo(() => summarizeOrders(periodOrders), [periodOrders]);
-
-  return (
-    <>
-      <section className="space-y-5">
-        <div className="rounded-[26px] border border-red-100/80 bg-white p-4 shadow-[0_18px_60px_rgba(111,18,25,0.08)] sm:p-5">
-          <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
-            <div className="min-w-0">
-              <p className="text-[11px] font-black uppercase tracking-[0.22em] text-red-700">
-                Заказы FoodLike
-              </p>
-              <h2 className="mt-2 text-3xl font-black leading-tight text-zinc-950 sm:text-4xl">
-                Три рабочих модуля
-              </h2>
-              <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-zinc-500">
-                Новые, в работе и завершенные заказы разделены сразу. В карточке видно главное, детали открываются внутри.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-2 xl:justify-end">
-              <Link
-                href="/dashboard/orders/dispatcher"
-                className="inline-flex h-11 items-center justify-center rounded-full bg-red-800 px-5 text-sm font-bold text-white shadow-[0_12px_24px_rgba(153,27,27,0.22)] transition hover:bg-red-900"
-              >
-                Экран диспетчера
-              </Link>
-              {canCreate ? (
-                <button
-                  type="button"
-                  onClick={() => document.querySelector<HTMLButtonElement>("[data-order-create-fab]")?.click()}
-                  className="inline-flex h-11 items-center justify-center rounded-full border border-red-100 bg-red-50 px-5 text-sm font-bold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white"
-                >
-                  Создать заказ
-                </button>
-              ) : null}
-            </div>
-          </div>
-
-          <div className="mt-5 grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.58fr)]">
-            <OrdersPeriodControl
-              dateMode={dateMode}
-              dateValue={dateValue}
-              onDateModeChange={setDateMode}
-              onDateValueChange={setDateValue}
-            />
-            <section className="grid gap-3 sm:grid-cols-2">
-              <OrdersMetric label="Всего" value={periodSummary.total} hint="за период" />
-              <OrdersMetric label="Оборот" value={formatOrderMoney(periodSummary.revenueCents)} hint="по всем модулям" />
-            </section>
-          </div>
-        </div>
-
-        <div className="grid gap-4 2xl:grid-cols-3">
-          {modules.map((module) => (
-            <OrdersModule
-              key={module.key}
-              module={module}
-              packagingOptions={packagingOptions}
-              user={user}
-            />
-          ))}
-        </div>
-      </section>
-
-      {canCreate ? (
-        <OrderCreateButton
-          user={user}
-          clients={orderCreateOptions.clients}
-          employees={orderCreateOptions.employees}
-          catalogItems={orderCreateOptions.catalogItems}
-        />
-      ) : null}
-    </>
-  );
+function buildOrdersHref(period: SalesPeriod, date: string) {
+  return buildSalesHref(period, date).replace("/dashboard/sales", "/dashboard/orders");
 }
 
-function getOrderModuleKey(order: OrderListItem): OrdersModuleKey {
+function sumBy<T>(items: T[], getValue: (item: T) => number) {
+  return items.reduce((sum, item) => sum + getValue(item), 0);
+}
+
+function buildPeriodOptions(period: SalesPeriod, date: string) {
+  return SALES_PERIODS.map((item) => ({
+    label: SALES_PERIOD_LABELS[item],
+    href: buildOrdersHref(item, date),
+    isActive: item === period,
+  }));
+}
+
+function buildDateParts(date: Date) {
+  const currentYear = new Date().getFullYear();
+  const selectedYear = date.getFullYear();
+  const startYear = Math.min(currentYear - 5, selectedYear - 2);
+  const endYear = Math.max(currentYear + 2, selectedYear + 2);
+
+  return {
+    day: String(date.getDate()).padStart(2, "0"),
+    month: String(date.getMonth() + 1).padStart(2, "0"),
+    year: String(selectedYear),
+    days: Array.from({ length: 31 }, (_, index) => String(index + 1).padStart(2, "0")),
+    months: Array.from({ length: 12 }, (_, index) => {
+      const value = String(index + 1).padStart(2, "0");
+      const label = new Date(2026, index, 1).toLocaleDateString("ru-RU", { month: "long" });
+      return { value, label };
+    }),
+    years: Array.from({ length: endYear - startYear + 1 }, (_, index) => String(startYear + index)),
+  };
+}
+
+function getColumnKey(order: OrderListItem): OrdersColumnKey {
   if (order.status === "SENT_TO_KITCHEN") {
     return "new";
   }
-
   if (order.status === "READY" || order.status === "PACKED") {
     return "work";
   }
-
   return "done";
 }
 
-function OrdersModule({
-  module,
+export function OrdersWorkspace({
   user,
+  period,
+  date,
+  orders,
   packagingOptions,
 }: {
-  module: (typeof ORDER_MODULES)[number] & {
-    orders: OrderListItem[];
-    summary: ReturnType<typeof summarizeOrders>;
-  };
   user: SessionUser;
+  period?: string | null;
+  date?: string | null;
+  orders: OrderListItem[];
   packagingOptions: ProductItem[];
 }) {
+  const range = buildSalesPeriodRange(period, date);
+  const selectedDate = new Date(range.selectedDate);
+  const periodOrders = sortOrdersNewestFirst(orders.filter((order) => isDateInRange(order.createdAt, range)));
+  const activeOrders = periodOrders.filter((order) => ["SENT_TO_KITCHEN", "READY", "PACKED"].includes(order.status));
+  const paidOrders = periodOrders.filter((order) => order.status === "DELIVERED_PAID");
+  const cancelledOrders = periodOrders.filter((order) => order.status === "CANCELLED");
+  const realRevenueCents = sumBy(paidOrders, (order) => order.totalCents);
+  const expectedRevenueCents = realRevenueCents + sumBy(activeOrders, (order) => order.totalCents);
+  const averageCheckCents = paidOrders.length ? Math.round(realRevenueCents / paidOrders.length) : 0;
+  const columns = ORDER_COLUMNS.map((column) => ({
+    ...column,
+    orders: periodOrders.filter((order) => getColumnKey(order) === column.key),
+  }));
+  const [activeColumnKey, setActiveColumnKey] = useState<OrdersColumnKey | null>(null);
+  const activeColumn = columns.find((column) => column.key === activeColumnKey) ?? null;
+
   return (
-    <section className="min-w-0 rounded-[26px] border border-red-100/80 bg-white p-4 shadow-[0_18px_60px_rgba(111,18,25,0.08)] sm:p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-red-700">
-            {module.eyebrow}
-          </p>
-          <h3 className="mt-1 text-2xl font-black text-zinc-950">{module.title}</h3>
-          <p className="mt-2 max-w-xl text-sm font-medium leading-6 text-zinc-500">{module.description}</p>
-        </div>
-        <div className="rounded-[18px] bg-red-50 px-4 py-3 text-right">
-          <p className="text-2xl font-black leading-none text-red-800">{module.orders.length}</p>
-          <p className="mt-1 text-[10px] font-black uppercase tracking-[0.16em] text-red-700">заказов</p>
-        </div>
-      </div>
-
-      <div className="mt-4 grid gap-2 sm:grid-cols-2">
-        <OrdersMetric label="Активные" value={module.summary.active} hint="внутри модуля" compact />
-        <OrdersMetric label="Сумма" value={formatOrderMoney(module.summary.revenueCents)} hint="по модулю" compact />
-      </div>
-
-      <div className="mt-4">
-        {module.orders.length === 0 ? (
-          <div className="rounded-[20px] border border-dashed border-red-200 bg-red-50/40 px-4 py-10 text-center">
-            <p className="text-sm font-black text-zinc-950">{module.emptyText}</p>
+    <section className="foodlike-frame space-y-4 p-4 sm:p-5">
+      <div className="relative z-40 overflow-visible rounded-[22px] border border-white/70 bg-white/76 p-4 shadow-[0_18px_60px_rgba(127,29,29,0.10)] backdrop-blur-2xl">
+        <div className="grid gap-4 xl:grid-cols-[minmax(260px,0.55fr)_1fr] xl:items-end">
+          <div>
+            <p className="foodlike-kicker">Период заказов</p>
+            <h2 className="mt-1 foodlike-title-sm">{range.label}</h2>
+            <p className="mt-1 text-sm leading-6 text-zinc-500">
+              Минималистичная доска: новые, в работе и выполненные заказы.
+            </p>
           </div>
-        ) : (
-          <PaginatedList className="space-y-3" itemLabel="заказов" pageSize={5}>
-            {module.orders.map((order) => (
-              <OrderCard
-                key={order.id}
-                order={order}
-                user={user}
-                packagingOptions={packagingOptions}
-              />
-            ))}
-          </PaginatedList>
-        )}
+          <div className="flex flex-col gap-3 lg:flex-row lg:flex-nowrap lg:items-center xl:justify-end">
+            <div className="flex flex-wrap gap-2 lg:flex-nowrap">
+              {buildPeriodOptions(range.period, range.selectedDate).map((option) => (
+                <Link
+                  key={option.label}
+                  href={option.href}
+                  className={[
+                    "inline-flex h-10 items-center rounded-full border px-4 text-sm font-semibold transition",
+                    option.isActive
+                      ? "border-red-800 bg-red-800 text-white shadow-sm shadow-red-950/15"
+                      : "border-red-100 bg-white/80 text-red-800 hover:border-red-800 hover:bg-red-50",
+                  ].join(" ")}
+                >
+                  {option.label}
+                </Link>
+              ))}
+            </div>
+            <OrdersPeriodPicker period={range.period} dateParts={buildDateParts(selectedDate)} />
+          </div>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link href={buildOrdersHref(range.period, range.previousDate)} className="inline-flex h-9 items-center rounded-full border border-red-100 bg-white/80 px-3 text-xs font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white">
+            Предыдущий период
+          </Link>
+          <Link href={buildOrdersHref(range.period, range.nextDate)} className="inline-flex h-9 items-center rounded-full border border-red-100 bg-white/80 px-3 text-xs font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white">
+            Следующий период
+          </Link>
+        </div>
       </div>
+
+      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <OrdersMetric label="Ориентир выручки" value={formatOrderMoney(expectedRevenueCents)} hint="оплаченные + активные заказы" />
+        <OrdersMetric label="Реальная выручка" value={formatOrderMoney(realRevenueCents)} hint={`${paidOrders.length} оплаченных заказов`} />
+        <OrdersMetric label="Средний чек" value={formatOrderMoney(averageCheckCents)} hint="по фактически оплаченным" />
+        <OrdersMetric label="Отмены" value={cancelledOrders.length} hint={`${periodOrders.length} заказов всего`} />
+      </section>
+
+      <section className="grid items-stretch gap-4 xl:grid-cols-3">
+        {columns.map((column) => (
+          <OrdersColumn
+            key={column.key}
+            column={column}
+            user={user}
+            packagingOptions={packagingOptions}
+            onOpen={() => setActiveColumnKey(column.key)}
+          />
+        ))}
+      </section>
+      {activeColumn ? (
+        <OrdersColumnDialog
+          column={activeColumn}
+          user={user}
+          packagingOptions={packagingOptions}
+          onClose={() => setActiveColumnKey(null)}
+        />
+      ) : null}
     </section>
   );
 }
 
-function OrdersMetric({
-  label,
-  value,
-  hint,
-  compact = false,
-}: {
-  label: string;
-  value: string | number;
-  hint: string;
-  compact?: boolean;
-}) {
+function OrdersMetric({ label, value, hint }: { label: string; value: string | number; hint: string }) {
   return (
-    <article className={`rounded-[20px] border border-red-100 bg-[linear-gradient(135deg,#fff_0%,#fff7f7_100%)] ${compact ? "p-3" : "p-4"}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-red-700">{label}</p>
-      <p className={`${compact ? "mt-1 text-xl" : "mt-2 text-2xl"} font-black leading-none text-zinc-950`}>{value}</p>
-      <p className="mt-2 text-xs font-semibold text-zinc-500">{hint}</p>
+    <article className="rounded-[18px] border border-red-950/10 bg-white/78 p-4 text-zinc-950 shadow-sm shadow-red-950/5">
+      <p className="foodlike-kicker">{label}</p>
+      <p className="mt-2 text-2xl font-semibold leading-none">{value}</p>
+      <p className="mt-2 text-xs leading-5 text-zinc-500">{hint}</p>
     </article>
   );
 }
 
-function OrdersPeriodControl({
-  dateMode,
-  dateValue,
-  onDateModeChange,
-  onDateValueChange,
+function OrdersColumn({
+  column,
+  user,
+  packagingOptions,
+  onOpen,
 }: {
-  dateMode: DateMode;
-  dateValue: string;
-  onDateModeChange: (mode: DateMode) => void;
-  onDateValueChange: (value: string) => void;
+  column: (typeof ORDER_COLUMNS)[number] & { orders: OrderListItem[] };
+  user: SessionUser;
+  packagingOptions: ProductItem[];
+  onOpen: () => void;
 }) {
-  return (
-    <div className="rounded-[20px] border border-red-100 bg-red-50/35 p-4">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-red-700">
-            Период
-          </p>
-          <p className="mt-1 text-lg font-black text-zinc-950">Единый фильтр для трех модулей</p>
-        </div>
+  const columnRevenueCents = sumBy(column.orders, (order) => order.totalCents);
 
-        <div className="flex flex-wrap gap-2">
-          <DateModeButton
-            isActive={dateMode === "day"}
-            label="День"
-            onClick={() => {
-              onDateModeChange("day");
-              onDateValueChange(buildDayKey());
-            }}
-          />
-          <DateModeButton
-            isActive={dateMode === "month"}
-            label="Месяц"
-            onClick={() => {
-              onDateModeChange("month");
-              onDateValueChange(buildMonthKey());
-            }}
-          />
-          <input
-            type={dateMode}
-            value={dateValue}
-            onChange={(event) => onDateValueChange(event.target.value)}
-            className="h-11 min-w-[10.5rem] rounded-full border border-red-100 bg-white px-4 text-sm font-bold text-zinc-950 outline-none transition focus:border-red-400 focus:ring-2 focus:ring-red-800/10"
-          />
+  return (
+    <section className="flex min-w-0 flex-col rounded-[20px] border border-red-950/10 bg-white/80 p-4 shadow-sm shadow-red-950/5 backdrop-blur-2xl">
+      <div className="grid min-h-24 grid-cols-[1fr_auto] items-start gap-3">
+        <div className="min-w-0">
+          <p className="foodlike-kicker">{column.eyebrow}</p>
+          <h3 className="mt-1 text-xl font-semibold leading-tight text-zinc-950">{column.title}</h3>
+          <p className="mt-1 line-clamp-2 text-xs leading-5 text-zinc-500">{column.description}</p>
+        </div>
+        <div className="flex size-16 shrink-0 flex-col items-center justify-center rounded-[18px] bg-red-50 text-red-800">
+          <p className="text-2xl font-semibold leading-none">{column.orders.length}</p>
+          <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em]">шт</p>
         </div>
       </div>
-    </div>
+      <div className="mt-4 rounded-[18px] border border-red-100 bg-[linear-gradient(180deg,#fff,rgba(255,247,247,0.82))] p-3">
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-red-800/70">Сумма колонки</p>
+            <p className="mt-1 text-xl font-semibold leading-none text-zinc-950">{formatOrderMoney(columnRevenueCents)}</p>
+          </div>
+          <button
+            type="button"
+            onClick={onOpen}
+            className="inline-flex h-9 shrink-0 items-center justify-center rounded-full bg-red-800 px-4 text-sm font-semibold text-white shadow-sm shadow-red-950/10 transition hover:bg-red-900"
+          >
+            Открыть
+          </button>
+        </div>
+        {!column.orders.length ? (
+          <p className="mt-3 border-t border-red-950/10 pt-3 text-xs font-medium leading-5 text-zinc-500">
+            {column.emptyText}
+          </p>
+        ) : null}
+      </div>
+      {column.orders.length ? (
+        <div className="mt-4 flex-1">
+          <PaginatedList className="space-y-3" itemLabel="заказов" pageSize={4}>
+            {column.orders.map((order) => (
+              <OrderCard key={order.id} order={order} user={user} packagingOptions={packagingOptions} compact />
+            ))}
+          </PaginatedList>
+        </div>
+      ) : null}
+    </section>
   );
 }
 
-function DateModeButton({ isActive, label, onClick }: {
-  isActive: boolean;
-  label: string;
-  onClick: () => void;
+function OrdersColumnDialog({
+  column,
+  user,
+  packagingOptions,
+  onClose,
+}: {
+  column: (typeof ORDER_COLUMNS)[number] & { orders: OrderListItem[] };
+  user: SessionUser;
+  packagingOptions: ProductItem[];
+  onClose: () => void;
 }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`h-11 rounded-full px-4 text-sm font-bold transition ${
-        isActive
-          ? "bg-zinc-950 text-white"
-          : "border border-red-100 bg-white text-red-800 hover:border-red-800"
-      }`}
-    >
-      {label}
-    </button>
+  const columnRevenueCents = sumBy(column.orders, (order) => order.totalCents);
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
+  if (typeof document === "undefined") {
+    return null;
+  }
+
+  return createPortal(
+    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-red-950/35 p-3 backdrop-blur-sm sm:p-5" role="dialog" aria-modal="true">
+      <button type="button" className="absolute inset-0 cursor-default" aria-label="Закрыть заказы" onClick={onClose} />
+      <section className="relative flex h-[calc(100dvh-24px)] w-[calc(100vw-24px)] max-w-[1500px] flex-col overflow-hidden rounded-[28px] border border-red-950/10 bg-[linear-gradient(180deg,#fff,rgba(255,248,248,0.98))] shadow-[0_30px_90px_rgba(69,10,10,0.32)] sm:h-[calc(100dvh-40px)] sm:w-[calc(100vw-40px)]">
+        <div className="shrink-0 border-b border-red-950/10 p-5 sm:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="foodlike-kicker">{column.eyebrow}</p>
+              <h2 className="mt-1 text-2xl font-semibold text-zinc-950">{column.title}</h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-zinc-500">{column.description}</p>
+            </div>
+            <button type="button" onClick={onClose} className="inline-flex h-10 items-center rounded-full border border-red-100 bg-white/85 px-4 text-sm font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white">
+              Закрыть
+            </button>
+          </div>
+        </div>
+        <div className="flex-1 overflow-auto p-5 sm:p-6">
+          <div className="mx-auto max-w-[1320px]">
+            <div className="mb-4 grid gap-3 md:grid-cols-3">
+              <OrdersMetric label="Заказов" value={column.orders.length} hint="в выбранной колонке" />
+              <OrdersMetric label="Сумма" value={formatOrderMoney(columnRevenueCents)} hint="по всем заказам колонки" />
+              <OrdersMetric label="Средний чек" value={formatOrderMoney(column.orders.length ? columnRevenueCents / column.orders.length : 0)} hint="среднее по колонке" />
+            </div>
+            {column.orders.length ? (
+              <div className="grid gap-3 xl:grid-cols-2">
+                {column.orders.map((order) => (
+                  <OrderCard key={order.id} order={order} user={user} packagingOptions={packagingOptions} />
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-[22px] border border-dashed border-red-200 bg-red-50/40 px-4 py-14 text-center">
+                <p className="text-sm font-semibold text-zinc-950">{column.emptyText}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+    </div>,
+    document.body,
   );
 }

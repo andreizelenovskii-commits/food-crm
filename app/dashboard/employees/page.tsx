@@ -4,6 +4,7 @@ import { PaginatedList } from "@/components/ui/paginated-list";
 import { hasPermission } from "@/modules/auth/authz";
 import { EmployeeDeleteButton } from "@/modules/employees/components/employee-delete-button";
 import { EmployeeCreateDialogButton } from "@/modules/employees/components/employee-create-dialog";
+import { EmployeeTeamSchedule } from "@/modules/employees/components/employee-team-schedule";
 import { fetchEmployees } from "@/modules/employees/employees.api";
 import { requirePermission } from "@/modules/auth/auth.session";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
@@ -98,37 +99,47 @@ export default async function EmployeesPage() {
         </div>
 
         <div className="relative mt-4 grid gap-5">
-          <section className="rounded-[22px] border border-white/70 bg-white/76 p-4 shadow-[0_18px_60px_rgba(127,29,29,0.10)] backdrop-blur-2xl sm:p-5">
-            <h2 className="text-lg font-semibold tracking-[-0.02em] text-zinc-950">Список сотрудников</h2>
-            <div className="mt-4 space-y-4">
+          <EmployeeTeamSchedule employees={employees} />
+
+          <section className="rounded-[22px] border border-white/70 bg-white/76 p-4 shadow-[0_18px_60px_rgba(127,29,29,0.10)] backdrop-blur-2xl">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="foodlike-kicker">Команда</p>
+                <h2 className="mt-1 text-lg font-semibold tracking-[-0.02em] text-zinc-950">Список сотрудников</h2>
+              </div>
+              <span className="rounded-full bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-900">
+                {employees.length} чел.
+              </span>
+            </div>
+            <div className="mt-3">
               {employees.length === 0 ? (
                 <p className="rounded-[18px] border border-dashed border-red-950/14 bg-white/70 p-5 text-sm leading-6 text-zinc-500">
                   Пока нет ни одного сотрудника.
                 </p>
               ) : (
-                <PaginatedList itemLabel="сотрудников">
+                <PaginatedList itemLabel="сотрудников" pageSize={12} className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                   {employees.map((employee) => (
                     <div
                       key={employee.id}
-                      className="group relative rounded-[18px] border border-red-950/10 bg-white/84 p-4 shadow-sm shadow-red-950/5 transition hover:-translate-y-0.5 hover:border-red-200 hover:bg-white"
+                      className="group relative rounded-[18px] border border-red-950/10 bg-white/84 p-3 shadow-sm shadow-red-950/5 transition hover:-translate-y-0.5 hover:border-red-200 hover:bg-white"
                     >
                       <Link
                         href={`/dashboard/employees/${employee.id}`}
                         aria-label={`Открыть профиль сотрудника ${employee.name}`}
                         className="absolute inset-0 rounded-[18px]"
                       />
-                      <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="text-base font-semibold tracking-[-0.01em] text-zinc-950 transition group-hover:text-red-800">
+                          <p className="truncate text-base font-semibold tracking-[-0.01em] text-zinc-950 transition group-hover:text-red-800">
                             {employee.name}
                           </p>
-                          <p className="mt-0.5 text-sm text-zinc-500">
+                          <p className="mt-0.5 text-xs leading-5 text-zinc-500">
                             Дата рождения: {formatDate(employee.birthDate)}
                             {getAgeLabel(employee.birthDate)
                               ? ` · ${getAgeLabel(employee.birthDate)}`
                               : ""}
                           </p>
-                          <p className="text-sm text-zinc-500">
+                          <p className="text-xs leading-5 text-zinc-500">
                             Телефон: {employee.phone || "Не указан"}
                           </p>
                         </div>

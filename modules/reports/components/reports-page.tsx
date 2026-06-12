@@ -7,6 +7,8 @@ import {
   type ReportsInput,
   type ReportMetric,
 } from "@/modules/reports/reports.page-model";
+import { ReportsDialogGrid } from "@/modules/reports/components/reports-dialog-grid";
+import { ReportsPeriodPicker } from "@/modules/reports/components/reports-period-picker";
 
 type ReportsPageProps = ReportsInput & {
   user: SessionUser;
@@ -18,23 +20,31 @@ function MetricCard({ label, value, hint }: ReportMetric) {
 
 export function ReportsPage({
   user,
+  period,
+  date,
   month,
   orders,
   catalogItems,
   products,
+  techCards,
   incomingActs,
   writeoffActs,
   employees,
+  clients,
   loyalty,
 }: ReportsPageProps) {
   const viewModel = buildReportsViewModel({
     month,
+    period,
+    date,
     orders,
     catalogItems,
     products,
+    techCards,
     incomingActs,
     writeoffActs,
     employees,
+    clients,
     loyalty,
   });
 
@@ -45,33 +55,46 @@ export function ReportsPage({
       action={<SessionUserActions user={user} />}
     >
       <div className="foodlike-frame space-y-4 p-4 sm:p-5">
-        <GlassPanel className="p-4 sm:p-5">
-          <div className="grid gap-4 xl:grid-cols-[minmax(260px,0.55fr)_1fr] xl:items-end">
+        <GlassPanel className="relative z-40 overflow-visible p-4 sm:p-5">
+          <div className="relative z-40 grid gap-4 xl:grid-cols-[minmax(260px,0.55fr)_1fr] xl:items-end">
             <div>
               <p className="foodlike-kicker">
                 Отчетный центр
               </p>
               <h2 className="mt-1 foodlike-title-sm">
-                Месячные отчеты FoodLike
+                Управленческие отчеты FoodLike
               </h2>
+              <p className="mt-1 text-sm leading-6 text-zinc-500">
+                {viewModel.selectedPeriodLabel}: продажи, закупки, себестоимость, склад, персонал, меню и клиенты.
+              </p>
             </div>
-            <form action="/dashboard/reports" className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-end">
-              <label className="block">
-                <span className="text-xs font-medium text-zinc-500">Месяц отчета</span>
-                <input
-                  type="month"
-                  name="month"
-                  defaultValue={viewModel.selectedMonth}
-                  className="foodlike-field mt-1"
-                />
-              </label>
-              <button
-                type="submit"
-                className="foodlike-button-primary"
-              >
-                Сформировать
-              </button>
-            </form>
+            <div className="flex flex-col gap-3 lg:flex-row lg:flex-nowrap lg:items-center xl:justify-end">
+              <div className="flex flex-wrap gap-2 lg:flex-nowrap">
+                {viewModel.periodOptions.map((option) => (
+                  <a
+                    key={option.label}
+                    href={option.href}
+                    className={[
+                      "inline-flex h-10 items-center rounded-full border px-4 text-sm font-semibold transition",
+                      option.isActive
+                        ? "border-red-800 bg-red-800 text-white shadow-sm shadow-red-950/15"
+                        : "border-red-100 bg-white/80 text-red-800 hover:border-red-800 hover:bg-red-50",
+                    ].join(" ")}
+                  >
+                    {option.label}
+                  </a>
+                ))}
+              </div>
+              <ReportsPeriodPicker period={viewModel.range.period} dateParts={viewModel.dateParts} />
+            </div>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <a href={viewModel.previousHref} className="inline-flex h-9 items-center rounded-full border border-red-100 bg-white/80 px-3 text-xs font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white">
+              Предыдущий период
+            </a>
+            <a href={viewModel.nextHref} className="inline-flex h-9 items-center rounded-full border border-red-100 bg-white/80 px-3 text-xs font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white">
+              Следующий период
+            </a>
           </div>
         </GlassPanel>
 
@@ -81,56 +104,22 @@ export function ReportsPage({
           ))}
         </section>
 
-        <section className="grid gap-4 xl:grid-cols-2">
-          {viewModel.sections.map((section) => (
-            <GlassPanel
-              key={section.title}
-              className="p-4"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-base font-semibold text-zinc-950">
-                    {section.title}
-                  </h2>
-                  <p className="mt-1 text-sm leading-5 text-zinc-500">
-                    {section.description}
-                  </p>
-                </div>
-              </div>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                {section.metrics.map((metric) => (
-                  <MetricCard key={metric.label} {...metric} />
-                ))}
-              </div>
-            </GlassPanel>
-          ))}
-        </section>
-
         <GlassPanel className="p-4">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="foodlike-kicker">
-                Популярные шаблоны
+                Отчеты
               </p>
               <h2 className="mt-1 foodlike-title-sm">
-                Что стоит добавить в следующих версиях
+                Открыть детальный расчет
               </h2>
+              <p className="mt-1 text-sm leading-6 text-zinc-500">
+                Каждый отчет считается по выбранному периоду и открывается в отдельном окне.
+              </p>
             </div>
           </div>
-          <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            {viewModel.popularReports.map((report) => (
-              <article
-                key={report.title}
-                className="foodlike-card p-3.5"
-              >
-                <h3 className="text-sm font-semibold text-zinc-950">
-                  {report.title}
-                </h3>
-                <p className="mt-1.5 text-xs leading-5 text-zinc-500">
-                  {report.description}
-                </p>
-              </article>
-            ))}
+          <div className="mt-4">
+            <ReportsDialogGrid reports={viewModel.reports} />
           </div>
         </GlassPanel>
       </div>

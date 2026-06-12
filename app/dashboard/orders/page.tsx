@@ -1,33 +1,44 @@
-import { hasPermission } from "@/modules/auth/authz";
 import { requirePermission } from "@/modules/auth/auth.session";
 import { OrdersPage } from "@/modules/orders/components/orders-page";
-import { type OrderCreateOptions } from "@/modules/orders/orders.page-model";
-import { fetchOrderCreateOptions, fetchOrders, fetchPackagingOptions } from "@/modules/orders/orders.api";
-import { canCreateOrders } from "@/modules/orders/orders.workflow";
+import { fetchOrders, fetchPackagingOptions } from "@/modules/orders/orders.api";
 
-const EMPTY_ORDER_CREATE_OPTIONS: OrderCreateOptions = {
-  clients: [],
-  employees: [],
-  catalogItems: [],
-};
+function padDatePart(value: string | undefined, fallback: string) {
+  const normalized = Number(value);
+  return Number.isFinite(normalized) && normalized > 0
+    ? String(normalized).padStart(2, "0")
+    : fallback;
+}
 
-export default async function OrdersRoutePage() {
+function resolveDateParam(searchParams?: { date?: string; day?: string; month?: string; year?: string }) {
+  if (searchParams?.year || searchParams?.month || searchParams?.day) {
+    const now = new Date();
+    const year = String(Number(searchParams.year) || now.getFullYear());
+    const month = padDatePart(searchParams.month, "01");
+    const day = padDatePart(searchParams.day, "01");
+
+    return `${year}-${month}-${day}`;
+  }
+
+  return searchParams?.date;
+}
+
+export default async function OrdersRoutePage(props: {
+  searchParams?: Promise<{ period?: string; date?: string; day?: string; month?: string; year?: string }>;
+}) {
   const user = await requirePermission("view_orders");
-  const canManageOrders = hasPermission(user, "manage_orders");
-  const canCreate = canCreateOrders(user.role) && canManageOrders;
-  const [orders, packagingOptions, orderCreateOptions] = await Promise.all([
+  const searchParams = await props.searchParams;
+  const [orders, packagingOptions] = await Promise.all([
     fetchOrders(),
     fetchPackagingOptions(),
-    canCreate ? fetchOrderCreateOptions() : Promise.resolve(EMPTY_ORDER_CREATE_OPTIONS),
   ]);
 
   return (
     <OrdersPage
       user={user}
-      canCreate={canCreate}
+      period={searchParams?.period}
+      date={resolveDateParam(searchParams)}
       orders={orders}
       packagingOptions={packagingOptions}
-      orderCreateOptions={orderCreateOptions}
     />
   );
 }

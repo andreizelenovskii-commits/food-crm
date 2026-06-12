@@ -28,6 +28,7 @@ export function CatalogWorkspace({
   canManageCatalog,
 }: CatalogWorkspaceProps) {
   const [activeDialog, setActiveDialog] = useState<CatalogDialog>(null);
+  const [dialogCategory, setDialogCategory] = useState(selectedCategory);
   const clientItems = catalogItems.filter((item) => item.priceListType === "CLIENT");
   const internalItems = catalogItems.filter((item) => item.priceListType === "INTERNAL");
   const linkedCount = catalogItems.filter((item) => item.technologicalCardId > 0).length;
@@ -36,6 +37,10 @@ export function CatalogWorkspace({
     category,
     count: catalogItems.filter((item) => item.category === category).length,
   })).filter((item) => item.count > 0);
+  const openPrices = (category = selectedCategory) => {
+    setDialogCategory(category);
+    setActiveDialog("prices");
+  };
 
   return (
     <>
@@ -56,7 +61,7 @@ export function CatalogWorkspace({
             <div className="mt-5 flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                onClick={() => setActiveDialog("prices")}
+                onClick={() => openPrices()}
                 className="foodlike-button-primary"
               >
                 Открыть прайсы
@@ -95,7 +100,7 @@ export function CatalogWorkspace({
                 title="Прайсы и категории"
                 hint="Один список с переключением типа прайса, поиском и фильтрами."
                 action="Открыть"
-                onClick={() => setActiveDialog("prices")}
+                onClick={() => openPrices()}
               />
               <ActionCard
                 title="Как устроен каталог"
@@ -115,8 +120,13 @@ export function CatalogWorkspace({
             </div>
             <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {categoryCounts.length ? (
-                categoryCounts.slice(0, 9).map((item) => (
-                  <CategoryStat key={item.category} label={item.category} count={item.count} />
+                categoryCounts.map((item) => (
+                  <CategoryStat
+                    key={item.category}
+                    label={item.category}
+                    count={item.count}
+                    onClick={() => openPrices(item.category)}
+                  />
                 ))
               ) : (
                 <div className="foodlike-empty p-4 sm:col-span-2 lg:col-span-3">
@@ -133,7 +143,7 @@ export function CatalogWorkspace({
           title="Прайсы каталога"
           items={catalogItems}
           categories={categoryCounts}
-          initialCategory={selectedCategory}
+          initialCategory={dialogCategory}
           canManageCatalog={canManageCatalog}
           onClose={() => setActiveDialog(null)}
         />
@@ -215,11 +225,34 @@ function ActionCard({
   );
 }
 
-function CategoryStat({ label, count }: { label: string; count: number }) {
+function CategoryStat({
+  label,
+  count,
+  onClick,
+}: {
+  label: string;
+  count: number;
+  onClick: () => void;
+}) {
   return (
-    <div className="rounded-[16px] border border-red-950/10 bg-white/74 p-3 shadow-sm shadow-red-950/5">
-      <p className="truncate text-sm font-semibold text-zinc-950">{label}</p>
-      <p className="mt-1 text-xs font-semibold text-red-800">{count} поз.</p>
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      className="group rounded-[16px] border border-red-950/10 bg-white/78 p-3 text-left shadow-sm shadow-red-950/5 transition hover:-translate-y-0.5 hover:border-red-900/20 hover:bg-red-800 hover:text-white hover:shadow-md hover:shadow-red-950/15"
+    >
+      <span className="flex items-start justify-between gap-3">
+        <span className="min-w-0">
+          <span className="block truncate text-sm font-semibold text-zinc-950 transition group-hover:text-white">
+            {label}
+          </span>
+          <span className="mt-1 block text-xs font-semibold text-red-800 transition group-hover:text-red-50/85">
+            {count} поз.
+          </span>
+        </span>
+        <span className="shrink-0 rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-800 transition group-hover:bg-white/16 group-hover:text-white">
+          Открыть
+        </span>
+      </span>
+    </button>
   );
 }
