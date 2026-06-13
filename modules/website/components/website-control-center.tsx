@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { ControlRow, EditableCard, Metric, Switch } from "@/modules/website/components/website-control-parts";
 import { WebsiteDialog, type WebsiteEditor } from "@/modules/website/components/website-dialog";
 import {
-  MAINTENANCE_MESSAGE_STORAGE_KEY,
-  MAINTENANCE_MODE_STORAGE_KEY,
+  persistMaintenanceModeSnapshot,
+  readMaintenanceModeSnapshot,
 } from "@/shared/config/maintenance-mode";
 
 export type GiveawayStatus = "Активен" | "Запланирован" | "Черновик";
@@ -77,13 +77,10 @@ export function WebsiteControlCenter({
   const [maintenanceEnabled, setMaintenanceEnabled] = useState(
     () =>
       typeof window !== "undefined" &&
-      window.localStorage.getItem(MAINTENANCE_MODE_STORAGE_KEY) === "enabled",
+      readMaintenanceModeSnapshot().enabled,
   );
   const [maintenanceMessage, setMaintenanceMessage] = useState(
-    () =>
-      (typeof window !== "undefined" &&
-        window.localStorage.getItem(MAINTENANCE_MESSAGE_STORAGE_KEY)) ||
-      DEFAULT_MESSAGE,
+    () => (typeof window !== "undefined" && readMaintenanceModeSnapshot().message) || DEFAULT_MESSAGE,
   );
 
   const activeGiveaways = giveaways.filter((item) => item.status === "Активен").length;
@@ -101,8 +98,10 @@ export function WebsiteControlCenter({
   }, [maintenanceEnabled, siteEnabled]);
 
   useEffect(() => {
-    window.localStorage.setItem(MAINTENANCE_MODE_STORAGE_KEY, maintenanceEnabled ? "enabled" : "disabled");
-    window.localStorage.setItem(MAINTENANCE_MESSAGE_STORAGE_KEY, maintenanceMessage);
+    persistMaintenanceModeSnapshot({
+      enabled: maintenanceEnabled,
+      message: maintenanceMessage,
+    });
   }, [maintenanceEnabled, maintenanceMessage]);
 
   function openGiveawayEditor(id: number | null) {

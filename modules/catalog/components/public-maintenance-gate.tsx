@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
-  MAINTENANCE_MESSAGE_STORAGE_KEY,
-  MAINTENANCE_MODE_STORAGE_KEY,
+  readMaintenanceModeSnapshot,
 } from "@/shared/config/maintenance-mode";
 
 export function PublicMaintenanceGate({
@@ -20,11 +19,10 @@ export function PublicMaintenanceGate({
 
   useEffect(() => {
     function readMode() {
-      setIsEnabled(window.localStorage.getItem(MAINTENANCE_MODE_STORAGE_KEY) === "enabled");
-      setMessage(
-        window.localStorage.getItem(MAINTENANCE_MESSAGE_STORAGE_KEY) ||
-          "Проходят технические работы. Приносим свои извинения. Заказ вы можете сделать по номеру телефона.",
-      );
+      const snapshot = readMaintenanceModeSnapshot();
+
+      setIsEnabled(snapshot.enabled);
+      setMessage(snapshot.message || "Проходят технические работы. Приносим свои извинения. Заказ вы можете сделать по номеру телефона.");
     }
 
     readMode();
