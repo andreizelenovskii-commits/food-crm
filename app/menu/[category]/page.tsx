@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { fetchCurrentClient } from "@/modules/clients/clients.api";
 import { fetchPublicCatalogItems } from "@/modules/catalog/catalog.api";
 import { PUBLIC_MENU_CATEGORY_LINKS } from "@/modules/catalog/catalog.types";
+import { PublicMaintenanceGate } from "@/modules/catalog/components/public-maintenance-gate";
 import { PublicMenuSection } from "@/modules/catalog/components/public-menu-section";
 import { PublicSiteHeader } from "@/modules/catalog/components/public-site-header";
 import {
@@ -9,6 +10,7 @@ import {
   getMenuCategorySubcategories,
   matchesMenuCategory,
 } from "@/modules/catalog/components/public-menu-category-utils";
+import { PUBLIC_SITE_CONTACTS } from "@/shared/config/public-site";
 
 export default async function PublicMenuCategoryPage(props: {
   params: Promise<{ category: string }>;
@@ -40,6 +42,10 @@ export default async function PublicMenuCategoryPage(props: {
     <>
       <PublicSiteHeader categories={headerCategories} currentClient={currentClient} searchableItems={menuItems} />
       <main className="min-h-screen bg-white pt-28 text-[#211316]">
+        <PublicMaintenanceGate
+          phoneHref={PUBLIC_SITE_CONTACTS.phoneHref}
+          phoneLabel={PUBLIC_SITE_CONTACTS.phoneLabel}
+        />
         <PublicMenuSection
           categoryLinks={subcategories}
           categorySections={categorySections}

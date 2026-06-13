@@ -10,10 +10,12 @@ import {
   PublicHomeUpdatePanel,
 } from "@/modules/catalog/components/public-home-sections";
 import { PublicMenuSection } from "@/modules/catalog/components/public-menu-section";
+import { PublicMaintenanceGate } from "@/modules/catalog/components/public-maintenance-gate";
 import { PublicSiteHeader } from "@/modules/catalog/components/public-site-header";
 import { fetchPublicCatalogItems } from "@/modules/catalog/catalog.api";
 import { PUBLIC_MENU_CATEGORY_LINKS, type CatalogItem } from "@/modules/catalog/catalog.types";
 import { matchesMenuCategory } from "@/modules/catalog/components/public-menu-category-utils";
+import { PUBLIC_SITE_CONTACTS } from "@/shared/config/public-site";
 
 export const metadata: Metadata = {
   title: "FoodLike | Доставка еды",
@@ -53,6 +55,10 @@ export default async function Home() {
         searchableItems={menuItems}
       />
       <main className="min-h-screen bg-[#fff9f4] text-[#211316]">
+        <PublicMaintenanceGate
+          phoneHref={PUBLIC_SITE_CONTACTS.phoneHref}
+          phoneLabel={PUBLIC_SITE_CONTACTS.phoneLabel}
+        />
         <PublicHomeHero heroItems={heroItems} menuItemsCount={menuItems.length} />
         <PublicAccountSection currentClient={currentClient} />
         <PublicHomeFeatureStrip />

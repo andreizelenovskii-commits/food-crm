@@ -36,8 +36,7 @@ const INVENTORY_SUB_ITEMS: Array<{
 ];
 
 const SETTINGS_SUB_ITEMS = [
-  { href: "/dashboard/settings/rights", label: "Права" },
-  { href: "/dashboard/settings/roles", label: "Роли" },
+  { href: "/dashboard/settings/rights", label: "Роли и права" },
   { href: "/dashboard/settings/kitchen-zones", label: "Кухонные зоны" },
 ] as const;
 
