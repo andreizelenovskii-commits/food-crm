@@ -118,7 +118,7 @@ export function EmployeeProfileClient({
           </div>
         </section>
 
-        <div className="grid gap-4 xl:grid-cols-2 xl:items-stretch">
+        <div className="grid gap-4 xl:grid-cols-3 xl:items-stretch">
           <section className="flex h-full flex-col rounded-[20px] border border-white/70 bg-white/66 p-4 shadow-sm shadow-red-950/5 backdrop-blur-xl">
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">Рабочий месяц</p>
             <h2 className="mt-1 text-base font-semibold text-zinc-950">График и нагрузка</h2>
@@ -143,6 +143,25 @@ export function EmployeeProfileClient({
             </div>
             <button type="button" onClick={() => setActivePanel("schedule")} className="mt-3 inline-flex h-10 w-full items-center justify-center rounded-full bg-red-800 px-5 text-sm font-semibold text-white shadow-sm shadow-red-950/15 transition hover:bg-red-900">
               Открыть график
+            </button>
+          </section>
+
+          <section className="flex h-full flex-col rounded-[20px] border border-white/70 bg-white/66 p-4 shadow-sm shadow-red-950/5 backdrop-blur-xl">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">Авторизация</p>
+            <h2 className="mt-1 text-base font-semibold text-zinc-950">Доступ в систему</h2>
+            <p className="mt-2 text-xs leading-5 text-zinc-600">
+              Создай или обнови сотруднику телефон и пароль для входа в CRM. Роль берётся из карточки сотрудника.
+            </p>
+            <div className="mt-4 space-y-2 rounded-[14px] border border-dashed border-red-200/80 bg-white/55 p-3">
+              <p className="text-xs font-semibold text-zinc-700">
+                {employee.phone ? `Логин: ${employee.phone}` : "Телефон для входа ещё не задан"}
+              </p>
+              <p className="text-xs leading-5 text-zinc-500">
+                {employee.passwordUpdatedAt ? "Пароль уже выдавали. Можно сбросить и выдать новый." : "Пароль ещё не сохраняли."}
+              </p>
+            </div>
+            <button type="button" onClick={() => setActivePanel("access")} className="mt-auto inline-flex h-10 w-full items-center justify-center rounded-full border border-red-100 bg-white/90 px-5 text-sm font-semibold text-red-800 shadow-sm shadow-red-950/5 transition hover:border-red-800 hover:bg-red-800 hover:text-white">
+              Открыть доступ
             </button>
           </section>
 
