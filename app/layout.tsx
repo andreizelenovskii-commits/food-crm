@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { BodyScrollLockObserver } from "@/components/ui/body-scroll-lock-observer";
+import { BUILD_VERSION } from "@/shared/build-version";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -24,6 +25,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru" className="h-full antialiased">
+      <head>
+        <meta name="foodlike-build" content={BUILD_VERSION} />
+      </head>
       <body className="min-h-full flex flex-col">
         <BodyScrollLockObserver />
         {children}

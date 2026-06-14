@@ -43,6 +43,7 @@ jobs:
         env:
           BACKEND_API_URL: https://api.crmandromeda.ru
           NEXT_PUBLIC_BACKEND_API_URL: https://api.crmandromeda.ru
+          NEXT_PUBLIC_BUILD_VERSION: ${{ github.sha }}
           SESSION_SECRET: build-time-placeholder
 
       - name: Configure SSH
@@ -79,7 +80,7 @@ jobs:
           ln -sfn "$APP_DIR/shared/.env" "$RELEASE_DIR/.env"
           cd "$RELEASE_DIR"
           npm ci
-          npm run build
+          NEXT_PUBLIC_BUILD_VERSION="$GITHUB_SHA" npm run build
           ln -sfn "$RELEASE_DIR" "$APP_DIR/current"
           cd "$APP_DIR/current"
           pm2 delete food-crm-frontend || true
