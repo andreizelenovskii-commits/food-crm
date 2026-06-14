@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BuildVersionRefresh } from "@/components/ui/build-version-refresh";
 import { BodyScrollLockObserver } from "@/components/ui/body-scroll-lock-observer";
 import { BUILD_VERSION } from "@/shared/build-version";
 import "./globals.css";
@@ -29,6 +30,7 @@ export default function RootLayout({
         <meta name="foodlike-build" content={BUILD_VERSION} />
       </head>
       <body className="min-h-full flex flex-col">
+        <BuildVersionRefresh buildVersion={BUILD_VERSION} />
         <BodyScrollLockObserver />
         {children}
       </body>
