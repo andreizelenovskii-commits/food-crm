@@ -63,5 +63,6 @@ export type SessionUser = {
   id: number;
   phone: string;
   role: UserRole;
+  permissions?: string[];
   displayName?: string | null;
 };

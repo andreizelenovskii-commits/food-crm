@@ -60,7 +60,7 @@ async function parseResponse<T>(response: Response): Promise<T> {
 export async function browserBackendJson<T>(
   path: string,
   init: {
-    method?: "GET" | "POST" | "PATCH" | "DELETE";
+    method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
     body?: unknown;
   } = {},
 ) {

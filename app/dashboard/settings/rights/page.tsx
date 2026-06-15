@@ -1,10 +1,13 @@
 import { PageShell } from "@/components/ui/page-shell";
 import { requirePermission } from "@/modules/auth/auth.session";
+import { hasPermission } from "@/modules/auth/authz";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
+import { fetchAccessModel } from "@/modules/settings/access-model.api";
 import { RolesPermissionsEditor } from "@/modules/settings/components/roles-permissions-editor";
 
 export default async function RightsSettingsPage() {
   const user = await requirePermission("view_settings");
+  const accessModel = await fetchAccessModel();
 
   return (
     <PageShell
@@ -13,7 +16,10 @@ export default async function RightsSettingsPage() {
       backHref="/dashboard/settings"
       action={<SessionUserActions user={user} />}
     >
-      <RolesPermissionsEditor />
+      <RolesPermissionsEditor
+        accessModel={accessModel}
+        canManageSettings={hasPermission(user, "manage_settings")}
+      />
     </PageShell>
   );
 }

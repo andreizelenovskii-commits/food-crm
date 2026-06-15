@@ -1,18 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-
-type RoleKey =
-  | "administrator"
-  | "chef"
-  | "manager"
-  | "seniorCourier"
-  | "dispatcher"
-  | "cook"
-  | "courier";
+import { browserBackendJson } from "@/shared/api/browser-backend";
+import type { AccessModel } from "@/modules/settings/access-model.api";
+import type { AuthPermission } from "@/modules/auth/authz";
+import type { UserRole } from "@/modules/auth/auth.types";
 
 type Permission = {
-  id: string;
+  id: AuthPermission;
   label: string;
   hint: string;
 };
@@ -22,99 +17,76 @@ type PermissionGroup = {
   items: Permission[];
 };
 
-const ROLES: Array<{ id: RoleKey; title: string; subtitle: string }> = [
-  { id: "chef", title: "Шеф повар", subtitle: "Руководитель кухни и операций" },
-  { id: "administrator", title: "Администратор", subtitle: "Система, команда и настройки" },
-  { id: "manager", title: "Управляющий", subtitle: "Полный операционный доступ" },
-  { id: "seniorCourier", title: "Старший курьер", subtitle: "Доставка, команда и контроль смены" },
-  { id: "dispatcher", title: "Диспетчер", subtitle: "Заказы, клиенты, смена" },
-  { id: "cook", title: "Повар", subtitle: "Кухня и упаковка" },
-  { id: "courier", title: "Курьер", subtitle: "Доставка и статусы" },
-];
-
 const PERMISSION_GROUPS: PermissionGroup[] = [
   {
     title: "Заказы",
     items: [
-      { id: "orders.view", label: "Просмотр заказов", hint: "Видит список и карточки заказов" },
-      { id: "orders.create", label: "Создание заказов", hint: "Может оформить заказ вручную" },
-      { id: "orders.edit", label: "Редактирование заказов", hint: "Меняет состав, клиента и сумму" },
-      { id: "orders.status", label: "Смена статусов", hint: "Двигает заказ по этапам" },
-      { id: "orders.cancel", label: "Отмена заказов", hint: "Закрывает ошибочные заказы" },
-    ],
-  },
-  {
-    title: "Кухня и доставка",
-    items: [
-      { id: "kitchen.view", label: "Кухонный экран", hint: "Видит заказы на приготовление" },
-      { id: "kitchen.manage", label: "Управление кухней", hint: "Назначает зоны и упаковку" },
-      { id: "delivery.view", label: "Маршруты доставки", hint: "Видит адреса и курьеров" },
-      { id: "delivery.close", label: "Закрытие доставки", hint: "Отмечает доставлено и оплачено" },
+      { id: "view_orders", label: "Видит заказы", hint: "Открывает список и карточки заказов" },
+      { id: "manage_orders", label: "Управляет заказами", hint: "Создаёт, меняет статусы и редактирует заказы" },
     ],
   },
   {
     title: "Каталог и склад",
     items: [
-      { id: "catalog.view", label: "Просмотр каталога", hint: "Видит меню и техкарты" },
-      { id: "catalog.manage", label: "Управление каталогом", hint: "Меняет цены, фото и публикацию" },
-      { id: "inventory.view", label: "Просмотр склада", hint: "Видит остатки и движения" },
-      { id: "inventory.manage", label: "Управление складом", hint: "Поступления, списания, инвентаризация" },
-      { id: "suppliers.manage", label: "Поставщики", hint: "Создаёт и редактирует поставщиков" },
+      { id: "view_catalog", label: "Видит каталог", hint: "Открывает меню, товары и карточки" },
+      { id: "manage_catalog", label: "Управляет каталогом", hint: "Меняет цены, фото, состав и публикацию" },
+      { id: "view_inventory", label: "Видит склад", hint: "Открывает остатки, поступления, списания и техкарты" },
+      { id: "manage_inventory", label: "Управляет складом", hint: "Создаёт движения, инвентаризации и техкарты" },
     ],
   },
   {
     title: "Клиенты и команда",
     items: [
-      { id: "clients.view", label: "Просмотр клиентов", hint: "Видит базу клиентов" },
-      { id: "clients.manage", label: "Управление клиентами", hint: "Редактирует данные и заметки" },
-      { id: "loyalty.manage", label: "Лояльность", hint: "Настраивает уровни и бонусы" },
-      { id: "employees.view", label: "Просмотр сотрудников", hint: "Видит карточки команды" },
-      { id: "employees.manage", label: "Управление сотрудниками", hint: "Роли, доступы, графики" },
+      { id: "view_clients", label: "Видит клиентов", hint: "Открывает клиентскую базу и карточки" },
+      { id: "manage_clients", label: "Управляет клиентами", hint: "Создаёт и редактирует клиентов" },
+      { id: "view_employees", label: "Видит сотрудников", hint: "Открывает команду, карточки и графики" },
+      { id: "manage_employees", label: "Управляет сотрудниками", hint: "Меняет карточки, должности и доступы" },
     ],
   },
   {
-    title: "Финансы и система",
+    title: "Система",
     items: [
-      { id: "reports.view", label: "Отчёты", hint: "Продажи, каналы, клиенты" },
-      { id: "payments.manage", label: "Оплаты и эквайринг", hint: "Онлайн-оплата и терминалы" },
-      { id: "cashbox.manage", label: "Касса и ОФД", hint: "Фискализация и чеки" },
-      { id: "settings.view", label: "Просмотр настроек", hint: "Видит системные разделы" },
-      { id: "settings.manage", label: "Управление настройками", hint: "Меняет права, устройства и интеграции" },
-      { id: "site.manage", label: "Сайт и приложение", hint: "Техработы, розыгрыши, промо" },
+      { id: "view_dashboard", label: "Видит дашборд", hint: "Открывает главную CRM и базовую аналитику" },
+      { id: "view_settings", label: "Видит настройки", hint: "Открывает раздел настроек" },
+      { id: "manage_settings", label: "Управляет настройками", hint: "Меняет роли, права и системные параметры" },
     ],
   },
 ];
 
-const DEFAULT_PERMISSIONS: Record<RoleKey, string[]> = {
-  administrator: allPermissionIds(),
-  chef: allPermissionIds(),
-  manager: allPermissionIds(),
-  seniorCourier: allPermissionIds(),
-  dispatcher: [
-    "orders.view",
-    "orders.create",
-    "orders.edit",
-    "orders.status",
-    "clients.view",
-    "clients.manage",
-    "catalog.view",
-    "delivery.view",
-    "reports.view",
-  ],
-  cook: ["orders.view", "orders.status", "kitchen.view", "kitchen.manage", "catalog.view", "inventory.view"],
-  courier: ["orders.view", "orders.status", "delivery.view", "delivery.close", "clients.view"],
-};
-
-function allPermissionIds() {
+function allPermissionIds(): AuthPermission[] {
   return PERMISSION_GROUPS.flatMap((group) => group.items.map((item) => item.id));
 }
 
-export function RolesPermissionsEditor() {
-  const [activeRole, setActiveRole] = useState<RoleKey>("administrator");
-  const [matrix, setMatrix] = useState(DEFAULT_PERMISSIONS);
+function roleSubtitle(role: UserRole) {
+  if (role === "Администратор" || role === "admin") return "Система, команда и настройки";
+  if (role === "Шеф повар") return "Кухня, склад и операционный контроль";
+  if (role === "Управляющий") return "Полный операционный доступ";
+  if (role === "Старший курьер") return "Доставка, команда и контроль смены";
+  if (role === "Диспетчер") return "Заказы, клиенты, смена";
+  if (role === "Повар") return "Кухня и заказы";
+  return "Доставка и статусы";
+}
+
+function buildMatrix(accessModel: AccessModel) {
+  return Object.fromEntries(
+    accessModel.roles.map((role) => [role.role, role.permissions]),
+  ) as Record<UserRole, AuthPermission[]>;
+}
+
+export function RolesPermissionsEditor({
+  accessModel,
+  canManageSettings,
+}: {
+  accessModel: AccessModel;
+  canManageSettings: boolean;
+}) {
+  const roles = accessModel.roles.filter((role) => role.role !== "admin");
+  const [activeRole, setActiveRole] = useState<UserRole>(roles[0]?.role ?? "Администратор");
+  const [matrix, setMatrix] = useState(() => buildMatrix(accessModel));
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const totalPermissions = allPermissionIds().length;
-  const activePermissions = matrix[activeRole];
-  const activeRoleMeta = ROLES.find((role) => role.id === activeRole) ?? ROLES[0];
+  const activePermissions = useMemo(() => matrix[activeRole] ?? [], [activeRole, matrix]);
+  const activeRoleMeta = roles.find((role) => role.role === activeRole) ?? roles[0];
 
   const groupStats = useMemo(
     () =>
@@ -126,19 +98,47 @@ export function RolesPermissionsEditor() {
     [activePermissions],
   );
 
-  function togglePermission(permissionId: string) {
-    setMatrix((current) => {
-      const rolePermissions = current[activeRole];
-      const nextPermissions = rolePermissions.includes(permissionId)
-        ? rolePermissions.filter((item) => item !== permissionId)
-        : [...rolePermissions, permissionId];
+  async function saveRolePermissions(role: UserRole, permissions: AuthPermission[]) {
+    setSaveState("saving");
 
-      return { ...current, [activeRole]: nextPermissions };
+    try {
+      await browserBackendJson(`/api/v1/access-model/${encodeURIComponent(role)}`, {
+        method: "PUT",
+        body: { permissions },
+      });
+      setSaveState("saved");
+    } catch {
+      setSaveState("error");
+    }
+  }
+
+  function setRolePermissions(permissionIds: AuthPermission[]) {
+    if (!canManageSettings) {
+      return;
+    }
+
+    setMatrix((current) => {
+      const next = { ...current, [activeRole]: permissionIds };
+      void saveRolePermissions(activeRole, permissionIds);
+
+      return next;
     });
   }
 
-  function setRolePermissions(permissionIds: string[]) {
-    setMatrix((current) => ({ ...current, [activeRole]: permissionIds }));
+  function togglePermission(permissionId: AuthPermission) {
+    if (!canManageSettings) {
+      return;
+    }
+
+    setMatrix((current) => {
+      const rolePermissions = current[activeRole] ?? [];
+      const nextPermissions = rolePermissions.includes(permissionId)
+        ? rolePermissions.filter((item) => item !== permissionId)
+        : [...rolePermissions, permissionId];
+      void saveRolePermissions(activeRole, nextPermissions);
+
+      return { ...current, [activeRole]: nextPermissions };
+    });
   }
 
   return (
@@ -146,21 +146,21 @@ export function RolesPermissionsEditor() {
       <aside className="rounded-[18px] border border-white/70 bg-white/82 p-4 shadow-[0_18px_54px_rgba(127,29,29,0.09)] backdrop-blur-2xl">
         <p className="foodlike-kicker">Роли</p>
         <div className="mt-3 grid gap-2">
-          {ROLES.map((role) => {
-            const isActive = role.id === activeRole;
+          {roles.map((role) => {
+            const isActive = role.role === activeRole;
             return (
               <button
-                key={role.id}
+                key={role.role}
                 type="button"
-                onClick={() => setActiveRole(role.id)}
+                onClick={() => setActiveRole(role.role)}
                 className={[
                   "rounded-[14px] border p-3 text-left transition",
                   isActive ? "border-red-800 bg-red-800 text-white" : "border-red-950/10 bg-white/76 text-zinc-950 hover:border-red-200",
                 ].join(" ")}
               >
-                <span className="block text-sm font-semibold">{role.title}</span>
+                <span className="block text-sm font-semibold">{role.label}</span>
                 <span className={["mt-1 block text-xs leading-5", isActive ? "text-white/75" : "text-zinc-500"].join(" ")}>
-                  {role.subtitle}
+                  {roleSubtitle(role.role)}
                 </span>
               </button>
             );
@@ -173,17 +173,28 @@ export function RolesPermissionsEditor() {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="foodlike-kicker">Матрица доступа</p>
-              <h2 className="mt-1 text-xl font-semibold text-zinc-950">{activeRoleMeta.title}</h2>
+              <h2 className="mt-1 text-xl font-semibold text-zinc-950">{activeRoleMeta?.label ?? activeRole}</h2>
               <p className="mt-2 text-sm leading-6 text-zinc-600">
-                Выбери конкретные действия, которые доступны этой роли.
+                Эти права реально управляют видимостью разделов CRM и доступом к API.
               </p>
+              {!canManageSettings ? (
+                <p className="mt-2 text-xs font-semibold text-red-800">У тебя есть только просмотр матрицы, без сохранения изменений.</p>
+              ) : null}
             </div>
             <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={() => setRolePermissions(allPermissionIds())} className="foodlike-button-secondary">Все права</button>
-              <button type="button" onClick={() => setRolePermissions([])} className="foodlike-button-secondary">Очистить</button>
-              <button type="button" onClick={() => setRolePermissions(DEFAULT_PERMISSIONS[activeRole])} className="foodlike-button-primary">Вернуть роль</button>
+              <button type="button" onClick={() => setRolePermissions(allPermissionIds())} disabled={!canManageSettings} className="foodlike-button-secondary disabled:opacity-50">Все права</button>
+              <button type="button" onClick={() => setRolePermissions([])} disabled={!canManageSettings} className="foodlike-button-secondary disabled:opacity-50">Очистить</button>
             </div>
           </div>
+          <p className="mt-3 text-xs font-semibold text-zinc-500">
+            {saveState === "saving"
+              ? "Сохраняю права..."
+              : saveState === "saved"
+                ? "Права сохранены. Они применятся к новым запросам и после обновления сессии."
+                : saveState === "error"
+                  ? "Не удалось сохранить права. Проверь доступ к управлению настройками."
+                  : "Изменение галочки сразу сохраняется в backend."}
+          </p>
 
           <div className="mt-4 grid gap-3 md:grid-cols-4">
             <Metric label="Выбрано" value={`${activePermissions.length}/${totalPermissions}`} />
@@ -210,9 +221,11 @@ export function RolesPermissionsEditor() {
                       key={permission.id}
                       type="button"
                       onClick={() => togglePermission(permission.id)}
+                      disabled={!canManageSettings}
                       className={[
                         "grid gap-3 rounded-[14px] border p-3 text-left transition sm:grid-cols-[1fr_auto] sm:items-center",
                         checked ? "border-red-200 bg-red-50/70" : "border-red-950/10 bg-white/76 hover:border-red-200",
+                        !canManageSettings ? "cursor-not-allowed opacity-70" : "",
                       ].join(" ")}
                     >
                       <span>

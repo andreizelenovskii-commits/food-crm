@@ -97,7 +97,7 @@ export async function backendGetOptional<T>(path: string) {
 export async function backendJson<T>(
   path: string,
   init: {
-    method?: "POST" | "PATCH" | "DELETE";
+    method?: "POST" | "PUT" | "PATCH" | "DELETE";
     body?: unknown;
   } = {},
 ) {

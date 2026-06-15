@@ -119,6 +119,10 @@ export function hasPermission(
   userOrRole: SessionUser | UserRole,
   permission: AuthPermission,
 ) {
+  if (typeof userOrRole !== "string" && Array.isArray(userOrRole.permissions)) {
+    return userOrRole.permissions.includes(permission);
+  }
+
   const rawRole = typeof userOrRole === "string" ? userOrRole : userOrRole.role;
   const role = normalizeUserRole(rawRole);
 
