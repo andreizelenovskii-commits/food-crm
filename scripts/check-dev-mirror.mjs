@@ -4,11 +4,10 @@ const REQUIRED_MARKERS = [
   {
     file: ".github/workflows/setup-staging.yml",
     markers: [
-      "dev.crm.crmandromeda.ru",
-      "dev-api.crmandromeda.ru",
       "food_crm_staging",
       "/home/deploy/apps/food-crm-staging",
       "/home/deploy/apps/food-crm-backend-staging",
+      "127.0.0.1:4100",
     ],
   },
   {
@@ -17,7 +16,7 @@ const REQUIRED_MARKERS = [
       'branches: ["dev"]',
       "food-crm-frontend-staging",
       "127.0.0.1:3100",
-      "https://dev-api.crmandromeda.ru",
+      "http://127.0.0.1:4100",
     ],
   },
   {
@@ -39,7 +38,7 @@ const REQUIRED_MARKERS = [
   },
   {
     file: "docs/STAGING.md",
-    markers: ["dev.crm.crmandromeda.ru", "dev-api.crmandromeda.ru", "Branch:           dev"],
+    markers: ["Staging has no public DNS", "127.0.0.1:3100", "Branch:           dev"],
   },
 ];
 
@@ -68,4 +67,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log("OK: dev mirror configuration is present for frontend, backend, DNS docs and PM2.");
+console.log("OK: internal dev mirror configuration is present for frontend, backend and PM2.");

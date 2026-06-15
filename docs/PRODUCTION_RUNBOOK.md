@@ -18,7 +18,7 @@
 - База данных: PostgreSQL на этой же VPS
 - Frontend: `https://crm.crmandromeda.ru`
 - Backend API: `https://api.crmandromeda.ru`
-- Public site: `https://crmandromeda.ru`, `https://www.crmandromeda.ru`
+- Public site: `https://crmandromeda.ru`
 
 ## SSH
 
@@ -30,7 +30,6 @@ ssh deploy@163.5.29.68
 
 ```text
 @     -> 163.5.29.68
-www   -> 163.5.29.68
 crm   -> 163.5.29.68
 api   -> 163.5.29.68
 ```
@@ -39,7 +38,6 @@ api   -> 163.5.29.68
 
 ```bash
 dig @8.8.8.8 +short crmandromeda.ru A
-dig @8.8.8.8 +short www.crmandromeda.ru A
 dig @8.8.8.8 +short crm.crmandromeda.ru A
 dig @8.8.8.8 +short api.crmandromeda.ru A
 ```
@@ -50,7 +48,6 @@ dig @8.8.8.8 +short api.crmandromeda.ru A
 curl https://api.crmandromeda.ru/api/v1/health
 curl -I https://crm.crmandromeda.ru
 curl -I https://crmandromeda.ru
-curl -I https://www.crmandromeda.ru
 ```
 
 Ожидаемый API-ответ:

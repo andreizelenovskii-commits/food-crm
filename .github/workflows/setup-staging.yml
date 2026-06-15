@@ -41,8 +41,8 @@ jobs:
           grep -v -E '^(BACKEND_API_URL|NEXT_PUBLIC_BACKEND_API_URL|BACKEND_SESSION_COOKIE_NAME)=' "$FRONTEND_APP_DIR/shared/.env" > "$FRONTEND_APP_DIR/shared/.env.tmp" || true
           mv "$FRONTEND_APP_DIR/shared/.env.tmp" "$FRONTEND_APP_DIR/shared/.env"
           {
-            echo "BACKEND_API_URL=https://dev-api.crmandromeda.ru"
-            echo "NEXT_PUBLIC_BACKEND_API_URL=https://dev-api.crmandromeda.ru"
+            echo "BACKEND_API_URL=http://127.0.0.1:4100"
+            echo "NEXT_PUBLIC_BACKEND_API_URL=http://127.0.0.1:4100"
             echo "BACKEND_SESSION_COOKIE_NAME=food_crm_staging_api_session"
           } >> "$FRONTEND_APP_DIR/shared/.env"
           chmod 600 "$FRONTEND_APP_DIR/shared/.env"
@@ -63,19 +63,11 @@ jobs:
           {
             echo "DATABASE_URL=$STAGING_DATABASE_URL"
             echo "PORT=4100"
-            echo "BACKEND_CORS_ORIGIN=https://dev.crm.crmandromeda.ru,http://localhost:3000,http://127.0.0.1:3000"
+            echo "BACKEND_CORS_ORIGIN=http://localhost:3000,http://127.0.0.1:3000"
             echo "BACKEND_SESSION_COOKIE_DOMAIN=.crmandromeda.ru"
             echo "BACKEND_SESSION_COOKIE_NAME=food_crm_staging_api_session"
           } >> "$BACKEND_APP_DIR/shared/.env"
           chmod 600 "$BACKEND_APP_DIR/shared/.env"
 
           sudo -n -u postgres createdb food_crm_staging --owner=food_crm_user || true
-
-          if ! sudo -n grep -q 'dev.crm.crmandromeda.ru' /etc/caddy/Caddyfile; then
-            printf '\ndev.crm.crmandromeda.ru {\n  reverse_proxy 127.0.0.1:3100\n}\n\ndev-api.crmandromeda.ru {\n  reverse_proxy 127.0.0.1:4100\n}\n' > /tmp/food-crm-staging.Caddyfile
-            sudo -n sh -c 'cat /tmp/food-crm-staging.Caddyfile >> /etc/caddy/Caddyfile'
-            sudo -n caddy fmt --overwrite /etc/caddy/Caddyfile
-            sudo -n caddy validate --config /etc/caddy/Caddyfile
-            sudo -n systemctl reload caddy
-          fi
           REMOTE

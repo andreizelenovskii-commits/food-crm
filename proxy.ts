@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const PUBLIC_HOSTS = new Set(["crmandromeda.ru", "www.crmandromeda.ru"]);
-const CRM_HOSTS = new Set(["crm.crmandromeda.ru", "dev.crm.crmandromeda.ru"]);
+const PUBLIC_HOSTS = new Set(["crmandromeda.ru"]);
+const CRM_HOSTS = new Set(["crm.crmandromeda.ru"]);
+const LEGACY_PUBLIC_HOSTS = new Set(["www.crmandromeda.ru"]);
+const LEGACY_CRM_HOSTS = new Set(["dev.crm.crmandromeda.ru"]);
 const CRM_ORIGIN = "https://crm.crmandromeda.ru";
 const PUBLIC_ORIGIN = "https://crmandromeda.ru";
 
@@ -22,6 +24,18 @@ function redirectTo(origin: string, request: NextRequest, pathname: string) {
 export function proxy(request: NextRequest) {
   const hostname = getHostname(request);
   const { pathname } = request.nextUrl;
+
+  if (LEGACY_PUBLIC_HOSTS.has(hostname)) {
+    if (pathname === "/login" || pathname.startsWith("/dashboard")) {
+      return redirectTo(CRM_ORIGIN, request, pathname);
+    }
+
+    return redirectTo(PUBLIC_ORIGIN, request, pathname);
+  }
+
+  if (LEGACY_CRM_HOSTS.has(hostname)) {
+    return redirectTo(CRM_ORIGIN, request, pathname === "/" ? "/login" : pathname);
+  }
 
   if (PUBLIC_HOSTS.has(hostname)) {
     if (pathname === "/login" || pathname.startsWith("/dashboard")) {

@@ -183,7 +183,7 @@ pm2-logrotate        online
 основной домен в тот же frontend-процесс, что и CRM:
 
 ```caddyfile
-crmandromeda.ru, www.crmandromeda.ru {
+crmandromeda.ru {
   reverse_proxy 127.0.0.1:3000
 }
 

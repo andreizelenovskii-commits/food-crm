@@ -1,12 +1,12 @@
 # Dev Mirror
 
-Dev-зеркало проекта — это staging-контур на ветке `dev`, отделённый от production по доменам, портам, PM2-процессам и базе.
+Dev-зеркало проекта — это внутренний staging-контур на ветке `dev`, отделённый от production по портам, PM2-процессам и базе. Публичные домены остаются только для production: `crmandromeda.ru`, `crm.crmandromeda.ru`, `api.crmandromeda.ru`.
 
 ## Контур
 
 ```text
-Frontend:  https://dev.crm.crmandromeda.ru      port 3100
-Backend:   https://dev-api.crmandromeda.ru      port 4100
+Frontend:  http://127.0.0.1:3100      port 3100
+Backend:   http://127.0.0.1:4100      port 4100
 Database:  food_crm_staging
 Branch:    dev
 ```
@@ -40,13 +40,13 @@ npm run mirror:check
 - workflow подготовки dev-инфраструктуры
 - frontend/backend staging deploy workflows
 - staging PM2-конфиги
-- dev-домены
+- внутренние staging-порты
 - dev-БД `food_crm_staging`
 
 ## Рабочий Поток
 
 1. Вести разработку в ветке `dev`.
 2. Push в `dev` запускает deploy на dev-зеркало.
-3. Проверить `https://dev.crm.crmandromeda.ru` и `https://dev-api.crmandromeda.ru/api/v1/health`.
+3. Проверить на VPS `curl -I http://127.0.0.1:3100` и `curl -fsS http://127.0.0.1:4100/api/v1/health`.
 4. После проверки merge `dev` в `main`.
 5. Production deploy идёт отдельно по `main`.

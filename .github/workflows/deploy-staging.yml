@@ -19,7 +19,7 @@ jobs:
       DEPLOY_HOST: 163.5.29.68
       DEPLOY_USER: deploy
       DEPLOY_PORT: 22
-      STAGING_API_URL: https://dev-api.crmandromeda.ru
+      STAGING_API_URL: http://127.0.0.1:4100
 
     steps:
       - name: Checkout

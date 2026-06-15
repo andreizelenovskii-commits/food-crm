@@ -29,10 +29,10 @@ elsewhere.
 
 | Среда | CRM | Ветка в git |
 | --- | --- | --- |
-| **Зеркало (черновик)** | [dev.crm.crmandromeda.ru](https://dev.crm.crmandromeda.ru) | `dev` + workflows **Deploy … staging** |
+| **Зеркало (черновик)** | внутренний порт VPS `127.0.0.1:3100` | `dev` + workflows **Deploy … staging** |
 | **Прод** | [crm.crmandromeda.ru](https://crm.crmandromeda.ru) | `main` + обычный деплой |
 
-Короткая пошаговая схема: **[docs/mirror-workflow.md](docs/mirror-workflow.md)**. Инфраструктура и DNS: **[docs/STAGING.md](docs/STAGING.md)**.
+Короткая пошаговая схема: **[docs/mirror-workflow.md](docs/mirror-workflow.md)**. Инфраструктура staging: **[docs/STAGING.md](docs/STAGING.md)**.
 
 Модель веток и чеклист перед `main`: **[docs/RELEASE_WORKFLOW.md](docs/RELEASE_WORKFLOW.md)**.
 

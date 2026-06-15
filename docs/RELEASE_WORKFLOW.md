@@ -79,15 +79,15 @@ Backend:
 - `npm run typecheck` passes.
 - `npm test` passes.
 - Database migrations have been applied on staging.
-- `https://dev-api.crm.crmandromeda.ru/api/v1/health` responds.
+- `http://127.0.0.1:4100/api/v1/health` responds on the VPS.
 
 Frontend:
 
 - `npm run lint` passes.
 - `npm test` passes.
 - `npm run build` passes.
-- `https://dev.crm.crmandromeda.ru` opens.
-- `https://dev.crm.crmandromeda.ru/login` opens.
+- `http://127.0.0.1:3100` responds on the VPS.
+- `http://127.0.0.1:3100/login` responds on the VPS.
 - Dashboard opens after login.
 
 Manual staging smoke-test:

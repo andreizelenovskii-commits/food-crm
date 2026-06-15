@@ -13,7 +13,7 @@ Caddy, firewall, logs, rollback и troubleshooting для production.
 Ожидаемые production routes:
 
 ```caddyfile
-crmandromeda.ru, www.crmandromeda.ru {
+crmandromeda.ru {
   reverse_proxy 127.0.0.1:3000
 }
 

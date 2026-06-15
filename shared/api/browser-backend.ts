@@ -17,9 +17,7 @@ export function getBrowserBackendApiUrl() {
 
     if (
       hostname === "crm.crmandromeda.ru" ||
-      hostname === "crmandromeda.ru" ||
-      hostname === "www.crmandromeda.ru" ||
-      hostname === "dev.crm.crmandromeda.ru"
+      hostname === "crmandromeda.ru"
     ) {
       return "";
     }

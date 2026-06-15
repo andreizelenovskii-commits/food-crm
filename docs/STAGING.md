@@ -6,11 +6,12 @@ Staging is the draft mirror for development changes before production deploy.
 
 ## Domains
 
-Create DNS A records:
+Staging has no public DNS. Public domains are reserved for production:
 
 ```text
-dev.crm.crmandromeda.ru      163.5.29.68
-dev-api.crmandromeda.ru      163.5.29.68
+crmandromeda.ru
+crm.crmandromeda.ru
+api.crmandromeda.ru
 ```
 
 ## Runtime
@@ -32,7 +33,7 @@ Branch:              main
 
 ## First Setup
 
-After DNS records exist, run the GitHub Actions workflow:
+Run the GitHub Actions workflow:
 
 ```text
 Setup staging infrastructure
@@ -42,7 +43,7 @@ It prepares:
 
 - staging `.env` files
 - `food_crm_staging` database
-- Caddy routes for `dev.crm.crmandromeda.ru` and `dev-api.crmandromeda.ru`
+- PM2 processes on internal ports `3100` and `4100`
 
 The setup requires passwordless `sudo` for the `deploy` user on the VPS.
 

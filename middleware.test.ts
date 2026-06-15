@@ -24,6 +24,20 @@ describe("domain routing middleware", () => {
     expect(response.headers.get("location")).toBe("https://crm.crmandromeda.ru/dashboard/orders");
   });
 
+  it("canonicalizes the legacy www public domain", () => {
+    const response = proxy(requestFor("https://www.crmandromeda.ru/menu/pizza", "www.crmandromeda.ru"));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("https://crmandromeda.ru/menu/pizza");
+  });
+
+  it("moves login from the legacy www domain to the CRM domain", () => {
+    const response = proxy(requestFor("https://www.crmandromeda.ru/login", "www.crmandromeda.ru"));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("https://crm.crmandromeda.ru/login");
+  });
+
   it("moves the CRM root to login", () => {
     const response = proxy(requestFor("https://crm.crmandromeda.ru/", "crm.crmandromeda.ru"));
 
@@ -36,5 +50,12 @@ describe("domain routing middleware", () => {
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe("https://crmandromeda.ru/menu/pizza");
+  });
+
+  it("canonicalizes the legacy dev CRM domain", () => {
+    const response = proxy(requestFor("https://dev.crm.crmandromeda.ru/dashboard", "dev.crm.crmandromeda.ru"));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("https://crm.crmandromeda.ru/dashboard");
   });
 });
