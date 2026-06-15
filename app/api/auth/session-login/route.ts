@@ -20,16 +20,22 @@ function getSetCookieHeaders(headers: Headers) {
   return singleValue ? [singleValue] : [];
 }
 
-function redirectToLogin(request: NextRequest, errorMessage: string, returnTo: string) {
-  const target = new URL("/login", request.url);
-  target.searchParams.set("error", errorMessage);
+function redirectToLogin(errorMessage: string, returnTo: string) {
+  const searchParams = new URLSearchParams({
+    error: errorMessage,
+  });
 
   const safeReturnTo = normalizeAuthReturnTo(returnTo, "");
   if (safeReturnTo) {
-    target.searchParams.set("returnTo", safeReturnTo);
+    searchParams.set("returnTo", safeReturnTo);
   }
 
-  return NextResponse.redirect(target, { status: 303 });
+  return new NextResponse(null, {
+    status: 303,
+    headers: {
+      location: `/login?${searchParams.toString()}`,
+    },
+  });
 }
 
 export async function POST(request: NextRequest) {
@@ -41,7 +47,6 @@ export async function POST(request: NextRequest) {
     input = parseLoginInput(formData);
   } catch (error) {
     return redirectToLogin(
-      request,
       error instanceof Error ? error.message : "Заполни телефон и пароль",
       returnTo,
     );
@@ -63,7 +68,6 @@ export async function POST(request: NextRequest) {
     });
   } catch {
     return redirectToLogin(
-      request,
       "API недоступен. Обнови страницу и попробуй ещё раз.",
       returnTo,
     );
@@ -76,16 +80,17 @@ export async function POST(request: NextRequest) {
 
   if (!backendResponse.ok) {
     return redirectToLogin(
-      request,
       payload?.error?.message ?? "Неверный телефон или пароль",
       returnTo,
     );
   }
 
-  const response = NextResponse.redirect(
-    new URL(normalizeAuthReturnTo(returnTo), request.url),
-    { status: 303 },
-  );
+  const response = new NextResponse(null, {
+    status: 303,
+    headers: {
+      location: normalizeAuthReturnTo(returnTo),
+    },
+  });
   const setCookieHeaders = getSetCookieHeaders(backendResponse.headers);
 
   for (const cookie of setCookieHeaders) {
