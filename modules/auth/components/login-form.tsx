@@ -52,6 +52,20 @@ function SessionIcon({ className }: { className?: string }) {
   );
 }
 
+function FoodLikeMark() {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-xl font-black text-red-700 shadow-sm">
+        F
+      </span>
+      <div>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/65">FoodLike</p>
+        <p className="text-lg font-semibold text-white">CRM</p>
+      </div>
+    </div>
+  );
+}
+
 export function LoginForm({ returnTo, initialError }: { returnTo?: string; initialError?: string }) {
   const [errorMessage, setErrorMessage] = useState<string | null>(initialError ?? null);
   const [isPending, setIsPending] = useState(false);
@@ -86,22 +100,20 @@ export function LoginForm({ returnTo, initialError }: { returnTo?: string; initi
   }
 
   return (
-    <section className="mx-auto w-full max-w-5xl overflow-hidden rounded-[28px] border border-white/75 bg-white/82 shadow-[0_24px_80px_rgba(127,29,29,0.14)] backdrop-blur-2xl">
-      <div className="grid lg:grid-cols-[0.92fr_1.08fr]">
-        <aside className="flex min-h-[28rem] flex-col justify-between bg-[linear-gradient(145deg,#b70716_0%,#d90416_48%,#7f1d1d_100%)] p-6 text-white sm:p-8">
+    <section className="w-full overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-[0_28px_90px_rgba(127,29,29,0.16)]">
+      <div className="grid min-h-[35rem] lg:grid-cols-[0.95fr_1.05fr]">
+        <aside className="flex flex-col justify-between bg-[linear-gradient(145deg,#b70716_0%,#d90416_48%,#7f1d1d_100%)] p-6 text-white sm:p-8 lg:p-10">
           <div>
-            <span className="inline-flex rounded-full border border-white/20 bg-white/12 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]">
-              FoodLike CRM
-            </span>
-            <h2 className="mt-5 max-w-sm text-3xl font-semibold leading-tight sm:text-4xl">
-              Служебный вход для команды
+            <FoodLikeMark />
+            <h2 className="mt-8 max-w-md text-3xl font-semibold leading-tight sm:text-4xl">
+              Авторизация команды
             </h2>
-            <p className="mt-4 max-w-sm text-sm leading-6 text-white/78">
-              Вход выполняется по телефону сотрудника. После успешной проверки сессия сохраняется на 30 дней.
+            <p className="mt-4 max-w-md text-sm leading-6 text-white/78">
+              Отдельный служебный вход CRM. Доступ определяется должностью в карточке сотрудника, сессия сохраняется на 30 дней.
             </p>
-            <div className="mt-5 grid gap-3">
+            <div className="mt-6 grid gap-3">
               {AUTH_ROLE_GROUPS.map((group) => (
-                <div key={group.title} className="rounded-[18px] border border-white/18 bg-white/10 p-3">
+                <div key={group.title} className="rounded-[18px] border border-white/16 bg-white/10 p-4">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/65">{group.title}</p>
                   <p className="mt-2 text-sm font-semibold leading-6 text-white">{group.roles.join(" · ")}</p>
                 </div>
@@ -109,8 +121,8 @@ export function LoginForm({ returnTo, initialError }: { returnTo?: string; initi
             </div>
           </div>
 
-          <div className="space-y-3">
-            <div className="rounded-[18px] border border-white/18 bg-white/12 p-4">
+          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+            <div className="rounded-[18px] border border-white/16 bg-white/10 p-4">
               <div className="flex items-start gap-3">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-white/16">
                   <ShieldIcon className="h-5 w-5" />
@@ -123,7 +135,7 @@ export function LoginForm({ returnTo, initialError }: { returnTo?: string; initi
                 </div>
               </div>
             </div>
-            <div className="rounded-[18px] border border-white/18 bg-white/12 p-4">
+            <div className="rounded-[18px] border border-white/16 bg-white/10 p-4">
               <div className="flex items-start gap-3">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-white/16">
                   <SessionIcon className="h-5 w-5" />
@@ -143,7 +155,7 @@ export function LoginForm({ returnTo, initialError }: { returnTo?: string; initi
           action="/api/auth/session-login"
           method="post"
           onSubmit={submitLogin}
-          className="space-y-5 p-5 sm:p-8"
+          className="flex flex-col justify-center space-y-5 p-6 sm:p-8 lg:p-12"
           noValidate
         >
           <input type="hidden" name="returnTo" value={returnTo ?? ""} />
