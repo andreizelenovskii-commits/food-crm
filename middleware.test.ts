@@ -17,11 +17,11 @@ describe("domain routing middleware", () => {
     expect(response.status).toBe(200);
   });
 
-  it("moves CRM pages from the public domain to the CRM domain", () => {
+  it("keeps CRM pages unreachable from the public domain", () => {
     const response = proxy(requestFor("https://crmandromeda.ru/dashboard/orders", "crmandromeda.ru"));
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("https://crm.crmandromeda.ru/dashboard/orders");
+    expect(response.headers.get("location")).toBe("https://crmandromeda.ru/");
   });
 
   it("canonicalizes the legacy www public domain", () => {
@@ -31,11 +31,17 @@ describe("domain routing middleware", () => {
     expect(response.headers.get("location")).toBe("https://crmandromeda.ru/menu/pizza");
   });
 
-  it("moves login from the legacy www domain to the CRM domain", () => {
+  it("keeps CRM login unreachable from the legacy www domain", () => {
     const response = proxy(requestFor("https://www.crmandromeda.ru/login", "www.crmandromeda.ru"));
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("https://crm.crmandromeda.ru/login");
+    expect(response.headers.get("location")).toBe("https://crmandromeda.ru/");
+  });
+
+  it("does not expose the CRM login endpoint on the public domain", () => {
+    const response = proxy(requestFor("https://crmandromeda.ru/api/auth/session-login", "crmandromeda.ru"));
+
+    expect(response.status).toBe(404);
   });
 
   it("moves the CRM root to login", () => {

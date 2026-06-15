@@ -21,13 +21,17 @@ function redirectTo(origin: string, request: NextRequest, pathname: string) {
   return NextResponse.redirect(target, 307);
 }
 
+function redirectToPublicRoot() {
+  return NextResponse.redirect(PUBLIC_ORIGIN, 307);
+}
+
 export function proxy(request: NextRequest) {
   const hostname = getHostname(request);
   const { pathname } = request.nextUrl;
 
   if (LEGACY_PUBLIC_HOSTS.has(hostname)) {
     if (pathname === "/login" || pathname.startsWith("/dashboard")) {
-      return redirectTo(CRM_ORIGIN, request, pathname);
+      return redirectToPublicRoot();
     }
 
     return redirectTo(PUBLIC_ORIGIN, request, pathname);
@@ -39,11 +43,11 @@ export function proxy(request: NextRequest) {
 
   if (PUBLIC_HOSTS.has(hostname)) {
     if (pathname === "/login" || pathname.startsWith("/dashboard")) {
-      return redirectTo(CRM_ORIGIN, request, pathname);
+      return redirectToPublicRoot();
     }
 
     if (pathname === "/api/auth/session-login") {
-      return redirectTo(CRM_ORIGIN, request, "/login");
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
   }
 
