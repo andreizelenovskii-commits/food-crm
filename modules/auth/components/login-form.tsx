@@ -2,98 +2,44 @@
 
 import { useActionState, useState } from "react";
 import { loginAction } from "@/modules/auth/auth.actions";
-import { SurfaceCard } from "@/components/ui/surface-card";
 
 const initialLoginFormState = {
   errorMessage: null,
 };
 
-const ACCESS_VIEWS = [
-  {
-    id: "admin",
-    label: "Управляющий",
-    icon: "manager",
-  },
-  {
-    id: "cook",
-    label: "Повар",
-    icon: "chef",
-  },
-  {
-    id: "courier",
-    label: "Курьер",
-    icon: "courier",
-  },
-  {
-    id: "dispatch",
-    label: "Диспетчер",
-    icon: "dispatch",
-  },
-] as const;
-
-type RoleIconName = (typeof ACCESS_VIEWS)[number]["icon"];
-
-function RoleIcon({
-  name,
-  className,
-}: {
-  name: RoleIconName;
-  className?: string;
-}) {
-  const sharedProps = {
-    viewBox: "0 0 24 24",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: 1.8,
-    strokeLinecap: "round" as const,
-    strokeLinejoin: "round" as const,
-    className,
-    "aria-hidden": true,
-  };
-
-  if (name === "manager") {
-    return (
-      <svg {...sharedProps}>
-        <path d="M8.5 8.2a3.5 3.5 0 0 1 7 0v1.2a3.5 3.5 0 0 1-7 0V8.2Z" />
-        <path d="M6.2 21v-1.4A4.6 4.6 0 0 1 10.8 15h2.4a4.6 4.6 0 0 1 4.6 4.6V21" />
-        <path d="m10.2 15.2 1.8 2.2 1.8-2.2" />
-        <path d="m11 18.8 1-1.4 1 1.4" />
-        <path d="M9.2 5.7h5.6" />
-      </svg>
-    );
-  }
-
-  if (name === "chef") {
-    return (
-      <svg {...sharedProps}>
-        <path d="M7.2 10.8a3.2 3.2 0 1 1 3.3-5.1A3.4 3.4 0 0 1 17 7.2a3 3 0 0 1-.3 5.9" />
-        <path d="M7.2 11.2h9.6v6.6a2.2 2.2 0 0 1-2.2 2.2H9.4a2.2 2.2 0 0 1-2.2-2.2v-6.6Z" />
-        <path d="M9.7 15.2h4.6" />
-        <path d="M10 18h4" />
-      </svg>
-    );
-  }
-
-  if (name === "courier") {
-    return (
-      <svg {...sharedProps}>
-        <path d="M4 15.5V7.8A1.8 1.8 0 0 1 5.8 6h8.4A1.8 1.8 0 0 1 16 7.8v7.7" />
-        <path d="M16 10h2.4l1.6 2.6v2.9" />
-        <path d="M6.5 18.5a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4Z" />
-        <path d="M17.5 18.5a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4Z" />
-        <path d="M8.2 16h7.6" />
-      </svg>
-    );
-  }
-
+function ShieldIcon({ className }: { className?: string }) {
   return (
-    <svg {...sharedProps}>
-      <path d="M6.8 12.5v-1.8a5.2 5.2 0 0 1 10.4 0v1.8" />
-      <path d="M6.8 12.2H5.7a1.7 1.7 0 0 0-1.7 1.7v1.2a1.7 1.7 0 0 0 1.7 1.7h1.1v-4.6Z" />
-      <path d="M17.2 12.2h1.1a1.7 1.7 0 0 1 1.7 1.7v1.2a1.7 1.7 0 0 1-1.7 1.7h-1.1v-4.6Z" />
-      <path d="M17.2 16.8v.4a2.3 2.3 0 0 1-2.3 2.3h-2" />
-      <path d="M10.7 19.5h2.2" />
-      <path d="M10 10.4h4" />
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M12 3 5 6v5.2c0 4.4 2.8 8.3 7 9.8 4.2-1.5 7-5.4 7-9.8V6l-7-3Z" />
+      <path d="m9.2 12 1.8 1.8 3.9-4" />
+    </svg>
+  );
+}
+
+function SessionIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" />
+      <path d="M8 9h8M8 13h5" />
+      <path d="M16 16.5 18 18l3-4" />
     </svg>
   );
 }
@@ -103,126 +49,128 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
     loginAction,
     initialLoginFormState,
   );
-  const [selectedView, setSelectedView] =
-    useState<(typeof ACCESS_VIEWS)[number]["id"]>("admin");
   const [showPassword, setShowPassword] = useState(false);
 
-  const inputClassName = "foodlike-field";
-
   return (
-    <SurfaceCard className="mx-auto max-w-xl overflow-hidden bg-white/95 p-0 shadow-xl shadow-red-950/10">
-      <div className="border-b border-red-950/10 bg-[linear-gradient(135deg,#ffffff_0%,#fff3f3_100%)] px-5 py-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-3">
-            <span className="foodlike-pill uppercase tracking-[0.14em]">
-              Команда FoodLike
+    <section className="mx-auto w-full max-w-5xl overflow-hidden rounded-[28px] border border-white/75 bg-white/82 shadow-[0_24px_80px_rgba(127,29,29,0.14)] backdrop-blur-2xl">
+      <div className="grid lg:grid-cols-[0.92fr_1.08fr]">
+        <aside className="flex min-h-[28rem] flex-col justify-between bg-[linear-gradient(145deg,#b70716_0%,#d90416_48%,#7f1d1d_100%)] p-6 text-white sm:p-8">
+          <div>
+            <span className="inline-flex rounded-full border border-white/20 bg-white/12 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]">
+              FoodLike CRM
             </span>
-            <h2 className="text-2xl font-semibold text-zinc-950">
-              Вход для сотрудников
+            <h2 className="mt-5 max-w-sm text-3xl font-semibold leading-tight sm:text-4xl">
+              Служебный вход для команды
             </h2>
-          </div>
-        </div>
-      </div>
-
-      <form action={formAction} className="space-y-5 px-5 py-5" noValidate>
-        <input type="hidden" name="returnTo" value={returnTo ?? ""} />
-        <div className="space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-sm font-medium text-zinc-700">
-              Должность
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {ACCESS_VIEWS.map((view) => {
-              const isActive = selectedView === view.id;
-              return (
-                <button
-                  key={view.id}
-                  type="button"
-                  onClick={() => setSelectedView(view.id)}
-                  className={`group flex min-h-20 min-w-0 items-center gap-3 rounded-[14px] border px-3 py-3 text-left transition ${
-                    isActive
-                      ? "border-red-800 bg-red-800 text-white shadow-lg shadow-red-950/18"
-                      : "border-red-950/10 bg-white text-zinc-700 shadow-sm shadow-red-950/5 hover:border-red-200 hover:bg-red-50/70 hover:text-red-800"
-                  }`}
-                  aria-pressed={isActive}
-                >
-                  <span
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] transition ${
-                      isActive
-                        ? "bg-white/14 text-white"
-                        : "bg-red-50 text-red-800 group-hover:bg-white"
-                    }`}
-                  >
-                    <RoleIcon name={view.icon} className="h-6 w-6" />
-                  </span>
-                  <span className="min-w-0 text-base font-semibold leading-5">
-                    {view.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <label className="block space-y-2">
-          <span className="text-sm font-medium text-zinc-700">Телефон для входа</span>
-          <input
-            name="phone"
-            type="tel"
-            inputMode="tel"
-            placeholder="+7 999 123-45-67"
-            className={inputClassName}
-            autoComplete="username"
-            autoCapitalize="none"
-            autoCorrect="off"
-            required
-          />
-        </label>
-
-        <label className="block space-y-2">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-sm font-medium text-zinc-700">Пароль</span>
-            <button
-              type="button"
-              onClick={() => setShowPassword((current) => !current)}
-              className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
-                showPassword
-                  ? "border-red-800 bg-red-800 text-white"
-                  : "border-red-200 bg-white text-red-800 hover:border-red-200 hover:text-red-900"
-              }`}
-              aria-pressed={showPassword}
-            >
-              {showPassword ? "Скрыть" : "Показать"}
-            </button>
+            <p className="mt-4 max-w-sm text-sm leading-6 text-white/78">
+              Вход выполняется по телефону сотрудника. После успешной проверки сессия сохраняется на 30 дней.
+            </p>
           </div>
 
-          <div className="relative">
+          <div className="space-y-3">
+            <div className="rounded-[18px] border border-white/18 bg-white/12 p-4">
+              <div className="flex items-start gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-white/16">
+                  <ShieldIcon className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-sm font-semibold">Проверка сессии после входа</p>
+                  <p className="mt-1 text-xs leading-5 text-white/72">
+                    Если браузер не сохранил cookie, форма покажет ошибку сразу.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="rounded-[18px] border border-white/18 bg-white/12 p-4">
+              <div className="flex items-start gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-white/16">
+                  <SessionIcon className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-sm font-semibold">Единый домен авторизации</p>
+                  <p className="mt-1 text-xs leading-5 text-white/72">
+                    Запросы идут через текущий сайт, чтобы Safari, Atlas и Chrome работали одинаково.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <form action={formAction} className="space-y-5 p-5 sm:p-8" noValidate>
+          <input type="hidden" name="returnTo" value={returnTo ?? ""} />
+
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-red-800/70">
+              Авторизация
+            </p>
+            <h3 className="mt-2 text-2xl font-semibold tracking-[-0.02em] text-zinc-950">
+              Войти в CRM
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-zinc-600">
+              Используй рабочий телефон в формате +7 или 11 цифр. Роль подтянется из карточки сотрудника.
+            </p>
+          </div>
+
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-zinc-700">Телефон</span>
             <input
-              name="password"
-              type={showPassword ? "text" : "password"}
-              placeholder="Пароль от вашей учётной записи"
-              className={`${inputClassName} pr-24`}
-              autoComplete="current-password"
+              name="phone"
+              type="tel"
+              inputMode="tel"
+              placeholder="+7 924 186-87-41"
+              className="h-12 w-full rounded-[16px] border border-red-950/10 bg-white px-4 text-base text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-red-300 focus:ring-4 focus:ring-red-800/10"
+              autoComplete="username"
+              autoCapitalize="none"
+              autoCorrect="off"
               required
             />
+          </label>
+
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-zinc-700">Пароль</span>
+            <div className="relative">
+              <input
+                name="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Пароль от CRM"
+                className="h-12 w-full rounded-[16px] border border-red-950/10 bg-white px-4 pr-28 text-base text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-red-300 focus:ring-4 focus:ring-red-800/10"
+                autoComplete="current-password"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((current) => !current)}
+                className="absolute right-2 top-1/2 inline-flex h-8 -translate-y-1/2 items-center rounded-[12px] border border-red-100 bg-white px-3 text-xs font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white"
+                aria-pressed={showPassword}
+              >
+                {showPassword ? "Скрыть" : "Показать"}
+              </button>
+            </div>
+          </label>
+
+          <div className="rounded-[18px] border border-red-950/10 bg-red-50/60 p-4">
+            <p className="text-sm font-semibold text-zinc-950">Сессия сохраняется на 30 дней</p>
+            <p className="mt-1 text-xs leading-5 text-zinc-600">
+              Выход вручную завершает текущую сессию. Смена пароля сбрасывает другие активные входы.
+            </p>
           </div>
-        </label>
 
-        {state.errorMessage ? (
-          <p className="rounded-[18px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-            {state.errorMessage}
-          </p>
-        ) : null}
+          {state.errorMessage ? (
+            <p className="rounded-[18px] border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">
+              {state.errorMessage}
+            </p>
+          ) : null}
 
-        <button
-          type="submit"
-          disabled={isPending}
-          className="foodlike-button-primary w-full"
-        >
-          {isPending ? "Входим..." : "Перейти в систему"}
-        </button>
-      </form>
-    </SurfaceCard>
+          <button
+            type="submit"
+            disabled={isPending}
+            className="inline-flex h-12 w-full items-center justify-center rounded-[16px] bg-red-800 px-5 text-sm font-semibold text-white shadow-lg shadow-red-950/15 transition hover:bg-red-900 disabled:cursor-not-allowed disabled:bg-red-300"
+          >
+            {isPending ? "Проверяем сессию..." : "Войти в систему"}
+          </button>
+        </form>
+      </div>
+    </section>
   );
 }

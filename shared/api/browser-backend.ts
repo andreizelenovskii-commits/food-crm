@@ -2,28 +2,31 @@ const DEFAULT_BACKEND_PORT = "4000";
 const FORM_DATA_TIMEOUT_MS = 30_000;
 
 export function getBrowserBackendApiUrl() {
-  if (process.env.NEXT_PUBLIC_BACKEND_API_URL?.trim()) {
-    const apiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL.trim().replace(/\/$/, "");
+  if (typeof window !== "undefined") {
+    const { protocol, hostname } = window.location;
 
-    if (typeof window !== "undefined" && window.location.hostname === "localhost") {
-      return apiUrl.replace("http://127.0.0.1:", "http://localhost:");
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      if (process.env.NEXT_PUBLIC_BACKEND_API_URL?.trim()) {
+        return process.env.NEXT_PUBLIC_BACKEND_API_URL.trim()
+          .replace(/\/$/, "")
+          .replace("http://127.0.0.1:", "http://localhost:");
+      }
+
+      return `${protocol}//${hostname}:${DEFAULT_BACKEND_PORT}`;
     }
 
-    return apiUrl;
+    if (
+      hostname === "crm.crmandromeda.ru" ||
+      hostname === "crmandromeda.ru" ||
+      hostname === "www.crmandromeda.ru" ||
+      hostname === "dev.crm.crmandromeda.ru"
+    ) {
+      return "";
+    }
   }
 
-  const { protocol, hostname } = window.location;
-
-  if (hostname === "localhost" || hostname === "127.0.0.1") {
-    return `${protocol}//${hostname}:${DEFAULT_BACKEND_PORT}`;
-  }
-
-  if (hostname === "crm.crmandromeda.ru" || hostname === "crmandromeda.ru" || hostname === "www.crmandromeda.ru") {
-    return "https://api.crmandromeda.ru";
-  }
-
-  if (hostname === "dev.crm.crmandromeda.ru") {
-    return "https://dev-api.crmandromeda.ru";
+  if (process.env.NEXT_PUBLIC_BACKEND_API_URL?.trim()) {
+    return process.env.NEXT_PUBLIC_BACKEND_API_URL.trim().replace(/\/$/, "");
   }
 
   return "";
@@ -59,7 +62,7 @@ async function parseResponse<T>(response: Response): Promise<T> {
 export async function browserBackendJson<T>(
   path: string,
   init: {
-    method?: "POST" | "PATCH" | "DELETE";
+    method?: "GET" | "POST" | "PATCH" | "DELETE";
     body?: unknown;
   } = {},
 ) {

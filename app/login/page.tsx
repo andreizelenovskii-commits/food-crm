@@ -15,7 +15,7 @@ export default async function LoginPage(props: {
       align="center"
       backHref="/"
     >
-      <div className="mx-auto w-full max-w-xl space-y-5">
+      <div className="mx-auto w-full max-w-5xl space-y-5">
         <LoginForm returnTo={returnTo} />
         <div className="rounded-[14px] border border-red-100 bg-white/90 px-4 py-4 text-center shadow-sm shadow-red-950/5">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">

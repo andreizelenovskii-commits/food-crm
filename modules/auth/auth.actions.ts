@@ -6,11 +6,16 @@ import {
 } from "@/shared/errors/app-error";
 import { parseLoginInput } from "@/modules/auth/auth.validation";
 import { browserBackendJson } from "@/shared/api/browser-backend";
+import type { SessionUser } from "@/modules/auth/auth.types";
 
 /** API мог ещё отдавать текст про email — показываем единообразно про телефон. */
 function loginErrorMessageForUi(message: string): string {
   if (message === "Неверный email или пароль") {
     return "Неверный телефон или пароль";
+  }
+
+  if (message === "Authentication required") {
+    return "Сессия не сохранилась. Обнови страницу и войди ещё раз.";
   }
 
   return message;
@@ -35,6 +40,16 @@ export async function loginAction(
         password: input.password,
       },
     });
+
+    const sessionUser = await browserBackendJson<SessionUser | null>("/api/v1/auth/me", {
+      method: "GET",
+    });
+
+    if (!sessionUser) {
+      throw new AuthenticationError(
+        "Вход выполнен, но браузер не сохранил сессию. Обнови страницу и попробуй ещё раз.",
+      );
+    }
   } catch (error) {
     if (
       error instanceof ValidationError ||
