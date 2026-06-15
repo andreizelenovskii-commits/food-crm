@@ -4,6 +4,17 @@ import { useState, type FormEvent } from "react";
 import { loginAction } from "@/modules/auth/auth.actions";
 import { limitRuPhoneInput } from "@/shared/phone";
 
+const AUTH_ROLE_GROUPS = [
+  {
+    title: "Руководители",
+    roles: ["Шеф повар", "Администратор", "Управляющий", "Старший курьер"],
+  },
+  {
+    title: "Сотрудники",
+    roles: ["Повара", "Курьеры", "Диспетчера"],
+  },
+] as const;
+
 function ShieldIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -88,6 +99,14 @@ export function LoginForm({ returnTo, initialError }: { returnTo?: string; initi
             <p className="mt-4 max-w-sm text-sm leading-6 text-white/78">
               Вход выполняется по телефону сотрудника. После успешной проверки сессия сохраняется на 30 дней.
             </p>
+            <div className="mt-5 grid gap-3">
+              {AUTH_ROLE_GROUPS.map((group) => (
+                <div key={group.title} className="rounded-[18px] border border-white/18 bg-white/10 p-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/65">{group.title}</p>
+                  <p className="mt-2 text-sm font-semibold leading-6 text-white">{group.roles.join(" · ")}</p>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="space-y-3">

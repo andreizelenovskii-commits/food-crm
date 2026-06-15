@@ -2,7 +2,14 @@
 
 import { useMemo, useState } from "react";
 
-type RoleKey = "manager" | "dispatcher" | "cook" | "courier" | "admin";
+type RoleKey =
+  | "administrator"
+  | "chef"
+  | "manager"
+  | "seniorCourier"
+  | "dispatcher"
+  | "cook"
+  | "courier";
 
 type Permission = {
   id: string;
@@ -16,11 +23,13 @@ type PermissionGroup = {
 };
 
 const ROLES: Array<{ id: RoleKey; title: string; subtitle: string }> = [
+  { id: "chef", title: "Шеф повар", subtitle: "Руководитель кухни и операций" },
+  { id: "administrator", title: "Администратор", subtitle: "Система, команда и настройки" },
   { id: "manager", title: "Управляющий", subtitle: "Полный операционный доступ" },
+  { id: "seniorCourier", title: "Старший курьер", subtitle: "Доставка, команда и контроль смены" },
   { id: "dispatcher", title: "Диспетчер", subtitle: "Заказы, клиенты, смена" },
   { id: "cook", title: "Повар", subtitle: "Кухня и упаковка" },
   { id: "courier", title: "Курьер", subtitle: "Доставка и статусы" },
-  { id: "admin", title: "Администратор", subtitle: "Система и подключения" },
 ];
 
 const PERMISSION_GROUPS: PermissionGroup[] = [
@@ -77,8 +86,10 @@ const PERMISSION_GROUPS: PermissionGroup[] = [
 ];
 
 const DEFAULT_PERMISSIONS: Record<RoleKey, string[]> = {
+  administrator: allPermissionIds(),
+  chef: allPermissionIds(),
   manager: allPermissionIds(),
-  admin: allPermissionIds(),
+  seniorCourier: allPermissionIds(),
   dispatcher: [
     "orders.view",
     "orders.create",
@@ -99,7 +110,7 @@ function allPermissionIds() {
 }
 
 export function RolesPermissionsEditor() {
-  const [activeRole, setActiveRole] = useState<RoleKey>("manager");
+  const [activeRole, setActiveRole] = useState<RoleKey>("administrator");
   const [matrix, setMatrix] = useState(DEFAULT_PERMISSIONS);
   const totalPermissions = allPermissionIds().length;
   const activePermissions = matrix[activeRole];

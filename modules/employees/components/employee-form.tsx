@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { EmployeeDatePicker } from "@/modules/employees/components/employee-date-picker";
-import { EMPLOYEE_ROLES, type EmployeeRole } from "@/modules/employees/employees.types";
+import { EMPLOYEE_ROLE_GROUPS, EMPLOYEE_ROLES, type EmployeeRole } from "@/modules/employees/employees.types";
 import { addEmployeeAction } from "@/modules/employees/employees.actions";
 
 export function EmployeeForm() {
@@ -40,27 +40,32 @@ export function EmployeeForm() {
       </label>
 
       <div className="block space-y-3">
-        <span className="text-sm font-medium text-zinc-700">Роль</span>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {EMPLOYEE_ROLES.map((role) => {
-            const isSelected = selectedRole === role;
-            return (
-              <button
-                key={role}
-                type="button"
-                onClick={() => setSelectedRole(role)}
-                className={`rounded-full border px-4 py-2.5 text-sm font-semibold transition ${
-                  isSelected
-                    ? "border-red-800 bg-red-800 text-white shadow-sm shadow-red-950/15"
-                    : "border-red-950/10 bg-white/90 text-zinc-950 hover:border-red-200 hover:bg-white"
-                }`}
-                aria-pressed={isSelected}
-              >
-                {role}
-              </button>
-            );
-          })}
-        </div>
+        <span className="text-sm font-medium text-zinc-700">Должность</span>
+        {EMPLOYEE_ROLE_GROUPS.map((group) => (
+          <div key={group.title} className="space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">{group.title}</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {group.roles.map((role) => {
+                const isSelected = selectedRole === role;
+                return (
+                  <button
+                    key={role}
+                    type="button"
+                    onClick={() => setSelectedRole(role)}
+                    className={`rounded-full border px-4 py-2.5 text-sm font-semibold transition ${
+                      isSelected
+                        ? "border-red-800 bg-red-800 text-white shadow-sm shadow-red-950/15"
+                        : "border-red-950/10 bg-white/90 text-zinc-950 hover:border-red-200 hover:bg-white"
+                    }`}
+                    aria-pressed={isSelected}
+                  >
+                    {role}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
         <input type="hidden" name="role" value={selectedRole} />
       </div>
 

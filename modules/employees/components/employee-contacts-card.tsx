@@ -3,7 +3,7 @@
 import { createPortal } from "react-dom";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { EmployeeDatePicker } from "@/modules/employees/components/employee-date-picker";
-import { EMPLOYEE_ROLES, type EmployeeProfile } from "@/modules/employees/employees.types";
+import { EMPLOYEE_ROLE_GROUPS, type EmployeeProfile } from "@/modules/employees/employees.types";
 import {
   type ContactsDraft,
   formatDate,
@@ -148,22 +148,27 @@ export function EmployeeContactsCard({
                           <div className="p-3">
                             <div className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Выберите роль</div>
                             <div className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-track-zinc-100 scrollbar-thumb-zinc-300">
-                              {EMPLOYEE_ROLES.map((role) => (
-                                <button
-                                  key={role}
-                                  type="button"
-                                  onClick={() => {
-                                    patchDraft({ role });
-                                    onRolePickerChange(false);
-                                  }}
-                                  className={`mb-2 flex w-full items-center justify-center rounded-2xl px-3 py-2 text-sm transition ${
-                                    role === contactsDraft.role
-                                      ? "bg-red-800 text-white"
-                                      : "bg-white text-zinc-950 hover:bg-red-50/70"
-                                  }`}
-                                >
-                                  {role}
-                                </button>
+                              {EMPLOYEE_ROLE_GROUPS.map((group) => (
+                                <div key={group.title} className="mb-3">
+                                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400">{group.title}</p>
+                                  {group.roles.map((role) => (
+                                    <button
+                                      key={role}
+                                      type="button"
+                                      onClick={() => {
+                                        patchDraft({ role });
+                                        onRolePickerChange(false);
+                                      }}
+                                      className={`mb-2 flex w-full items-center justify-center rounded-2xl px-3 py-2 text-sm transition ${
+                                        role === contactsDraft.role
+                                          ? "bg-red-800 text-white"
+                                          : "bg-white text-zinc-950 hover:bg-red-50/70"
+                                      }`}
+                                    >
+                                      {role}
+                                    </button>
+                                  ))}
+                                </div>
                               ))}
                             </div>
                           </div>
