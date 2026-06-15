@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { loginAction } from "@/modules/auth/auth.actions";
+import { limitRuPhoneInput } from "@/shared/phone";
 
 function ShieldIcon({ className }: { className?: string }) {
   return (
@@ -44,6 +45,7 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [phone, setPhone] = useState("");
 
   async function submitLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -139,7 +141,10 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
               name="phone"
               type="tel"
               inputMode="tel"
+              value={phone}
+              onChange={(event) => setPhone(limitRuPhoneInput(event.target.value))}
               placeholder="+7 924 186-87-41"
+              maxLength={12}
               className="h-12 w-full rounded-[16px] border border-red-950/10 bg-white px-4 text-base text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-red-300 focus:ring-4 focus:ring-red-800/10"
               autoComplete="username"
               autoCapitalize="none"

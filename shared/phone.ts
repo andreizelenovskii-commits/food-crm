@@ -17,6 +17,14 @@ export function isValidRuMobileDigits(normalized: string): boolean {
   return /^7\d{10}$/.test(normalized);
 }
 
+export function limitRuPhoneInput(raw: string): string {
+  const trimmed = raw.trim();
+  const hasLeadingPlus = trimmed.startsWith("+");
+  const digits = raw.replace(/\D/g, "").slice(0, 11);
+
+  return hasLeadingPlus ? `+${digits}` : digits;
+}
+
 /** Отображение логина 7XXXXXXXXXX как +7 (900) 123-45-67. */
 export function formatRuMobileLoginDigits(digits: string): string {
   if (!/^7\d{10}$/.test(digits)) {

@@ -6,7 +6,7 @@ import {
   type EmployeeAccessFormState,
 } from "@/modules/employees/employees.actions";
 import type { EmployeeProfile } from "@/modules/employees/employees.types";
-import { isValidRuMobileDigits, normalizeRuPhoneDigits } from "@/shared/phone";
+import { isValidRuMobileDigits, limitRuPhoneInput, normalizeRuPhoneDigits } from "@/shared/phone";
 
 function pickRandom(characters: string, randomByte: number) {
   return characters[randomByte % characters.length];
@@ -150,8 +150,9 @@ export function EmployeeAccessForm({ employee }: { employee: EmployeeProfile }) 
             type="tel"
             inputMode="tel"
             value={phone}
-            onChange={(event) => setPhone(event.target.value)}
+            onChange={(event) => setPhone(limitRuPhoneInput(event.target.value))}
             placeholder="+7 900 123-45-67"
+            maxLength={12}
             className="h-11 w-full rounded-[14px] border border-red-950/10 bg-white/90 px-4 text-zinc-950 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-800/10"
             required
           />

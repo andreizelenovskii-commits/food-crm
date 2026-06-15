@@ -1,5 +1,7 @@
 "use client";
 
+import { limitRuPhoneInput } from "@/shared/phone";
+
 type AuthStep = "details" | "code";
 
 type AuthFormState = {
@@ -47,6 +49,10 @@ export function PhoneField({ autoComplete }: { autoComplete: string }) {
         type="tel"
         inputMode="tel"
         placeholder="+7 999 123-45-67"
+        maxLength={12}
+        onInput={(event) => {
+          event.currentTarget.value = limitRuPhoneInput(event.currentTarget.value);
+        }}
         className={inputClassName}
         autoComplete={autoComplete}
         required
