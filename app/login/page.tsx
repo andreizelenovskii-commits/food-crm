@@ -3,9 +3,10 @@ import { LoginForm } from "@/modules/auth/components/login-form";
 import { PUBLIC_SITE_URL } from "@/shared/deploy-public-urls";
 
 export default async function LoginPage(props: {
-  searchParams?: Promise<{ returnTo?: string }>;
+  searchParams?: Promise<{ error?: string; returnTo?: string }>;
 }) {
   const searchParams = await props.searchParams;
+  const error = searchParams?.error?.trim() ?? "";
   const returnTo = searchParams?.returnTo?.trim() ?? "";
 
   return (
@@ -16,7 +17,7 @@ export default async function LoginPage(props: {
       backHref="/"
     >
       <div className="mx-auto w-full max-w-5xl space-y-5">
-        <LoginForm returnTo={returnTo} />
+        <LoginForm returnTo={returnTo} initialError={error} />
         <div className="rounded-[14px] border border-red-100 bg-white/90 px-4 py-4 text-center shadow-sm shadow-red-950/5">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">
             Навигация

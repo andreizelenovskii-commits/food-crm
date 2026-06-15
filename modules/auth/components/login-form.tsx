@@ -41,8 +41,8 @@ function SessionIcon({ className }: { className?: string }) {
   );
 }
 
-export function LoginForm({ returnTo }: { returnTo?: string }) {
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+export function LoginForm({ returnTo, initialError }: { returnTo?: string; initialError?: string }) {
+  const [errorMessage, setErrorMessage] = useState<string | null>(initialError ?? null);
   const [isPending, setIsPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [phone, setPhone] = useState("");
@@ -120,7 +120,13 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
           </div>
         </aside>
 
-        <form onSubmit={submitLogin} className="space-y-5 p-5 sm:p-8" noValidate>
+        <form
+          action="/api/auth/session-login"
+          method="post"
+          onSubmit={submitLogin}
+          className="space-y-5 p-5 sm:p-8"
+          noValidate
+        >
           <input type="hidden" name="returnTo" value={returnTo ?? ""} />
 
           <div>
