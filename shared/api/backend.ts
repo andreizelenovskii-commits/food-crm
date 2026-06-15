@@ -10,25 +10,55 @@ export function getBackendApiUrl() {
   ).replace(/\/$/, "");
 }
 
-function buildUrl(path: string) {
-  return `${getBackendApiUrl()}${path.startsWith("/") ? path : `/${path}`}`;
+function getBackendApiUrls() {
+  const primaryUrl = getBackendApiUrl();
+  const fallbackUrl = (
+    process.env.BACKEND_INTERNAL_API_URL?.trim() ||
+    (process.env.NODE_ENV === "production" ? DEFAULT_BACKEND_API_URL : "")
+  ).replace(/\/$/, "");
+
+  return Array.from(new Set([primaryUrl, fallbackUrl].filter(Boolean)));
+}
+
+function buildUrl(path: string, apiUrl = getBackendApiUrl()) {
+  return `${apiUrl}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
 function getBackendUnavailableMessage(path: string) {
-  const apiUrl = getBackendApiUrl();
-  const isLocalBackend = apiUrl.includes("localhost") || apiUrl.includes("127.0.0.1");
+  const apiUrls = getBackendApiUrls();
+  const isLocalBackend = apiUrls.every((apiUrl) => apiUrl.includes("localhost") || apiUrl.includes("127.0.0.1"));
+  const targets = apiUrls.map((apiUrl) => buildUrl(path, apiUrl)).join(", ");
 
   if (isLocalBackend) {
     return [
-      `Backend API is unavailable at ${buildUrl(path)}.`,
+      `Backend API is unavailable at ${targets}.`,
       "Start it locally with `cd backend && npm run start` or set BACKEND_API_URL/NEXT_PUBLIC_BACKEND_API_URL.",
     ].join(" ");
   }
 
   return [
-    `Backend API недоступен: ${buildUrl(path)}.`,
+    `Backend API недоступен: ${targets}.`,
     "Проверьте, что backend запущен на сервере, домен API открыт и переменные окружения указывают на правильный адрес.",
   ].join(" ");
+}
+
+async function fetchBackend(path: string, init: RequestInit) {
+  let networkError: TypeError | null = null;
+
+  for (const apiUrl of getBackendApiUrls()) {
+    try {
+      return await fetch(buildUrl(path, apiUrl), init);
+    } catch (error) {
+      if (error instanceof TypeError) {
+        networkError = error;
+        continue;
+      }
+
+      throw error;
+    }
+  }
+
+  throw networkError ?? new TypeError("Backend API unavailable");
 }
 
 async function getCookieHeader() {
@@ -62,7 +92,7 @@ async function parseErrorMessage(response: Response) {
 
 export async function backendGet<T>(path: string) {
   try {
-    return parseResponse<T>(await fetch(buildUrl(path), {
+    return parseResponse<T>(await fetchBackend(path, {
       cache: "no-store",
       headers: {
         cookie: await getCookieHeader(),
@@ -81,7 +111,7 @@ export async function backendGetOptional<T>(path: string) {
   let response: Response;
 
   try {
-    response = await fetch(buildUrl(path), {
+    response = await fetchBackend(path, {
       cache: "no-store",
       headers: {
         cookie: await getCookieHeader(),
@@ -109,7 +139,7 @@ export async function backendGetResult<T>(path: string): Promise<
   let response: Response;
 
   try {
-    response = await fetch(buildUrl(path), {
+    response = await fetchBackend(path, {
       cache: "no-store",
       headers: {
         cookie: await getCookieHeader(),
@@ -149,7 +179,7 @@ export async function backendJson<T>(
   } = {},
 ) {
   try {
-    return parseResponse<T>(await fetch(buildUrl(path), {
+    return parseResponse<T>(await fetchBackend(path, {
       method: init.method ?? "POST",
       cache: "no-store",
       headers: {
