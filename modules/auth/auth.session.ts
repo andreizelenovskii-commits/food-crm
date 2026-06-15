@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { hasPermission, type AuthPermission } from "@/modules/auth/authz";
 import type { SessionUser } from "@/modules/auth/auth.types";
-import { backendGetOptional } from "@/shared/api/backend";
+import { backendGetResult } from "@/shared/api/backend";
 
 const BACKEND_SESSION_COOKIE_NAME =
   process.env.BACKEND_SESSION_COOKIE_NAME?.trim() || "food_crm_api_session";
@@ -26,17 +26,46 @@ export async function clearSession() {
 }
 
 export async function getSessionUser(): Promise<SessionUser | null> {
-  return backendGetOptional<SessionUser>("/api/v1/auth/me");
+  const result = await backendGetResult<SessionUser>("/api/v1/auth/me");
+
+  return result.ok ? result.data : null;
+}
+
+function loginReasonFromMessage(message: string) {
+  const lower = message.toLowerCase();
+
+  if (message.includes("другого устройства")) return "other_device";
+  if (message.includes("Пароль был измен")) return "password_changed";
+  if (message.includes("истекла")) return "expired";
+  if (message.includes("повреждена") || lower.includes("cookie")) return "invalid";
+  if (message.includes("Сессия завершена")) return "revoked";
+  if (message.includes("Backend API недоступен") || message.includes("API недоступен")) return "server";
+  if (message.includes("доступ")) return "access";
+
+  return "required";
+}
+
+function loginRedirectUrl(message: string, returnTo = "") {
+  const searchParams = new URLSearchParams({
+    reason: loginReasonFromMessage(message),
+    message,
+  });
+
+  if (returnTo) {
+    searchParams.set("returnTo", returnTo);
+  }
+
+  return `/login?${searchParams.toString()}`;
 }
 
 export async function requireSessionUser() {
-  const user = await getSessionUser();
+  const result = await backendGetResult<SessionUser>("/api/v1/auth/me");
 
-  if (!user) {
-    redirect("/login");
+  if (!result.ok) {
+    redirect(loginRedirectUrl(result.message));
   }
 
-  return user;
+  return result.data;
 }
 
 export async function requirePermission(
@@ -46,7 +75,7 @@ export async function requirePermission(
   const user = await requireSessionUser();
 
   if (!hasPermission(user, permission)) {
-    redirect(redirectTo);
+    redirect(loginRedirectUrl("Недостаточно прав для этого раздела CRM.", redirectTo));
   }
 
   return user;

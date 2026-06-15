@@ -66,7 +66,27 @@ function FoodLikeMark() {
   );
 }
 
-export function LoginForm({ returnTo, initialError }: { returnTo?: string; initialError?: string }) {
+function reasonTitle(reason?: string) {
+  if (reason === "other_device") return "Вход с другого устройства";
+  if (reason === "password_changed") return "Пароль изменён";
+  if (reason === "expired") return "Сессия истекла";
+  if (reason === "invalid") return "Cookie сессии повреждена";
+  if (reason === "revoked") return "Сессия завершена";
+  if (reason === "server") return "Сервер авторизации недоступен";
+  if (reason === "access") return "Недостаточно прав";
+
+  return "Нужно войти заново";
+}
+
+export function LoginForm({
+  returnTo,
+  initialError,
+  initialReason,
+}: {
+  returnTo?: string;
+  initialError?: string;
+  initialReason?: string;
+}) {
   const [errorMessage, setErrorMessage] = useState<string | null>(initialError ?? null);
   const [isPending, setIsPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -220,9 +240,10 @@ export function LoginForm({ returnTo, initialError }: { returnTo?: string; initi
           </div>
 
           {errorMessage ? (
-            <p className="rounded-[18px] border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">
-              {errorMessage}
-            </p>
+            <div className="rounded-[18px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+              <p className="font-semibold">{reasonTitle(initialReason)}</p>
+              <p className="mt-1 leading-5">{errorMessage}</p>
+            </div>
           ) : null}
 
           <button

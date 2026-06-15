@@ -52,6 +52,14 @@ async function parseResponse<T>(response: Response): Promise<T> {
   return payload?.data as T;
 }
 
+async function parseErrorMessage(response: Response) {
+  const payload = await response.json().catch(() => null) as {
+    error?: { message?: string };
+  } | null;
+
+  return payload?.error?.message ?? `Backend request failed: ${response.status}`;
+}
+
 export async function backendGet<T>(path: string) {
   try {
     return parseResponse<T>(await fetch(buildUrl(path), {
@@ -92,6 +100,45 @@ export async function backendGetOptional<T>(path: string) {
   }
 
   return parseResponse<T>(response);
+}
+
+export async function backendGetResult<T>(path: string): Promise<
+  | { ok: true; data: T }
+  | { ok: false; status: number; message: string }
+> {
+  let response: Response;
+
+  try {
+    response = await fetch(buildUrl(path), {
+      cache: "no-store",
+      headers: {
+        cookie: await getCookieHeader(),
+      },
+    });
+  } catch (error) {
+    if (error instanceof TypeError) {
+      return {
+        ok: false,
+        status: 503,
+        message: getBackendUnavailableMessage(path),
+      };
+    }
+
+    throw error;
+  }
+
+  if (!response.ok) {
+    return {
+      ok: false,
+      status: response.status,
+      message: await parseErrorMessage(response),
+    };
+  }
+
+  return {
+    ok: true,
+    data: await parseResponse<T>(response),
+  };
 }
 
 export async function backendJson<T>(
