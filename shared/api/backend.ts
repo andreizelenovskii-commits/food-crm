@@ -1,6 +1,8 @@
 import { cookies } from "next/headers";
 
 const DEFAULT_BACKEND_API_URL = "http://127.0.0.1:4000";
+const BACKEND_SESSION_COOKIE_NAME =
+  process.env.BACKEND_SESSION_COOKIE_NAME?.trim() || "food_crm_api_session";
 
 export function getBackendApiUrl() {
   return (
@@ -66,10 +68,13 @@ async function fetchBackend(path: string, init: RequestInit) {
 
 async function getCookieHeader() {
   const cookieStore = await cookies();
-  return cookieStore
-    .getAll()
-    .map((cookie) => `${cookie.name}=${cookie.value}`)
-    .join("; ");
+  const sessionCookie = cookieStore.get(BACKEND_SESSION_COOKIE_NAME);
+
+  if (!sessionCookie?.value || /[\r\n;]/.test(sessionCookie.value)) {
+    return "";
+  }
+
+  return `${BACKEND_SESSION_COOKIE_NAME}=${sessionCookie.value}`;
 }
 
 async function parseResponse<T>(response: Response): Promise<T> {
