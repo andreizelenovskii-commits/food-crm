@@ -4,7 +4,6 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { PaginatedList } from "@/components/ui/paginated-list";
 import type { SessionUser } from "@/modules/auth/auth.types";
 import type { ProductItem } from "@/modules/inventory/inventory.types";
 import { OrderCard, formatOrderMoney } from "@/modules/orders/components/order-display";
@@ -62,6 +61,14 @@ function buildOrdersHref(period: SalesPeriod, date: string) {
 
 function sumBy<T>(items: T[], getValue: (item: T) => number) {
   return items.reduce((sum, item) => sum + getValue(item), 0);
+}
+
+function formatOrdersCount(count: number) {
+  if (count === 1) {
+    return "1 новый";
+  }
+
+  return `${count} новых`;
 }
 
 function buildPeriodOptions(period: SalesPeriod, date: string) {
@@ -184,8 +191,6 @@ export function OrdersWorkspace({
           <OrdersColumn
             key={column.key}
             column={column}
-            user={user}
-            packagingOptions={packagingOptions}
             onOpen={() => setActiveColumnKey(column.key)}
           />
         ))}
@@ -214,31 +219,56 @@ function OrdersMetric({ label, value, hint }: { label: string; value: string | n
 
 function OrdersColumn({
   column,
-  user,
-  packagingOptions,
   onOpen,
 }: {
   column: (typeof ORDER_COLUMNS)[number] & { orders: OrderListItem[] };
-  user: SessionUser;
-  packagingOptions: ProductItem[];
   onOpen: () => void;
 }) {
   const columnRevenueCents = sumBy(column.orders, (order) => order.totalCents);
+  const hasNewOrders = column.key === "new" && column.orders.length > 0;
 
   return (
-    <section className="flex min-w-0 flex-col rounded-[20px] border border-red-950/10 bg-white/80 p-4 shadow-sm shadow-red-950/5 backdrop-blur-2xl">
+    <section
+      className={[
+        "flex min-w-0 flex-col rounded-[20px] border bg-white/80 p-4 shadow-sm backdrop-blur-2xl",
+        hasNewOrders
+          ? "border-red-300 shadow-red-950/10 ring-2 ring-red-100"
+          : "border-red-950/10 shadow-red-950/5",
+      ].join(" ")}
+    >
       <div className="grid min-h-24 grid-cols-[1fr_auto] items-start gap-3">
         <div className="min-w-0">
           <p className="foodlike-kicker">{column.eyebrow}</p>
           <h3 className="mt-1 text-xl font-semibold leading-tight text-zinc-950">{column.title}</h3>
           <p className="mt-1 line-clamp-2 text-xs leading-5 text-zinc-500">{column.description}</p>
         </div>
-        <div className="flex size-16 shrink-0 flex-col items-center justify-center rounded-[18px] bg-red-50 text-red-800">
+        <div
+          className={[
+            "flex size-16 shrink-0 flex-col items-center justify-center rounded-[18px] text-red-800",
+            hasNewOrders ? "animate-pulse bg-red-100 ring-4 ring-red-100/70" : "bg-red-50",
+          ].join(" ")}
+        >
           <p className="text-2xl font-semibold leading-none">{column.orders.length}</p>
           <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em]">шт</p>
         </div>
       </div>
-      <div className="mt-4 rounded-[18px] border border-red-100 bg-[linear-gradient(180deg,#fff,rgba(255,247,247,0.82))] p-3">
+      <div
+        className={[
+          "mt-4 rounded-[18px] border p-4",
+          hasNewOrders
+            ? "border-red-200 bg-[linear-gradient(135deg,#fff1f1,#fff)]"
+            : "border-red-100 bg-[linear-gradient(180deg,#fff,rgba(255,247,247,0.82))]",
+        ].join(" ")}
+      >
+        {hasNewOrders ? (
+          <div className="mb-4 rounded-[16px] bg-red-800 px-4 py-5 text-white shadow-lg shadow-red-950/15">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/75">Требуют внимания</p>
+            <div className="mt-2 flex items-end justify-between gap-3">
+              <p className="text-4xl font-semibold leading-none">{formatOrdersCount(column.orders.length)}</p>
+              <span className="mb-1 inline-flex h-3 w-3 rounded-full bg-white shadow-[0_0_0_8px_rgba(255,255,255,0.18)]" />
+            </div>
+          </div>
+        ) : null}
         <div className="flex items-end justify-between gap-3">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-red-800/70">Сумма колонки</p>
@@ -258,15 +288,6 @@ function OrdersColumn({
           </p>
         ) : null}
       </div>
-      {column.orders.length ? (
-        <div className="mt-4 flex-1">
-          <PaginatedList className="space-y-3" itemLabel="заказов" pageSize={4}>
-            {column.orders.map((order) => (
-              <OrderCard key={order.id} order={order} user={user} packagingOptions={packagingOptions} compact />
-            ))}
-          </PaginatedList>
-        </div>
-      ) : null}
     </section>
   );
 }
