@@ -7,6 +7,7 @@ import {
 import { parseLoginInput } from "@/modules/auth/auth.validation";
 import { browserBackendJson } from "@/shared/api/browser-backend";
 import type { SessionUser } from "@/modules/auth/auth.types";
+import { normalizeAuthReturnTo } from "@/modules/auth/auth.redirect";
 
 /** API мог ещё отдавать текст про email — показываем единообразно про телефон. */
 function loginErrorMessageForUi(message: string): string {
@@ -64,7 +65,7 @@ export async function loginAction(
     throw error;
   }
 
-  window.location.assign(returnTo.startsWith("/") ? returnTo : "/dashboard");
+  window.location.assign(normalizeAuthReturnTo(returnTo));
   return { errorMessage: null };
 }
 
@@ -119,9 +120,10 @@ export async function changePasswordAction(
 export async function logoutAction(formData: FormData) {
   const returnTo = String(formData.get("returnTo") ?? "").trim();
   await browserBackendJson("/api/v1/auth/logout");
+  const safeReturnTo = normalizeAuthReturnTo(returnTo, "");
   window.location.assign(
-    returnTo.startsWith("/")
-      ? `/login?returnTo=${encodeURIComponent(returnTo)}`
+    safeReturnTo
+      ? `/login?returnTo=${encodeURIComponent(safeReturnTo)}`
       : "/login",
   );
 }
