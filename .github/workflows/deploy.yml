@@ -88,6 +88,9 @@ jobs:
           sleep 5
           curl -fsS http://127.0.0.1:3000 >/dev/null
           curl -fsS http://127.0.0.1:3000/login >/dev/null
+          DASHBOARD_STATUS="$(curl -sS -D /tmp/food-crm-dashboard-headers.txt -o /tmp/food-crm-dashboard-check.txt -w '%{http_code}' http://127.0.0.1:3000/dashboard)"
+          test "$DASHBOARD_STATUS" = "307"
+          grep -qi '^location: /login?reason=' /tmp/food-crm-dashboard-headers.txt
           pm2 save
           find "$APP_DIR/releases" -mindepth 1 -maxdepth 1 -type d \
             ! -samefile "$RELEASE_DIR" \

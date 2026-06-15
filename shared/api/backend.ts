@@ -12,12 +12,15 @@ export function getBackendApiUrl() {
 
 function getBackendApiUrls() {
   const primaryUrl = getBackendApiUrl();
-  const fallbackUrl = (
+  const internalUrl = (
     process.env.BACKEND_INTERNAL_API_URL?.trim() ||
     (process.env.NODE_ENV === "production" ? DEFAULT_BACKEND_API_URL : "")
   ).replace(/\/$/, "");
+  const productionFallbackUrls = process.env.NODE_ENV === "production"
+    ? ["http://localhost:4000", "https://crm.crmandromeda.ru"]
+    : [];
 
-  return Array.from(new Set([primaryUrl, fallbackUrl].filter(Boolean)));
+  return Array.from(new Set([primaryUrl, internalUrl, ...productionFallbackUrls].filter(Boolean)));
 }
 
 function buildUrl(path: string, apiUrl = getBackendApiUrl()) {
