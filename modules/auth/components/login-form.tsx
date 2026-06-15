@@ -1,11 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState, type FormEvent } from "react";
 import { loginAction } from "@/modules/auth/auth.actions";
-
-const initialLoginFormState = {
-  errorMessage: null,
-};
 
 function ShieldIcon({ className }: { className?: string }) {
   return (
@@ -45,11 +41,36 @@ function SessionIcon({ className }: { className?: string }) {
 }
 
 export function LoginForm({ returnTo }: { returnTo?: string }) {
-  const [state, formAction, isPending] = useActionState(
-    loginAction,
-    initialLoginFormState,
-  );
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isPending, setIsPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  async function submitLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (isPending) {
+      return;
+    }
+
+    setErrorMessage(null);
+    setIsPending(true);
+
+    try {
+      const result = await loginAction(
+        { errorMessage: null },
+        new FormData(event.currentTarget),
+      );
+      setErrorMessage(result.errorMessage);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Не удалось выполнить вход. Обнови страницу и попробуй ещё раз.",
+      );
+    } finally {
+      setIsPending(false);
+    }
+  }
 
   return (
     <section className="mx-auto w-full max-w-5xl overflow-hidden rounded-[28px] border border-white/75 bg-white/82 shadow-[0_24px_80px_rgba(127,29,29,0.14)] backdrop-blur-2xl">
@@ -97,7 +118,7 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
           </div>
         </aside>
 
-        <form action={formAction} className="space-y-5 p-5 sm:p-8" noValidate>
+        <form onSubmit={submitLogin} className="space-y-5 p-5 sm:p-8" noValidate>
           <input type="hidden" name="returnTo" value={returnTo ?? ""} />
 
           <div>
@@ -156,9 +177,9 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
             </p>
           </div>
 
-          {state.errorMessage ? (
+          {errorMessage ? (
             <p className="rounded-[18px] border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">
-              {state.errorMessage}
+              {errorMessage}
             </p>
           ) : null}
 
