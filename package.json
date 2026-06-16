@@ -16,7 +16,7 @@
     "local:db:logs": "docker compose logs -f postgres"
   },
   "dependencies": {
-    "next": "^16.2.4",
+    "next": "^16.2.9",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
   },
@@ -34,6 +34,7 @@
     "jsdom": "^29.1.1",
     "tailwindcss": "^4.2.4",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.6"
+    "vite": "^8.0.16",
+    "vitest": "^4.1.9"
   }
 }
