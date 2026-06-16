@@ -1,11 +1,16 @@
 import type {
   IncomingActSummary,
   InventoryResponsibleOption,
+  InventoryWorkspaceData,
   InventorySessionSummary,
   ProductItem,
   WriteoffActSummary,
 } from "@/modules/inventory/inventory.types";
 import { backendGet } from "@/shared/api/backend";
+
+export async function fetchInventoryWorkspace(): Promise<InventoryWorkspaceData> {
+  return backendGet<InventoryWorkspaceData>("/api/v1/inventory/workspace");
+}
 
 export async function fetchProducts(): Promise<ProductItem[]> {
   return backendGet<ProductItem[]>("/api/v1/inventory/products");

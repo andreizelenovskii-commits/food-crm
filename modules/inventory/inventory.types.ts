@@ -1,3 +1,6 @@
+import type { Employee } from "@/modules/employees/employees.types";
+import type { TechCardItem, TechCardProductOption } from "@/modules/tech-cards/tech-cards.types";
+
 export const PRODUCT_CATEGORIES = [
   "Молокосодержащая продукция",
   "Мясная и куриная продукция",
@@ -167,4 +170,15 @@ export type WriteoffActSummary = {
   totalQuantity: number;
   totalCents: number;
   items: WriteoffActItem[];
+};
+
+export type InventoryWorkspaceData = {
+  products: ProductItem[];
+  responsibleOptions: InventoryResponsibleOption[];
+  incomingActs: IncomingActSummary[];
+  inventorySessions: InventorySessionSummary[];
+  writeoffActs: WriteoffActSummary[];
+  employees: Employee[];
+  techCards: TechCardItem[];
+  techCardProducts: TechCardProductOption[];
 };
