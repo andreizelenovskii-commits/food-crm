@@ -18,11 +18,11 @@ function getBackendApiUrls() {
     process.env.BACKEND_INTERNAL_API_URL?.trim() ||
     (process.env.NODE_ENV === "production" ? DEFAULT_BACKEND_API_URL : "")
   ).replace(/\/$/, "");
-  const productionFallbackUrls = process.env.NODE_ENV === "production"
-    ? ["http://localhost:4000", "https://crm.crmandromeda.ru"]
-    : [];
+  const urls = process.env.NODE_ENV === "production"
+    ? [internalUrl, "http://localhost:4000", primaryUrl, "https://crm.crmandromeda.ru"]
+    : [primaryUrl, internalUrl];
 
-  return Array.from(new Set([primaryUrl, internalUrl, ...productionFallbackUrls].filter(Boolean)));
+  return Array.from(new Set(urls.filter(Boolean)));
 }
 
 function buildUrl(path: string, apiUrl = getBackendApiUrl()) {
