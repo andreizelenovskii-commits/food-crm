@@ -4,6 +4,7 @@ import { getUserHomePath } from "@/modules/auth/auth.redirect";
 import { fetchClients } from "@/modules/clients/clients.api";
 import { buildClientsPageViewModel } from "@/modules/clients/clients.page-model";
 import { DashboardPage } from "@/modules/dashboard/components/dashboard-page";
+import { hasPermission } from "@/modules/auth/authz";
 import { resolveDashboardSelectedMonth, type DashboardPageSearchParams } from "@/modules/dashboard/dashboard.page-model";
 import {
   getDashboardMetrics,
@@ -23,9 +24,10 @@ export default async function DashboardRoutePage(props: {
 
   const searchParams = await props.searchParams;
   const selectedMonth = resolveDashboardSelectedMonth(searchParams);
+  const canViewClients = hasPermission(user, "view_clients");
   const [dashboard, clients] = await Promise.all([
     getDashboardMetrics(),
-    fetchClients(),
+    canViewClients ? fetchClients() : Promise.resolve([]),
   ]);
   const clientsViewModel = buildClientsPageViewModel(clients, "");
   const employeeDashboard = STAFF_ROLES.has(user.role)
