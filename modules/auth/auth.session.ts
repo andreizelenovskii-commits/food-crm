@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { hasPermission, type AuthPermission } from "@/modules/auth/authz";
 import type { SessionUser } from "@/modules/auth/auth.types";
+import { getAccessDeniedPath, getUserHomePath } from "@/modules/auth/auth.redirect";
 import { backendGetResult } from "@/shared/api/backend";
 
 const BACKEND_SESSION_COOKIE_NAME =
@@ -75,7 +76,8 @@ export async function requirePermission(
   const user = await requireSessionUser();
 
   if (!hasPermission(user, permission)) {
-    redirect(loginRedirectUrl("Недостаточно прав для этого раздела CRM.", redirectTo));
+    const roleHomePath = getUserHomePath(user);
+    redirect(roleHomePath === redirectTo ? getAccessDeniedPath() : roleHomePath);
   }
 
   return user;

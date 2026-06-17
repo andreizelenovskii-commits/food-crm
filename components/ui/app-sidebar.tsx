@@ -6,20 +6,24 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { ModuleIcon } from "@/components/ui/module-icon";
 import { SidebarNavGroup } from "@/components/ui/sidebar-nav-group";
+import type { SessionUser } from "@/modules/auth/auth.types";
+import { hasPermission, type AuthPermission } from "@/modules/auth/authz";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Главная", icon: "grid" },
-  { href: "/dashboard/sales", label: "Продажи", icon: "chart" },
-  { href: "/dashboard/reports", label: "Отчеты", icon: "report" },
-  { href: "/dashboard/orders", label: "Заказы", icon: "receipt" },
-  { href: "/dashboard/clients", label: "Клиенты", icon: "users" },
-  { href: "/dashboard/catalog", label: "Каталог", icon: "book" },
-  { href: "/dashboard/inventory", label: "Склад", icon: "box" },
-  { href: "/dashboard/employees", label: "Сотрудники", icon: "badge" },
-  { href: "/dashboard/loyalty", label: "Лояльность", icon: "star" },
-  { href: "/dashboard/reviews", label: "Отзывы", icon: "message" },
-  { href: "/dashboard/website", label: "Сайт", icon: "globe" },
-  { href: "/dashboard/settings", label: "Настройки", icon: "settings" },
+  { href: "/dashboard", label: "Главная", icon: "grid", permission: "view_dashboard" },
+  { href: "/dashboard/orders/dispatcher", label: "Диспетчер", icon: "receipt", permission: "manage_orders", roles: ["Диспетчер"] },
+  { href: "/dashboard/kitchen", label: "Кухня", icon: "receipt", permission: "view_orders", roles: ["Повар", "Шеф повар", "Администратор", "admin", "Управляющий"] },
+  { href: "/dashboard/sales", label: "Продажи", icon: "chart", permission: "view_dashboard", managerOnly: true },
+  { href: "/dashboard/reports", label: "Отчеты", icon: "report", permission: "view_dashboard", managerOnly: true },
+  { href: "/dashboard/orders", label: "Заказы", icon: "receipt", permission: "view_orders", managerOnly: true },
+  { href: "/dashboard/clients", label: "Клиенты", icon: "users", permission: "view_clients" },
+  { href: "/dashboard/catalog", label: "Каталог", icon: "book", permission: "view_catalog" },
+  { href: "/dashboard/inventory", label: "Склад", icon: "box", permission: "view_inventory" },
+  { href: "/dashboard/employees", label: "Сотрудники", icon: "badge", permission: "view_employees" },
+  { href: "/dashboard/loyalty", label: "Лояльность", icon: "star", permission: "view_dashboard", managerOnly: true },
+  { href: "/dashboard/reviews", label: "Отзывы", icon: "message", permission: "view_dashboard", managerOnly: true },
+  { href: "/dashboard/website", label: "Сайт", icon: "globe", permission: "view_settings" },
+  { href: "/dashboard/settings", label: "Настройки", icon: "settings", permission: "view_settings" },
 ] as const;
 
 const INVENTORY_SUB_ITEMS: Array<{
@@ -48,7 +52,25 @@ function isActivePath(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function AppSidebar() {
+const MANAGER_ROLES = new Set(["admin", "Администратор", "Шеф повар", "Управляющий", "Старший курьер"]);
+
+function canShowNavItem(user: SessionUser | null, item: (typeof NAV_ITEMS)[number]) {
+  if (!user) {
+    return false;
+  }
+
+  if ("managerOnly" in item && item.managerOnly && !MANAGER_ROLES.has(user.role)) {
+    return false;
+  }
+
+  if ("roles" in item && item.roles && !(item.roles as readonly string[]).includes(user.role)) {
+    return false;
+  }
+
+  return hasPermission(user, item.permission as AuthPermission);
+}
+
+export function AppSidebar({ user }: { user: SessionUser | null }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -117,7 +139,7 @@ export function AppSidebar() {
 
         <nav className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
           <div className="space-y-1">
-            {NAV_ITEMS.map((item) => {
+            {NAV_ITEMS.filter((item) => canShowNavItem(user, item)).map((item) => {
               const isActive = isActivePath(pathname, item.href);
 
               if (item.href === "/dashboard/inventory") {

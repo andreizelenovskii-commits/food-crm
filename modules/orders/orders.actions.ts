@@ -70,20 +70,28 @@ export async function updateOrderStatusAction(formData: FormData) {
   const status = String(formData.get("status") ?? "").trim();
 
   if (!Number.isInteger(orderId) || orderId <= 0) {
-    return;
+    return { errorMessage: "Не удалось определить заказ" };
   }
 
   if (!ORDER_STATUSES.includes(status as OrderStatus)) {
-    return;
+    return { errorMessage: "Недопустимый статус заказа" };
   }
 
-  await browserBackendJson(`/api/v1/orders/${orderId}/status`, {
-    method: "PATCH",
-    body: {
-      status: status as OrderStatus,
-    },
-  });
+  try {
+    await browserBackendJson(`/api/v1/orders/${orderId}/status`, {
+      method: "PATCH",
+      body: {
+        status: status as OrderStatus,
+      },
+    });
+  } catch (error) {
+    return {
+      errorMessage: error instanceof Error ? error.message : "Не удалось изменить статус",
+    };
+  }
+
   window.location.reload();
+  return { errorMessage: null };
 }
 
 export async function chooseOrderPackagingAction(formData: FormData) {

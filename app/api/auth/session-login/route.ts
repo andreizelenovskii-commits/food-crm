@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { normalizeAuthReturnTo } from "@/modules/auth/auth.redirect";
+import { normalizeAuthReturnTo, normalizeRoleReturnTo } from "@/modules/auth/auth.redirect";
 import { parseLoginInput } from "@/modules/auth/auth.validation";
+import type { SessionUser } from "@/modules/auth/auth.types";
 import { getBackendApiUrl } from "@/shared/api/backend";
 
 type LoginPayload = {
   token?: string;
   expiresAt?: string;
+  user?: SessionUser;
 };
 
 function getSetCookieHeaders(headers: Headers) {
@@ -88,7 +90,9 @@ export async function POST(request: NextRequest) {
   const response = new NextResponse(null, {
     status: 303,
     headers: {
-      location: normalizeAuthReturnTo(returnTo),
+      location: payload?.data?.user
+        ? normalizeRoleReturnTo(returnTo, payload.data.user)
+        : normalizeAuthReturnTo(returnTo),
     },
   });
   const setCookieHeaders = getSetCookieHeaders(backendResponse.headers);
