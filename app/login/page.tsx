@@ -1,8 +1,16 @@
+import { redirect } from "next/navigation";
 import { LoginForm } from "@/modules/auth/components/login-form";
+import { getSessionUser } from "@/modules/auth/auth.session";
+import { getUserHomePath } from "@/modules/auth/auth.redirect";
 
 export default async function LoginPage(props: {
   searchParams?: Promise<{ error?: string; message?: string; reason?: string; returnTo?: string }>;
 }) {
+  const user = await getSessionUser();
+  if (user) {
+    redirect(getUserHomePath(user));
+  }
+
   const searchParams = await props.searchParams;
   const error = searchParams?.error?.trim() || searchParams?.message?.trim() || "";
   const reason = searchParams?.reason?.trim() ?? "";

@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { loginAction } from "@/modules/auth/auth.actions";
-import { limitRuPhoneInput } from "@/shared/phone";
+import { formatRuPhoneDisplay, toBackendPhone } from "@/shared/phone";
 
 const AUTH_ROLE_GROUPS = [
   {
@@ -73,7 +73,7 @@ function reasonTitle(reason?: string) {
   if (reason === "invalid") return "Cookie сессии повреждена";
   if (reason === "revoked") return "Сессия завершена";
   if (reason === "server") return "Сервер авторизации недоступен";
-  if (reason === "access") return "Недостаточно прав";
+  if (reason === "access") return "Нет доступа к разделу";
 
   return "Нужно войти заново";
 }
@@ -90,7 +90,12 @@ export function LoginForm({
   const [errorMessage, setErrorMessage] = useState<string | null>(initialError ?? null);
   const [isPending, setIsPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [phone, setPhone] = useState("");
+  const [phoneDigits, setPhoneDigits] = useState("");
+  const phoneDisplay = phoneDigits ? formatRuPhoneDisplay(phoneDigits) : "";
+
+  function applyPhoneInput(value: string) {
+    setPhoneDigits(toBackendPhone(value));
+  }
 
   async function submitLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -194,16 +199,20 @@ export function LoginForm({
 
           <label className="block space-y-2">
             <span className="text-sm font-medium text-zinc-700">Телефон</span>
+            <input type="hidden" name="phone" value={phoneDigits} />
             <input
-              name="phone"
+              name="phoneDisplay"
               type="tel"
               inputMode="tel"
-              value={phone}
-              onChange={(event) => setPhone(limitRuPhoneInput(event.target.value))}
-              placeholder="+7 924 186-87-41"
-              maxLength={12}
+              value={phoneDisplay}
+              onChange={(event) => applyPhoneInput(event.currentTarget.value)}
+              onPaste={(event) => {
+                event.preventDefault();
+                applyPhoneInput(event.clipboardData.getData("text"));
+              }}
+              placeholder="+7-(999)-999-99-99"
               className="h-12 w-full rounded-[16px] border border-red-950/10 bg-white px-4 text-base text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-red-300 focus:ring-4 focus:ring-red-800/10"
-              autoComplete="username"
+              autoComplete="tel"
               autoCapitalize="none"
               autoCorrect="off"
               required

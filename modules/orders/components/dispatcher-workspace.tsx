@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { SessionUser } from "@/modules/auth/auth.types";
 import type { ProductItem } from "@/modules/inventory/inventory.types";
+import { DispatcherFilters } from "@/modules/orders/components/dispatcher-filters";
 import { GlassPanel, KpiTile } from "@/modules/dashboard/components/dashboard-widgets";
 import { OrderCreateButton } from "@/modules/orders/components/order-create-button";
 import { OrderCard } from "@/modules/orders/components/order-display";
@@ -14,7 +15,7 @@ import {
   matchesDateFilter,
 } from "@/modules/orders/components/orders-filtering";
 import type { OrderCreateOptions } from "@/modules/orders/orders.page-model";
-import type { OrderListItem } from "@/modules/orders/orders.types";
+import type { OrderListItem, OrderSource, OrderStatus } from "@/modules/orders/orders.types";
 import { INITIAL_ORDER_STATUS, isOrderClosed } from "@/modules/orders/orders.workflow";
 
 export function DispatcherWorkspace({
@@ -32,17 +33,50 @@ export function DispatcherWorkspace({
 }) {
   const [dateMode, setDateMode] = useState<DateMode>("day");
   const [dateValue, setDateValue] = useState(buildDayKey());
+  const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
+  const [sourceFilter, setSourceFilter] = useState<OrderSource | "all">("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const visibleOrders = useMemo(
-    () => orders.filter((order) => matchesDateFilter(order, dateMode, dateValue)),
-    [dateMode, dateValue, orders],
+    () => orders.filter((order) => {
+      const query = searchQuery.trim().toLowerCase();
+
+      if (!matchesDateFilter(order, dateMode, dateValue)) {
+        return false;
+      }
+
+      if (statusFilter !== "all" && order.status !== statusFilter) {
+        return false;
+      }
+
+      if (sourceFilter !== "all" && order.source !== sourceFilter) {
+        return false;
+      }
+
+      if (!query) {
+        return true;
+      }
+
+      return [
+        String(order.id),
+        order.clientName,
+        order.customerPhoneSnapshot ?? "",
+      ].some((value) => value.toLowerCase().includes(query));
+    }),
+    [dateMode, dateValue, orders, searchQuery, sourceFilter, statusFilter],
   );
   const websiteOrders = visibleOrders.filter(
     (order) => !order.isInternal && order.status === INITIAL_ORDER_STATUS,
   );
   const activeClientOrders = visibleOrders.filter(
-    (order) => !order.isInternal && !isOrderClosed(order.status) && order.status !== INITIAL_ORDER_STATUS,
+    (order) =>
+      !order.isInternal &&
+      !isOrderClosed(order.status) &&
+      order.status !== INITIAL_ORDER_STATUS &&
+      order.status !== "READY" &&
+      order.status !== "PACKED",
   );
   const readyOrders = visibleOrders.filter((order) => order.status === "READY" || order.status === "PACKED");
+  const closedOrders = visibleOrders.filter((order) => order.status === "DELIVERED_PAID" || order.status === "CANCELLED");
 
   return (
     <>
@@ -61,7 +95,16 @@ export function DispatcherWorkspace({
             />
           </section>
 
-          <div className="grid gap-4 xl:grid-cols-[minmax(320px,0.9fr)_minmax(420px,1.1fr)]">
+          <DispatcherFilters
+            searchQuery={searchQuery}
+            statusFilter={statusFilter}
+            sourceFilter={sourceFilter}
+            onSearchQueryChange={setSearchQuery}
+            onStatusFilterChange={setStatusFilter}
+            onSourceFilterChange={setSourceFilter}
+          />
+
+          <div className="grid gap-4 xl:grid-cols-2">
             <DispatcherColumn
               title="Заказы с сайта"
               orders={websiteOrders}
@@ -75,6 +118,20 @@ export function DispatcherWorkspace({
               user={user}
               packagingOptions={packagingOptions}
               emptyText="Активных клиентских заказов нет."
+            />
+            <DispatcherColumn
+              title="Готовые и собранные"
+              orders={readyOrders}
+              user={user}
+              packagingOptions={packagingOptions}
+              emptyText="Готовых заказов пока нет."
+            />
+            <DispatcherColumn
+              title="Завершённые и отменённые"
+              orders={closedOrders}
+              user={user}
+              packagingOptions={packagingOptions}
+              emptyText="Закрытых заказов в фильтре нет."
             />
           </div>
         </div>

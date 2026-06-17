@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { AppSidebar } from "@/components/ui/app-sidebar";
+import { getSessionUser } from "@/modules/auth/auth.session";
 
 type PageShellProps = {
   title: string;
@@ -12,7 +13,7 @@ type PageShellProps = {
   compact?: boolean;
 };
 
-export function PageShell({
+export async function PageShell({
   title,
   description,
   children,
@@ -21,6 +22,7 @@ export function PageShell({
   backHref,
   compact = false,
 }: PageShellProps) {
+  const user = await getSessionUser();
   const showSidebar = align !== "center";
   const layoutClassName =
     align === "center"
@@ -40,7 +42,7 @@ export function PageShell({
             : ""
         }
       >
-        {showSidebar ? <AppSidebar /> : null}
+        {showSidebar ? <AppSidebar user={user} /> : null}
         <div
           className={`mx-auto w-full ${
             showSidebar

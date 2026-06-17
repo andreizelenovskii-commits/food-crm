@@ -7,7 +7,7 @@ import {
 import { parseLoginInput } from "@/modules/auth/auth.validation";
 import { browserBackendJson } from "@/shared/api/browser-backend";
 import type { SessionUser } from "@/modules/auth/auth.types";
-import { normalizeAuthReturnTo } from "@/modules/auth/auth.redirect";
+import { normalizeAuthReturnTo, normalizeRoleReturnTo } from "@/modules/auth/auth.redirect";
 
 /** API мог ещё отдавать текст про email — показываем единообразно про телефон. */
 function loginErrorMessageForUi(message: string): string {
@@ -51,6 +51,9 @@ export async function loginAction(
         "Вход выполнен, но браузер не сохранил сессию. Обнови страницу и попробуй ещё раз.",
       );
     }
+
+    window.location.assign(normalizeRoleReturnTo(returnTo, sessionUser));
+    return { errorMessage: null };
   } catch (error) {
     if (
       error instanceof ValidationError ||
@@ -64,9 +67,6 @@ export async function loginAction(
 
     throw error;
   }
-
-  window.location.assign(normalizeAuthReturnTo(returnTo));
-  return { errorMessage: null };
 }
 
 export type ChangePasswordFormState = {

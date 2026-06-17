@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
-export default function DashboardDispatcherPage() {
+export default function DispatcherPage() {
   redirect("/dispatcher/orders");
 }

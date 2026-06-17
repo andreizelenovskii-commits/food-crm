@@ -1,10 +1,14 @@
-import type { OrderListItem } from "@/modules/orders/orders.types";
+import type { KitchenOrderListItem, OrderListItem } from "@/modules/orders/orders.types";
 import type { OrderCreateOptions } from "@/modules/orders/orders.page-model";
 import type { ProductItem } from "@/modules/inventory/inventory.types";
 import { backendGet } from "@/shared/api/backend";
 
 export async function fetchOrders(): Promise<OrderListItem[]> {
   return backendGet<OrderListItem[]>("/api/v1/orders");
+}
+
+export async function fetchKitchenOrders(): Promise<KitchenOrderListItem[]> {
+  return backendGet<KitchenOrderListItem[]>("/api/v1/orders/kitchen");
 }
 
 export async function fetchOrderById(orderId: number): Promise<OrderListItem | null> {
