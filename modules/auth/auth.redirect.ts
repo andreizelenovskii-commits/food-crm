@@ -1,4 +1,4 @@
-import type { SessionUser, UserRole } from "@/modules/auth/auth.types";
+import { normalizeUserRole, type SessionUser } from "@/modules/auth/auth.types";
 
 const DEFAULT_AUTH_REDIRECT = "/dashboard";
 const ACCESS_DENIED_PATH = "/access-denied";
@@ -13,17 +13,37 @@ export function normalizeAuthReturnTo(value: string, fallback = DEFAULT_AUTH_RED
   return trimmed;
 }
 
-export function getRoleHomePath(role: UserRole) {
-  if (role === "Диспетчер") {
+export function getSafeReturnTo(value: string | null | undefined, fallback = DEFAULT_AUTH_REDIRECT) {
+  const trimmed = value?.trim() ?? "";
+
+  if (!trimmed || !trimmed.startsWith("/") || trimmed.startsWith("//")) {
+    return fallback;
+  }
+
+  if (!trimmed.startsWith("/dashboard")) {
+    return fallback;
+  }
+
+  return trimmed;
+}
+
+export function getRoleHomePath(role: unknown) {
+  const normalizedRole = normalizeUserRole(role);
+
+  if (normalizedRole === "Диспетчер") {
     return "/dispatcher/orders";
   }
 
-  if (role === "Повар") {
+  if (normalizedRole === "Повар") {
     return "/kitchen";
   }
 
-  if (role === "Курьер") {
+  if (normalizedRole === "Курьер") {
     return "/dashboard/profile";
+  }
+
+  if (!normalizedRole) {
+    return ACCESS_DENIED_PATH;
   }
 
   return DEFAULT_AUTH_REDIRECT;

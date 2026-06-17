@@ -2,6 +2,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { LogoutButton } from "@/modules/auth/components/logout-button";
 import type { SessionUser } from "@/modules/auth/auth.types";
+import { getSafeReturnTo } from "@/modules/auth/auth.redirect";
+import { shouldShowBackToCrm } from "@/modules/auth/authz";
 
 type StaffNavItem = {
   href: string;
@@ -15,6 +17,7 @@ export function StaffShell({
   navItems,
   activeHref,
   children,
+  returnTo,
 }: {
   user: SessionUser;
   title: string;
@@ -22,8 +25,11 @@ export function StaffShell({
   navItems: StaffNavItem[];
   activeHref: string;
   children: ReactNode;
+  returnTo?: string | null;
 }) {
   const displayName = user.displayName?.trim() || user.role;
+  const showBackToCrm = shouldShowBackToCrm(user, activeHref);
+  const backToCrmHref = getSafeReturnTo(returnTo);
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#fff4f4_0%,#fffafa_38%,#f6f1f1_100%)] px-3 py-4 sm:px-5">
@@ -36,6 +42,14 @@ export function StaffShell({
               <p className="mt-1 text-sm leading-6 text-zinc-500">{subtitle}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              {showBackToCrm ? (
+                <Link
+                  href={backToCrmHref}
+                  className="inline-flex h-10 items-center rounded-full border border-red-200 bg-red-800 px-4 text-sm font-semibold text-white transition hover:bg-red-900"
+                >
+                  ← Вернуться в CRM
+                </Link>
+              ) : null}
               <Link
                 href="/dashboard/profile"
                 className="inline-flex h-10 items-center rounded-full border border-red-100 bg-white px-4 text-sm font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white"

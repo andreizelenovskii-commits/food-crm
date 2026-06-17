@@ -7,15 +7,12 @@ import { useState } from "react";
 import { ModuleIcon } from "@/components/ui/module-icon";
 import { SidebarNavGroup } from "@/components/ui/sidebar-nav-group";
 import type { SessionUser } from "@/modules/auth/auth.types";
-import { hasPermission, type AuthPermission } from "@/modules/auth/authz";
+import { hasPermission, isFullAccessRole, type AuthPermission } from "@/modules/auth/authz";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Главная", icon: "grid", permission: "view_dashboard" },
-  { href: "/dashboard/orders/dispatcher", label: "Диспетчер", icon: "receipt", permission: "manage_orders", roles: ["Диспетчер"] },
-  { href: "/dashboard/kitchen", label: "Кухня", icon: "receipt", permission: "view_orders", roles: ["Повар", "Шеф повар", "Администратор", "admin", "Управляющий"] },
   { href: "/dashboard/sales", label: "Продажи", icon: "chart", permission: "view_dashboard", managerOnly: true },
   { href: "/dashboard/reports", label: "Отчеты", icon: "report", permission: "view_dashboard", managerOnly: true },
-  { href: "/dashboard/orders", label: "Заказы", icon: "receipt", permission: "view_orders", managerOnly: true },
   { href: "/dashboard/clients", label: "Клиенты", icon: "users", permission: "view_clients" },
   { href: "/dashboard/catalog", label: "Каталог", icon: "book", permission: "view_catalog" },
   { href: "/dashboard/inventory", label: "Склад", icon: "box", permission: "view_inventory" },
@@ -24,6 +21,11 @@ const NAV_ITEMS = [
   { href: "/dashboard/reviews", label: "Отзывы", icon: "message", permission: "view_dashboard", managerOnly: true },
   { href: "/dashboard/website", label: "Сайт", icon: "globe", permission: "view_settings" },
   { href: "/dashboard/settings", label: "Настройки", icon: "settings", permission: "view_settings" },
+] as const;
+
+const OPERATIONAL_ITEMS = [
+  { href: "/dispatcher/orders", label: "Диспетчерская", description: "Заказы и клиенты", icon: "receipt" },
+  { href: "/kitchen", label: "Кухня", description: "Кухонная очередь", icon: "receipt" },
 ] as const;
 
 const INVENTORY_SUB_ITEMS: Array<{
@@ -54,7 +56,7 @@ function isActivePath(pathname: string, href: string) {
 
 const MANAGER_ROLES = new Set(["admin", "Администратор", "Шеф повар", "Управляющий", "Старший курьер"]);
 
-function canShowNavItem(user: SessionUser | null, item: (typeof NAV_ITEMS)[number]) {
+export function canShowNavItem(user: SessionUser | null, item: (typeof NAV_ITEMS)[number]) {
   if (!user) {
     return false;
   }
@@ -68,6 +70,14 @@ function canShowNavItem(user: SessionUser | null, item: (typeof NAV_ITEMS)[numbe
   }
 
   return hasPermission(user, item.permission as AuthPermission);
+}
+
+export function getVisibleNavItems(user: SessionUser | null) {
+  return NAV_ITEMS.filter((item) => canShowNavItem(user, item));
+}
+
+export function getVisibleOperationalItems(user: SessionUser | null) {
+  return user && isFullAccessRole(user.role) ? [...OPERATIONAL_ITEMS] : [];
 }
 
 export function AppSidebar({ user }: { user: SessionUser | null }) {
@@ -139,7 +149,7 @@ export function AppSidebar({ user }: { user: SessionUser | null }) {
 
         <nav className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
           <div className="space-y-1">
-            {NAV_ITEMS.filter((item) => canShowNavItem(user, item)).map((item) => {
+            {getVisibleNavItems(user).map((item) => {
               const isActive = isActivePath(pathname, item.href);
 
               if (item.href === "/dashboard/inventory") {
@@ -219,6 +229,48 @@ export function AppSidebar({ user }: { user: SessionUser | null }) {
               );
             })}
           </div>
+
+          {getVisibleOperationalItems(user).length > 0 ? (
+            <div className="mt-4 border-t border-red-950/10 pt-4">
+              <p className="px-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-red-800/70">
+                Операционные экраны
+              </p>
+              <div className="mt-2 space-y-2">
+                {getVisibleOperationalItems(user).map((item) => {
+                  const isActive = isActivePath(pathname, item.href);
+
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setIsMobileOpen(false)}
+                      className={[
+                        "flex items-center gap-2.5 rounded-[14px] border px-2.5 py-2.5 text-sm transition",
+                        isActive
+                          ? "border-red-800 bg-red-800 text-white shadow-md shadow-red-950/10"
+                          : "border-red-100 bg-white/78 text-zinc-700 hover:border-red-200 hover:bg-red-50 hover:text-red-900",
+                      ].join(" ")}
+                    >
+                      <span
+                        className={[
+                          "flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px]",
+                          isActive ? "bg-white/16 text-white" : "bg-red-50 text-red-800",
+                        ].join(" ")}
+                      >
+                        <ModuleIcon name={item.icon} />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block font-semibold leading-5">{item.label}</span>
+                        <span className={isActive ? "block text-xs leading-4 text-white/72" : "block text-xs leading-4 text-zinc-500"}>
+                          {item.description}
+                        </span>
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
         </nav>
 
       </aside>
