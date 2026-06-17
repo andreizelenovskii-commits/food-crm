@@ -31,6 +31,7 @@ describe("getRoleHomePath", () => {
   it("routes operators to their workspaces", () => {
     expect(getRoleHomePath("Диспетчер")).toBe("/dispatcher/orders");
     expect(getRoleHomePath("Повар")).toBe("/kitchen");
+    expect(getRoleHomePath("Курьер")).toBe("/dashboard/profile");
   });
 
   it("keeps managers on the admin dashboard", () => {
@@ -56,5 +57,10 @@ describe("normalizeRoleReturnTo", () => {
   it("keeps cook on kitchen workspace instead of forbidden returnTo", () => {
     expect(normalizeRoleReturnTo("/dashboard/settings", { role: "Повар" })).toBe("/kitchen");
     expect(normalizeRoleReturnTo("/kitchen", { role: "Повар" })).toBe("/kitchen");
+  });
+
+  it("keeps courier on profile instead of the full dashboard", () => {
+    expect(normalizeRoleReturnTo("/dashboard/settings", { role: "Курьер" })).toBe("/dashboard/profile");
+    expect(normalizeRoleReturnTo("/dashboard/profile", { role: "Курьер" })).toBe("/dashboard/profile");
   });
 });

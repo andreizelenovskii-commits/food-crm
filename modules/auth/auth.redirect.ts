@@ -22,6 +22,10 @@ export function getRoleHomePath(role: UserRole) {
     return "/kitchen";
   }
 
+  if (role === "Курьер") {
+    return "/dashboard/profile";
+  }
+
   return DEFAULT_AUTH_REDIRECT;
 }
 
@@ -43,6 +47,12 @@ export function normalizeRoleReturnTo(value: string, user: Pick<SessionUser, "ro
   if (user.role === "Повар") {
     return safeReturnTo.startsWith("/kitchen") ||
       safeReturnTo.startsWith("/dashboard/profile")
+      ? safeReturnTo
+      : roleHomePath;
+  }
+
+  if (user.role === "Курьер") {
+    return safeReturnTo.startsWith("/dashboard/profile")
       ? safeReturnTo
       : roleHomePath;
   }
