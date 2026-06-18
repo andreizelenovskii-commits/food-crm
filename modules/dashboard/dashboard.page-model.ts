@@ -41,12 +41,20 @@ export function resolveDashboardSelectedMonth(searchParams?: DashboardPageSearch
   return selectedMonthParam?.trim() ?? "";
 }
 
+export function isStaffRestrictedRole(role: SessionUser["role"]) {
+  return STAFF_ROLES.has(role);
+}
+
+export function shouldFetchDashboardClients(user: SessionUser) {
+  return hasPermission(user, "view_clients");
+}
+
 export function buildDashboardPageViewModel({
   user,
   dashboard,
   employeeDashboard,
 }: DashboardPageProps) {
-  const isStaffRole = STAFF_ROLES.has(user.role);
+  const isStaffRole = isStaffRestrictedRole(user.role);
   const activeMonthDate =
     employeeDashboard && /^\d{4}-\d{2}$/.test(employeeDashboard.monthKey)
       ? new Date(

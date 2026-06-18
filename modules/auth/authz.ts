@@ -115,19 +115,70 @@ const ROLE_PERMISSIONS: Record<UserRole, AuthPermission[]> = {
   ],
 };
 
+const FULL_ACCESS_ROLES = new Set<UserRole>([
+  "admin",
+  "Администратор",
+  "Шеф повар",
+  "Управляющий",
+  "Старший курьер",
+]);
+
+export function isFullAccessRole(role: unknown) {
+  const normalizedRole = normalizeUserRole(role);
+
+  return normalizedRole ? FULL_ACCESS_ROLES.has(normalizedRole) : false;
+}
+
+export function isRestrictedStaffRole(role: unknown) {
+  const normalizedRole = normalizeUserRole(role);
+
+  return normalizedRole === "Диспетчер" ||
+    normalizedRole === "Повар" ||
+    normalizedRole === "Курьер";
+}
+
+export function canAccessCrmShell(userOrRole: SessionUser | UserRole) {
+  const rawRole = typeof userOrRole === "string" ? userOrRole : userOrRole.role;
+
+  return isFullAccessRole(rawRole);
+}
+
+export function canAccessDispatcherWorkspace(userOrRole: SessionUser | UserRole) {
+  const rawRole = typeof userOrRole === "string" ? userOrRole : userOrRole.role;
+  const role = normalizeUserRole(rawRole);
+
+  return isFullAccessRole(role) || role === "Диспетчер";
+}
+
+export function canAccessKitchenWorkspace(userOrRole: SessionUser | UserRole) {
+  const rawRole = typeof userOrRole === "string" ? userOrRole : userOrRole.role;
+  const role = normalizeUserRole(rawRole);
+
+  return isFullAccessRole(role) || role === "Повар";
+}
+
+export function shouldShowBackToCrm(userOrRole: SessionUser | UserRole, pathname: string) {
+  return isFullAccessRole(typeof userOrRole === "string" ? userOrRole : userOrRole.role) &&
+    (pathname === "/kitchen" || pathname.startsWith("/dispatcher"));
+}
+
 export function hasPermission(
   userOrRole: SessionUser | UserRole,
   permission: AuthPermission,
 ) {
-  if (typeof userOrRole !== "string" && Array.isArray(userOrRole.permissions)) {
-    return userOrRole.permissions.includes(permission);
-  }
-
   const rawRole = typeof userOrRole === "string" ? userOrRole : userOrRole.role;
   const role = normalizeUserRole(rawRole);
 
   if (!role) {
     return false;
+  }
+
+  if (isFullAccessRole(role)) {
+    return ROLE_PERMISSIONS[role].includes(permission);
+  }
+
+  if (typeof userOrRole !== "string" && Array.isArray(userOrRole.permissions)) {
+    return userOrRole.permissions.includes(permission);
   }
 
   return ROLE_PERMISSIONS[role].includes(permission);
