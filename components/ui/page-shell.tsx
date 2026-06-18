@@ -57,6 +57,7 @@ export async function PageShell({
               {backHref ? (
                 <Link
                   href={backHref}
+                  prefetch={false}
                   className="mb-2 inline-flex h-8 items-center rounded-full border border-red-100 bg-white/70 px-3 text-xs font-semibold text-red-800 shadow-sm shadow-red-950/5 transition hover:border-red-800 hover:bg-red-800 hover:text-white"
                 >
                   Назад

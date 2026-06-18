@@ -21,6 +21,7 @@ export function SessionUserActions({
       {extraAction}
       <Link
         href="/dashboard/profile"
+        prefetch={false}
         className="inline-flex items-center gap-2.5 rounded-[12px] border border-red-100 bg-white px-3 py-1.5 text-left transition hover:border-red-200 hover:bg-red-50/60"
       >
         <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-red-800 text-xs font-semibold text-white shadow-sm shadow-red-950/20">

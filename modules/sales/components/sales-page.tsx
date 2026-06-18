@@ -40,7 +40,7 @@ function ToneMetricCard(metric: SalesMetric) {
   );
 
   return metric.href ? (
-    <Link href={metric.href} className={className}>
+    <Link href={metric.href} prefetch={false} className={className}>
       {content}
     </Link>
   ) : (
@@ -145,7 +145,7 @@ function LinkRow({ item, compact = false }: { item: SalesMetric; compact?: boole
   );
 
   return item.href ? (
-    <Link href={item.href} className={rowClassName}>
+    <Link href={item.href} prefetch={false} className={rowClassName}>
       {content}
     </Link>
   ) : (
@@ -157,6 +157,7 @@ function PanelLink({ href, children }: { href: string; children: React.ReactNode
   return (
     <Link
       href={href}
+      prefetch={false}
       className="inline-flex h-9 items-center rounded-full border border-red-100 bg-white/80 px-3 text-xs font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white"
     >
       {children}
@@ -191,6 +192,7 @@ export function SalesPage(props: SalesPageProps) {
                   <Link
                     key={option.label}
                     href={option.href}
+                    prefetch={false}
                     className={[
                       "inline-flex h-10 items-center rounded-full border px-4 text-sm font-semibold transition",
                       option.isActive
@@ -259,6 +261,7 @@ export function SalesPage(props: SalesPageProps) {
                 <Link
                   key={action.href}
                   href={action.href}
+                  prefetch={false}
                   className="group rounded-[18px] border border-red-950/10 bg-white/78 p-4 shadow-sm shadow-red-950/5 transition hover:-translate-y-1 hover:border-red-800/20 hover:bg-red-800 hover:text-white"
                 >
                   <p className="text-sm font-semibold">{action.label}</p>
