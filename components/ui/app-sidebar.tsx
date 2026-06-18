@@ -120,6 +120,7 @@ export function AppSidebar({ user }: { user: SessionUser | null }) {
         <div className="flex h-20 items-center gap-3 border-b border-red-950/10 px-4">
           <Link
             href="/dashboard"
+            prefetch={false}
             className="relative flex h-12 w-12 shrink-0 overflow-hidden rounded-[12px]"
             aria-label="FoodLike"
           >
@@ -208,6 +209,7 @@ export function AppSidebar({ user }: { user: SessionUser | null }) {
                 <Link
                   key={item.href}
                   href={item.href}
+                  prefetch={false}
                   onClick={() => setIsMobileOpen(false)}
                   className={[
                     "flex h-10 items-center gap-2.5 rounded-[12px] px-2 text-sm font-medium transition",
@@ -243,6 +245,7 @@ export function AppSidebar({ user }: { user: SessionUser | null }) {
                     <Link
                       key={item.href}
                       href={item.href}
+                      prefetch={false}
                       onClick={() => setIsMobileOpen(false)}
                       className={[
                         "flex items-center gap-2.5 rounded-[14px] border px-2.5 py-2.5 text-sm transition",

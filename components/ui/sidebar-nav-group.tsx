@@ -48,6 +48,7 @@ export function SidebarNavGroup({
       >
         <Link
           href={href}
+          prefetch={false}
           onClick={onOpen}
           className="flex h-full min-w-0 flex-1 items-center gap-2.5 rounded-l-[12px] pl-2 text-sm font-medium"
         >
@@ -96,6 +97,7 @@ export function SidebarNavGroup({
             <Link
               key={subItem.href}
               href={subItem.href}
+              prefetch={false}
               onClick={onCloseMobile}
               className={[
                 "group relative flex h-8 items-center rounded-[9px] px-3 text-[13px] font-semibold transition",
