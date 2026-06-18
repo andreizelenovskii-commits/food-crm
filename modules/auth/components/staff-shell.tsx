@@ -45,6 +45,7 @@ export function StaffShell({
               {showBackToCrm ? (
                 <Link
                   href={backToCrmHref}
+                  prefetch={false}
                   className="inline-flex h-10 items-center rounded-full border border-red-200 bg-red-800 px-4 text-sm font-semibold text-white transition hover:bg-red-900"
                 >
                   ← Вернуться в CRM
@@ -52,6 +53,7 @@ export function StaffShell({
               ) : null}
               <Link
                 href="/dashboard/profile"
+                prefetch={false}
                 className="inline-flex h-10 items-center rounded-full border border-red-100 bg-white px-4 text-sm font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white"
               >
                 {displayName}
@@ -69,6 +71,7 @@ export function StaffShell({
                   <Link
                     key={item.href}
                     href={item.href}
+                    prefetch={false}
                     className={[
                       "inline-flex h-12 items-center rounded-full border px-5 text-base font-semibold transition",
                       isActive
