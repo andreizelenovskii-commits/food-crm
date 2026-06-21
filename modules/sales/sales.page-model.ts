@@ -37,11 +37,13 @@ export type SalesAnalyticsInput = {
 
 export type SalesMetric = {
   label: string;
-  value: string;
+  value?: string;
   hint: string;
   href?: string;
   tone?: "good" | "warning" | "danger";
 };
+
+export type SalesAnalyticsViewModel = ReturnType<typeof buildSalesAnalyticsViewModel>;
 
 function formatMoney(cents: number) {
   return MONEY_FORMATTER.format(cents / 100);

@@ -5,17 +5,17 @@ import type { SessionUser } from "@/modules/auth/auth.types";
 import { GlassPanel, KpiTile } from "@/modules/dashboard/components/dashboard-widgets";
 import { SalesPeriodPicker } from "@/modules/sales/components/sales-period-picker";
 import {
-  buildSalesAnalyticsViewModel,
-  type SalesAnalyticsInput,
+  type SalesAnalyticsViewModel,
   type SalesMetric,
 } from "@/modules/sales/sales.page-model";
 
-type SalesPageProps = SalesAnalyticsInput & {
+type SalesPageProps = {
   user: SessionUser;
+  analytics: SalesAnalyticsViewModel;
 };
 
 function MetricCard(metric: SalesMetric) {
-  return <KpiTile href={metric.href} label={metric.label} value={metric.value} hint={metric.hint} />;
+  return <KpiTile href={metric.href} label={metric.label} value={metric.value ?? ""} hint={metric.hint} />;
 }
 
 function ToneMetricCard(metric: SalesMetric) {
@@ -34,7 +34,7 @@ function ToneMetricCard(metric: SalesMetric) {
       <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-800/70">
         {metric.label}
       </p>
-      <p className="mt-2 text-2xl font-semibold leading-none text-zinc-950">{metric.value}</p>
+      <p className="mt-2 text-2xl font-semibold leading-none text-zinc-950">{metric.value ?? ""}</p>
       <p className="mt-2 text-xs leading-5 text-zinc-600">{metric.hint}</p>
     </>
   );
@@ -140,7 +140,7 @@ function LinkRow({ item, compact = false }: { item: SalesMetric; compact?: boole
         <p className="truncate text-sm font-medium text-zinc-900">{item.label}</p>
         <p className="mt-0.5 text-xs leading-5 text-zinc-500">{item.hint}</p>
       </div>
-      <p className="text-sm font-semibold text-zinc-950">{item.value}</p>
+      <p className="text-sm font-semibold text-zinc-950">{item.value ?? ""}</p>
     </>
   );
 
@@ -166,13 +166,14 @@ function PanelLink({ href, children }: { href: string; children: React.ReactNode
 }
 
 export function SalesPage(props: SalesPageProps) {
-  const analytics = buildSalesAnalyticsViewModel(props);
+  const { analytics } = props;
 
   return (
     <PageShell
       title="Продажи"
       description="Выручка, заказы, маржа, food cost и управленческая отчетность по периодам."
       action={<SessionUserActions user={props.user} />}
+      user={props.user}
     >
       <div className="foodlike-frame space-y-4 p-4 sm:p-5">
         <GlassPanel className="relative z-30 overflow-visible p-4">

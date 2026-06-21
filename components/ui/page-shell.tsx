@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { AppSidebar } from "@/components/ui/app-sidebar";
 import { getSessionUser } from "@/modules/auth/auth.session";
+import type { SessionUser } from "@/modules/auth/auth.types";
 
 type PageShellProps = {
   title: string;
@@ -11,6 +12,7 @@ type PageShellProps = {
   action?: ReactNode;
   backHref?: string;
   compact?: boolean;
+  user?: SessionUser | null;
 };
 
 export async function PageShell({
@@ -21,8 +23,9 @@ export async function PageShell({
   action,
   backHref,
   compact = false,
+  user: providedUser,
 }: PageShellProps) {
-  const user = await getSessionUser();
+  const user = providedUser === undefined ? await getSessionUser() : providedUser;
   const showSidebar = align !== "center";
   const layoutClassName =
     align === "center"
