@@ -1,6 +1,5 @@
+import Link from "next/link";
 import { PageShell } from "@/components/ui/page-shell";
-import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
-import type { SessionUser } from "@/modules/auth/auth.types";
 import { GlassPanel, KpiTile } from "@/modules/dashboard/components/dashboard-widgets";
 import {
   buildReportsViewModel,
@@ -10,16 +9,13 @@ import {
 import { ReportsDialogGrid } from "@/modules/reports/components/reports-dialog-grid";
 import { ReportsPeriodPicker } from "@/modules/reports/components/reports-period-picker";
 
-type ReportsPageProps = ReportsInput & {
-  user: SessionUser;
-};
+type ReportsPageProps = ReportsInput;
 
 function MetricCard({ label, value, hint }: ReportMetric) {
   return <KpiTile label={label} value={value} hint={hint} />;
 }
 
 export function ReportsPage({
-  user,
   period,
   date,
   month,
@@ -52,7 +48,6 @@ export function ReportsPage({
     <PageShell
       title="Отчеты"
       description="Сводка по заказам, складу, сотрудникам и клиентской активности."
-      action={<SessionUserActions user={user} />}
     >
       <div className="foodlike-frame space-y-4 p-4 sm:p-5">
         <GlassPanel className="relative z-40 overflow-visible p-4 sm:p-5">
@@ -71,7 +66,7 @@ export function ReportsPage({
             <div className="flex flex-col gap-3 lg:flex-row lg:flex-nowrap lg:items-center xl:justify-end">
               <div className="flex flex-wrap gap-2 lg:flex-nowrap">
                 {viewModel.periodOptions.map((option) => (
-                  <a
+                  <Link
                     key={option.label}
                     href={option.href}
                     className={[
@@ -82,19 +77,19 @@ export function ReportsPage({
                     ].join(" ")}
                   >
                     {option.label}
-                  </a>
+                  </Link>
                 ))}
               </div>
               <ReportsPeriodPicker period={viewModel.range.period} dateParts={viewModel.dateParts} />
             </div>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
-            <a href={viewModel.previousHref} className="inline-flex h-9 items-center rounded-full border border-red-100 bg-white/80 px-3 text-xs font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white">
+            <Link href={viewModel.previousHref} className="inline-flex h-9 items-center rounded-full border border-red-100 bg-white/80 px-3 text-xs font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white">
               Предыдущий период
-            </a>
-            <a href={viewModel.nextHref} className="inline-flex h-9 items-center rounded-full border border-red-100 bg-white/80 px-3 text-xs font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white">
+            </Link>
+            <Link href={viewModel.nextHref} className="inline-flex h-9 items-center rounded-full border border-red-100 bg-white/80 px-3 text-xs font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white">
               Следующий период
-            </a>
+            </Link>
           </div>
         </GlassPanel>
 

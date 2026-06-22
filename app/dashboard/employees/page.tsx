@@ -1,17 +1,14 @@
 import Link from "next/link";
 import { PageShell } from "@/components/ui/page-shell";
 import { PaginatedList } from "@/components/ui/paginated-list";
-import { hasPermission } from "@/modules/auth/authz";
+import { PermissionGate } from "@/modules/auth/components/permission-gate";
 import { EmployeeDeleteButton } from "@/modules/employees/components/employee-delete-button";
 import { EmployeeCreateDialogButton } from "@/modules/employees/components/employee-create-dialog";
 import { EmployeeTeamSchedule } from "@/modules/employees/components/employee-team-schedule";
 import { fetchEmployees } from "@/modules/employees/employees.api";
-import { requirePermission } from "@/modules/auth/auth.session";
-import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
 import { GlassPanel } from "@/modules/dashboard/components/dashboard-widgets";
 
 export default async function EmployeesPage() {
-  const user = await requirePermission("view_employees");
   const employees = await fetchEmployees();
 
   const getAgeLabel = (value: string | null | undefined) => {
@@ -72,7 +69,6 @@ export default async function EmployeesPage() {
       title="Сотрудники"
       description="Добавляй новых сотрудников и переходи на их профиль для детальной статистики."
       backHref="/dashboard"
-      action={<SessionUserActions user={user} />}
     >
       <div className="relative overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#fffdfc_0%,#fff2f2_46%,#f8eeee_100%)] p-4 shadow-[0_24px_80px_rgba(127,29,29,0.12)] sm:p-5">
         <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-red-300/25 blur-3xl" />
@@ -90,11 +86,11 @@ export default async function EmployeesPage() {
               Карточки сотрудников, контакты, доступ в систему, графики и
               финансовые корректировки в едином рабочем формате.
             </p>
-            {hasPermission(user, "manage_employees") ? (
+            <PermissionGate permission="manage_employees">
               <div className="mt-4">
                 <EmployeeCreateDialogButton />
               </div>
-            ) : null}
+            </PermissionGate>
           </GlassPanel>
         </div>
 
@@ -144,13 +140,13 @@ export default async function EmployeesPage() {
                           </p>
                         </div>
 
-                        {hasPermission(user, "manage_employees") ? (
+                        <PermissionGate permission="manage_employees">
                           <EmployeeDeleteButton
                             employeeId={employee.id}
                             employeeName={employee.name}
                             disabled={employee.ordersCount > 0}
                           />
-                        ) : null}
+                        </PermissionGate>
                       </div>
                     </div>
                   ))}

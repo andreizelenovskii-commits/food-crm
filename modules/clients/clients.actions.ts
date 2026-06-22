@@ -6,6 +6,7 @@ import {
   parseUpdateClientInput,
 } from "@/modules/clients/clients.validation";
 import { browserBackendJson } from "@/shared/api/browser-backend";
+import { navigateWithinWorkspace } from "@/modules/navigation/client-workspace-navigation";
 
 export type ClientFormValues = {
   name: string;
@@ -73,7 +74,7 @@ export async function addClientAction(
     throw error;
   }
 
-  window.location.assign("/dashboard/clients");
+  navigateWithinWorkspace("/dashboard/clients");
   return { errorMessage: null, values: getClientFormValues(formData) };
 }
 
@@ -125,6 +126,6 @@ export async function updateClientAction(
     throw error;
   }
 
-  window.location.assign("/dashboard/clients");
+  navigateWithinWorkspace("/dashboard/clients");
   return { errorMessage: null, values: getClientFormValues(formData) };
 }

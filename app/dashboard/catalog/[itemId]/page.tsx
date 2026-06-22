@@ -1,7 +1,5 @@
 import { notFound } from "next/navigation";
 import { PageShell } from "@/components/ui/page-shell";
-import { requirePermission } from "@/modules/auth/auth.session";
-import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
 import { type CatalogFormValues } from "@/modules/catalog/catalog.form-types";
 import { CatalogItemForm } from "@/modules/catalog/components/catalog-item-form";
 import { fetchCatalogItemById } from "@/modules/catalog/catalog.api";
@@ -14,7 +12,6 @@ function formatPriceInput(priceCents: number) {
 export default async function CatalogItemEditPage(props: {
   params: Promise<{ itemId: string }>;
 }) {
-  const user = await requirePermission("manage_catalog");
   const params = await props.params;
   const itemId = Number(params.itemId);
 
@@ -64,7 +61,6 @@ export default async function CatalogItemEditPage(props: {
       title="Редактирование позиции"
       description="Обнови карточку каталога, не меняя логику технологической карты."
       backHref="/dashboard/catalog"
-      action={<SessionUserActions user={user} />}
     >
       <div className="mx-auto max-w-3xl">
         <CatalogItemForm

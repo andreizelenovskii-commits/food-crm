@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useEmployeeSession } from "@/modules/auth/components/employee-session-provider";
 import type { SessionUser } from "@/modules/auth/auth.types";
+import { refreshWorkspaceRoute } from "@/modules/navigation/client-workspace-navigation";
 import { OrderStatusButton } from "@/modules/orders/components/order-status-button";
 import { ORDER_SOURCE_LABELS, type KitchenOrderListItem } from "@/modules/orders/orders.types";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_STYLES, getOrderAdvanceAction } from "@/modules/orders/orders.workflow";
@@ -92,7 +93,7 @@ export function KitchenWorkspace({
           </button>
           <button
             type="button"
-            onClick={() => window.location.reload()}
+            onClick={refreshWorkspaceRoute}
             className="inline-flex h-10 items-center rounded-full bg-red-800 px-4 text-sm font-semibold text-white shadow-sm shadow-red-950/15 transition hover:bg-red-900"
           >
             Обновить
@@ -115,7 +116,7 @@ export function KitchenWorkspace({
           <p className="mt-1 leading-6">{errorMessage}</p>
           <button
             type="button"
-            onClick={() => window.location.reload()}
+            onClick={refreshWorkspaceRoute}
             className="mt-3 inline-flex h-9 items-center rounded-full bg-red-800 px-4 text-sm font-semibold text-white"
           >
             Повторить

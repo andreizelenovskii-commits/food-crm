@@ -1,6 +1,7 @@
+"use client";
+
 import { PageShell } from "@/components/ui/page-shell";
-import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
-import type { SessionUser } from "@/modules/auth/auth.types";
+import { useEmployeeSession } from "@/modules/auth/components/employee-session-provider";
 import { GlassPanel, KpiTile } from "@/modules/dashboard/components/dashboard-widgets";
 import { EMPLOYEE_ADJUSTMENT_LABELS } from "@/modules/employees/employees.types";
 import type { EmployeeProfile } from "@/modules/employees/employees.types";
@@ -9,7 +10,6 @@ import { buildProfileViewModel } from "@/modules/profile/profile.page-model";
 import { formatRuMobileLoginDigits } from "@/shared/phone";
 
 type ProfilePageProps = {
-  user: SessionUser;
   employee: EmployeeProfile;
   month: string;
 };
@@ -28,14 +28,14 @@ function InfoCard({
   );
 }
 
-export function EmployeeSelfProfilePage({ user, employee, month }: ProfilePageProps) {
+export function EmployeeSelfProfilePage({ employee, month }: ProfilePageProps) {
+  const { user } = useEmployeeSession();
   const profile = buildProfileViewModel(employee, month);
 
   return (
     <PageShell
       title="Мой профиль"
       description="Личные данные, зарплата, результаты месяца и доступ к CRM."
-      action={<SessionUserActions user={user} />}
     >
       <div className="foodlike-frame space-y-4 p-4 sm:p-5">
         <GlassPanel className="p-4">
@@ -82,7 +82,7 @@ export function EmployeeSelfProfilePage({ user, employee, month }: ProfilePagePr
               управления сотрудниками — в карточке сотрудника в разделе «Сотрудники».
             </p>
             <p className="foodlike-card mt-3 px-4 py-3 text-sm font-semibold text-zinc-950">
-              {formatRuMobileLoginDigits(user.phone)}
+              {formatRuMobileLoginDigits(user?.phone ?? "")}
             </p>
           </GlassPanel>
 

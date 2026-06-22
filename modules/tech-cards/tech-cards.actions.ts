@@ -4,6 +4,7 @@ import { ValidationError } from "@/shared/errors/app-error";
 import { clearTechCardDraft } from "@/modules/tech-cards/components/tech-card-draft";
 import { parseTechCardInput } from "@/modules/tech-cards/tech-cards.validation";
 import { browserBackendJson } from "@/shared/api/browser-backend";
+import { navigateWithinWorkspace } from "@/modules/navigation/client-workspace-navigation";
 
 export type TechCardFormState = {
   errorMessage: string | null;
@@ -111,7 +112,7 @@ export async function addTechCardAction(
   }
 
   clearTechCardDraft();
-  window.location.assign("/dashboard/inventory?tab=recipes&draft=cleared");
+  navigateWithinWorkspace("/dashboard/inventory?tab=recipes&draft=cleared");
   return { errorMessage: null, values: EMPTY_TECH_CARD_FORM_VALUES };
 }
 
@@ -145,7 +146,7 @@ export async function updateTechCardAction(
     throw error;
   }
 
-  window.location.assign("/dashboard/inventory?tab=recipes");
+  navigateWithinWorkspace("/dashboard/inventory?tab=recipes");
   return { errorMessage: null, values: getTechCardFormValues(formData) };
 }
 
@@ -172,6 +173,6 @@ export async function deleteTechCardAction(formData: FormData): Promise<{ errorM
     throw error;
   }
 
-  window.location.assign("/dashboard/inventory?tab=recipes");
+  navigateWithinWorkspace("/dashboard/inventory?tab=recipes");
   return { errorMessage: null };
 }

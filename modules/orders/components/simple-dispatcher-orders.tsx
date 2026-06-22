@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useEmployeeSession } from "@/modules/auth/components/employee-session-provider";
 import type { SessionUser } from "@/modules/auth/auth.types";
+import { refreshWorkspaceRoute } from "@/modules/navigation/client-workspace-navigation";
 import { OrderStatusButton } from "@/modules/orders/components/order-status-button";
 import { formatOrderMoney } from "@/modules/orders/components/order-display";
 import type { OrderListItem, OrderStatus } from "@/modules/orders/orders.types";
@@ -105,7 +106,7 @@ export function SimpleDispatcherOrders({ orders }: { orders: OrderListItem[] }) 
           ))}
           <button
             type="button"
-            onClick={() => window.location.reload()}
+            onClick={refreshWorkspaceRoute}
             className="inline-flex h-11 items-center rounded-full border border-red-100 bg-white px-4 text-sm font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white"
           >
             Обновить

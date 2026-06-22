@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useEmployeeSession } from "@/modules/auth/components/employee-session-provider";
 import type { SessionUser } from "@/modules/auth/auth.types";
 import type { ProductItem } from "@/modules/inventory/inventory.types";
 import { OrderCard, formatOrderMoney } from "@/modules/orders/components/order-display";
@@ -110,18 +111,17 @@ function getColumnKey(order: OrderListItem): OrdersColumnKey {
 }
 
 export function OrdersWorkspace({
-  user,
   period,
   date,
   orders,
   packagingOptions,
 }: {
-  user: SessionUser;
   period?: string | null;
   date?: string | null;
   orders: OrderListItem[];
   packagingOptions: ProductItem[];
 }) {
+  const { user } = useEmployeeSession();
   const range = buildSalesPeriodRange(period, date);
   const selectedDate = new Date(range.selectedDate);
   const periodOrders = sortOrdersNewestFirst(orders.filter((order) => isDateInRange(order.createdAt, range)));
@@ -195,7 +195,7 @@ export function OrdersWorkspace({
           />
         ))}
       </section>
-      {activeColumn ? (
+      {activeColumn && user ? (
         <OrdersColumnDialog
           column={activeColumn}
           user={user}

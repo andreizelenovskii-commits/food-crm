@@ -1,17 +1,12 @@
 import { PageShell } from "@/components/ui/page-shell";
-import { requirePermission } from "@/modules/auth/auth.session";
-import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
 import { GlassPanel, KpiTile } from "@/modules/dashboard/components/dashboard-widgets";
 
 export default async function ReviewsPage() {
-  const user = await requirePermission("view_dashboard");
-
   return (
     <PageShell
       title="Отзывы"
       description="Здесь будет единый раздел отзывов клиентов: оценки, комментарии и история обработки."
       backHref="/dashboard"
-      action={<SessionUserActions user={user} />}
     >
       <div className="foodlike-frame grid gap-4 p-4 sm:p-5 xl:grid-cols-[1.1fr_0.9fr]">
         <GlassPanel className="p-4 sm:p-5">

@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 
 type ConfirmDeleteButtonProps = {
@@ -33,6 +33,7 @@ export function ConfirmDeleteButton({
   buttonClassName = DEFAULT_BUTTON_CLASS_NAME,
 }: ConfirmDeleteButtonProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -63,7 +64,8 @@ export function ConfirmDeleteButton({
 
         setIsConfirmOpen(false);
 
-        window.location.assign(redirectTo);
+        router.push(redirectTo);
+        router.refresh();
       } catch (error) {
         const fallbackMessage = "Не удалось удалить запись. Попробуйте снова.";
         const errorMessage = error instanceof Error && error.message

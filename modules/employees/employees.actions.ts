@@ -8,6 +8,7 @@ import {
 } from "@/modules/employees/employees.validation";
 import { parseIssueEmployeeAccessInput } from "@/modules/employees/employee-access.validation";
 import { browserBackendJson } from "@/shared/api/browser-backend";
+import { navigateWithinWorkspace } from "@/modules/navigation/client-workspace-navigation";
 
 export async function addEmployeeAction(formData: FormData) {
   const input = parseCreateEmployeeInput(formData);
@@ -16,7 +17,7 @@ export async function addEmployeeAction(formData: FormData) {
     body: input,
   });
 
-  window.location.assign("/dashboard/employees");
+  navigateWithinWorkspace("/dashboard/employees");
 }
 
 export async function updateEmployeeAction(employeeId: number, formData: FormData) {
@@ -27,7 +28,7 @@ export async function updateEmployeeAction(employeeId: number, formData: FormDat
     body: input,
   });
 
-  window.location.assign(`/dashboard/employees/${employeeId}`);
+  navigateWithinWorkspace(`/dashboard/employees/${employeeId}`);
 }
 
 export async function addEmployeeAdjustmentAction(formData: FormData) {
@@ -42,7 +43,7 @@ export async function addEmployeeAdjustmentAction(formData: FormData) {
     },
   });
 
-  window.location.assign(`/dashboard/employees/${input.employeeId}`);
+  navigateWithinWorkspace(`/dashboard/employees/${input.employeeId}`);
 }
 
 export async function deleteEmployeeAction(formData: FormData) {

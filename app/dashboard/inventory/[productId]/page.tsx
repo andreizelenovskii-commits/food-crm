@@ -1,8 +1,6 @@
 import { notFound } from "next/navigation";
 import { PageShell } from "@/components/ui/page-shell";
-import { hasPermission } from "@/modules/auth/authz";
-import { requirePermission } from "@/modules/auth/auth.session";
-import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
+import { PermissionGate } from "@/modules/auth/components/permission-gate";
 import { GlassPanel, KpiTile } from "@/modules/dashboard/components/dashboard-widgets";
 import { formatInventoryQuantity } from "@/modules/inventory/inventory.format";
 import { ProductDeleteButton } from "@/modules/inventory/components/product-delete-button";
@@ -20,7 +18,6 @@ function formatMoney(cents: number) {
 export default async function ProductDetailsPage(props: {
   params?: Promise<{ productId: string }>;
 }) {
-  const user = await requirePermission("view_inventory");
   const params = await props.params;
   const productId = Number(params?.productId);
 
@@ -34,7 +31,6 @@ export default async function ProductDetailsPage(props: {
     notFound();
   }
 
-  const canManageInventory = hasPermission(user, "manage_inventory");
   const stockTone =
     product.stockQuantity === 0
       ? "text-red-700"
@@ -47,7 +43,6 @@ export default async function ProductDetailsPage(props: {
       title={product.name}
       description="Внутренняя карточка товара: здесь можно посмотреть параметры позиции и при необходимости обновить их."
       backHref="/dashboard/inventory"
-      action={<SessionUserActions user={user} />}
     >
       <div className="foodlike-frame grid gap-5 p-4 sm:p-5 xl:grid-cols-[0.95fr_1.05fr]">
         <section className="space-y-5">
@@ -89,7 +84,7 @@ export default async function ProductDetailsPage(props: {
             </div>
           </GlassPanel>
 
-          {canManageInventory ? (
+          <PermissionGate permission="manage_inventory">
             <div className="flex justify-end">
               <ProductDeleteButton
                 productId={product.id}
@@ -98,12 +93,12 @@ export default async function ProductDetailsPage(props: {
                 redirectTo="/dashboard/inventory"
               />
             </div>
-          ) : null}
+          </PermissionGate>
         </section>
 
-        {canManageInventory ? (
+        <PermissionGate permission="manage_inventory">
           <ProductForm initialProduct={product} />
-        ) : null}
+        </PermissionGate>
       </div>
     </PageShell>
   );

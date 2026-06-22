@@ -1,8 +1,6 @@
 import { notFound } from "next/navigation";
 import { PageShell } from "@/components/ui/page-shell";
-import { hasPermission } from "@/modules/auth/authz";
-import { requirePermission } from "@/modules/auth/auth.session";
-import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
+import { PermissionGate } from "@/modules/auth/components/permission-gate";
 import { TechCardForm } from "@/modules/tech-cards/components/tech-card-form";
 import {
   fetchTechCardById,
@@ -19,7 +17,6 @@ function formatQuantity(value: number) {
 export default async function TechCardDetailsPage(props: {
   params?: Promise<{ techCardId: string }>;
 }) {
-  const user = await requirePermission("view_inventory");
   const params = await props.params;
   const techCardId = Number(params?.techCardId);
 
@@ -37,14 +34,11 @@ export default async function TechCardDetailsPage(props: {
     notFound();
   }
 
-  const canManageInventory = hasPermission(user, "manage_inventory");
-
   return (
     <PageShell
       title={techCard.name}
       description="Карточка технологической карты: здесь можно проверить состав и обновить данные."
       backHref="/dashboard/inventory?tab=recipes"
-      action={<SessionUserActions user={user} />}
     >
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(390px,0.82fr)] xl:items-start">
         <section className="space-y-4">
@@ -141,7 +135,7 @@ export default async function TechCardDetailsPage(props: {
           </article>
         </section>
 
-        {canManageInventory ? (
+        <PermissionGate permission="manage_inventory">
           <div className="xl:sticky xl:top-4">
             <TechCardForm
               products={products}
@@ -149,7 +143,7 @@ export default async function TechCardDetailsPage(props: {
               initialTechCard={techCard}
             />
           </div>
-        ) : null}
+        </PermissionGate>
       </div>
     </PageShell>
   );

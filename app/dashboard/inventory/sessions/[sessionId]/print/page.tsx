@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { requirePermission } from "@/modules/auth/auth.session";
 import { formatInventoryQuantity } from "@/modules/inventory/inventory.format";
 import { InventorySessionAutoPrint } from "@/modules/inventory/components/inventory-session-auto-print";
 import { InventorySessionPrintButton } from "@/modules/inventory/components/inventory-session-print-button";
@@ -28,8 +27,6 @@ export default async function InventorySessionPrintPage(props: {
   params: Promise<{ sessionId: string }>;
   searchParams?: Promise<{ autoPrint?: string }>;
 }) {
-  await requirePermission("view_inventory");
-
   const { sessionId } = await props.params;
   const searchParams = props.searchParams ? await props.searchParams : {};
   const numericSessionId = Number(sessionId);

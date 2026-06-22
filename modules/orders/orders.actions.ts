@@ -12,6 +12,7 @@ import {
   INITIAL_ORDER_STATUS,
 } from "@/modules/orders/orders.workflow";
 import { browserBackendJson } from "@/shared/api/browser-backend";
+import { refreshWorkspaceRoute } from "@/modules/navigation/client-workspace-navigation";
 
 export type OrderFormState = {
   errorMessage: string | null;
@@ -90,7 +91,7 @@ export async function updateOrderStatusAction(formData: FormData) {
     };
   }
 
-  window.location.reload();
+  refreshWorkspaceRoute();
   return { errorMessage: null };
 }
 
@@ -113,5 +114,5 @@ export async function chooseOrderPackagingAction(formData: FormData) {
       packageProductId,
     },
   });
-  window.location.reload();
+  refreshWorkspaceRoute();
 }

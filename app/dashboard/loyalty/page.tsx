@@ -1,20 +1,16 @@
 import Link from "next/link";
 import { PageShell } from "@/components/ui/page-shell";
-import { requirePermission } from "@/modules/auth/auth.session";
-import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
 import { GlassPanel, KpiTile } from "@/modules/dashboard/components/dashboard-widgets";
 import { LoyaltyLevelCards } from "@/modules/loyalty/components/loyalty-level-cards";
 import { fetchLoyaltySnapshot } from "@/modules/loyalty/loyalty.api";
 
 export default async function LoyaltyPage() {
-  const user = await requirePermission("view_dashboard");
   const snapshot = await fetchLoyaltySnapshot();
 
   return (
     <PageShell
       title="Система лояльности"
       backHref="/dashboard"
-      action={<SessionUserActions user={user} />}
     >
       <div className="relative overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#fffdfc_0%,#fff2f2_46%,#f8eeee_100%)] p-4 shadow-[0_24px_80px_rgba(127,29,29,0.12)] sm:p-5">
         <div className="relative space-y-4">

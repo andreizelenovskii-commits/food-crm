@@ -4,6 +4,7 @@ import { ValidationError } from "@/shared/errors/app-error";
 import { parseCatalogItemInput } from "@/modules/catalog/catalog.validation";
 import { browserBackendFormData, browserBackendJson } from "@/shared/api/browser-backend";
 import type { CatalogFormState, CatalogFormValues } from "@/modules/catalog/catalog.form-types";
+import { navigateWithinWorkspace } from "@/modules/navigation/client-workspace-navigation";
 
 function getCatalogFormValues(formData: FormData): CatalogFormValues {
   const read = (name: string) => String(formData.get(name) ?? "").trim();
@@ -52,7 +53,7 @@ export async function addCatalogItemAction(
     throw error;
   }
 
-  window.location.assign("/dashboard/catalog");
+  navigateWithinWorkspace("/dashboard/catalog");
   return { errorMessage: null, values: getCatalogFormValues(formData) };
 }
 
@@ -95,7 +96,7 @@ export async function updateCatalogItemAction(
     throw error;
   }
 
-  window.location.assign("/dashboard/catalog");
+  navigateWithinWorkspace("/dashboard/catalog");
   return { errorMessage: null, values: getCatalogFormValues(formData) };
 }
 

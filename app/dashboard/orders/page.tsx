@@ -1,4 +1,3 @@
-import { requirePermission } from "@/modules/auth/auth.session";
 import { OrdersPage } from "@/modules/orders/components/orders-page";
 import { fetchOrders, fetchPackagingOptions } from "@/modules/orders/orders.api";
 
@@ -25,7 +24,6 @@ function resolveDateParam(searchParams?: { date?: string; day?: string; month?: 
 export default async function OrdersRoutePage(props: {
   searchParams?: Promise<{ period?: string; date?: string; day?: string; month?: string; year?: string }>;
 }) {
-  const user = await requirePermission("view_orders");
   const searchParams = await props.searchParams;
   const [orders, packagingOptions] = await Promise.all([
     fetchOrders(),
@@ -34,7 +32,6 @@ export default async function OrdersRoutePage(props: {
 
   return (
     <OrdersPage
-      user={user}
       period={searchParams?.period}
       date={resolveDateParam(searchParams)}
       orders={orders}

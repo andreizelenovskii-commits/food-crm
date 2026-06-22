@@ -5,6 +5,7 @@ import { SessionUserActions } from "@/modules/auth/components/session-user-actio
 import { EmployeeSessionProvider } from "@/modules/auth/components/employee-session-provider";
 import { getUserHomePath } from "@/modules/auth/auth.redirect";
 import { requireWorkspaceAccess } from "@/modules/auth/server/employee-session";
+import { WorkspaceNavigationListener } from "@/modules/navigation/workspace-navigation-listener";
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const user = await requireWorkspaceAccess("crm");
@@ -16,6 +17,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
   return (
     <EmployeeSessionProvider initialUser={user}>
+      <WorkspaceNavigationListener />
       <main className="min-h-screen bg-transparent">
         <div className="min-h-screen md:flex">
           <AppSidebar user={user} />
