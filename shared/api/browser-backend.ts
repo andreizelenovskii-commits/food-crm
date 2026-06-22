@@ -72,6 +72,7 @@ export async function browserBackendJson<T>(
   try {
     return parseResponse<T>(await fetch(url, {
       method: init.method ?? "POST",
+      cache: "no-store",
       credentials: "include",
       headers: hasBody ? { "content-type": "application/json" } : undefined,
       body: hasBody ? JSON.stringify(init.body) : undefined,
