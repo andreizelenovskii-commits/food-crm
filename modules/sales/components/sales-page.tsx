@@ -1,7 +1,5 @@
 import Link from "next/link";
 import { PageShell } from "@/components/ui/page-shell";
-import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
-import type { SessionUser } from "@/modules/auth/auth.types";
 import { GlassPanel, KpiTile } from "@/modules/dashboard/components/dashboard-widgets";
 import { SalesPeriodPicker } from "@/modules/sales/components/sales-period-picker";
 import {
@@ -10,7 +8,6 @@ import {
 } from "@/modules/sales/sales.page-model";
 
 type SalesPageProps = {
-  user: SessionUser;
   analytics: SalesAnalyticsViewModel;
 };
 
@@ -172,8 +169,6 @@ export function SalesPage(props: SalesPageProps) {
     <PageShell
       title="Продажи"
       description="Выручка, заказы, маржа, food cost и управленческая отчетность по периодам."
-      action={<SessionUserActions user={props.user} />}
-      user={props.user}
     >
       <div className="foodlike-frame space-y-4 p-4 sm:p-5">
         <GlassPanel className="relative z-30 overflow-visible p-4">

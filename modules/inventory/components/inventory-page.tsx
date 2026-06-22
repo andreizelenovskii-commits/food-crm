@@ -1,5 +1,4 @@
 import { PageShell } from "@/components/ui/page-shell";
-import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
 import { GlassPanel } from "@/modules/dashboard/components/dashboard-widgets";
 import { InventoryAuditTab } from "@/modules/inventory/components/inventory-audit-tab";
 import { InventoryIncomingPanel } from "@/modules/inventory/components/inventory-incoming-panel";
@@ -24,7 +23,6 @@ const INVENTORY_TAB_TITLES: Record<InventoryTab, string> = {
 };
 
 export function InventoryPage({
-  user,
   canManageInventory,
   products,
   responsibleOptions,
@@ -51,7 +49,6 @@ export function InventoryPage({
       title="Склад"
       description="Здесь хранится всё по складу: товары, остатки, средняя закупочная цена и движение."
       backHref="/dashboard"
-      action={<SessionUserActions user={user} />}
     >
       <div className="relative overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#fffdfc_0%,#fff2f2_46%,#f8eeee_100%)] p-4 shadow-[0_24px_80px_rgba(127,29,29,0.12)] sm:p-5">
         <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-red-300/25 blur-3xl" />

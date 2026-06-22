@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { PageShell } from "@/components/ui/page-shell";
-import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
 import { BestClientCard } from "@/modules/clients/components/best-client-card";
 import { ClientCreatePanel } from "@/modules/clients/components/client-create-panel";
 import { ClientLiveSearch } from "@/modules/clients/components/client-live-search";
@@ -28,7 +27,6 @@ function buildClientsHref(rawQuery: string, loyaltyLevel: ClientLoyaltyLevel | n
 }
 
 export function ClientsPage({
-  user,
   canManageClients,
   viewModel,
 }: ClientsPageProps) {
@@ -47,7 +45,6 @@ export function ClientsPage({
       title="Клиенты"
       description="Здесь можно вести базу клиентов, быстро видеть их контакты и понимать, у кого уже есть заказы."
       backHref="/dashboard"
-      action={<SessionUserActions user={user} />}
     >
       <div className="relative overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#fffdfc_0%,#fff3f2_48%,#f7eeee_100%)] p-4 shadow-[0_24px_80px_rgba(127,29,29,0.12)] sm:p-5">
         <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-red-300/20 blur-3xl" />

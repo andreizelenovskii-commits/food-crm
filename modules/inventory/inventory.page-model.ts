@@ -1,4 +1,3 @@
-import type { SessionUser } from "@/modules/auth/auth.types";
 import type { Employee } from "@/modules/employees/employees.types";
 import {
   PRODUCT_CATEGORIES,
@@ -39,7 +38,6 @@ export type InventoryPageSearchParams = {
 };
 
 export type InventoryPageProps = {
-  user: SessionUser;
   canManageInventory: boolean;
   products: ProductItem[];
   responsibleOptions: InventoryResponsibleOption[];

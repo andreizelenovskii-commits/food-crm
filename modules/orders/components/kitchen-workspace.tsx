@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useEmployeeSession } from "@/modules/auth/components/employee-session-provider";
 import type { SessionUser } from "@/modules/auth/auth.types";
 import { OrderStatusButton } from "@/modules/orders/components/order-status-button";
 import { ORDER_SOURCE_LABELS, type KitchenOrderListItem } from "@/modules/orders/orders.types";
@@ -37,14 +38,13 @@ function getOrderAgeLabel(value: string) {
 }
 
 export function KitchenWorkspace({
-  user,
   orders,
   errorMessage,
 }: {
-  user: SessionUser;
   orders: KitchenOrderListItem[];
   errorMessage?: string | null;
 }) {
+  const { user } = useEmployeeSession();
   const [now, setNow] = useState(() => new Date());
   const [activeGroup, setActiveGroup] = useState<"new" | "ready">("new");
   const sortedOrders = useMemo(
@@ -139,7 +139,7 @@ export function KitchenWorkspace({
       {!errorMessage && visibleOrders.length > 0 ? (
         <div className="grid gap-3 xl:grid-cols-2">
           {visibleOrders.map((order) => (
-            <KitchenOrderCard key={order.id} order={order} user={user} />
+            user ? <KitchenOrderCard key={order.id} order={order} user={user} /> : null
           ))}
         </div>
       ) : null}

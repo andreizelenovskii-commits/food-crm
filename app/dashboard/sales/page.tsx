@@ -1,4 +1,3 @@
-import { requirePermission } from "@/modules/auth/auth.session";
 import { SalesPage } from "@/modules/sales/components/sales-page";
 import { fetchSalesAnalytics } from "@/modules/sales/sales.api";
 
@@ -25,7 +24,6 @@ function resolveDateParam(searchParams?: { date?: string; day?: string; month?: 
 export default async function SalesRoutePage(props: {
   searchParams?: Promise<{ period?: string; date?: string; day?: string; month?: string; year?: string }>;
 }) {
-  const user = await requirePermission("view_dashboard");
   const searchParams = await props.searchParams;
   const analytics = await fetchSalesAnalytics({
     period: searchParams?.period,
@@ -34,7 +32,6 @@ export default async function SalesRoutePage(props: {
 
   return (
     <SalesPage
-      user={user}
       analytics={analytics}
     />
   );

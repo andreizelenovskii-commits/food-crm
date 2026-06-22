@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useEmployeeSession } from "@/modules/auth/components/employee-session-provider";
 import type { SessionUser } from "@/modules/auth/auth.types";
 import { OrderStatusButton } from "@/modules/orders/components/order-status-button";
 import { formatOrderMoney } from "@/modules/orders/components/order-display";
@@ -47,7 +48,8 @@ function getOrderItemsSummary(order: OrderListItem) {
     .join(", ") || "Позиции не добавлены";
 }
 
-export function SimpleDispatcherOrders({ user, orders }: { user: SessionUser; orders: OrderListItem[] }) {
+export function SimpleDispatcherOrders({ orders }: { orders: OrderListItem[] }) {
+  const { user } = useEmployeeSession();
   const [activeGroup, setActiveGroup] = useState<DispatcherOrderGroup>("new");
   const [searchQuery, setSearchQuery] = useState("");
   const groupedOrders = useMemo(() => {
@@ -118,7 +120,7 @@ export function SimpleDispatcherOrders({ user, orders }: { user: SessionUser; or
       ) : (
         <div className="grid gap-3 xl:grid-cols-2">
           {active.orders.map((order) => (
-            <SimpleDispatcherOrderCard key={order.id} user={user} order={order} />
+            user ? <SimpleDispatcherOrderCard key={order.id} user={user} order={order} /> : null
           ))}
         </div>
       )}

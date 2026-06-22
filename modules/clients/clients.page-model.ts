@@ -1,4 +1,3 @@
-import type { SessionUser } from "@/modules/auth/auth.types";
 import type { Client, ClientLoyaltyLevel } from "@/modules/clients/clients.types";
 import { LOYALTY_LEVELS } from "@/modules/loyalty/loyalty.types";
 import { matchesSmartSearch, normalizeSearchText } from "@/shared/lib/smart-search";
@@ -26,7 +25,6 @@ export type ClientsPageViewModel = {
 };
 
 export type ClientsPageProps = {
-  user: SessionUser;
   canManageClients: boolean;
   viewModel: ClientsPageViewModel;
 };

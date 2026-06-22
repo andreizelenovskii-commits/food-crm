@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { LogoutButton } from "@/modules/auth/components/logout-button";
 import type { SessionUser } from "@/modules/auth/auth.types";
 import { getSafeReturnTo } from "@/modules/auth/auth.redirect";
@@ -23,12 +26,14 @@ export function StaffShell({
   title: string;
   subtitle: string;
   navItems: StaffNavItem[];
-  activeHref: string;
+  activeHref?: string;
   children: ReactNode;
   returnTo?: string | null;
 }) {
+  const pathname = usePathname();
+  const currentHref = activeHref ?? pathname;
   const displayName = user.displayName?.trim() || user.role;
-  const showBackToCrm = shouldShowBackToCrm(user, activeHref);
+  const showBackToCrm = shouldShowBackToCrm(user, currentHref);
   const backToCrmHref = getSafeReturnTo(returnTo);
 
   return (
@@ -65,7 +70,7 @@ export function StaffShell({
           {navItems.length > 0 ? (
             <nav className="mt-4 flex flex-wrap gap-2">
               {navItems.map((item) => {
-                const isActive = activeHref === item.href;
+                const isActive = currentHref === item.href;
 
                 return (
                   <Link

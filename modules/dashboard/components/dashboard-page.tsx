@@ -1,7 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { PageShell } from "@/components/ui/page-shell";
 import { PUBLIC_SITE_URL } from "@/shared/deploy-public-urls";
-import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
+import { useEmployeeSession } from "@/modules/auth/components/employee-session-provider";
 import { BirthdayCarousel } from "@/modules/dashboard/components/birthday-carousel";
 import { ModuleCarousel } from "@/modules/dashboard/components/module-carousel";
 import {
@@ -12,15 +14,28 @@ import {
 } from "@/modules/dashboard/components/dashboard-widgets";
 import {
   buildDashboardPageViewModel,
-  type DashboardPageProps,
 } from "@/modules/dashboard/dashboard.page-model";
+import type { UpcomingBirthdayClient } from "@/modules/clients/clients.page-model";
+import type {
+  DashboardSnapshot,
+  EmployeeDashboardSnapshot,
+} from "@/modules/dashboard/dashboard.types";
 
 export function DashboardPage({
-  user,
   dashboard,
   employeeDashboard,
   upcomingBirthdays = [],
-}: DashboardPageProps) {
+}: {
+  dashboard: DashboardSnapshot;
+  employeeDashboard: EmployeeDashboardSnapshot | null;
+  upcomingBirthdays?: UpcomingBirthdayClient[];
+}) {
+  const { user } = useEmployeeSession();
+
+  if (!user) {
+    return null;
+  }
+
   const {
     isStaffRole,
     monthNavigation,
@@ -80,7 +95,6 @@ export function DashboardPage({
   return (
     <PageShell
       title="Главная"
-      action={<SessionUserActions user={user} />}
     >
       <div className="relative overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#fffdfc_0%,#fff2f2_46%,#f8eeee_100%)] p-4 shadow-[0_24px_80px_rgba(127,29,29,0.12)] sm:p-5">
         <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-red-300/25 blur-3xl" />

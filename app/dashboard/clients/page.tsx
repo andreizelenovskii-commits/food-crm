@@ -1,5 +1,3 @@
-import { hasPermission } from "@/modules/auth/authz";
-import { requirePermission } from "@/modules/auth/auth.session";
 import { ClientsPage } from "@/modules/clients/components/clients-page";
 import {
   buildClientsPageViewModel,
@@ -12,7 +10,6 @@ import { fetchClients } from "@/modules/clients/clients.api";
 export default async function ClientsRoutePage(props: {
   searchParams?: Promise<ClientsPageSearchParams>;
 }) {
-  const user = await requirePermission("view_clients");
   const searchParams = await props.searchParams;
   const clients = await fetchClients();
   const rawQuery = resolveClientsQuery(searchParams);
@@ -20,8 +17,7 @@ export default async function ClientsRoutePage(props: {
 
   return (
     <ClientsPage
-      user={user}
-      canManageClients={hasPermission(user, "manage_clients")}
+      canManageClients={true}
       viewModel={buildClientsPageViewModel(clients, rawQuery, activeLoyaltyLevel)}
     />
   );

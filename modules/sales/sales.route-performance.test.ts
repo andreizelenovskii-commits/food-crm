@@ -19,11 +19,15 @@ describe("sales route performance contract", () => {
     expect(source).not.toContain("fetchWriteoffActs");
   });
 
-  it("passes the already loaded user into PageShell to avoid a second auth lookup", () => {
+  it("keeps PageShell presentational and sales leaf free of auth lookup", () => {
     const pageShellSource = readSource("components/ui/page-shell.tsx");
     const salesPageSource = readSource("modules/sales/components/sales-page.tsx");
+    const salesRouteSource = readSource("app/dashboard/sales/page.tsx");
 
-    expect(pageShellSource).toContain("providedUser === undefined ? await getSessionUser() : providedUser");
-    expect(salesPageSource).toContain("user={props.user}");
+    expect(pageShellSource).not.toContain("getSessionUser");
+    expect(pageShellSource).not.toContain("AppSidebar");
+    expect(salesPageSource).not.toContain("SessionUserActions");
+    expect(salesPageSource).not.toContain("user={");
+    expect(salesRouteSource).not.toContain("requirePermission");
   });
 });
