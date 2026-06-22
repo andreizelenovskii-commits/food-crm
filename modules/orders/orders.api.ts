@@ -1,10 +1,28 @@
-import type { KitchenOrderListItem, OrderListItem } from "@/modules/orders/orders.types";
+import type {
+  DispatcherShiftDto,
+  DispatcherWorkspace,
+  KitchenOrderListItem,
+  OrderListItem,
+  PublicOrderingStatus,
+} from "@/modules/orders/orders.types";
 import type { OrderCreateOptions } from "@/modules/orders/orders.page-model";
 import type { ProductItem } from "@/modules/inventory/inventory.types";
 import { backendGet } from "@/shared/api/backend";
 
 export async function fetchOrders(): Promise<OrderListItem[]> {
   return backendGet<OrderListItem[]>("/api/v1/orders");
+}
+
+export async function fetchDispatcherWorkspace(): Promise<DispatcherWorkspace> {
+  return backendGet<DispatcherWorkspace>("/api/v1/dispatcher/workspace");
+}
+
+export async function fetchDispatcherShifts(): Promise<DispatcherShiftDto[]> {
+  return backendGet<DispatcherShiftDto[]>("/api/v1/dispatcher-shifts");
+}
+
+export async function fetchPublicOrderingStatus(): Promise<PublicOrderingStatus> {
+  return backendGet<PublicOrderingStatus>("/api/v1/public/ordering-status");
 }
 
 export async function fetchKitchenOrders(): Promise<KitchenOrderListItem[]> {

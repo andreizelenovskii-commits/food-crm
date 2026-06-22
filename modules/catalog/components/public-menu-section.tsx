@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import type { PublicClientProfile } from "@/modules/clients/clients.types";
 import type { CatalogItem, CatalogItemVariant } from "@/modules/catalog/catalog.types";
 import {
@@ -24,6 +24,7 @@ import {
 } from "@/modules/catalog/components/public-menu-choice-utils";
 import { resolvePublicMenuVariant } from "@/modules/catalog/components/public-menu-utils";
 import { ORDER_STATUS_LABELS } from "@/modules/orders/orders.workflow";
+import type { PublicOrderingStatus } from "@/modules/orders/orders.types";
 import { browserBackendJson } from "@/shared/api/browser-backend";
 
 type Cart = Record<string, {
@@ -59,6 +60,7 @@ export function PublicMenuSection({
   const [isPending, setIsPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [createdOrder, setCreatedOrder] = useState<PublicOrderStatus | null>(null);
+  const [orderingStatus, setOrderingStatus] = useState<PublicOrderingStatus | null>(null);
   const cartItems = useMemo(
     () =>
       Object.entries(cart)
@@ -88,6 +90,26 @@ export function PublicMenuSection({
     (sum, entry) => sum + entry.variant.priceCents * entry.quantity,
     0,
   );
+
+  useEffect(() => {
+    let isActive = true;
+
+    browserBackendJson<PublicOrderingStatus>("/api/v1/public/ordering-status", { method: "GET" })
+      .then((status) => {
+        if (isActive) {
+          setOrderingStatus(status);
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setOrderingStatus(null);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   function addConfiguredItem(
     item: CatalogItem,
@@ -159,6 +181,11 @@ export function PublicMenuSection({
 
     if (!cartItems.length) {
       setMessage("Добавьте позиции в корзину");
+      return;
+    }
+
+    if (orderingStatus?.acceptingOrders === false) {
+      setMessage(orderingStatus.message);
       return;
     }
 
@@ -245,6 +272,7 @@ export function PublicMenuSection({
             currentClient={currentClient}
             isPending={isPending}
             message={message}
+            orderingStatus={orderingStatus}
             totalCents={totalCents}
             onChoiceChange={changeChoice}
             onQuantityChange={changeQuantity}

@@ -41,6 +41,11 @@ const INVENTORY_SUB_ITEMS: Array<{
   { href: "/dashboard/inventory?tab=recipes", label: "Техкарты", tab: "recipes" },
 ];
 
+const SALES_SUB_ITEMS = [
+  { href: "/dashboard/sales", label: "Аналитика", permission: "view_dashboard" },
+  { href: "/dashboard/sales/shifts", label: "Смены", permission: "view_dispatcher_shifts" },
+] as const;
+
 const SETTINGS_SUB_ITEMS = [
   { href: "/dashboard/settings/rights", label: "Роли и права" },
   { href: "/dashboard/settings/kitchen-zones", label: "Кухонные зоны" },
@@ -85,8 +90,10 @@ export function AppSidebar({ user }: { user: SessionUser | null }) {
   const searchParams = useSearchParams();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const isInventoryPath = isActivePath(pathname, "/dashboard/inventory");
+  const isSalesPath = isActivePath(pathname, "/dashboard/sales");
   const isSettingsPath = isActivePath(pathname, "/dashboard/settings");
   const [isInventoryOpen, setIsInventoryOpen] = useState(isInventoryPath);
+  const [isSalesOpen, setIsSalesOpen] = useState(isSalesPath);
   const [isSettingsOpen, setIsSettingsOpen] = useState(isSettingsPath);
   const activeInventoryTab = isInventoryPath ? (searchParams.get("tab") ?? "products") : "";
 
@@ -175,6 +182,34 @@ export function AppSidebar({ user }: { user: SessionUser | null }) {
                       label: subItem.label,
                       isActive: activeInventoryTab === subItem.tab,
                     }))}
+                  />
+                );
+              }
+
+              if (item.href === "/dashboard/sales") {
+                return (
+                  <SidebarNavGroup
+                    key={item.href}
+                    href={item.href}
+                    label={item.label}
+                    icon={item.icon}
+                    isActive={isActive}
+                    isOpen={isSalesOpen}
+                    expandLabel="Показать разделы продаж"
+                    collapseLabel="Скрыть разделы продаж"
+                    onOpen={() => {
+                      setIsSalesOpen(true);
+                      setIsMobileOpen(false);
+                    }}
+                    onToggle={() => setIsSalesOpen((current) => !current)}
+                    onCloseMobile={() => setIsMobileOpen(false)}
+                    subItems={SALES_SUB_ITEMS
+                      .filter((subItem) => user ? hasPermission(user, subItem.permission as AuthPermission) : false)
+                      .map((subItem) => ({
+                        href: subItem.href,
+                        label: subItem.label,
+                        isActive: isActivePath(pathname, subItem.href),
+                      }))}
                   />
                 );
               }

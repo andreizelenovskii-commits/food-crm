@@ -62,6 +62,7 @@ export async function browserBackendJson<T>(
   init: {
     method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
     body?: unknown;
+    signal?: AbortSignal;
   } = {},
 ) {
   const apiUrl = getBrowserBackendApiUrl();
@@ -74,6 +75,7 @@ export async function browserBackendJson<T>(
       credentials: "include",
       headers: hasBody ? { "content-type": "application/json" } : undefined,
       body: hasBody ? JSON.stringify(init.body) : undefined,
+      signal: init.signal,
     }));
   } catch (error) {
     if (error instanceof TypeError) {

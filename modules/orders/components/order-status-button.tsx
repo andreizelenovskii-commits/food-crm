@@ -9,11 +9,13 @@ export function OrderStatusButton({
   status,
   label,
   className,
+  onSuccess,
 }: {
   orderId: number;
   status: OrderStatus;
   label: string;
   className?: string;
+  onSuccess?: () => void;
 }) {
   const [isPending, startTransition] = useTransition();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -32,6 +34,8 @@ export function OrderStatusButton({
             const result = await updateOrderStatusAction(formData);
             if (result?.errorMessage) {
               setErrorMessage(result.errorMessage);
+            } else {
+              onSuccess?.();
             }
           });
         }}

@@ -7,6 +7,7 @@ import { ClientAddressFieldsWithDefaults } from "@/modules/clients/components/cl
 import { formatPublicMenuMoney } from "@/modules/catalog/components/public-menu-utils";
 import { ORDER_STATUS_LABELS } from "@/modules/orders/orders.workflow";
 import type { PublicOrderStatus } from "@/modules/catalog/components/public-menu-cart";
+import type { PublicOrderingStatus } from "@/modules/orders/orders.types";
 
 const DELIVERY_FEE_CENTS = 17000;
 
@@ -16,6 +17,7 @@ export function CheckoutPanel({
   deliveryFeeCents,
   isPending,
   message,
+  orderingStatus,
   payableCents,
   subtotalCents,
 }: {
@@ -24,6 +26,7 @@ export function CheckoutPanel({
   deliveryFeeCents: number;
   isPending: boolean;
   message: string | null;
+  orderingStatus: PublicOrderingStatus | null;
   payableCents: number;
   subtotalCents: number;
 }) {
@@ -35,9 +38,16 @@ export function CheckoutPanel({
         <TotalRow label="Итого" value={formatPublicMenuMoney(payableCents)} strong />
       </div>
       <CheckoutFields currentClient={currentClient} />
+      {orderingStatus && !orderingStatus.acceptingOrders ? (
+        <p className="mt-4 rounded-[16px] border border-[#ffd0d6] bg-[#fff1f2] px-4 py-3 text-sm font-semibold leading-6 text-[#a00010]">
+          {orderingStatus.reason === "SHIFT_CLOSED"
+            ? "Приём заказов на сегодня завершён."
+            : "Сейчас заказы не принимаются. Приём начнётся после открытия смены, не ранее 09:00 по сахалинскому времени."}
+        </p>
+      ) : null}
       {message ? <p className="mt-4 rounded-[16px] border border-[#f3dadd] bg-white px-4 py-3 text-sm font-semibold leading-6 text-[#6b5960]">{message}</p> : null}
       {createdOrder ? <p className="mt-3 text-sm font-black text-[#b00012]">Статус: {ORDER_STATUS_LABELS[createdOrder.status]}</p> : null}
-      <button type="submit" disabled={isPending} className="mt-5 min-h-[52px] w-full rounded-full bg-[#d50014] px-6 text-sm font-black text-white shadow-[0_14px_28px_rgba(213,0,20,0.20)] transition hover:bg-[#b90012] disabled:opacity-60">
+      <button type="submit" disabled={isPending || orderingStatus?.acceptingOrders === false} className="mt-5 min-h-[52px] w-full rounded-full bg-[#d50014] px-6 text-sm font-black text-white shadow-[0_14px_28px_rgba(213,0,20,0.20)] transition hover:bg-[#b90012] disabled:opacity-60">
         {currentClient ? "Оформить заказ" : "Войти для заказа"}
       </button>
     </aside>

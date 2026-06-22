@@ -15,6 +15,7 @@ import {
 import { PublicModalCloseButton } from "@/modules/catalog/components/public-modal-shell";
 import { formatPublicMenuMoney } from "@/modules/catalog/components/public-menu-utils";
 import type { OrderStatus } from "@/modules/orders/orders.types";
+import type { PublicOrderingStatus } from "@/modules/orders/orders.types";
 
 export type PublicCartEntry = {
   key: string;
@@ -38,6 +39,7 @@ export function PublicMenuCart({
   currentClient,
   isPending,
   message,
+  orderingStatus,
   totalCents,
   onChoiceChange,
   onQuantityChange,
@@ -48,6 +50,7 @@ export function PublicMenuCart({
   currentClient: PublicClientProfile | null;
   isPending: boolean;
   message: string | null;
+  orderingStatus: PublicOrderingStatus | null;
   totalCents: number;
   onChoiceChange: (key: string, choiceSlotId: number, position: number, selectedCatalogItemId: number) => void;
   onQuantityChange: (key: string, delta: number) => void;
@@ -107,6 +110,7 @@ export function PublicMenuCart({
                 currentClient={currentClient}
                 isPending={isPending}
                 message={message}
+                orderingStatus={orderingStatus}
                 deliveryFeeCents={deliveryFeeCents}
                 payableCents={payableCents}
                 subtotalCents={totalCents}

@@ -1,8 +1,11 @@
-import { fetchOrders } from "@/modules/orders/orders.api";
+import { fetchDispatcherWorkspace, fetchOrderCreateOptions } from "@/modules/orders/orders.api";
 import { SimpleDispatcherOrders } from "@/modules/orders/components/simple-dispatcher-orders";
 
 export default async function DispatcherOrdersPage() {
-  const orders = await fetchOrders();
+  const [workspace, orderOptions] = await Promise.all([
+    fetchDispatcherWorkspace(),
+    fetchOrderCreateOptions(),
+  ]);
 
-  return <SimpleDispatcherOrders orders={orders} />;
+  return <SimpleDispatcherOrders initialWorkspace={workspace} orderOptions={orderOptions} />;
 }

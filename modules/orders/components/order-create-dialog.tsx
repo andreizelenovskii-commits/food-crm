@@ -5,13 +5,21 @@ import { OrderCreateCatalogSection } from "@/modules/orders/components/order-cre
 import { OrderCreateParamsPanel } from "@/modules/orders/components/order-create-params-panel";
 import type { SelectedOrderItem } from "@/modules/orders/components/order-create.types";
 
-export function OrderCreateFab({ onOpen }: { onOpen: () => void }) {
+export function OrderCreateFab({
+  onOpen,
+  className,
+  label = "Создать заказ",
+}: {
+  onOpen: () => void;
+  className?: string;
+  label?: string;
+}) {
   return (
     <button
       type="button"
       data-order-create-fab
       onClick={onOpen}
-      className="fixed bottom-6 right-6 z-30 inline-flex items-center gap-3 rounded-full bg-red-800 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-red-950/25 transition hover:bg-red-900"
+      className={className ?? "fixed bottom-6 right-6 z-30 inline-flex items-center gap-3 rounded-full bg-red-800 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-red-950/25 transition hover:bg-red-900"}
       aria-label="Создать заказ"
     >
       <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/16">
@@ -24,7 +32,7 @@ export function OrderCreateFab({ onOpen }: { onOpen: () => void }) {
           />
         </svg>
       </span>
-      <span>Создать заказ</span>
+      <span>{label}</span>
     </button>
   );
 }

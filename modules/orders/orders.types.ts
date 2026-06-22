@@ -1,4 +1,5 @@
 export type OrderStatus =
+  | "NEW"
   | "SENT_TO_KITCHEN"
   | "READY"
   | "PACKED"
@@ -6,6 +7,7 @@ export type OrderStatus =
   | "CANCELLED";
 
 export const ORDER_STATUSES = [
+  "NEW",
   "SENT_TO_KITCHEN",
   "READY",
   "PACKED",
@@ -78,6 +80,7 @@ export type KitchenOrderItemSummary = Pick<
 export type OrderListItem = {
   id: number;
   status: OrderStatus;
+  shiftId: number | null;
   source: OrderSource;
   isInternal: boolean;
   clientId: number | null;
@@ -114,7 +117,83 @@ export type OrderCreateInput = {
   employeeId: number;
   isInternal: boolean;
   status: OrderStatus;
+  shiftId?: number | null;
   source: OrderSource;
   deliveryFeeCents: number;
   items: OrderDraftItem[];
+};
+
+export type DispatcherShiftDto = {
+  id: number;
+  number: number;
+  displayNumber: string;
+  businessDate: string;
+  status: "OPEN" | "CLOSED";
+  timeZone: string;
+  openedAt: string;
+  closedAt: string | null;
+  responsibleName: string;
+  closedByName: string | null;
+  openedByUserId: number;
+  closedByUserId: number | null;
+  checksCount: number;
+  revenueCents: number;
+  cancelledOrdersCount: number;
+  totalOrdersCount: number;
+  activeOrdersCount: number;
+};
+
+export type DispatcherWorkspace = {
+  clock: {
+    serverNow: string;
+    businessDate: string;
+    businessTimeZone: string;
+  };
+  shift: {
+    state: "NOT_OPEN" | "OPEN" | "CLOSED" | "PREVIOUS_SHIFT_OPEN";
+    id: number | null;
+    number: number | null;
+    displayNumber: string | null;
+    businessDate: string;
+    openedAt: string | null;
+    closedAt: string | null;
+    responsibleName: string | null;
+    closedByName: string | null;
+    canOpen: boolean;
+    canClose: boolean;
+    openAvailableAt: string;
+    closeAvailableAt: string;
+    activeOrdersCount: number;
+    checksCount: number;
+    revenueCents: number;
+    cancelledOrdersCount: number;
+    previousShift?: DispatcherShiftDto;
+  };
+  orderGroups: {
+    new: OrderListItem[];
+    inProgress: OrderListItem[];
+    completed: OrderListItem[];
+  };
+  counts: {
+    new: number;
+    inProgress: number;
+    completed: number;
+  };
+  capabilities: {
+    canCreateOrder: boolean;
+    canOpenShift: boolean;
+    canCloseShift: boolean;
+    canCancelOrder: boolean;
+    canDeleteOrder: boolean;
+  };
+};
+
+export type PublicOrderingStatus = {
+  acceptingOrders: boolean;
+  reason: "SHIFT_CLOSED" | "SHIFT_NOT_OPEN" | null;
+  businessDate: string;
+  businessTimeZone: string;
+  serverNow: string;
+  nextOpenNotBefore: string;
+  message: string;
 };

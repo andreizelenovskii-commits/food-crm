@@ -29,11 +29,17 @@ export function OrderCreateButton({
   clients,
   employees,
   catalogItems,
+  onSuccess,
+  triggerClassName,
+  triggerLabel,
 }: {
   user: SessionUser;
   clients: Client[];
   employees: Employee[];
   catalogItems: CatalogItem[];
+  onSuccess?: () => void;
+  triggerClassName?: string;
+  triggerLabel?: string;
 }) {
   const initialState = createInitialOrderFormState();
   const [isOpen, setIsOpen] = useState(false);
@@ -70,11 +76,12 @@ export function OrderCreateButton({
         setSelectedItems({});
         setSelectedVariants({});
         setSelectedChoices({});
+        onSuccess?.();
       }, 0);
 
       return () => window.clearTimeout(timeoutId);
     }
-  }, [isOpen, isPending, state.successMessage]);
+  }, [isOpen, isPending, onSuccess, state.successMessage]);
 
   const visibleCatalogItems = useMemo(
     () =>
@@ -220,7 +227,11 @@ export function OrderCreateButton({
 
   return (
     <>
-      <OrderCreateFab onOpen={() => setIsOpen(true)} />
+      <OrderCreateFab
+        onOpen={() => setIsOpen(true)}
+        className={triggerClassName}
+        label={triggerLabel}
+      />
 
       {isOpen ? (
         <OrderCreateDialog
