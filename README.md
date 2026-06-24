@@ -4,7 +4,6 @@
 
 ```bash
 npm ci
-cp .env.local.example .env.local
 npm run lint
 npm test
 npm run build
@@ -18,10 +17,14 @@ http://localhost:3000
 http://localhost:3000/login
 ```
 
-The frontend requires `SESSION_SECRET` in `.env.local`. By default it sends API
-requests to `http://127.0.0.1:4000`; override that with
-`NEXT_PUBLIC_BACKEND_API_URL` and/or `BACKEND_API_URL` when the backend runs
-elsewhere.
+For permanent one-command local development use:
+
+```bash
+npm run local:setup
+npm run local:dev
+```
+
+Full guide: **[docs/LOCAL_DEVELOPMENT.md](docs/LOCAL_DEVELOPMENT.md)**.
 
 ## Зеркало перед доменом (рекомендуется)
 
@@ -40,7 +43,9 @@ elsewhere.
 
 ## Локально на Mac (`localhost`)
 
-Нужно только если хочешь гонять фронт у себя без staging. Тогда поднимаешь API и Postgres — **[docs/LOCAL_BACKEND.md](docs/LOCAL_BACKEND.md)**. Переменные фронта: **[.env.local.example](.env.local.example)** (`SESSION_SECRET`, при необходимости URL API).
+Постоянная локальная среда без SSH/VPS/Caddy: **[docs/LOCAL_DEVELOPMENT.md](docs/LOCAL_DEVELOPMENT.md)**.
+
+Старый ручной backend-flow оставлен для справки: **[docs/LOCAL_BACKEND.md](docs/LOCAL_BACKEND.md)**.
 
 ---
 
