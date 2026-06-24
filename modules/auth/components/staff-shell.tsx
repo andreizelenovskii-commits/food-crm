@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { LogoutButton } from "@/modules/auth/components/logout-button";
+import { LocalEnvBadge } from "@/components/ui/local-env-badge";
 import type { SessionUser } from "@/modules/auth/auth.types";
 import { getSafeReturnTo } from "@/modules/auth/auth.redirect";
 import { shouldShowBackToCrm } from "@/modules/auth/authz";
@@ -47,6 +48,7 @@ export function StaffShell({
               <p className="mt-1 text-sm leading-6 text-zinc-500">{subtitle}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              <LocalEnvBadge />
               {showBackToCrm ? (
                 <Link
                   href={backToCrmHref}

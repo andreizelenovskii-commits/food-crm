@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { AppSidebar } from "@/components/ui/app-sidebar";
+import { LocalEnvBadge } from "@/components/ui/local-env-badge";
 import { SessionUserActions } from "@/modules/auth/components/session-user-actions";
 import { EmployeeSessionProvider } from "@/modules/auth/components/employee-session-provider";
 import { getUserHomePath } from "@/modules/auth/auth.redirect";
@@ -23,7 +24,10 @@ export default async function DashboardLayout({ children }: { children: ReactNod
           <AppSidebar user={user} />
           <div className="mx-auto w-full min-w-0 flex-1 px-4 pb-4 pt-16 sm:px-5 md:pt-4 lg:px-6">
             <div className="mb-4 flex justify-end">
-              <SessionUserActions user={user} />
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <LocalEnvBadge />
+                <SessionUserActions user={user} />
+              </div>
             </div>
             {children}
           </div>
