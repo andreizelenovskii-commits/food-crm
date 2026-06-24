@@ -24,4 +24,40 @@ describe("local development environment contracts", () => {
     expect(read("shared/app-env.ts")).toContain('APP_ENV === "local"');
     expect(read("app/dev/page.tsx")).toContain("notFound()");
   });
+
+  it("background process manager owns only explicit local pids", () => {
+    const source = read("scripts/local-process-manager.mjs");
+
+    expect(source).toContain("start.lock");
+    expect(source).toContain("stale");
+    expect(source).toContain("is already used by PID");
+    expect(source).toContain("stopService");
+    expect(source).not.toContain("killall");
+  });
+
+  it("reset and restore use local backups with explicit safety guards", () => {
+    expect(read("scripts/local-backup.mjs")).toContain("food-crm-local-");
+    expect(read("scripts/local-reset.mjs")).toContain("scripts/local-backup.mjs");
+    expect(read("scripts/local-reset.mjs")).toContain("--no-backup");
+    expect(read("scripts/local-restore.mjs")).toContain(".dump");
+    expect(read("scripts/local-restore.mjs")).toContain("RESTORE LOCAL DATABASE");
+  });
+
+  it("shift automation uses isolated ports and sanitized reports", () => {
+    expect(read("docker-compose.shift-test.yml")).toContain("5433:5432");
+    expect(read("scripts/local-shift-test-stack.mjs")).toContain("4001");
+    expect(read("scripts/local-shift-test-stack.mjs")).toContain("3001");
+    expect(read("scripts/local-shift-check.mjs")).toContain("food_crm_shift_test");
+    expect(read("scripts/local-shift-check.mjs")).not.toContain("api.crmandromeda.ru");
+    expect(read(".gitignore")).toContain(".local/");
+  });
+
+  it("macOS autostart never resets data or opens a browser", () => {
+    const source = read("scripts/local-autostart-runner.sh.template");
+
+    expect(source).toContain("local:start");
+    expect(source).not.toContain("local:reset");
+    expect(source).not.toContain("local:fresh");
+    expect(source).not.toContain(" open ");
+  });
 });
