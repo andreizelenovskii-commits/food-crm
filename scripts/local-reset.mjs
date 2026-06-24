@@ -5,9 +5,11 @@ import {
   assertLocalDatabaseUrl,
   findBackendDir,
   readEnvFile,
+  removeIfExists,
   run,
   waitForPostgres,
 } from "./local-utils.mjs";
+import { stopApps } from "./local-process-manager.mjs";
 
 async function confirm() {
   if (process.argv.includes("--yes")) {
@@ -29,6 +31,10 @@ async function main() {
   assertLocalDatabaseUrl(backendEnv.get("DATABASE_URL") ?? "");
   await confirm();
 
+  await stopApps();
+  if (!process.argv.includes("--no-backup")) {
+    await run("node", ["scripts/local-backup.mjs"]);
+  }
   await run("docker", ["compose", "down", "-v"]);
   await run("docker", ["compose", "up", "-d", "postgres"]);
   await waitForPostgres();
@@ -36,6 +42,7 @@ async function main() {
   await run("npx", ["prisma", "generate"], { cwd: backendDir });
   await run("npm", ["run", "db:deploy"], { cwd: backendDir });
   await run("npm", ["run", "db:seed:dev"], { cwd: backendDir });
+  removeIfExists(resolve(backendDir, ".local-dev-clock.json"));
 
   console.log("");
   console.log("Local database reset complete.");
