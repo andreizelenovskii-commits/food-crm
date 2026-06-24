@@ -1,24 +1,11 @@
-import { existsSync, rmSync } from "node:fs";
-import { pidFile, readPids, run } from "./local-utils.mjs";
+import { stopApps, stopPostgres } from "./local-process-manager.mjs";
 
 async function main() {
-  const pids = readPids();
-
-  for (const pid of pids) {
-    try {
-      process.kill(pid, "SIGTERM");
-      console.log(`Stopped local process ${pid}`);
-    } catch {
-      // Already stopped.
-    }
-  }
-
-  if (existsSync(pidFile)) {
-    rmSync(pidFile, { force: true });
-  }
+  await stopApps();
+  console.log("Stopped local backend/frontend processes.");
 
   if (process.argv.includes("--db")) {
-    await run("docker", ["compose", "stop", "postgres"]);
+    await stopPostgres();
     console.log("Stopped local PostgreSQL container.");
   } else {
     console.log("PostgreSQL left running. Use npm run local:stop -- --db to stop it.");

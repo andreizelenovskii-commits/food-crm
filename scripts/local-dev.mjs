@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import {
   findBackendDir,
   frontendDir,
+  ensureDockerReady,
   run,
   savePids,
   spawnPrefixed,
@@ -13,6 +14,7 @@ async function main() {
   const backendDir = findBackendDir();
 
   await run("node", ["scripts/local-doctor.mjs"]);
+  await ensureDockerReady();
   await run("docker", ["compose", "up", "-d", "postgres"]);
   await waitForPostgres();
 
@@ -38,7 +40,7 @@ async function main() {
   console.log("Backend health:  http://127.0.0.1:4000/api/v1/health");
 
   if (process.platform === "darwin" && !process.env.FOODLIKE_NO_OPEN) {
-    spawn("open", ["http://localhost:3000/login"], { stdio: "ignore", detached: true }).unref();
+    spawn("open", ["http://localhost:3000/dev"], { stdio: "ignore", detached: true }).unref();
   }
 
   const stop = () => {

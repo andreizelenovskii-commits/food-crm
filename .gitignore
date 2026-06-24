@@ -47,4 +47,5 @@ next-env.d.ts
 /app/generated/prisma
 /backups/
 /backend/
+.local/
 .local-dev-pids.json

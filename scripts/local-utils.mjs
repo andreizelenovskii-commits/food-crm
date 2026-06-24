@@ -1,13 +1,35 @@
 import { spawn } from "node:child_process";
 import { createServer } from "node:net";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomBytes } from "node:crypto";
 
 export const frontendDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 export const localDatabaseUrl = "postgresql://food_crm_local:food_crm_local_dev@127.0.0.1:5432/food_crm_local?schema=public";
-export const pidFile = resolve(frontendDir, ".local-dev-pids.json");
+export const localDir = resolve(frontendDir, ".local");
+export const localPidsDir = resolve(localDir, "pids");
+export const localLogsDir = resolve(localDir, "logs");
+export const localLocksDir = resolve(localDir, "locks");
+export const localBackupsDir = resolve(localDir, "backups");
+export const localReportsDir = resolve(localDir, "reports");
+export const runtimeFile = resolve(localDir, "runtime.json");
+export const pidFile = resolve(localPidsDir, "local-dev-pids.json");
+
+export function ensureLocalDirs() {
+  for (const dir of [localDir, localPidsDir, localLogsDir, localLocksDir, localBackupsDir, localReportsDir]) {
+    mkdirSync(dir, { recursive: true });
+  }
+}
+
+export function localPath(...parts) {
+  ensureLocalDirs();
+  return resolve(localDir, ...parts);
+}
+
+export function sleep(ms) {
+  return new Promise((resolvePromise) => setTimeout(resolvePromise, ms));
+}
 
 export function findBackendDir() {
   const candidates = [
@@ -100,6 +122,16 @@ export function assertLocalDatabaseUrl(databaseUrl) {
   }
 }
 
+export function getBackendEnv(backendDir = findBackendDir()) {
+  return readEnvFile(resolve(backendDir, ".env"));
+}
+
+export function assertBackendEnvIsLocal(backendDir = findBackendDir()) {
+  const backendEnv = getBackendEnv(backendDir);
+  assertLocalDatabaseUrl(backendEnv.get("DATABASE_URL") ?? "");
+  return backendEnv;
+}
+
 export function writeFrontendEnvIfMissing() {
   const target = resolve(frontendDir, ".env.local");
 
@@ -112,6 +144,8 @@ export function writeFrontendEnvIfMissing() {
     "BACKEND_API_URL=http://127.0.0.1:4000",
     "BACKEND_INTERNAL_API_URL=http://127.0.0.1:4000",
     "BACKEND_SESSION_COOKIE_NAME=food_crm_local_api_session",
+    "LOCAL_SMOKE_PHONE=+7 900 100-00-09",
+    "LOCAL_SMOKE_PASSWORD=" + randomSecret(),
     "NEXT_PUBLIC_PUBLIC_SITE_URL=http://localhost:3000",
     "NEXT_PUBLIC_CRM_PRODUCTION_URL=http://localhost:3000",
     "NEXT_PUBLIC_APP_ENV=local",
@@ -144,6 +178,8 @@ export function writeBackendEnvIfMissing(backendDir) {
     "SMSAERO_SIGN=SMS Aero",
     "BUSINESS_TIME_ZONE=Asia/Sakhalin",
     "LOCAL_DEV_TOOLS_ENABLED=true",
+    "LOCAL_SMOKE_PHONE=+7 900 100-00-09",
+    "LOCAL_SMOKE_PASSWORD=" + randomSecret(),
     "",
   ].join("\n"), { mode: 0o600 });
   return true;
@@ -188,11 +224,39 @@ export async function waitForPostgres(timeoutMs = 60_000) {
       return;
     } catch (error) {
       lastError = error;
-      await new Promise((resolvePromise) => setTimeout(resolvePromise, 1000));
+      await sleep(1000);
     }
   }
 
   throw new Error(`PostgreSQL did not become ready${lastError instanceof Error ? `: ${lastError.message}` : ""}`);
+}
+
+export async function ensureDockerReady(timeoutMs = 120_000) {
+  try {
+    await run("docker", ["--version"], { stdio: "ignore" });
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("ENOENT")) {
+      throw new Error("Docker CLI was not found. Install Docker Desktop and make sure `docker` is available in PATH.");
+    }
+  }
+
+  if (process.platform === "darwin") {
+    await run("open", ["-ga", "Docker"], { stdio: "ignore" }).catch(() => undefined);
+  }
+
+  const startedAt = Date.now();
+  let lastError = null;
+  while (Date.now() - startedAt < timeoutMs) {
+    try {
+      await run("docker", ["info"], { stdio: "ignore" });
+      return;
+    } catch (error) {
+      lastError = error;
+      await sleep(2000);
+    }
+  }
+
+  throw new Error(`Docker did not become ready${lastError instanceof Error ? `: ${lastError.message}` : ""}`);
 }
 
 export function checkPortFree(port) {
@@ -207,6 +271,7 @@ export function checkPortFree(port) {
 }
 
 export function savePids(pids) {
+  ensureLocalDirs();
   writeFileSync(pidFile, `${JSON.stringify({ pids }, null, 2)}\n`);
 }
 
@@ -220,5 +285,11 @@ export function readPids() {
     return Array.isArray(payload.pids) ? payload.pids.filter(Number.isInteger) : [];
   } catch {
     return [];
+  }
+}
+
+export function removeIfExists(path) {
+  if (existsSync(path)) {
+    rmSync(path, { force: true, recursive: false });
   }
 }
