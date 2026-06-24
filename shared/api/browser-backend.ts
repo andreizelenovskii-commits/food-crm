@@ -1,33 +1,39 @@
-const DEFAULT_BACKEND_PORT = "4000";
 const FORM_DATA_TIMEOUT_MS = 30_000;
 
-export function getBrowserBackendApiUrl() {
-  if (typeof window !== "undefined") {
-    const { protocol, hostname } = window.location;
+export function resolveBrowserBackendApiUrl(
+  hostname: string,
+  explicitBackendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL?.trim() ?? "",
+) {
+  const configuredBackendUrl = explicitBackendUrl.trim();
 
-    if (hostname === "localhost" || hostname === "127.0.0.1") {
-      if (process.env.NEXT_PUBLIC_BACKEND_API_URL?.trim()) {
-        return process.env.NEXT_PUBLIC_BACKEND_API_URL.trim()
-          .replace(/\/$/, "")
-          .replace("http://127.0.0.1:", "http://localhost:");
-      }
-
-      return `${protocol}//${hostname}:${DEFAULT_BACKEND_PORT}`;
+  if (hostname === "localhost" || hostname === "127.0.0.1") {
+    if (configuredBackendUrl) {
+      return configuredBackendUrl
+        .replace(/\/$/, "")
+        .replace("http://127.0.0.1:", "http://localhost:");
     }
 
-    if (
-      hostname === "crm.crmandromeda.ru" ||
-      hostname === "crmandromeda.ru"
-    ) {
-      return "";
-    }
+    return "";
   }
 
-  if (process.env.NEXT_PUBLIC_BACKEND_API_URL?.trim()) {
-    return process.env.NEXT_PUBLIC_BACKEND_API_URL.trim().replace(/\/$/, "");
+  if (
+    hostname === "crm.crmandromeda.ru" ||
+    hostname === "crmandromeda.ru"
+  ) {
+    return "";
+  }
+
+  if (configuredBackendUrl) {
+    return configuredBackendUrl.replace(/\/$/, "");
   }
 
   return "";
+}
+
+export function getBrowserBackendApiUrl() {
+  return resolveBrowserBackendApiUrl(
+    typeof window === "undefined" ? "" : window.location.hostname,
+  );
 }
 
 function getBackendUnavailableMessage(path: string) {
