@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { createServer } from "node:net";
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomBytes } from "node:crypto";
@@ -12,12 +12,13 @@ export const localPidsDir = resolve(localDir, "pids");
 export const localLogsDir = resolve(localDir, "logs");
 export const localLocksDir = resolve(localDir, "locks");
 export const localBackupsDir = resolve(localDir, "backups");
+export const localEnvBackupsDir = resolve(localDir, "env-backups");
 export const localReportsDir = resolve(localDir, "reports");
 export const runtimeFile = resolve(localDir, "runtime.json");
 export const pidFile = resolve(localPidsDir, "local-dev-pids.json");
 
 export function ensureLocalDirs() {
-  for (const dir of [localDir, localPidsDir, localLogsDir, localLocksDir, localBackupsDir, localReportsDir]) {
+  for (const dir of [localDir, localPidsDir, localLogsDir, localLocksDir, localBackupsDir, localEnvBackupsDir, localReportsDir]) {
     mkdirSync(dir, { recursive: true });
   }
 }
@@ -112,6 +113,71 @@ export function readEnvFile(path) {
   return values;
 }
 
+function stamp() {
+  return new Date().toISOString().replace(/[-:]/g, "").replace(/\..+/, "").replace("T", "-");
+}
+
+function backupEnvFile(path, label) {
+  ensureLocalDirs();
+  if (existsSync(path)) {
+    copyFileSync(path, resolve(localEnvBackupsDir, `${label}-${stamp()}.env`));
+  }
+}
+
+function upsertEnvValue(source, key, value) {
+  const lines = source.split(/\r?\n/);
+  let found = false;
+  const nextLines = lines.map((line) => {
+    if (line.startsWith(`${key}=`)) {
+      found = true;
+      return `${key}=${value}`;
+    }
+    return line;
+  });
+
+  if (!found) {
+    const needsBlank = nextLines.length > 0 && nextLines.at(-1) !== "";
+    nextLines.push(...(needsBlank ? [""] : []), `${key}=${value}`);
+  }
+
+  return nextLines.join("\n").replace(/\n{3,}/g, "\n\n").replace(/\s*$/, "\n");
+}
+
+function commentOutEnvValue(source, key, reason) {
+  const lines = source.split(/\r?\n/);
+  let changed = false;
+  const nextLines = lines.map((line) => {
+    if (line.startsWith(`${key}=`)) {
+      changed = true;
+      return `# ${line} # disabled by local auth repair: ${reason}`;
+    }
+    return line;
+  });
+  return { source: nextLines.join("\n").replace(/\s*$/, "\n"), changed };
+}
+
+function updateEnvFile(path, label, updates, options = {}) {
+  const original = existsSync(path) ? readFileSync(path, "utf8") : "";
+  let next = original;
+
+  for (const [key, value] of Object.entries(updates)) {
+    next = upsertEnvValue(next, key, value);
+  }
+
+  for (const key of options.commentOut ?? []) {
+    const result = commentOutEnvValue(next, key, "local browser must use same-origin /api/v1");
+    next = result.source;
+  }
+
+  if (next !== original) {
+    backupEnvFile(path, label);
+    writeFileSync(path, next, { mode: 0o600 });
+    return true;
+  }
+
+  return false;
+}
+
 export function assertLocalDatabaseUrl(databaseUrl) {
   const url = new URL(databaseUrl);
   const hostname = url.hostname;
@@ -154,6 +220,20 @@ export function writeFrontendEnvIfMissing() {
   return true;
 }
 
+export function repairFrontendLocalEnv() {
+  return updateEnvFile(
+    resolve(frontendDir, ".env.local"),
+    "frontend",
+    {
+      BACKEND_API_URL: "http://127.0.0.1:4000",
+      BACKEND_INTERNAL_API_URL: "http://127.0.0.1:4000",
+      BACKEND_SESSION_COOKIE_NAME: "food_crm_local_api_session",
+      NEXT_PUBLIC_APP_ENV: "local",
+    },
+    { commentOut: ["NEXT_PUBLIC_BACKEND_API_URL"] },
+  );
+}
+
 export function writeBackendEnvIfMissing(backendDir) {
   const target = resolve(backendDir, ".env");
 
@@ -183,6 +263,54 @@ export function writeBackendEnvIfMissing(backendDir) {
     "",
   ].join("\n"), { mode: 0o600 });
   return true;
+}
+
+export function repairBackendLocalEnv(backendDir) {
+  return updateEnvFile(
+    resolve(backendDir, ".env"),
+    "backend",
+    {
+      NODE_ENV: "development",
+      HOST: "127.0.0.1",
+      PORT: "4000",
+      BACKEND_SESSION_COOKIE_NAME: "food_crm_local_api_session",
+      BACKEND_SESSION_COOKIE_DOMAIN: "",
+      BACKEND_SESSION_TTL_DAYS: "30",
+      BACKEND_CORS_ORIGIN: "http://localhost:3000,http://127.0.0.1:3000",
+      SMSAERO_ENABLED: "false",
+      BUSINESS_TIME_ZONE: "Asia/Sakhalin",
+      LOCAL_DEV_TOOLS_ENABLED: "true",
+    },
+  );
+}
+
+export function repairLocalAuthEnv(backendDir = findBackendDir()) {
+  const frontendEnvPath = resolve(frontendDir, ".env.local");
+  const backendEnvPath = resolve(backendDir, ".env");
+  return {
+    frontendChanged: repairFrontendLocalEnv(),
+    backendChanged: repairBackendLocalEnv(backendDir),
+    smokeChanged: repairLocalSmokeEnv(frontendEnvPath, backendEnvPath),
+  };
+}
+
+function repairLocalSmokeEnv(frontendEnvPath, backendEnvPath) {
+  const frontendEnv = readEnvFile(frontendEnvPath);
+  const backendEnv = readEnvFile(backendEnvPath);
+  const phone = frontendEnv.get("LOCAL_SMOKE_PHONE") || backendEnv.get("LOCAL_SMOKE_PHONE") || "+7 900 100-00-09";
+  const password = frontendEnv.get("LOCAL_SMOKE_PASSWORD") || backendEnv.get("LOCAL_SMOKE_PASSWORD") || randomSecret();
+  let changed = false;
+
+  changed = updateEnvFile(frontendEnvPath, "frontend", {
+    LOCAL_SMOKE_PHONE: phone,
+    LOCAL_SMOKE_PASSWORD: password,
+  }) || changed;
+  changed = updateEnvFile(backendEnvPath, "backend", {
+    LOCAL_SMOKE_PHONE: phone,
+    LOCAL_SMOKE_PASSWORD: password,
+  }) || changed;
+
+  return changed;
 }
 
 export async function waitForUrl(url, label, timeoutMs = 60_000) {

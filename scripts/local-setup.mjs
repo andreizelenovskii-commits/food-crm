@@ -4,6 +4,7 @@ import {
   findBackendDir,
   frontendDir,
   readEnvFile,
+  repairLocalAuthEnv,
   run,
   waitForPostgres,
   writeBackendEnvIfMissing,
@@ -23,6 +24,7 @@ async function main() {
 
   const frontendEnvCreated = writeFrontendEnvIfMissing();
   const backendEnvCreated = writeBackendEnvIfMissing(backendDir);
+  const envRepair = repairLocalAuthEnv(backendDir);
   const backendEnv = readEnvFile(resolve(backendDir, ".env"));
   assertLocalDatabaseUrl(backendEnv.get("DATABASE_URL") ?? "");
 
@@ -36,6 +38,9 @@ async function main() {
   console.log("Local setup complete.");
   console.log(`Frontend .env.local: ${frontendEnvCreated ? "created" : "kept existing"}`);
   console.log(`Backend .env: ${backendEnvCreated ? "created" : "kept existing"}`);
+  if (envRepair.frontendChanged || envRepair.backendChanged) {
+    console.log("Local auth env was repaired. Restart local services before logging in.");
+  }
   console.log("Database: food_crm_local on localhost");
   console.log("Demo password: FoodLikeDev1! (local only)");
 }

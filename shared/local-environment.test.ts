@@ -12,6 +12,27 @@ describe("local development environment contracts", () => {
     expect(read("scripts/local-reset.mjs")).toContain("RESET LOCAL DATABASE");
   });
 
+  it("local auth env repair keeps employee cookie canonical and host-only", () => {
+    const source = read("scripts/local-utils.mjs");
+
+    expect(source).toContain("food_crm_local_api_session");
+    expect(source).toContain("BACKEND_SESSION_COOKIE_DOMAIN: \"\"");
+    expect(source).toContain("NEXT_PUBLIC_BACKEND_API_URL");
+    expect(source).toContain("local browser must use same-origin /api/v1");
+  });
+
+  it("local auth check verifies same-origin cookie flow without printing secrets", () => {
+    const source = read("scripts/local-auth-check.mjs");
+
+    expect(source).toContain("http://localhost:3000");
+    expect(source).toContain("/api/v1/auth/login");
+    expect(source).toContain("/api/v1/auth/me");
+    expect(source).toContain("/api/v1/auth/logout");
+    expect(source).toContain("LOCAL AUTH CHECK PASSED");
+    expect(source).not.toContain("console.log(cookie");
+    expect(source).not.toContain("console.log(password");
+  });
+
   it("frontend env example keeps browser backend override disabled by default", () => {
     const source = read(".env.local.example");
 

@@ -26,6 +26,7 @@
     "local:stop": "node scripts/local-stop.mjs",
     "local:shift:check": "node scripts/local-shift-check.mjs",
     "local:shift:e2e": "node scripts/local-shift-e2e.mjs",
+    "local:auth:check": "node scripts/local-auth-check.mjs",
     "local:qa": "node scripts/local-qa.mjs",
     "local:autostart:install": "node scripts/local-autostart.mjs install",
     "local:autostart:uninstall": "node scripts/local-autostart.mjs uninstall",

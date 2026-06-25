@@ -41,6 +41,7 @@ async function main() {
   if (!fast) {
     ok = await check("Frontend build", () => run("npm", ["run", "build"])) && ok;
   }
+  ok = await check("Local auth", () => run("node", ["scripts/local-auth-check.mjs"])) && ok;
   ok = await check("Shift API smoke", () => run("node", ["scripts/local-shift-check.mjs"])) && ok;
   if (!noE2e) {
     const e2eOk = await check("Shift browser E2E", () => run("node", ["scripts/local-shift-e2e.mjs"]), false);

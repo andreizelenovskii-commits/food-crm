@@ -62,15 +62,27 @@ async function main() {
 
   const frontendCookie = frontendEnv.get("BACKEND_SESSION_COOKIE_NAME");
   const backendCookie = backendEnv.get("BACKEND_SESSION_COOKIE_NAME");
+  const canonicalCookie = "food_crm_local_api_session";
   if (!frontendEnv.size || !backendEnv.size) {
     record("WARN", "cookie names match", "npm run local:setup");
   } else {
     record(
-      frontendCookie && backendCookie && frontendCookie === backendCookie ? "PASS" : "FAIL",
+      frontendCookie === canonicalCookie && backendCookie === canonicalCookie ? "PASS" : "FAIL",
       "cookie names match",
-      "BACKEND_SESSION_COOKIE_NAME must match",
+      `BACKEND_SESSION_COOKIE_NAME must be ${canonicalCookie}`,
     );
   }
+
+  record(
+    (backendEnv.get("BACKEND_SESSION_COOKIE_DOMAIN") ?? "") === "" ? "PASS" : "FAIL",
+    "local cookie domain",
+    "BACKEND_SESSION_COOKIE_DOMAIN must be empty",
+  );
+  record(
+    frontendEnv.has("NEXT_PUBLIC_BACKEND_API_URL") ? "FAIL" : "PASS",
+    "browser API same-origin",
+    "NEXT_PUBLIC_BACKEND_API_URL must be absent locally",
+  );
 
   record(backendEnv.get("SMSAERO_ENABLED") === "false" ? "PASS" : "WARN", "local SMS mode", "SMSAERO_ENABLED=false");
   record(backendEnv.get("BUSINESS_TIME_ZONE") === "Asia/Sakhalin" ? "PASS" : "WARN", "business timezone");
