@@ -49,6 +49,16 @@ export async function closeManagementAccountingDay(formData: FormData) {
   revalidatePath("/dashboard/management-accounting");
 }
 
+export async function reopenManagementAccountingDay(formData: FormData) {
+  await backendJson<ManagementAccountingDay>("/api/v1/analytics/management/day/reopen", {
+    body: {
+      date: getFormString(formData, "date"),
+    },
+  });
+
+  revalidatePath("/dashboard/management-accounting");
+}
+
 export async function deleteManagementAccountingEntry(formData: FormData) {
   const entryId = Number(getFormString(formData, "entryId"));
 

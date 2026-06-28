@@ -53,6 +53,7 @@ export type ManagementAccountingDay = {
   canStart: boolean;
   canEdit: boolean;
   canClose: boolean;
+  canReopen: boolean;
 };
 
 export type ManagementAccountingViewModel = {

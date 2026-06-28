@@ -1,3 +1,4 @@
+import { ConfirmDeleteButton } from "@/components/ui/confirm-delete-button";
 import { GlassPanel } from "@/modules/dashboard/components/dashboard-widgets";
 import {
   createManagementAccountingEntry,
@@ -41,15 +42,14 @@ function ManualEntryList({
             </div>
             <p className="text-sm font-semibold text-zinc-950">{formatMoney(entry.amountCents)}</p>
             {canEdit ? (
-              <form action={deleteManagementAccountingEntry}>
-                <input type="hidden" name="entryId" value={entry.id} />
-                <button
-                  type="submit"
-                  className="inline-flex h-8 items-center rounded-full border border-red-100 bg-white/80 px-3 text-xs font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white"
-                >
-                  Удалить
-                </button>
-              </form>
+              <ConfirmDeleteButton
+                action={deleteManagementAccountingEntry}
+                ariaLabel={`Удалить статью ${entry.category}`}
+                entityLabel="Статья учета"
+                entityName={entry.category}
+                hiddenFields={[{ name: "entryId", value: entry.id }]}
+                buttonClassName="inline-flex h-8 items-center rounded-full border border-red-100 bg-white/80 px-3 text-xs font-semibold text-red-800 transition hover:border-red-800 hover:bg-red-800 hover:text-white"
+              />
             ) : null}
           </div>
         ))
@@ -64,6 +64,9 @@ function ManualEntryList({
 
 export function ManagementAccountingManualPanel({ accounting }: { accounting: ManagementAccountingViewModel }) {
   const canEdit = accounting.accountingDay.canEdit;
+  const lockedMessage = accounting.accountingDay.status === "CLOSED"
+    ? "Учет закрыт. Откройте день для корректировки, внесите ручные правки и закройте его повторно."
+    : "Начните управленческий учет за смену, чтобы добавить ручные расходы и доходы.";
 
   return (
     <GlassPanel className="p-4">
@@ -78,7 +81,7 @@ export function ManagementAccountingManualPanel({ accounting }: { accounting: Ma
       </div>
       {!canEdit ? (
         <p className="mt-4 rounded-[16px] border border-amber-200 bg-amber-50/80 px-4 py-3 text-sm leading-6 text-amber-900">
-          Начните управленческий учет за смену, чтобы добавить ручные расходы и доходы. После закрытия смены ручные изменения блокируются.
+          {lockedMessage}
         </p>
       ) : null}
       <form action={createManagementAccountingEntry} className="mt-4 grid gap-2 lg:grid-cols-[150px_1fr_150px_1fr_auto]">
