@@ -8,6 +8,7 @@ import {
 } from "@/modules/management-accounting/management-accounting.actions";
 import type {
   ManagementAccountingMetric,
+  ManagementAccountingPositionMetric,
   ManagementAccountingStaffMember,
   ManagementAccountingViewModel,
 } from "@/modules/management-accounting/management-accounting.types";
@@ -148,6 +149,52 @@ function MetricRows({
   );
 }
 
+function PositionPanel({
+  title,
+  eyebrow,
+  items,
+  emptyText,
+}: {
+  title: string;
+  eyebrow: string;
+  items: ManagementAccountingPositionMetric[];
+  emptyText: string;
+}) {
+  return (
+    <GlassPanel className="p-4">
+      <div>
+        <p className="foodlike-kicker">{eyebrow}</p>
+        <h2 className="mt-1 foodlike-title-sm">{title}</h2>
+      </div>
+      <div className="mt-3 divide-y divide-red-950/10">
+        {items.length ? (
+          items.map((item) => (
+            <div key={`${title}-${item.label}`} className="py-3">
+              <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-start">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-zinc-900">{item.label}</p>
+                  <p className="mt-0.5 text-xs leading-5 text-zinc-500">{item.hint}</p>
+                </div>
+                <p className={["text-sm font-semibold", item.marginCents < 0 ? "text-red-800" : "text-emerald-700"].join(" ")}>
+                  {formatMoney(item.marginCents)}
+                </p>
+              </div>
+              <div className="mt-2 grid gap-2 text-xs font-semibold text-zinc-600 sm:grid-cols-4">
+                <span>Кол-во {item.quantity}</span>
+                <span>Выручка {formatMoney(item.revenueCents)}</span>
+                <span>Себес {formatMoney(item.costCents)}</span>
+                <span>Фудкост {item.foodCostPercent}</span>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="foodlike-empty mt-4 px-4 py-4">{emptyText}</p>
+        )}
+      </div>
+    </GlassPanel>
+  );
+}
+
 function DatePanel({ accounting }: { accounting: ManagementAccountingViewModel }) {
   const day = accounting.accountingDay;
   const statusLabel =
@@ -160,7 +207,7 @@ function DatePanel({ accounting }: { accounting: ManagementAccountingViewModel }
     day.status === "OPEN"
       ? "Можно вносить ручные расходы и доходы."
       : day.status === "CLOSED"
-        ? "День зафиксирован, ручные изменения заблокированы."
+        ? "День зафиксирован, статистика ниже показана из сохраненного закрытия."
         : "Начните учет, чтобы добавить ручные статьи за смену.";
 
   return (
@@ -239,6 +286,9 @@ function PanelLink({ href, children }: { href: string; children: React.ReactNode
 }
 
 export function ManagementAccountingPage({ accounting }: ManagementAccountingPageProps) {
+  const positionEyebrow =
+    accounting.accountingDay.status === "CLOSED" ? "Снимок закрытия" : "Предпросмотр";
+
   return (
     <PageShell
       title="Управленческий учет"
@@ -263,12 +313,24 @@ export function ManagementAccountingPage({ accounting }: ManagementAccountingPag
             <MetricRows title="Продажи за день" eyebrow="Продажи" items={accounting.sales} />
             <MetricRows title="Доходы" eyebrow="Поступления" items={accounting.income} />
             <MetricRows title="Фудкост" eyebrow="Себестоимость" items={accounting.foodCost} />
+            <PositionPanel
+              title="Топ позиции"
+              eyebrow={positionEyebrow}
+              items={accounting.topPositions}
+              emptyText="Продаж по позициям за этот день пока нет."
+            />
           </div>
           <div className="grid content-start gap-4">
             <ManagementAccountingManualPanel accounting={accounting} />
             <StaffPanel members={accounting.staff.members} />
             <MetricRows title="Расходы" eyebrow="Затраты" items={accounting.expenses} />
             <MetricRows title="Прибыль и маржа" eyebrow="Итог" items={accounting.profit} />
+            <PositionPanel
+              title="Плохие позиции"
+              eyebrow={positionEyebrow}
+              items={accounting.badPositions}
+              emptyText="Позиции с отрицательной или слабой маржой за этот день пока не найдены."
+            />
             <MetricRows title="Что нужно завести дальше" eyebrow="Основа" items={accounting.dataGaps} />
           </div>
         </section>

@@ -34,6 +34,16 @@ export type ManagementAccountingStaffMember = {
   summary: string;
 };
 
+export type ManagementAccountingPositionMetric = {
+  label: string;
+  quantity: string;
+  revenueCents: number;
+  costCents: number;
+  marginCents: number;
+  foodCostPercent: string;
+  hint: string;
+};
+
 export type ManagementAccountingDay = {
   id: number | null;
   date: string;
@@ -63,6 +73,8 @@ export type ManagementAccountingViewModel = {
   expenses: ManagementAccountingMetric[];
   profit: ManagementAccountingMetric[];
   foodCost: ManagementAccountingMetric[];
+  topPositions: ManagementAccountingPositionMetric[];
+  badPositions: ManagementAccountingPositionMetric[];
   shift: {
     id: number;
     number: string;
