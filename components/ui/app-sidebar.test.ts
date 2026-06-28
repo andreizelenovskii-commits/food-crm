@@ -19,6 +19,7 @@ describe("getVisibleNavItems", () => {
     expect(labels).toContain("Склад");
     expect(labels).toContain("Клиенты");
     expect(labels).toContain("Каталог");
+    expect(labels).toContain("Управленческий учет");
     expect(labels).toContain("Сотрудники");
     expect(labels).toContain("Настройки");
     expect(labels).not.toContain("Заказы");

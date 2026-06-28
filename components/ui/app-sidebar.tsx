@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { href: "/dashboard", label: "Главная", icon: "grid", permission: "view_dashboard" },
   { href: "/dashboard/sales", label: "Продажи", icon: "chart", permission: "view_dashboard", managerOnly: true },
   { href: "/dashboard/reports", label: "Отчеты", icon: "report", permission: "view_dashboard", managerOnly: true },
+  { href: "/dashboard/management-accounting", label: "Управленческий учет", icon: "receipt", permission: "view_dashboard", managerOnly: true },
   { href: "/dashboard/clients", label: "Клиенты", icon: "users", permission: "view_clients" },
   { href: "/dashboard/catalog", label: "Каталог", icon: "book", permission: "view_catalog" },
   { href: "/dashboard/inventory", label: "Склад", icon: "box", permission: "view_inventory" },
