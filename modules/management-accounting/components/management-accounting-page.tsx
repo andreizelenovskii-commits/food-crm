@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { PageShell } from "@/components/ui/page-shell";
 import { GlassPanel, KpiTile } from "@/modules/dashboard/components/dashboard-widgets";
+import { ManagementAccountingManualPanel } from "@/modules/management-accounting/components/management-accounting-manual-panel";
 import type {
   ManagementAccountingMetric,
+  ManagementAccountingStaffMember,
   ManagementAccountingViewModel,
 } from "@/modules/management-accounting/management-accounting.types";
 
@@ -12,6 +14,20 @@ type ManagementAccountingPageProps = {
 
 function toDateInputValue(value: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : "";
+}
+
+const MONEY_FORMATTER = new Intl.NumberFormat("ru-RU", {
+  style: "currency",
+  currency: "RUB",
+  maximumFractionDigits: 0,
+});
+
+function formatMoney(cents: number) {
+  return MONEY_FORMATTER.format(cents / 100);
+}
+
+function formatHours(value: number) {
+  return new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 1 }).format(value);
 }
 
 function ToneTile(metric: ManagementAccountingMetric) {
@@ -30,6 +46,62 @@ function ToneTile(metric: ManagementAccountingMetric) {
       <p className="mt-2 text-2xl font-semibold leading-none text-zinc-950">{metric.value ?? ""}</p>
       <p className="mt-2 text-xs leading-5 text-zinc-600">{metric.hint}</p>
     </article>
+  );
+}
+
+function ShiftPanel({ accounting }: { accounting: ManagementAccountingViewModel }) {
+  const shift = accounting.shift;
+
+  return (
+    <GlassPanel className="p-4">
+      <p className="foodlike-kicker">Автоматически</p>
+      <h2 className="mt-1 foodlike-title-sm">Смена и продажи</h2>
+      {shift ? (
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <KpiTile label={`Смена ${shift.number}`} value={shift.status === "CLOSED" ? "Закрыта" : "Открыта"} hint={shift.closedAt ? "Смена закрыта и зафиксирована" : "Смена еще может меняться"} />
+          <KpiTile label="Выручка смены" value={formatMoney(shift.revenueCents)} hint={`${shift.checksCount} чеков · ${shift.totalOrdersCount} заказов`} />
+          <KpiTile label="Отмены" value={shift.cancelledOrdersCount} hint="Заказы в статусе отмены" />
+          <KpiTile label="Дата учета" value={accounting.range.date} hint="Данные привязаны к бизнес-дню смены" />
+        </div>
+      ) : (
+        <p className="foodlike-empty mt-4 px-4 py-4">
+          Смена за этот день не найдена. Продажи считаются по заказам за календарный день.
+        </p>
+      )}
+    </GlassPanel>
+  );
+}
+
+function StaffPanel({ members }: { members: ManagementAccountingStaffMember[] }) {
+  return (
+    <GlassPanel className="p-4">
+      <p className="foodlike-kicker">Автоматически</p>
+      <h2 className="mt-1 foodlike-title-sm">Персонал за день</h2>
+      <div className="mt-3 divide-y divide-red-950/10">
+        {members.length ? (
+          members.map((member) => (
+            <div key={member.employeeId} className="grid gap-2 py-3 lg:grid-cols-[1fr_auto] lg:items-center">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-zinc-900">{member.name}</p>
+                <p className="mt-0.5 text-xs leading-5 text-zinc-500">
+                  {member.role} · {formatHours(member.scheduledHours)} ч · {member.ordersCount} заказов
+                </p>
+              </div>
+              <div className="grid gap-1 text-sm font-semibold text-zinc-950 sm:grid-cols-4 sm:text-right">
+                <span>Аванс {formatMoney(member.advancesCents)}</span>
+                <span>Штраф {formatMoney(member.finesCents)}</span>
+                <span>Долг {formatMoney(member.debtCents)}</span>
+                <span>Итого {formatMoney(member.payoutCents)}</span>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="foodlike-empty mt-4 px-4 py-4">
+            По графику, заказам и выплатам за этот день сотрудников пока нет.
+          </p>
+        )}
+      </div>
+    </GlassPanel>
   );
 }
 
@@ -139,11 +211,14 @@ export function ManagementAccountingPage({ accounting }: ManagementAccountingPag
 
         <section className="grid items-start gap-4 xl:grid-cols-[0.9fr_1.1fr]">
           <div className="grid content-start gap-4">
+            <ShiftPanel accounting={accounting} />
             <MetricRows title="Продажи за день" eyebrow="Продажи" items={accounting.sales} />
             <MetricRows title="Доходы" eyebrow="Поступления" items={accounting.income} />
             <MetricRows title="Фудкост" eyebrow="Себестоимость" items={accounting.foodCost} />
           </div>
           <div className="grid content-start gap-4">
+            <ManagementAccountingManualPanel accounting={accounting} />
+            <StaffPanel members={accounting.staff.members} />
             <MetricRows title="Расходы" eyebrow="Затраты" items={accounting.expenses} />
             <MetricRows title="Прибыль и маржа" eyebrow="Итог" items={accounting.profit} />
             <MetricRows title="Что нужно завести дальше" eyebrow="Основа" items={accounting.dataGaps} />
