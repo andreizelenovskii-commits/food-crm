@@ -2,7 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { backendJson } from "@/shared/api/backend";
-import type { ManagementAccountingManualEntry } from "@/modules/management-accounting/management-accounting.types";
+import type {
+  ManagementAccountingDay,
+  ManagementAccountingManualEntry,
+} from "@/modules/management-accounting/management-accounting.types";
 
 function getFormString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -20,6 +23,26 @@ export async function createManagementAccountingEntry(formData: FormData) {
       category: getFormString(formData, "category"),
       amount: getFormString(formData, "amount"),
       comment: getFormString(formData, "comment"),
+    },
+  });
+
+  revalidatePath("/dashboard/management-accounting");
+}
+
+export async function startManagementAccountingDay(formData: FormData) {
+  await backendJson<ManagementAccountingDay>("/api/v1/analytics/management/day/start", {
+    body: {
+      date: getFormString(formData, "date"),
+    },
+  });
+
+  revalidatePath("/dashboard/management-accounting");
+}
+
+export async function closeManagementAccountingDay(formData: FormData) {
+  await backendJson<ManagementAccountingDay>("/api/v1/analytics/management/day/close", {
+    body: {
+      date: getFormString(formData, "date"),
     },
   });
 

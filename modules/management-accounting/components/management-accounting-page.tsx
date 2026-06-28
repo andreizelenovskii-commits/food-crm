@@ -2,6 +2,10 @@ import Link from "next/link";
 import { PageShell } from "@/components/ui/page-shell";
 import { GlassPanel, KpiTile } from "@/modules/dashboard/components/dashboard-widgets";
 import { ManagementAccountingManualPanel } from "@/modules/management-accounting/components/management-accounting-manual-panel";
+import {
+  closeManagementAccountingDay,
+  startManagementAccountingDay,
+} from "@/modules/management-accounting/management-accounting.actions";
 import type {
   ManagementAccountingMetric,
   ManagementAccountingStaffMember,
@@ -145,6 +149,20 @@ function MetricRows({
 }
 
 function DatePanel({ accounting }: { accounting: ManagementAccountingViewModel }) {
+  const day = accounting.accountingDay;
+  const statusLabel =
+    day.status === "OPEN"
+      ? "Учет открыт"
+      : day.status === "CLOSED"
+        ? "Учет закрыт"
+        : "Учет не начат";
+  const statusHint =
+    day.status === "OPEN"
+      ? "Можно вносить ручные расходы и доходы."
+      : day.status === "CLOSED"
+        ? "День зафиксирован, ручные изменения заблокированы."
+        : "Начните учет, чтобы добавить ручные статьи за смену.";
+
   return (
     <GlassPanel className="relative z-30 overflow-visible p-4">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
@@ -169,6 +187,36 @@ function DatePanel({ accounting }: { accounting: ManagementAccountingViewModel }
             Показать
           </button>
         </form>
+      </div>
+      <div className="mt-4 flex flex-col gap-3 rounded-[18px] border border-red-950/10 bg-white/72 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-zinc-950">{statusLabel}</p>
+          <p className="mt-1 text-xs leading-5 text-zinc-500">{statusHint}</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {day.canStart ? (
+            <form action={startManagementAccountingDay}>
+              <input type="hidden" name="date" value={accounting.range.date} />
+              <button
+                type="submit"
+                className="inline-flex h-10 items-center rounded-full border border-red-800 bg-red-800 px-4 text-sm font-semibold text-white shadow-sm shadow-red-950/15 transition hover:bg-red-900"
+              >
+                Начать управленческий учет за смену
+              </button>
+            </form>
+          ) : null}
+          {day.canClose ? (
+            <form action={closeManagementAccountingDay}>
+              <input type="hidden" name="date" value={accounting.range.date} />
+              <button
+                type="submit"
+                className="inline-flex h-10 items-center rounded-full border border-zinc-900 bg-zinc-900 px-4 text-sm font-semibold text-white shadow-sm shadow-zinc-950/15 transition hover:bg-black"
+              >
+                Закрыть управленческий учет за смену
+              </button>
+            </form>
+          ) : null}
+        </div>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
         <PanelLink href={accounting.previousHref}>Предыдущий день</PanelLink>
