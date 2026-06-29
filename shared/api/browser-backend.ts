@@ -1,4 +1,5 @@
 const DEFAULT_BACKEND_PORT = "4000";
+const JSON_TIMEOUT_MS = 15_000;
 const FORM_DATA_TIMEOUT_MS = 30_000;
 
 export function getBrowserBackendApiUrl() {
@@ -67,6 +68,8 @@ export async function browserBackendJson<T>(
   const apiUrl = getBrowserBackendApiUrl();
   const url = `${apiUrl}${path.startsWith("/") ? path : `/${path}`}`;
   const hasBody = init.body !== undefined;
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), JSON_TIMEOUT_MS);
 
   try {
     return parseResponse<T>(await fetch(url, {
@@ -74,13 +77,22 @@ export async function browserBackendJson<T>(
       credentials: "include",
       headers: hasBody ? { "content-type": "application/json" } : undefined,
       body: hasBody ? JSON.stringify(init.body) : undefined,
+      signal: controller.signal,
     }));
   } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error("Сервер не ответил за 15 секунд. Проверь соединение и попробуй ещё раз.", {
+        cause: error,
+      });
+    }
+
     if (error instanceof TypeError) {
       throw new Error(getBackendUnavailableMessage(path), { cause: error });
     }
 
     throw error;
+  } finally {
+    window.clearTimeout(timeoutId);
   }
 }
 

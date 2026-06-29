@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 
 const DEFAULT_BACKEND_API_URL = "http://127.0.0.1:4000";
+const SERVER_BACKEND_TIMEOUT_MS = 8_000;
 const BACKEND_SESSION_COOKIE_NAME =
   process.env.BACKEND_SESSION_COOKIE_NAME?.trim() || "food_crm_api_session";
 
@@ -19,7 +20,7 @@ function getBackendApiUrls() {
     (process.env.NODE_ENV === "production" ? DEFAULT_BACKEND_API_URL : "")
   ).replace(/\/$/, "");
   const urls = process.env.NODE_ENV === "production"
-    ? [internalUrl, "http://localhost:4000", primaryUrl, "https://crm.crmandromeda.ru"]
+    ? [internalUrl, primaryUrl]
     : [primaryUrl, internalUrl];
 
   return Array.from(new Set(urls.filter(Boolean)));
@@ -51,15 +52,28 @@ async function fetchBackend(path: string, init: RequestInit) {
   let networkError: TypeError | null = null;
 
   for (const apiUrl of getBackendApiUrls()) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), SERVER_BACKEND_TIMEOUT_MS);
+
     try {
-      return await fetch(buildUrl(path, apiUrl), init);
+      return await fetch(buildUrl(path, apiUrl), {
+        ...init,
+        signal: controller.signal,
+      });
     } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        networkError = new TypeError(`Backend API timeout at ${buildUrl(path, apiUrl)}`);
+        continue;
+      }
+
       if (error instanceof TypeError) {
         networkError = error;
         continue;
       }
 
       throw error;
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 
