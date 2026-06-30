@@ -19,12 +19,24 @@ jobs:
           install -m 700 -d ~/.ssh
           printf '%s' "${{ secrets.DEPLOY_SSH_KEY_B64 }}" | base64 -d > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p "${DEPLOY_PORT:-22}" "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+          {
+            echo "163.5.29.68 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOYJ4QAxEHGGPawPxQAPeOvHd7qz2UlmeEiWrHGbqM8X"
+            echo "163.5.29.68 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDQ/23+A1pYhFGICwMJh7tzTCQ6rQ+/R0vZ9XCdOOKT27EfPYhuuaO9B62VGZeCi1wlITR5XFfSaLm3FmGplD+anCjlD+oNsO0c2fbuRVDrMxExCnjLySTVI1eUc0uJLUo/zapZsriw5L1vQUQO5i0YcLYo7Dse6DjV1DsKnaOiU6phuTmhvX4kJ27CFPn4+pzqYz1MYW1s+B+13RJJ0pUEiV6LAtuPrjw+O40VZAX5KBdHsm4c7jMfJDBGflJC8jVYnzfxBE2f6b3F9P7pmqqtMfH3tAMQiRhouzRxD4K7iqtPnHaW3dg374Mt1cUl5WE0M3j9A5SicNGjHB1FWnMIV3/FPzjWc76ElhCUGaWESl3XXhsduwJ/i+KEXgXP9IicNl/iSzFavKMJdXWMLt2FfGUSBjCvIN6n53ggEh+WhgkYlnO3r/mLYRs9lW4b4bsve/j8IK9XVcMH8eE5WZ4dBDB/pFzMfNTfqTBvmi6Ga5yt7VsHxkkyJfrFrKjndis="
+            echo "163.5.29.68 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBCekjzFrLmr1I2j4OcaYvATahEjNNAJnIDwPqEA47oeYwwuHgJo/JToGBgaePIEm2M8IUNnqOaj/uWaD4MmvVnI="
+          } >> ~/.ssh/known_hosts
 
       - name: Diagnose and restart edge proxy
         run: |
           set -euo pipefail
-          SSH=(ssh -i ~/.ssh/deploy_key -p "${DEPLOY_PORT:-22}" "$DEPLOY_USER@$DEPLOY_HOST")
+          SSH=(
+            ssh
+            -i ~/.ssh/deploy_key
+            -p "${DEPLOY_PORT:-22}"
+            -o ConnectTimeout=60
+            -o ServerAliveInterval=10
+            -o ServerAliveCountMax=3
+            "$DEPLOY_USER@$DEPLOY_HOST"
+          )
           "${SSH[@]}" "bash -s" <<'REMOTE'
           set -u
 
