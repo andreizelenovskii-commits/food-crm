@@ -1,0 +1,60 @@
+name: Recover production edge
+
+on:
+  workflow_dispatch:
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+
+    env:
+      DEPLOY_HOST: 163.5.29.68
+      DEPLOY_USER: deploy
+      DEPLOY_PORT: 22
+
+    steps:
+      - name: Configure SSH
+        run: |
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          printf '%s' "${{ secrets.DEPLOY_SSH_KEY_B64 }}" | base64 -d > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "${DEPLOY_PORT:-22}" "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      - name: Diagnose and restart edge proxy
+        run: |
+          set -euo pipefail
+          SSH=(ssh -i ~/.ssh/deploy_key -p "${DEPLOY_PORT:-22}" "$DEPLOY_USER@$DEPLOY_HOST")
+          "${SSH[@]}" "bash -s" <<'REMOTE'
+          set -u
+
+          echo "== host =="
+          hostname || true
+          date -Is || true
+          uptime || true
+
+          echo "== listeners =="
+          sudo -n ss -ltnp '( sport = :80 or sport = :443 or sport = :3000 or sport = :4000 )' || ss -ltn '( sport = :80 or sport = :443 or sport = :3000 or sport = :4000 )' || true
+
+          echo "== pm2 =="
+          pm2 list || true
+
+          echo "== local app health before =="
+          curl -sS -m 5 -I http://127.0.0.1:3000/login || true
+          curl -sS -m 5 -I http://127.0.0.1:4000/api/v1/health || true
+
+          echo "== caddy status before =="
+          sudo -n systemctl status caddy --no-pager -l || true
+          sudo -n journalctl -u caddy -n 120 --no-pager || true
+
+          echo "== restart caddy =="
+          sudo -n systemctl restart caddy || sudo -n service caddy restart
+          sleep 5
+
+          echo "== caddy status after =="
+          sudo -n systemctl status caddy --no-pager -l || true
+
+          echo "== local edge after =="
+          curl -sS -m 8 -I http://127.0.0.1 || true
+          curl -k -sS -m 8 -I https://127.0.0.1 || true
+          REMOTE
